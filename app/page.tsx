@@ -1,112 +1,42 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { 
-  Flame, Activity, Trophy, Shield, Dumbbell, UserCheck, 
-  Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3, 
+import { useRouter } from 'next/navigation';
+import {
+  Trophy, Shield, Dumbbell, UserCheck,
+  Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
   Zap, Award, Volume2, VolumeX, Lock, Unlock, Eye,
-  AlertTriangle, Copy, Sparkles, Medal, ClipboardCheck, Scale,
+  AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
   Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2
 } from 'lucide-react';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-type ExecutionType = 'NORMAL' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
-type UserRole = 'ATHLETE' | 'COACH';
-
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  targetWeight: string;
-  rpeTarget: string;
-  restSeconds: number;
-  executionType: ExecutionType;
-  tut: string;
-  notes: string;
-}
-
-interface WorkoutDay {
-  id: string;
-  dayNumber: number;
-  title: string;
-  exercises: Exercise[];
-}
-
-interface ExerciseDraft {
-  name: string;
-  sets: number;
-  reps: string;
-  weight: string;
-  rpe: string;
-  rest: number;
-  type: ExecutionType;
-  tut: string;
-  notes: string;
-}
-
-const DAY_COUNT_OPTIONS = [2, 3, 4, 5, 6] as const;
-type DayCount = (typeof DAY_COUNT_OPTIONS)[number];
-
-const defaultExerciseDraft = (): ExerciseDraft => ({
-  name: '',
-  sets: 4,
-  reps: '8-10',
-  weight: '',
-  rpe: '8',
-  rest: 90,
-  type: 'NORMAL',
-  tut: '2-0-1-0',
-  notes: '',
-});
-
-const createEmptyDay = (dayNumber: number): WorkoutDay => ({
-  id: `day-${dayNumber}-${crypto.randomUUID?.() ?? `${Date.now()}-${dayNumber}`}`,
-  dayNumber,
-  title: '',
-  exercises: [],
-});
-
-const resizeProgramDays = (days: WorkoutDay[], count: DayCount): WorkoutDay[] => {
-  if (count === days.length) return days;
-  if (count > days.length) {
-    const extra = Array.from({ length: count - days.length }, (_, i) =>
-      createEmptyDay(days.length + i + 1)
-    );
-    return [...days, ...extra];
-  }
-  return days.slice(0, count).map((day, index) => ({ ...day, dayNumber: index + 1 }));
-};
-
-interface SetLog {
-  id: string;
-  exerciseId: string;
-  exerciseName: string;
-  weight: number;
-  reps: number;
-  rpe: number;
-  estimated1RM: number;
-  volume: number;
-  date: string;
-  time: string;
-}
-
-interface ReadinessLog {
-  id: string;
-  date: string;
-  sleepHours: number;
-  sleepQuality: number; // 1-10
-  stressLevel: number;  // 1-10
-  domsLevel: number;    // 1-10
-  energyLevel: number;  // 1-10
-  bodyWeight?: number;
-  readinessScore: number; // 0-100%
-  recommendation: string;
-}
+import {
+  DAY_COUNT_OPTIONS,
+  XP_PER_LEVEL,
+  XP_PER_READINESS,
+  XP_PER_SET,
+  levelFromXp,
+  type DayCount,
+  type Exercise,
+  type ExerciseDraft,
+  type ExecutionType,
+  type LeaderboardEntry,
+  type ReadinessLog,
+  type SessionUser,
+  type SetLog,
+  type UserRole,
+  type WorkoutDay,
+} from '@/lib/types';
+import { defaultExerciseDraft, resizeProgramDays } from '@/lib/program';
+import {
+  getCurrentSession,
+  loadAthletes,
+  loadGymState,
+  loadLeaderboard,
+  saveProgram,
+  saveReadinessLog,
+  saveSetLog,
+  signOutAccount,
+} from '@/lib/store';
 
 interface Achievement {
   id: string;
@@ -116,7 +46,17 @@ interface Achievement {
   unlocked: boolean;
 }
 
+const todayIso = () => new Date().toISOString().split('T')[0];
+
 export default function TopGymApp() {
+  const router = useRouter();
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [bootstrapping, setBootstrapping] = useState(true);
+  const [activeAthleteId, setActiveAthleteId] = useState('');
+  const [athletes, setAthletes] = useState<SessionUser[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [programName, setProgramName] = useState('Scheda Personale');
+
   // Gestione Ruolo e Accesso
   const [userRole, setUserRole] = useState<UserRole>('ATHLETE');
   const [showCoachPinModal, setShowCoachPinModal] = useState(false);
@@ -125,8 +65,7 @@ export default function TopGymApp() {
 
   // Tab Attiva
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard'>('workout');
-  const [selectedUser, setSelectedUser] = useState('Gabriele L.');
-  const [userXp, setUserXp] = useState(1350);
+  const [userXp, setUserXp] = useState(0);
 
   // Impostazioni Audio Timer
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -143,63 +82,11 @@ export default function TopGymApp() {
   const [energyLevel, setEnergyLevel] = useState(8);
   const [bodyWeight, setBodyWeight] = useState('');
 
-  const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([
-    {
-      id: 'r1',
-      date: '2026-09-08',
-      sleepHours: 8,
-      sleepQuality: 9,
-      stressLevel: 2,
-      domsLevel: 2,
-      energyLevel: 9,
-      bodyWeight: 78.5,
-      readinessScore: 92,
-      recommendation: 'Pronto per la massima intensità (100% del carico target).'
-    },
-    {
-      id: 'r2',
-      date: '2026-09-10',
-      sleepHours: 6,
-      sleepQuality: 5,
-      stressLevel: 7,
-      domsLevel: 6,
-      energyLevel: 5,
-      bodyWeight: 78.2,
-      readinessScore: 58,
-      recommendation: 'Attenzione: accumulo di fatica. Mantieni RPE <= 8 e limita i cedimenti.'
-    }
-  ]);
+  const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
 
   // Scheda Attiva (2-6 giorni, ognuno con titolo/focus ed esercizi)
   const [daysCount, setDaysCount] = useState<DayCount>(4);
-  const [programDays, setProgramDays] = useState<WorkoutDay[]>([
-    {
-      id: 'day-1',
-      dayNumber: 1,
-      title: 'Push',
-      exercises: [
-        { id: '1', name: 'Panca Piana Bilanciere', sets: 4, reps: '8-10', targetWeight: '80', rpeTarget: '8', restSeconds: 90, executionType: 'NORMAL', tut: '3-0-1-0', notes: 'Fermo al petto 1 sec' },
-        { id: '4', name: 'Lento Avanti Manubri', sets: 3, reps: '10-12', targetWeight: '24', rpeTarget: '8', restSeconds: 60, executionType: 'DROP_SET', tut: '2-0-1-0', notes: 'Ultima serie scarico 20%' }
-      ]
-    },
-    {
-      id: 'day-2',
-      dayNumber: 2,
-      title: 'Pull',
-      exercises: [
-        { id: '3', name: 'Trazioni + Dip In Superset', sets: 3, reps: 'Max', targetWeight: 'BW', rpeTarget: '9', restSeconds: 90, executionType: 'SUPERSET', tut: '2-0-1-0', notes: 'Esegui trazioni poi subito dip' }
-      ]
-    },
-    {
-      id: 'day-3',
-      dayNumber: 3,
-      title: 'Legs',
-      exercises: [
-        { id: '2', name: 'Squat Promo', sets: 4, reps: '6-8', targetWeight: '110', rpeTarget: '8.5', restSeconds: 120, executionType: 'REST_PAUSE', tut: '2-0-1-0', notes: 'Profondità sotto il parallelo' }
-      ]
-    },
-    { id: 'day-4', dayNumber: 4, title: '', exercises: [] }
-  ]);
+  const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [dayDrafts, setDayDrafts] = useState<Record<string, ExerciseDraft>>({});
 
@@ -210,14 +97,80 @@ export default function TopGymApp() {
   const [rpe, setRpe] = useState('8');
 
   // Storico Log Serie
-  const [logs, setLogs] = useState<SetLog[]>([
-    { id: 'l1', exerciseId: '1', exerciseName: 'Panca Piana Bilanciere', weight: 75, reps: 8, rpe: 8, estimated1RM: 95, volume: 600, date: '2026-09-01', time: '18:10' },
-    { id: 'l2', exerciseId: '1', exerciseName: 'Panca Piana Bilanciere', weight: 80, reps: 8, rpe: 8, estimated1RM: 101, volume: 640, date: '2026-09-05', time: '18:15' },
-    { id: 'l3', exerciseId: '1', exerciseName: 'Panca Piana Bilanciere', weight: 82.5, reps: 8, rpe: 9.5, estimated1RM: 104, volume: 660, date: '2026-09-08', time: '18:20' }
-  ]);
+  const [logs, setLogs] = useState<SetLog[]>([]);
 
   // Selezione esercizio per Analisi
-  const [selectedAnalyticsEx, setSelectedAnalyticsEx] = useState<string>('Panca Piana Bilanciere');
+  const [selectedAnalyticsEx, setSelectedAnalyticsEx] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const session = await getCurrentSession();
+      if (!session) {
+        router.replace('/login');
+        return;
+      }
+      if (cancelled) return;
+      setSessionUser(session);
+      setActiveAthleteId(session.id);
+      setUserRole(session.role);
+      const [state, board, people] = await Promise.all([
+        loadGymState(session.id),
+        loadLeaderboard(),
+        loadAthletes().catch(() => [session]),
+      ]);
+      if (cancelled) return;
+      applyLoadedState(state, session.id);
+      setLeaderboard(board);
+      setAthletes(people.length ? people : [session]);
+      setBootstrapping(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  const applyLoadedState = (state: Awaited<ReturnType<typeof loadGymState>>, athleteId: string) => {
+    setProgramName(state.programName);
+    setDaysCount(state.daysCount);
+    setProgramDays(state.programDays);
+    setLogs(state.logs);
+    setReadinessHistory(state.readinessHistory);
+    setUserXp(state.xp);
+    setSelectedDayIndex(0);
+    const firstEx = state.programDays[0]?.exercises[0];
+    setCurrentExId(firstEx?.id || '');
+    const firstLogged = state.logs[0]?.exerciseName || firstEx?.name || '';
+    setSelectedAnalyticsEx(firstLogged);
+    setActiveAthleteId(athleteId);
+  };
+
+  const persistCurrentProgram = async (
+    nextDays: WorkoutDay[],
+    nextCount: DayCount = daysCount,
+    nextName: string = programName
+  ) => {
+    if (!activeAthleteId) return;
+    await saveProgram(activeAthleteId, {
+      programName: nextName,
+      daysCount: nextCount,
+      programDays: nextDays,
+    });
+  };
+
+  const refreshLeaderboard = async () => {
+    setLeaderboard(await loadLeaderboard());
+  };
+
+  const handleLogout = async () => {
+    await signOutAccount();
+    router.replace('/login');
+  };
+
+  const handleSelectAthlete = async (athleteId: string) => {
+    const state = await loadGymState(athleteId);
+    applyLoadedState(state, athleteId);
+  };
 
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
   const activeRoutine = activeDay?.exercises ?? [];
@@ -233,12 +186,20 @@ export default function TopGymApp() {
 
   const handleDaysCountChange = (count: DayCount) => {
     setDaysCount(count);
-    setProgramDays(prev => resizeProgramDays(prev, count));
+    setProgramDays(prev => {
+      const next = resizeProgramDays(prev, count);
+      void persistCurrentProgram(next, count);
+      return next;
+    });
     setSelectedDayIndex(prev => Math.min(prev, count - 1));
   };
 
   const handleDayTitleChange = (dayId: string, title: string) => {
-    setProgramDays(prev => prev.map(day => (day.id === dayId ? { ...day, title } : day)));
+    setProgramDays(prev => {
+      const next = prev.map(day => (day.id === dayId ? { ...day, title } : day));
+      void persistCurrentProgram(next);
+      return next;
+    });
   };
 
   // Audio Timer
@@ -311,7 +272,14 @@ export default function TopGymApp() {
 
   // Auto-fill Ultimo Carico
   const currentExercise = activeRoutine.find(e => e.id === currentExId) || activeRoutine[0];
-  const lastLoggedSet = currentExercise ? logs.find(l => l.exerciseName === currentExercise.name) : undefined;
+  const exerciseHistory = currentExercise
+    ? logs.filter(l => l.exerciseName === currentExercise.name)
+    : [];
+  const lastLoggedSet = exerciseHistory[0];
+  const lastSessionDate = exerciseHistory.find(l => l.date !== todayIso())?.date;
+  const lastSessionSets = lastSessionDate
+    ? exerciseHistory.filter(l => l.date === lastSessionDate)
+    : [];
 
   const handleAutoFillLastLog = () => {
     if (lastLoggedSet) {
@@ -343,13 +311,14 @@ export default function TopGymApp() {
   };
 
   // SALVATAGGIO READINESS
-  const handleSaveReadiness = (e: React.FormEvent) => {
+  const handleSaveReadiness = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeAthleteId) return;
     const { totalScore, rec } = computeReadiness();
 
     const newReadiness: ReadinessLog = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
+      id: crypto.randomUUID(),
+      date: todayIso(),
       sleepHours: parseFloat(sleepHours) || 7,
       sleepQuality,
       stressLevel,
@@ -360,13 +329,17 @@ export default function TopGymApp() {
       recommendation: rec
     };
 
+    const nextXp = userXp + XP_PER_READINESS;
     setReadinessHistory([newReadiness, ...readinessHistory]);
-    setUserXp(prev => prev + 100);
+    setUserXp(nextXp);
+    await saveReadinessLog(activeAthleteId, newReadiness, nextXp);
+    await refreshLeaderboard();
     setActiveTab('workout');
   };
 
-  const handleLogSet = (e: React.FormEvent) => {
+  const handleLogSet = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeAthleteId) return;
     const numWeight = parseFloat(weight);
     const numReps = parseInt(reps, 10);
     const numRpe = parseFloat(rpe);
@@ -378,7 +351,7 @@ export default function TopGymApp() {
     const setVolume = numWeight * numReps;
 
     const newLog: SetLog = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       exerciseId: currentExId,
       exerciseName: exerciseObj?.name || 'Esercizio',
       weight: numWeight,
@@ -386,12 +359,25 @@ export default function TopGymApp() {
       rpe: numRpe,
       estimated1RM: est1RM,
       volume: setVolume,
-      date: new Date().toISOString().split('T')[0],
+      date: todayIso(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
+    const nextXp = userXp + XP_PER_SET;
+    const nextDays = programDays.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex =>
+        ex.id === currentExId || ex.name === exerciseObj?.name
+          ? { ...ex, targetWeight: String(numWeight) }
+          : ex
+      ),
+    }));
+
     setLogs([newLog, ...logs]);
-    setUserXp(prev => prev + 50);
+    setUserXp(nextXp);
+    setProgramDays(nextDays);
+    await saveSetLog(activeAthleteId, newLog, nextXp, nextDays);
+    await refreshLeaderboard();
 
     if (exerciseObj?.restSeconds) {
       startRestTimer(exerciseObj.restSeconds);
@@ -409,7 +395,7 @@ export default function TopGymApp() {
     if (!draft.name.trim()) return;
 
     const newExercise: Exercise = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: draft.name.trim(),
       sets: draft.sets,
       reps: draft.reps,
@@ -421,23 +407,27 @@ export default function TopGymApp() {
       notes: draft.notes || 'Nessuna nota'
     };
 
-    setProgramDays(prev =>
-      prev.map(day =>
+    setProgramDays(prev => {
+      const next = prev.map(day =>
         day.id === dayId ? { ...day, exercises: [...day.exercises, newExercise] } : day
-      )
-    );
+      );
+      void persistCurrentProgram(next);
+      return next;
+    });
     setDayDrafts(prev => ({ ...prev, [dayId]: defaultExerciseDraft() }));
   };
 
   const handleRemoveExerciseFromDay = (dayId: string, exerciseId: string) => {
     if (userRole !== 'COACH') return;
-    setProgramDays(prev =>
-      prev.map(day =>
+    setProgramDays(prev => {
+      const next = prev.map(day =>
         day.id === dayId
           ? { ...day, exercises: day.exercises.filter(ex => ex.id !== exerciseId) }
           : day
-      )
-    );
+      );
+      void persistCurrentProgram(next);
+      return next;
+    });
   };
 
   const handleSelectWorkoutDay = (index: number) => {
@@ -456,11 +446,14 @@ export default function TopGymApp() {
     }
   };
 
-  const userLevel = Math.floor(userXp / 500) + 1;
+  const userLevel = levelFromXp(userXp);
+  const todayLogs = logs.filter(l => l.date === todayIso());
+  const activeAthleteName =
+    athletes.find(a => a.id === activeAthleteId)?.displayName || sessionUser?.displayName || 'Atleta';
 
   // METRICHE
-  const totalVolumeToday = logs.reduce((acc, curr) => acc + curr.volume, 0);
-  const totalSetsToday = logs.length;
+  const totalVolumeToday = todayLogs.reduce((acc, curr) => acc + curr.volume, 0);
+  const totalSetsToday = todayLogs.length;
   const exerciseLogs = logs.filter(l => l.exerciseName === selectedAnalyticsEx);
   const maxWeightForEx = exerciseLogs.length > 0 ? Math.max(...exerciseLogs.map(l => l.weight)) : 0;
   const max1RMForEx = exerciseLogs.length > 0 ? Math.max(...exerciseLogs.map(l => l.estimated1RM)) : 0;
@@ -479,8 +472,16 @@ export default function TopGymApp() {
     { id: '1', title: 'Club dei 100kg', description: 'Solleva 100kg o più in un esercizio', icon: '🏋️', unlocked: logs.some(l => l.weight >= 100) },
     { id: '2', title: 'PR Breaker', description: 'Supera il tuo massimale stimato', icon: '🔥', unlocked: logs.length >= 3 },
     { id: '3', title: 'Atleta Consapevole', description: 'Registra 5 Check di Readiness', icon: '🧠', unlocked: readinessHistory.length >= 2 },
-    { id: '4', title: 'Costanza d\'Acciaio', description: 'Mantieni 5 giorni di frequenza', icon: '⚡', unlocked: true }
+    { id: '4', title: 'Costanza d\'Acciaio', description: 'Mantieni 5 giorni di frequenza', icon: '⚡', unlocked: new Set(logs.map(l => l.date)).size >= 5 }
   ];
+
+  if (bootstrapping || !sessionUser) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
+        <p className="text-sm text-zinc-400 font-bold tracking-wider">Caricamento scheda...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
@@ -491,7 +492,9 @@ export default function TopGymApp() {
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <div className="flex items-center gap-3 mt-2">
+            <p className="text-sm text-zinc-300 mt-1 font-bold">{sessionUser.displayName}</p>
+            <p className="text-xs text-zinc-500">{sessionUser.email}</p>
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
                 <button 
                   onClick={() => handleRoleSwitchRequest('ATHLETE')}
@@ -511,13 +514,13 @@ export default function TopGymApp() {
                 <div className="flex items-center gap-2">
                   <span className="text-zinc-400 text-xs font-bold">Gestisci Atleta:</span>
                   <select 
-                    value={selectedUser} 
-                    onChange={e => setSelectedUser(e.target.value)}
+                    value={activeAthleteId} 
+                    onChange={e => void handleSelectAthlete(e.target.value)}
                     className="bg-zinc-900 border border-zinc-700 text-white text-xs rounded px-2 py-1 font-bold outline-none"
                   >
-                    <option value="Gabriele L.">Gabriele L.</option>
-                    <option value="Elisea M.">Elisea M.</option>
-                    <option value="Pamela B.">Pamela B.</option>
+                    {athletes.map(athlete => (
+                      <option key={athlete.id} value={athlete.id}>{athlete.displayName}</option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -561,6 +564,14 @@ export default function TopGymApp() {
                 <div className="text-sm font-bold">{userXp} XP</div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
+            >
+              <LogOut className="w-4 h-4" /> Esci
+            </button>
           </div>
         </div>
       </header>
@@ -619,7 +630,7 @@ export default function TopGymApp() {
           </button>
         )}
 
-        <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Trophy className="w-4 h-4 text-yellow-500" /> Traguardi & Badge</button>
+        <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Trophy className="w-4 h-4 text-yellow-500" /> Classifica & Badge</button>
       </div>
 
       {/* CONTENUTO PRINCIPALE */}
@@ -654,7 +665,7 @@ export default function TopGymApp() {
 
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-                <h2 className="text-xl font-bold flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda Assegnata: Hypertrophy Phase A</h2>
+                <h2 className="text-xl font-bold flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda di {activeAthleteName}: {programName}</h2>
                 <span className="text-xs bg-zinc-900 border border-zinc-800 px-3 py-1 rounded text-zinc-400 font-bold">{daysCount} giorni / settimana</span>
               </div>
 
@@ -737,18 +748,26 @@ export default function TopGymApp() {
               </div>
 
               {lastLoggedSet && (
-                <div className="mb-4 bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-zinc-400">
-                    <span className="text-zinc-500 font-bold uppercase mr-2">Ultimo Carico:</span> 
-                    <b className="text-white">{lastLoggedSet.weight} Kg</b> × <b className="text-white">{lastLoggedSet.reps} reps</b> (RPE {lastLoggedSet.rpe})
+                <div className="mb-4 bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-zinc-400">
+                      <span className="text-zinc-500 font-bold uppercase mr-2">Ultimo carico salvato:</span>
+                      <b className="text-white">{lastLoggedSet.weight} Kg</b> × <b className="text-white">{lastLoggedSet.reps} reps</b> (RPE {lastLoggedSet.rpe})
+                      <span className="text-zinc-500 ml-2">{lastLoggedSet.date}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAutoFillLastLog}
+                      className="flex items-center gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded font-bold border border-zinc-700 transition-all"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-[#E50914]" /> Riprendi ultimo carico
+                    </button>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={handleAutoFillLastLog}
-                    className="flex items-center gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1.5 rounded font-bold border border-zinc-700 transition-all"
-                  >
-                    <Copy className="w-3.5 h-3.5 text-[#E50914]" /> Copia Ultima Serie
-                  </button>
+                  {lastSessionSets.length > 0 && (
+                    <p className="text-[11px] text-zinc-500">
+                      Ultima sessione ({lastSessionDate}): {lastSessionSets.map(s => `${s.weight}kg × ${s.reps}`).join(' · ')}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -774,7 +793,7 @@ export default function TopGymApp() {
 
               <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Serie Eseguite Oggi</h4>
               <div className="space-y-2">
-                {logs.length === 0 ? <p className="text-zinc-600 text-sm">Ancora nessuna serie registrata per questa sessione.</p> : logs.map((log) => (
+                {todayLogs.length === 0 ? <p className="text-zinc-600 text-sm">Ancora nessuna serie registrata per questa sessione.</p> : todayLogs.map((log) => (
                   <div key={log.id} className="flex justify-between items-center bg-zinc-900 p-3 rounded border border-zinc-800 text-sm">
                     <div>
                       <span className="font-bold text-white mr-2">{log.exerciseName}</span>
@@ -1106,7 +1125,7 @@ export default function TopGymApp() {
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-2 flex items-center gap-2"><UserCheck className="text-[#E50914]" /> Editor Schede per {selectedUser}</h2>
+              <h2 className="text-xl font-bold mb-2 flex items-center gap-2"><UserCheck className="text-[#E50914]" /> Editor Schede per {activeAthleteName}</h2>
               <p className="text-xs text-zinc-400 mb-5">Scegli da 2 a 6 giorni, poi per ogni giorno imposta Titolo/Focus (es. Push, Pull, Legs) e gli esercizi con serie e ripetizioni.</p>
 
               <div className="flex items-center gap-3 flex-wrap">
