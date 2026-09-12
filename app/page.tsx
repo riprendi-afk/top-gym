@@ -783,39 +783,89 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 2: READINESS */}
-        {activeTab === 'readiness' && (
+{/* TAB 2: CHECK READINESS */}
+{activeTab === 'readiness' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero</h2>
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
+              <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
+            </div>
 
-            <form onSubmit={handleSaveReadiness} className="space-y-4">
+            <form onSubmit={handleSaveReadiness} className="space-y-5">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">Ore di Sonno</label>
-                  <input type="number" step="0.5" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold" />
+                  <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Moon className="w-4 h-4 text-indigo-400"/> Ore di Sonno</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={sleepHours}
+                    onChange={e => setSleepHours(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">Peso Corporeo (Kg)</label>
-                  <input type="number" step="0.1" value={bodyWeight} onChange={e => setBodyWeight(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold" />
+                  <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Scale className="w-4 h-4 text-blue-400"/> Peso Corporeo (Kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={bodyWeight}
+                    onChange={e => setBodyWeight(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4 pt-2">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">Qualità Sonno: {sleepQuality}/10</label>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="text-zinc-400 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-yellow-400"/> Qualità del Sonno</span>
+                    <span className="text-yellow-400 font-mono">{sleepQuality} / 10</span>
+                  </div>
                   <input type="range" min="1" max="10" value={sleepQuality} onChange={e => setSleepQuality(Number(e.target.value))} className="w-full accent-[#E50914]" />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">Energia: {energyLevel}/10</label>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="text-zinc-400 flex items-center gap-1.5"><Dumbbell className="w-4 h-4 text-red-400"/> Fatica Muscolare / DOMS (1 = Nessun dolore, 10 = Dolore estremo)</span>
+                    <span className="text-red-400 font-mono">{domsLevel} / 10</span>
+                  </div>
+                  <input type="range" min="1" max="10" value={domsLevel} onChange={e => setDomsLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="text-zinc-400 flex items-center gap-1.5"><BatteryCharging className="w-4 h-4 text-green-400"/> Energia / Motivazione</span>
+                    <span className="text-green-400 font-mono">{energyLevel} / 10</span>
+                  </div>
                   <input type="range" min="1" max="10" value={energyLevel} onChange={e => setEnergyLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1">Stress Percepito: {stressLevel}/10</label>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="text-zinc-400 flex items-center gap-1.5"><Brain className="w-4 h-4 text-purple-400"/> Stress Percepito</span>
+                    <span className="text-purple-400 font-mono">{stressLevel} / 10</span>
+                  </div>
                   <input type="range" min="1" max="10" value={stressLevel} onChange={e => setStressLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-[#E50914] py-3 rounded-lg font-bold uppercase">Calcola Readiness (+20 XP)</button>
+              {/* ANTEPRIMA DEL PUNTEGGIO E CONSIGLIO PRIMA DI SALVARE */}
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato:</span>
+                  <span className="text-lg font-black text-[#E50914]">{computeReadiness().totalScore}%</span>
+                </div>
+                <p className="text-xs text-zinc-300 font-medium">
+                  <b>Consigliato:</b> {computeReadiness().rec}
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
+              </button>
             </form>
           </div>
         )}
