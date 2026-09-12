@@ -10,6 +10,7 @@ import {
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
   Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2
 } from 'lucide-react';
+import { saveCompletedWorkoutToSupabase } from '@/lib/store';
 
 type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
@@ -26,6 +27,11 @@ interface Exercise {
   executionType: ExecutionType;
   tut: string;
   notes?: string;
+ // Nuovi campi dedicati al Cardio / Circuiti
+ cardioType?: 'TREADMILL' | 'BIKE' | 'ROW' | 'CIRCUIT';
+ speed?: string;
+ incline?: string;
+ durationMinutes?: number;
 }
 
 interface WorkoutDay {
@@ -352,7 +358,28 @@ export default function TopGymApp() {
     setUserXp(prev => prev + 20);
     setActiveTab('workout');
   };
+  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
 
+  const handleFinishAndSaveWorkout = async () => {
+    const dayName = 'Giornata di Allenamento';
+    const totalVol = 12000;
+  
+    const result = await saveCompletedWorkoutToSupabase({
+      userId: 'default-user',
+      dayName: dayName,
+      totalVolume: totalVol,
+      exercisesCount: activeRoutine.length,
+    });
+  
+    if (result.success) {
+      setUserXp(prev => prev + 50);
+      setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
+      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
+    } else {
+      setWorkoutSuccessMessage('⚠️ Errore nel salvataggio dell\'allenamento.');
+      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
+    }
+  };
   const handleLogSet = (e: React.FormEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
@@ -434,6 +461,21 @@ export default function TopGymApp() {
     { id: '3', title: 'Atleta Consapevole', description: 'Registra Check di Readiness', icon: '🧠', unlocked: readinessHistory.length >= 1 },
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
+  {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
+<div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
+  {workoutSuccessMessage && (
+    <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm animate-fade-in">
+      {workoutSuccessMessage}
+    </div>
+  )}
+
+  <button
+    onClick={handleFinishAndSaveWorkout}
+    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+  >
+    <span>✅ Termina e Salva Allenamento</span>
+  </button>
+</div>
 
   // --- SCHERMATA LOGIN / REGISTRAZIONE ---
   if (!user) {

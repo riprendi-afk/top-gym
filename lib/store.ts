@@ -466,3 +466,34 @@ function mapReadiness(row: Record<string, unknown>): ReadinessLog {
 }
 
 export { isSupabaseConfigured };
+export async function saveCompletedWorkoutToSupabase(sessionData: {
+  userId: string;
+  dayName: string;
+  totalVolume: number;
+  exercisesCount: number;
+}) {
+  const supabase = getSupabase();
+  if (!supabase) {
+    // Fallback locale se Supabase non è attivo
+    return { success: true, localOnly: true };
+  }
+
+  const { data, error } = await supabase
+    .from('workout_history')
+    .insert([
+      {
+        user_id: sessionData.userId,
+        day_name: sessionData.dayName,
+        total_volume: sessionData.totalVolume,
+        exercises_count: sessionData.exercisesCount,
+        completed_at: new Date().toISOString(),
+      }
+    ]);
+
+  if (error) {
+    console.error('Errore nel salvataggio dell allenamento:', error.message);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data };
+}
