@@ -1,31 +1,24 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Verifica che le variabili d'ambiente siano reali e non placeholder
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl &&
-  supabaseAnonKey &&
-  !supabaseUrl.includes('placeholder') &&
-  supabaseAnonKey !== 'placeholder'
-);
-
-let client: SupabaseClient | null = null;
+let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient | null {
-  if (!isSupabaseConfigured) return null;
-  if (!client) {
-    client = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    });
-  }
-  return client;
-}
+  if (supabaseInstance) return supabaseInstance;
 
-// Esporta un istanza diretta di default per utilizzi rapidi
-export const supabase = getSupabase();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Variabili d’ambiente Supabase mancanti.');
+    return null;
+  }
+
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+
+  return supabaseInstance;
+}
