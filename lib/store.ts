@@ -154,7 +154,7 @@ export async function signUpAccount(params: {
       role: 'ATHLETE',
       xp: 0,
     },
-    message: isSupabaseConfigured
+    message: isSupabaseConfigured()
       ? undefined
       : 'Modalità locale: i dati restano su questo browser finché non colleghi Supabase.',
   };
