@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSupabase } from '@/lib/supabase';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -79,13 +80,17 @@ const todayIso = () => new Date().toISOString().split('T')[0];
 
 export default function TopGymApp() {
   const router = useRouter();
+  const supabase = getSupabase();
 
-  // Stato Autenticazione & Sessione
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  // Autenticazione Supabase
+  const [user, setUser] = useState<any>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Atleti e Selezione Coach
+  // Atleti per modalità Coach
   const [athletes] = useState<Athlete[]>([
     { id: 'ath-1', displayName: 'Marco Rossi', email: 'marco@topgym.it', xp: 340 },
     { id: 'ath-2', displayName: 'Giuseppe Di Girolamo', email: 'giuseppe@topgym.it', xp: 520 },
@@ -93,22 +98,22 @@ export default function TopGymApp() {
   ]);
   const [activeAthleteId, setActiveAthleteId] = useState('ath-2');
 
-  // Gestione Ruolo e Accesso
+  // Gestione Ruolo e PIN
   const [userRole, setUserRole] = useState<UserRole>('COACH');
   const [showCoachPinModal, setShowCoachPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab Attiva & XP
+  // Navigation & XP State
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard'>('workout');
   const [userXp, setUserXp] = useState(520);
 
-  // Audio & Timer
+  // Sound & Rest Timer
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Check Readiness Inputs
+  // Readiness Inputs
   const [sleepHours, setSleepHours] = useState('7.5');
   const [sleepQuality, setSleepQuality] = useState(8);
   const [stressLevel, setStressLevel] = useState(3);
@@ -130,8 +135,7 @@ export default function TopGymApp() {
     }
   ]);
 
-  // Programma di Allenamento
-  const [daysCount, setDaysCount] = useState<DayCount>(4);
+  // Programma Esercizi
   const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([
     {
@@ -173,7 +177,7 @@ export default function TopGymApp() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [currentExId, setCurrentExId] = useState('ex1');
 
-  // Input Logging Atleta
+  // Form Inserimento Serie (Atleta)
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('8');
@@ -181,7 +185,7 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Draft Builder Coach
+  // Form Builder Coach
   const [builderExName, setBuilderExName] = useState('');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
@@ -192,7 +196,50 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Audio Timer Effect
+  // Controllo Auth con Supabase
+  useEffect(() => {
+    if (!supabase) return;
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    initAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  // Gestione Login / Registrazione Supabase
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setErrorMessage('');
+
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username: username || email.split('@')[0] } }
+      });
+      if (error) setErrorMessage(error.message);
+      else alert('Registrazione completata! Ora puoi accedere.');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setErrorMessage(error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  // Timer Sound
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -208,7 +255,7 @@ export default function TopGymApp() {
       osc.stop(audioCtx.currentTime + 0.5);
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     } catch (e) {
-      console.log('Audio non supportato');
+      console.log('Audio non abilitato');
     }
   };
 
@@ -228,7 +275,7 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // Switch Ruolo con PIN
+  // Switch Ruolo Coach con PIN
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH' && userRole !== 'COACH') {
       setShowCoachPinModal(true);
@@ -248,17 +295,6 @@ export default function TopGymApp() {
     } else {
       setPinError(true);
     }
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loginEmail && loginPassword) {
-      setIsAuthenticated(true);
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
   };
 
   const calculate1RM = (w: number, r: number) => {
@@ -399,8 +435,8 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  // --- SCHERMATA LOGIN SE SCONNESSO ---
-  if (!isAuthenticated) {
+  // --- SCHERMATA LOGIN / REGISTRAZIONE ---
+  if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white font-sans">
         <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
@@ -409,14 +445,33 @@ export default function TopGymApp() {
           </h1>
           <p className="text-xs text-center text-zinc-400 mb-6">PWA Gestione Allenamenti & Coaching</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          {errorMessage && (
+            <div className="mb-4 rounded bg-red-950/60 p-3 text-xs text-red-200 border border-red-800">
+              {errorMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleAuth} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Username</label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                  placeholder="Nome Atleta"
+                />
+              </div>
+            )}
             <div>
               <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Email</label>
               <input
                 type="email"
                 required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
                 placeholder="atleta@topgym.it"
               />
@@ -426,8 +481,8 @@ export default function TopGymApp() {
               <input
                 type="password"
                 required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
                 placeholder="••••••••"
               />
@@ -436,9 +491,19 @@ export default function TopGymApp() {
               type="submit"
               className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider"
             >
-              Accedi al Dashboard
+              {isSignUp ? 'Crea Account' : 'Accedi al Dashboard'}
             </button>
           </form>
+
+          <div className="mt-6 text-center text-xs text-zinc-400">
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }}
+              className="font-semibold text-[#E50914] hover:underline"
+            >
+              {isSignUp ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -454,8 +519,7 @@ export default function TopGymApp() {
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta Selezionato: {activeAthlete.displayName}</p>
-            <p className="text-xs text-zinc-500">{activeAthlete.email}</p>
+            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {user.email}</p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
@@ -509,7 +573,7 @@ export default function TopGymApp() {
               )}
             </div>
 
-            {/* BADGE READINESS NELL'HEADER */}
+            {/* BADGE READINESS */}
             {latestReadiness && (
               <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
                 <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
