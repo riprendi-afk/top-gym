@@ -125,13 +125,14 @@ export default function TopGymApp() {
   // Impostazione Giorni Allenamento nel Builder
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
 
-  // Readiness Inputs
+  // Readiness Inputs & Storico
   const [sleepHours, setSleepHours] = useState('7.5');
   const [sleepQuality, setSleepQuality] = useState(8);
   const [stressLevel, setStressLevel] = useState(3);
   const [domsLevel, setDomsLevel] = useState(2);
   const [energyLevel, setEnergyLevel] = useState(8);
   const [bodyWeight, setBodyWeight] = useState('78.5');
+  const [readinessSuccessMessage, setReadinessSuccessMessage] = useState<string | null>(null);
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([
     {
       id: 'r1',
@@ -251,7 +252,7 @@ export default function TopGymApp() {
     setUser(null);
   };
 
-  // Timer Sound
+  // Sound & Rest Timer
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -351,7 +352,7 @@ export default function TopGymApp() {
     const { totalScore, rec } = computeReadiness();
     const newReadiness: ReadinessLog = {
       id: crypto.randomUUID(),
-      date: todayIso(), // Salvataggio esplicito con la data del giorno esatto
+      date: todayIso(), // Data automatica della giornata
       sleepHours: parseFloat(sleepHours) || 7,
       sleepQuality,
       stressLevel,
@@ -363,7 +364,8 @@ export default function TopGymApp() {
     };
     setReadinessHistory([newReadiness, ...readinessHistory]);
     setUserXp(prev => prev + 20);
-    setActiveTab('workout');
+    setReadinessSuccessMessage('🎉 Check Readiness registrato con successo! (+20 XP)');
+    setTimeout(() => setReadinessSuccessMessage(null), 4000);
   };
 
   // Gestione Giorni 2-6 nel Builder Coach
@@ -503,6 +505,9 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
+  // Nome Utente Dinamico (mostra Username scelto se presente, altrimenti la parte dell'email)
+  const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
+
   // --- SCHERMATA LOGIN / REGISTRAZIONE ---
   if (!user) {
     return (
@@ -587,7 +592,7 @@ export default function TopGymApp() {
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {user.email}</p>
+            <p className="text-sm text-zinc-300 mt-1 font-bold">Utente: <span className="text-[#E50914]">{displayUserName}</span></p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
@@ -623,7 +628,6 @@ export default function TopGymApp() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-between flex-wrap">
-            {/* TIMER RECUPERO CON AUDIO */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -641,12 +645,11 @@ export default function TopGymApp() {
               )}
             </div>
 
-            {/* BADGE READINESS */}
             {latestReadiness && (
               <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
                 <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-bold">READINESS ({latestReadiness.date})</div>
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold">READINESS</div>
                   <div className="text-sm font-black">{latestReadiness.readinessScore}%</div>
                 </div>
               </div>
@@ -662,9 +665,9 @@ export default function TopGymApp() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
             >
-              <LogOut className="w-4 h-4"/> Esci
+              <LogOut className="w-4 h-4 text-red-500"/> Esci
             </button>
           </div>
         </div>
@@ -856,7 +859,7 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
+            {/* PULSANTE TERMINA E SALVA ALLENAMENTO */}
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
               {workoutSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
@@ -885,8 +888,8 @@ export default function TopGymApp() {
                     <div key={item.id || idx} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
                       <div>
                         <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
-                        <span className="text-zinc-500 text-[10px]">
-                          {item.created_at ? new Date(item.created_at).toLocaleString('it-IT') : (item.date || 'Data non presente')}
+                        <span className="text-zinc-400 text-[11px] font-mono">
+                          Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
                         </span>
                       </div>
                       <div className="text-right">
@@ -903,87 +906,161 @@ export default function TopGymApp() {
 
         {/* TAB 2: CHECK READINESS */}
         {activeTab === 'readiness' && (
-          <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
-              <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
+          <div className="space-y-6">
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
+                <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
+              </div>
+
+              {readinessSuccessMessage && (
+                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
+                  {readinessSuccessMessage}
+                </div>
+              )}
+
+              {/* PER ATLETA: COMPILAZIONE CHECK READINESS */}
+              {userRole === 'ATHLETE' && (
+                <form onSubmit={handleSaveReadiness} className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Moon className="w-4 h-4 text-indigo-400"/> Ore di Sonno</label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={sleepHours}
+                        onChange={e => setSleepHours(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Scale className="w-4 h-4 text-blue-400"/> Peso Corporeo (Kg)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={bodyWeight}
+                        onChange={e => setBodyWeight(e.target.value)}
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <div className="flex justify-between text-xs font-bold mb-1">
+                        <span className="text-zinc-400 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-yellow-400"/> Qualità del Sonno</span>
+                        <span className="text-yellow-400 font-mono">{sleepQuality} / 10</span>
+                      </div>
+                      <input type="range" min="1" max="10" value={sleepQuality} onChange={e => setSleepQuality(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-bold mb-1">
+                        <span className="text-zinc-400 flex items-center gap-1.5"><Dumbbell className="w-4 h-4 text-red-400"/> Fatica Muscolare / DOMS (1 = Nessun dolore, 10 = Dolore estremo)</span>
+                        <span className="text-red-400 font-mono">{domsLevel} / 10</span>
+                      </div>
+                      <input type="range" min="1" max="10" value={domsLevel} onChange={e => setDomsLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-bold mb-1">
+                        <span className="text-zinc-400 flex items-center gap-1.5"><BatteryCharging className="w-4 h-4 text-green-400"/> Energia / Motivazione</span>
+                        <span className="text-green-400 font-mono">{energyLevel} / 10</span>
+                      </div>
+                      <input type="range" min="1" max="10" value={energyLevel} onChange={e => setEnergyLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-bold mb-1">
+                        <span className="text-zinc-400 flex items-center gap-1.5"><Brain className="w-4 h-4 text-purple-400"/> Stress Percepito</span>
+                        <span className="text-purple-400 font-mono">{stressLevel} / 10</span>
+                      </div>
+                      <input type="range" min="1" max="10" value={stressLevel} onChange={e => setStressLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span>
+                      <span className="text-lg font-black text-[#E50914]">{computeReadiness().totalScore}%</span>
+                    </div>
+                    <p className="text-xs text-zinc-300 font-medium">
+                      <b>Consigliato:</b> {computeReadiness().rec}
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
+                  </button>
+                </form>
+              )}
             </div>
 
-            <form onSubmit={handleSaveReadiness} className="space-y-5">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Moon className="w-4 h-4 text-indigo-400"/> Ore di Sonno</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={sleepHours}
-                    onChange={e => setSleepHours(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
-                  />
+            {/* STORICO CHECK READINESS GIORNO PER GIORNO (VISIBILE SIA AD ATLETA CHE A COACH) */}
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <History className="text-green-400" /> Storico Check Readiness ({userRole === 'COACH' ? activeAthlete.displayName : displayUserName})
+              </h3>
+              {readinessHistory.length === 0 ? (
+                <p className="text-xs text-zinc-400">Nessun check readiness ancora registrato.</p>
+              ) : (
+                <div className="space-y-3">
+                  {readinessHistory.map((item) => (
+                    <div key={item.id} className="bg-zinc-900 p-4 rounded-lg border border-zinc-800 space-y-2 text-xs">
+                      <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                        <span className="font-bold text-white flex items-center gap-1.5">
+                          <CalendarDays className="w-4 h-4 text-zinc-400" /> Data: {item.date}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded font-black text-sm ${item.readinessScore >= 80 ? 'bg-green-950 text-green-400 border border-green-800' : 'bg-yellow-950 text-yellow-400 border border-yellow-800'}`}>
+                          Score: {item.readinessScore}%
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-zinc-400 pt-1">
+                        <div>Sonno: <b className="text-white">{item.sleepHours}h ({item.sleepQuality}/10)</b></div>
+                        <div>Peso: <b className="text-white">{item.bodyWeight ? `${item.bodyWeight} kg` : 'N/D'}</b></div>
+                        <div>DOMS: <b className="text-white">{item.domsLevel}/10</b></div>
+                        <div>Energia: <b className="text-white">{item.energyLevel}/10</b></div>
+                      </div>
+                      <p className="text-[11px] text-zinc-300 italic pt-1 border-t border-zinc-800/40">
+                        Indicazione: {item.recommendation}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Scale className="w-4 h-4 text-blue-400"/> Peso Corporeo (Kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={bodyWeight}
-                    onChange={e => setBodyWeight(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
-                  />
-                </div>
+              )}
+            </div>
+
+            {/* VISTA COACH: STORICO ALLENAMENTI INTEGRATO NELLA SCHEDA ANALISI/READINESS */}
+            {userRole === 'COACH' && (
+              <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <History className="text-[#E50914]" /> Storico Allenamenti Atleta ({activeAthlete.displayName})
+                </h3>
+                {workoutHistory.length === 0 ? (
+                  <p className="text-xs text-zinc-400">Nessun allenamento registrato per questo atleta.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {workoutHistory.map((item, idx) => (
+                      <div key={item.id || idx} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
+                          <span className="text-zinc-400 text-[11px] font-mono">
+                            Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
+                          <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              <div className="space-y-4 pt-2">
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-zinc-400 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-yellow-400"/> Qualità del Sonno</span>
-                    <span className="text-yellow-400 font-mono">{sleepQuality} / 10</span>
-                  </div>
-                  <input type="range" min="1" max="10" value={sleepQuality} onChange={e => setSleepQuality(Number(e.target.value))} className="w-full accent-[#E50914]" />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-zinc-400 flex items-center gap-1.5"><Dumbbell className="w-4 h-4 text-red-400"/> Fatica Muscolare / DOMS (1 = Nessun dolore, 10 = Dolore estremo)</span>
-                    <span className="text-red-400 font-mono">{domsLevel} / 10</span>
-                  </div>
-                  <input type="range" min="1" max="10" value={domsLevel} onChange={e => setDomsLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-zinc-400 flex items-center gap-1.5"><BatteryCharging className="w-4 h-4 text-green-400"/> Energia / Motivazione</span>
-                    <span className="text-green-400 font-mono">{energyLevel} / 10</span>
-                  </div>
-                  <input type="range" min="1" max="10" value={energyLevel} onChange={e => setEnergyLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-zinc-400 flex items-center gap-1.5"><Brain className="w-4 h-4 text-purple-400"/> Stress Percepito</span>
-                    <span className="text-purple-400 font-mono">{stressLevel} / 10</span>
-                  </div>
-                  <input type="range" min="1" max="10" value={stressLevel} onChange={e => setStressLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
-                </div>
-              </div>
-
-              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span>
-                  <span className="text-lg font-black text-[#E50914]">{computeReadiness().totalScore}%</span>
-                </div>
-                <p className="text-xs text-zinc-300 font-medium">
-                  <b>Consigliato:</b> {computeReadiness().rec}
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
-              </button>
-            </form>
+            )}
           </div>
         )}
 
@@ -1093,21 +1170,24 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 5: LEADERBOARD & BADGE */}
+        {/* TAB 5: LEADERBOARD & BADGE (AGGIORNAMENTO IN LIVE) */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Trophy className="text-yellow-500"/> Classifica Palestra</h2>
               <div className="space-y-2">
-                {athletes.map((ath, index) => (
-                  <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-zinc-500">#{index + 1}</span>
-                      <span className="font-bold text-white">{ath.displayName}</span>
+                {athletes.map((ath, index) => {
+                  const currentXpVal = (ath.id === 'ath-2' || ath.displayName === displayUserName) ? userXp : ath.xp;
+                  return (
+                    <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-zinc-500">#{index + 1}</span>
+                        <span className="font-bold text-white">{ath.displayName === 'Giuseppe Di Girolamo' ? displayUserName : ath.displayName}</span>
+                      </div>
+                      <span className="font-black text-yellow-500">{currentXpVal} XP</span>
                     </div>
-                    <span className="font-black text-yellow-500">{ath.xp} XP</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
