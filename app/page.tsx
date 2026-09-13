@@ -33,10 +33,115 @@ export type MuscleGroup =
   | 'Polpacci' 
   | 'Addome';
 
+export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
+  const name = exerciseName.toLowerCase().trim();
+
+  // 1. PETTO
+  if (
+    name.includes('panca') || name.includes('chest') || name.includes('croci') || 
+    name.includes('dip') || name.includes('push up') || name.includes('piegament') ||
+    name.includes('pectoral') || name.includes('spinte inclinata') || name.includes('spinte piana') ||
+    name.includes('spinte declinata') || name.includes('svend press') || name.includes('fly')
+  ) {
+    return 'Petto';
+  }
+
+  // 2. DORSO
+  if (
+    name.includes('trazioni') || name.includes('lat') || name.includes('rematore') || 
+    name.includes('pulley') || name.includes('stacco') || name.includes('pull down') || 
+    name.includes('pull-down') || name.includes('pull over') || name.includes('pullover') || 
+    name.includes('chin up') || name.includes('chin-up') || name.includes('vertical traction') ||
+    name.includes('seal row') || name.includes('t-bar') || name.includes('dorsal') ||
+    name.includes('gran dorsale') || name.includes('back') || name.includes('row')
+  ) {
+    return 'Dorso';
+  }
+
+  // 3. SPALLE
+  if (
+    name.includes('shoulder') || name.includes('military') || name.includes('lento') || 
+    name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') || 
+    name.includes('press spalle') || name.includes('overhead') || name.includes('face pull') || 
+    name.includes('tirate al mento') || name.includes('tirata al mento') || name.includes('rear delt') ||
+    name.includes('shrug') || name.includes('scrollate')
+  ) {
+    return 'Spalle';
+  }
+
+  // 4. QUADRICIPITI
+  if (
+    name.includes('squat') || name.includes('pressa') || name.includes('leg ext') || 
+    name.includes('leg extension') || name.includes('affondi') || name.includes('lunge') || 
+    name.includes('hack') || name.includes('sissy') || name.includes('goblet') || 
+    name.includes('step up') || name.includes('step-up') || name.includes('quadricipit') ||
+    name.includes('affondo')
+  ) {
+    return 'Quadricipiti';
+  }
+
+  // 5. FEMORALI / ISCHIOCRURALI
+  if (
+    name.includes('leg curl') || name.includes('stacco rumeno') || name.includes('nordic') || 
+    name.includes('rdl') || name.includes('femorale') || name.includes('femorali') || 
+    name.includes('good morning') || name.includes('hamstring') || name.includes('stacco gambe tese')
+  ) {
+    return 'Femorali';
+  }
+
+  // 6. GLUTEI
+  if (
+    name.includes('hip thrust') || name.includes('glute') || name.includes('glutei') || 
+    name.includes('kickback glutei') || name.includes('abductor') || name.includes('abduzioni') || 
+    name.includes('ponti glutei') || name.includes('glute bridge')
+  ) {
+    return 'Glutei';
+  }
+
+  // 7. BICIPITI
+  if (
+    name.includes('curl') || name.includes('bicipit') || name.includes('biceps') || 
+    name.includes('hammer') || name.includes('scott') || name.includes('panca scott') || 
+    name.includes('concentrato') || name.includes('spider curl')
+  ) {
+    return 'Bicipiti';
+  }
+
+  // 8. TRICIPITI
+  if (
+    name.includes('pushdown') || name.includes('push down') || name.includes('french') || 
+    name.includes('tricipit') || name.includes('triceps') || name.includes('ercolina') || 
+    name.includes('skull crusher') || name.includes('skullcrusher') || name.includes('distensioni strette') || 
+    name.includes('kickback tricipiti')
+  ) {
+    return 'Tricipiti';
+  }
+
+  // 9. POLPACCI
+  if (
+    name.includes('polpacc') || name.includes('calf') || name.includes('calves') || 
+    name.includes('sollevamenti sulle punte')
+  ) {
+    return 'Polpacci';
+  }
+
+  // 10. ADDOME / CORE
+  if (
+    name.includes('crunch') || name.includes('plank') || name.includes('addominal') || 
+    name.includes('core') || name.includes('leg raise') || name.includes('sollevamento gambe') || 
+    name.includes('sit up') || name.includes('sit-up') || name.includes('russian twist') || 
+    name.includes('wheel') || name.includes('ab roller')
+  ) {
+    return 'Addome';
+  }
+
+  return 'Petto';
+};
+
 export interface Exercise {
   id: string;
   name: string;
-  muscleGroup?: MuscleGroup; // <-- Aggiungi questa riga
+  muscleGroup?: MuscleGroup;
   sets: number;
   reps: string;
   targetWeight: string;
@@ -46,7 +151,6 @@ export interface Exercise {
   tut: string;
   notes?: string;
 }
-
 
 interface WorkoutDay {
   id: string;
@@ -110,7 +214,7 @@ export default function TopGymApp() {
   const [errorMessage, setErrorMessage] = useState('');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
 
-  // Lista Atleti Reali da Supabase (niente dati mock)
+  // Lista Atleti Reali da Supabase
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>('');
 
@@ -161,8 +265,8 @@ export default function TopGymApp() {
       dayNumber: 1,
       title: 'Spinta (Push)',
       exercises: [
-        { id: 'ex1', name: 'Panca Piana Bilanciere', sets: 4, reps: '8', targetWeight: '90', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Fermo al petto di 1 secondo' },
-        { id: 'ex2', name: 'Spinte Inclinata Manubri', sets: 3, reps: '10', targetWeight: '32', rpeTarget: 8.5, restSeconds: 90, executionType: 'REST_PAUSE', tut: '2-0-1-0', notes: '20s rest pause all ultima serie' }
+        { id: 'ex1', name: 'Panca Piana Bilanciere', muscleGroup: 'Petto', sets: 4, reps: '8', targetWeight: '90', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Fermo al petto di 1 secondo' },
+        { id: 'ex2', name: 'Spinte Inclinata Manubri', muscleGroup: 'Petto', sets: 3, reps: '10', targetWeight: '32', rpeTarget: 8.5, restSeconds: 90, executionType: 'REST_PAUSE', tut: '2-0-1-0', notes: '20s rest pause all ultima serie' }
       ]
     },
     {
@@ -170,8 +274,8 @@ export default function TopGymApp() {
       dayNumber: 2,
       title: 'Trazione (Pull)',
       exercises: [
-        { id: 'ex3', name: 'Trazioni Zavorrate', sets: 4, reps: '6', targetWeight: '15', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Estensione completa dei gomiti' },
-        { id: 'ex4', name: 'Rematore Bilanciere', sets: 3, reps: '8', targetWeight: '75', rpeTarget: 8, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Schiena a 45 gradi costante' }
+        { id: 'ex3', name: 'Trazioni Zavorrate', muscleGroup: 'Dorso', sets: 4, reps: '6', targetWeight: '15', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Estensione completa dei gomiti' },
+        { id: 'ex4', name: 'Rematore Bilanciere', muscleGroup: 'Dorso', sets: 3, reps: '8', targetWeight: '75', rpeTarget: 8, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Schiena a 45 gradi costante' }
       ]
     },
     {
@@ -179,7 +283,7 @@ export default function TopGymApp() {
       dayNumber: 3,
       title: 'Gambe (Legs)',
       exercises: [
-        { id: 'ex5', name: 'Squat Bilanciere', sets: 4, reps: '6', targetWeight: '110', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Buca il parallelo' }
+        { id: 'ex5', name: 'Squat Bilanciere', muscleGroup: 'Quadricipiti', sets: 4, reps: '6', targetWeight: '110', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Buca il parallelo' }
       ]
     },
     {
@@ -187,7 +291,7 @@ export default function TopGymApp() {
       dayNumber: 4,
       title: 'Spalle & Braccia',
       exercises: [
-        { id: 'ex6', name: 'Military Press', sets: 4, reps: '8', targetWeight: '50', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Core ben contratto' }
+        { id: 'ex6', name: 'Military Press', muscleGroup: 'Spalle', sets: 4, reps: '8', targetWeight: '50', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Core ben contratto' }
       ]
     }
   ]);
@@ -203,8 +307,9 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Builder State
+  // Builder State (con Gruppo Muscolare)
   const [builderExName, setBuilderExName] = useState('');
+  const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
   const [builderWeight, setBuilderWeight] = useState('60');
@@ -496,6 +601,7 @@ export default function TopGymApp() {
     const newEx: Exercise = {
       id: crypto.randomUUID(),
       name: builderExName.trim(),
+      muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
       sets: builderSets,
       reps: builderReps,
       targetWeight: builderWeight,
@@ -508,6 +614,7 @@ export default function TopGymApp() {
 
     setProgramDays(prev => prev.map(day => day.id === dayId ? { ...day, exercises: [...day.exercises, newEx] } : day));
     setBuilderExName('');
+    setBuilderMuscleGroup('Petto');
     setBuilderNotes('');
   };
 
@@ -1152,8 +1259,28 @@ export default function TopGymApp() {
                 </div>
 
                 <form onSubmit={e => handleAddExerciseToDay(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => setBuilderExName(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Nome Esercizio" 
+                      value={builderExName} 
+                      onChange={e => {
+                        setBuilderExName(e.target.value);
+                        setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                      }} 
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
+                    />
+
+                    <select 
+                      value={builderMuscleGroup} 
+                      onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold"
+                    >
+                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
+                        <option key={mg} value={mg}>{mg}</option>
+                      ))}
+                    </select>
+
                     <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="text" placeholder="Reps (es. 8-10)" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="text" placeholder="Carico Target (kg)" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
@@ -1182,24 +1309,191 @@ export default function TopGymApp() {
             ))}
           </div>
         )}
-        
 
-{/* TAB 4: PROGRESSI */}
-{activeTab === 'analytics' && (
-  <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-    <h2 className="text-xl font-bold flex items-center gap-2"><BarChart3 className="text-[#E50914]"/> Analisi Volume & Progressi</h2>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
-        <div className="text-[10px] text-zinc-400 uppercase font-bold">Volume Oggi</div>
-        <div className="text-xl font-black text-white mt-1">{todayLogs.reduce((acc, curr) => acc + curr.volume, 0)} kg</div>
-      </div>
-      <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
-        <div className="text-[10px] text-zinc-400 uppercase font-bold">Serie Totali</div>
-        <div className="text-xl font-black text-white mt-1">{todayLogs.length}</div>
-      </div>
-    </div>
-  </div>
-)}
+        {/* TAB 4: PROGRESSI & ANALISI VOLUME (ATLETA & COACH) */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 flex justify-between items-center flex-wrap gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="text-[#E50914]" /> 
+                  Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Monitoraggio delle serie settimanali per distretto muscolare e progressione del tonnellaggio.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Tonnellaggio Totale</span>
+                  <span className="text-lg font-black text-emerald-400">
+                    {logs.reduce((sum, l) => sum + l.volume, 0).toLocaleString('it-IT')} kg
+                  </span>
+                </div>
+                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete</span>
+                  <span className="text-lg font-black text-white">{logs.length}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
+              <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale per Gruppo Muscolare (Serie Allenanti)
+                </h3>
+                <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+              </div>
+
+              {(() => {
+                const muscleGroups: MuscleGroup[] = [
+                  'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
+                  'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
+                ];
+
+                const weeklySetsMap: Record<string, number> = muscleGroups.reduce((acc, mg) => {
+                  acc[mg] = 0;
+                  return acc;
+                }, {} as Record<string, number>);
+
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+                logs.forEach(log => {
+                  const logDate = new Date(log.date);
+                  if (logDate >= sevenDaysAgo) {
+                    const ex = programDays.flatMap(d => d.exercises).find(e => e.name === log.exerciseName);
+                    const mg = ex?.muscleGroup || autoDetectMuscleGroup(log.exerciseName);
+                    weeklySetsMap[mg] = (weeklySetsMap[mg] || 0) + 1;
+                  }
+                });
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    {muscleGroups.map(mg => {
+                      const count = weeklySetsMap[mg] || 0;
+                      const maxTarget = 22;
+                      const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
+
+                      let statusColor = 'bg-zinc-700';
+                      let textColor = 'text-zinc-400';
+                      if (count >= 10 && count <= 20) {
+                        statusColor = 'bg-emerald-500';
+                        textColor = 'text-emerald-400';
+                      } else if (count > 20) {
+                        statusColor = 'bg-amber-500';
+                        textColor = 'text-amber-400';
+                      } else if (count > 0) {
+                        statusColor = 'bg-blue-500';
+                        textColor = 'text-blue-400';
+                      }
+
+                      return (
+                        <div key={mg} className="bg-zinc-900 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                          <div className="flex justify-between items-center text-xs font-bold">
+                            <span className="text-zinc-200">{mg}</span>
+                            <span className={textColor}>{count} Serie / sett</span>
+                          </div>
+
+                          <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${statusColor} transition-all duration-500`} 
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+
+                          <div className="flex justify-between text-[10px] text-zinc-500">
+                            <span>0 serie</span>
+                            <span>10 (MEV)</span>
+                            <span>20+ (MRV)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" /> Progressione Tonnellaggio nel Tempo (Kg Totali Sollevati)
+              </h3>
+
+              {workoutHistory.length === 0 ? (
+                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato per mostrare il grafico del tonnellaggio.</p>
+              ) : (
+                <div className="space-y-4">
+                  {(() => {
+                    const maxVol = Math.max(...workoutHistory.map(w => w.total_volume || w.totalVolume || 1));
+                    return (
+                      <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                        <div className="flex items-end gap-3 h-44 pt-6 border-b border-zinc-800 pb-2 overflow-x-auto">
+                          {workoutHistory.slice(0, 10).reverse().map((item, idx) => {
+                            const vol = item.total_volume || item.totalVolume || 0;
+                            const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : (item.date || '');
+                            const heightPercent = Math.max(12, Math.round((vol / maxVol) * 100));
+
+                            return (
+                              <div key={idx} className="flex-1 flex flex-col items-center gap-2 min-w-[45px]">
+                                <span className="text-[10px] font-mono font-bold text-emerald-400">
+                                  {vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol}
+                                </span>
+                                <div className="w-full bg-zinc-800 rounded-t h-full flex items-end overflow-hidden">
+                                  <div
+                                    className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t transition-all duration-500"
+                                    style={{ height: `${heightPercent}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-zinc-400 font-mono">{dateStr}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-center text-[11px] text-zinc-500 mt-2">
+                          Date di Allenamento Completi
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left text-zinc-300">
+                      <thead className="bg-zinc-900 text-zinc-400 uppercase text-[10px] border-b border-zinc-800">
+                        <tr>
+                          <th className="py-2.5 px-3">Data</th>
+                          <th className="py-2.5 px-3">Scheda / Giorno</th>
+                          <th className="py-2.5 px-3">Esercizi Eseguiti</th>
+                          <th className="py-2.5 px-3 text-right">Tonnellaggio Totale</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/60">
+                        {workoutHistory.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-zinc-900/50">
+                            <td className="py-2.5 px-3 font-mono text-zinc-400">
+                              {item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-white">
+                              {item.day_name || item.dayName || 'Allenamento'}
+                            </td>
+                            <td className="py-2.5 px-3 text-zinc-400">
+                              {item.exercises_count || item.exercisesCount || 0} esercizi
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
+                              {(item.total_volume || item.totalVolume || 0).toLocaleString('it-IT')} kg
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* TAB 5: LEADERBOARD & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
