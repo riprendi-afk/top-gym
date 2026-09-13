@@ -21,9 +21,22 @@ type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
 type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
 
-interface Exercise {
+export type MuscleGroup = 
+  | 'Petto' 
+  | 'Dorso' 
+  | 'Spalle' 
+  | 'Quadricipiti' 
+  | 'Femorali' 
+  | 'Glutei' 
+  | 'Bicipiti' 
+  | 'Tricipiti' 
+  | 'Polpacci' 
+  | 'Addome';
+
+export interface Exercise {
   id: string;
   name: string;
+  muscleGroup?: MuscleGroup; // <-- Aggiungi questa riga
   sets: number;
   reps: string;
   targetWeight: string;
@@ -33,6 +46,7 @@ interface Exercise {
   tut: string;
   notes?: string;
 }
+
 
 interface WorkoutDay {
   id: string;
@@ -1168,24 +1182,24 @@ export default function TopGymApp() {
             ))}
           </div>
         )}
+        
 
-        {/* TAB 4: PROGRESSI */}
-        {activeTab === 'analytics' && (
-          <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><BarChart3 className="text-[#E50914]"/> Analisi Volume & Progressi</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
-                <div className="text-[10px] text-zinc-400 uppercase font-bold">Volume Oggi</div>
-                <div className="text-xl font-black text-white mt-1">{todayLogs.reduce((acc, curr) => acc + curr.volume, 0)} kg</div>
-              </div>
-              <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
-                <div className="text-[10px] text-zinc-400 uppercase font-bold">Serie Totali</div>
-                <div className="text-xl font-black text-white mt-1">{todayLogs.length}</div>
-              </div>
-            </div>
-          </div>
-        )}
-
+{/* TAB 4: PROGRESSI */}
+{activeTab === 'analytics' && (
+  <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
+    <h2 className="text-xl font-bold flex items-center gap-2"><BarChart3 className="text-[#E50914]"/> Analisi Volume & Progressi</h2>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
+        <div className="text-[10px] text-zinc-400 uppercase font-bold">Volume Oggi</div>
+        <div className="text-xl font-black text-white mt-1">{todayLogs.reduce((acc, curr) => acc + curr.volume, 0)} kg</div>
+      </div>
+      <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-800">
+        <div className="text-[10px] text-zinc-400 uppercase font-bold">Serie Totali</div>
+        <div className="text-xl font-black text-white mt-1">{todayLogs.length}</div>
+      </div>
+    </div>
+  </div>
+)}
         {/* TAB 5: LEADERBOARD & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
