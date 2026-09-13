@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase } from '@/lib/store';
+import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase, getSupabase } from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -92,6 +92,7 @@ export default function TopGymApp() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const supabase = getSupabase();
 
   // Atleti per modalità Coach
   const [athletes] = useState<Athlete[]>([
@@ -191,7 +192,7 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Form Builder Coach per inserimento rapido
+  // Form Builder Coach
   const [builderExName, setBuilderExName] = useState('');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
@@ -200,6 +201,50 @@ export default function TopGymApp() {
   const [builderRest, setBuilderRest] = useState(90);
   const [builderType, setBuilderType] = useState<ExecutionType>('REGULAR');
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
+  const [builderNotes, setBuilderNotes] = useState('');
+
+  // Controllo Auth con Supabase
+  useEffect(() => {
+    if (!supabase) return;
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    initAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  // Gestione Login / Registrazione
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setErrorMessage('');
+
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username: username || email.split('@')[0] } }
+      });
+      if (error) setErrorMessage(error.message);
+      else alert('Registrazione completata! Ora puoi accedere.');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setErrorMessage(error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // Stato salvataggio e storico
   const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
@@ -214,7 +259,6 @@ export default function TopGymApp() {
     loadHistory();
   }, []);
 
-  // Modifica il numero di giorni di allenamento
   const handleDayCountChange = (count: DayCount) => {
     setSelectedDayCount(count);
     setProgramDays(prev => {
@@ -235,7 +279,6 @@ export default function TopGymApp() {
     });
   };
 
-  // Timer Sound
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -271,7 +314,6 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // Switch Ruolo Coach con PIN
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH' && userRole !== 'COACH') {
       setShowCoachPinModal(true);
@@ -416,11 +458,13 @@ export default function TopGymApp() {
       rpeTarget: builderRpe,
       restSeconds: builderRest,
       executionType: builderType,
-      tut: builderTut
+      tut: builderTut,
+      notes: builderNotes.trim() || undefined
     };
 
     setProgramDays(prev => prev.map(day => day.id === dayId ? { ...day, exercises: [...day.exercises, newEx] } : day));
     setBuilderExName('');
+    setBuilderNotes('');
   };
 
   const handleRemoveExerciseFromDay = (dayId: string, exerciseId: string) => {
@@ -451,6 +495,84 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
+  // --- SCHERMATA LOGIN / REGISTRAZIONE ---
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white font-sans">
+        <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+          <h1 className="mb-2 text-center text-3xl font-black uppercase tracking-wider text-[#E50914] flex items-center justify-center gap-2">
+            <Dumbbell className="w-8 h-8"/> TOP GYM
+          </h1>
+          <p className="text-xs text-center text-zinc-400 mb-6">PWA Gestione Allenamenti & Coaching</p>
+
+          {errorMessage && (
+            <div className="mb-4 rounded bg-red-950/60 p-3 text-xs text-red-200 border border-red-800">
+              {errorMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleAuth} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Username</label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                  placeholder="Nome Atleta"
+                />
+              </div>
+            )}
+            <div>
+              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                placeholder="atleta@topgym.it"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider"
+            >
+              {isSignUp ? 'Crea Account' : 'Accedi al Dashboard'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-xs text-zinc-400">
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }}
+              className="font-semibold text-[#E50914] hover:underline"
+            >
+              {isSignUp ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Nome Utente dinamico
+  const displayUserName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Atleta';
+
+  // --- DASHBOARD PRINCIPALE ---
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
       {/* HEADER UTENTE */}
@@ -460,7 +582,7 @@ export default function TopGymApp() {
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: Demo User</p>
+            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {displayUserName}</p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
@@ -530,6 +652,13 @@ export default function TopGymApp() {
                 <div className="text-sm font-bold text-yellow-500">{userXp} XP</div>
               </div>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg hover:border-red-900 transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-red-500"/> Esci
+            </button>
           </div>
         </div>
       </header>
@@ -643,6 +772,11 @@ export default function TopGymApp() {
                       <div>Target: <b className="text-white">{ex.targetWeight} Kg</b></div>
                       <div>TUT: <b className="text-yellow-500 font-mono">{ex.tut}</b></div>
                     </div>
+                    {ex.notes && (
+                      <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">
+                        Note: {ex.notes}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -713,7 +847,7 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* PULSANTE TERMINA E SALVA ALLENAMENTO (VISIBILE SOLO IN ESEGUI ALLENAMENTO) */}
+            {/* PULSANTE TERMINA E SALVA ALLENAMENTO */}
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
               {workoutSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
@@ -853,7 +987,6 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400 mt-1">Imposta la frequenza settimanale e componi gli esercizi per ciascuna giornata.</p>
               </div>
 
-              {/* SELETTORE GIORNI 2-3-4-5-6 */}
               <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                 <span className="text-xs font-bold text-zinc-400">Giorni/settimana:</span>
                 <div className="flex gap-1">
@@ -885,8 +1018,14 @@ export default function TopGymApp() {
                   {day.exercises.map((ex) => (
                     <div key={ex.id} className="bg-[#1E1E1E] p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
                       <div>
-                        <span className="font-bold text-white">{ex.name}</span>
-                        <div className="text-zinc-400">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{ex.name}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                            {ex.executionType}
+                          </span>
+                        </div>
+                        <div className="text-zinc-400 mt-0.5">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}</div>
+                        {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
                       <button onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400 p-1">
                         <Trash2 className="w-4 h-4"/>
@@ -895,11 +1034,32 @@ export default function TopGymApp() {
                   ))}
                 </div>
 
-                <form onSubmit={e => handleAddExerciseToDay(e, day.id)} className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
-                  <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => setBuilderExName(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
-                  <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
-                  <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
-                  <button type="submit" className="bg-[#E50914] text-xs font-bold py-1 rounded text-white hover:bg-red-700 transition">Aggiungi Esercizio</button>
+                <form onSubmit={e => handleAddExerciseToDay(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => setBuilderExName(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="text" placeholder="Reps (es. 8-10)" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="text" placeholder="Carico Target (kg)" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white">
+                      <option value="REGULAR">Tecnica: REGULAR</option>
+                      <option value="SUPERSET">Tecnica: SUPERSET</option>
+                      <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
+                      <option value="DROP_SET">Tecnica: DROP_SET</option>
+                      <option value="CLUSTER">Tecnica: CLUSTER</option>
+                    </select>
+
+                    <input type="text" placeholder="TUT (es. 2-0-1-0)" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="Note del Coach (opzionale)" value={builderNotes} onChange={e => setBuilderNotes(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0">Aggiungi</button>
+                  </div>
                 </form>
               </div>
             ))}
