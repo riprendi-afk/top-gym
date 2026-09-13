@@ -1170,29 +1170,37 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 5: LEADERBOARD & BADGE (AGGIORNAMENTO IN LIVE) */}
-        {activeTab === 'leaderboard' && (
-          <div className="space-y-6">
+{/* TAB 5: LEADERBOARD & BADGE (ORDINATA LIVE PER XP) */}
+{activeTab === 'leaderboard' && (
+          <div className="space-[#1E1E1E] space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Trophy className="text-yellow-500"/> Classifica Palestra</h2>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Trophy className="text-yellow-500"/> Classifica Palestra
+              </h2>
               <div className="space-y-2">
-                {athletes.map((ath, index) => {
-                  const currentXpVal = (ath.id === 'ath-2' || ath.displayName === displayUserName) ? userXp : ath.xp;
-                  return (
+                {athletes
+                  .map(ath => ({
+                    ...ath,
+                    displayName: (ath.id === 'ath-2' || ath.displayName === 'Giuseppe Di Girolamo') ? displayUserName : ath.displayName,
+                    currentXp: (ath.id === 'ath-2' || ath.displayName === 'Giuseppe Di Girolamo') ? userXp : ath.xp
+                  }))
+                  .sort((a, b) => b.currentXp - a.currentXp) // Ordinamento decrescente in tempo reale
+                  .map((ath, index) => (
                     <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-zinc-500">#{index + 1}</span>
-                        <span className="font-bold text-white">{ath.displayName === 'Giuseppe Di Girolamo' ? displayUserName : ath.displayName}</span>
+                        <span className="font-bold text-white">{ath.displayName}</span>
                       </div>
-                      <span className="font-black text-yellow-500">{currentXpVal} XP</span>
+                      <span className="font-black text-yellow-500">{ath.currentXp} XP</span>
                     </div>
-                  );
-                })}
+                  ))}
               </div>
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Medal className="text-yellow-500"/> Trofei & Traguardi</h2>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Medal className="text-yellow-500"/> Trofei & Traguardi
+              </h2>
               <div className="grid md:grid-cols-2 gap-3">
                 {achievements.map(ach => (
                   <div key={ach.id} className={`p-4 rounded-lg border flex items-center gap-3 ${ach.unlocked ? 'bg-zinc-900 border-yellow-600/50' : 'bg-zinc-900/40 border-zinc-800 opacity-50'}`}>
