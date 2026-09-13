@@ -594,6 +594,11 @@ export default function TopGymApp() {
     setReps('');
   };
 
+  // FUNZIONE CANCELLAZIONE SERIE (Corretta & Globale nel componente)
+  const handleDeleteLog = (logId: string) => {
+    setLogs(prev => prev.filter(l => l.id !== logId));
+  };
+
   const handleAddExerciseToDay = (e: React.FormEvent, dayId: string) => {
     e.preventDefault();
     if (!builderExName.trim()) return;
@@ -992,9 +997,22 @@ export default function TopGymApp() {
                   <div className="space-y-2">
                     {todayLogs.map((log, i) => (
                       <div key={log.id} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                        <span className="font-bold text-zinc-400">Set {i + 1} ({log.exerciseName})</span>
-                        <span className="text-white font-bold">{log.weight} Kg × {log.reps} reps</span>
-                        <span className="text-zinc-400">RPE: {log.rpe}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-zinc-500">Set {i + 1}</span>
+                          <div>
+                            <span className="font-bold text-white block">{log.exerciseName}</span>
+                            <span className="text-zinc-400 font-mono text-[11px]">{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLog(log.id)}
+                          title="Elimina serie erogata per errore"
+                          className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))}
                   </div>
