@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabase } from '@/lib/supabase';
+import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase } from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -10,8 +10,6 @@ import {
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
   Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2
 } from 'lucide-react';
-import { saveCompletedWorkoutToSupabase } from '@/lib/store';
-
 type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
 type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
@@ -86,7 +84,6 @@ const todayIso = () => new Date().toISOString().split('T')[0];
 
 export default function TopGymApp() {
   const router = useRouter();
-  const supabase = getSupabase();
 
   // Autenticazione Supabase
   const [user, setUser] = useState<any>(null);
@@ -95,6 +92,7 @@ export default function TopGymApp() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const supabase = getSupabase();
 
   // Atleti per modalità Coach
   const [athletes] = useState<Athlete[]>([
@@ -358,7 +356,21 @@ export default function TopGymApp() {
     setUserXp(prev => prev + 20);
     setActiveTab('workout');
   };
+
+
   const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
+
+// Storico allenamenti da Supabase
+const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
+
+const loadHistory = async () => {
+  const data = await getWorkoutHistoryFromSupabase('default-user');
+  setWorkoutHistory(data);
+};
+
+useEffect(() => {
+  loadHistory();
+}, []);
 
   const handleFinishAndSaveWorkout = async () => {
     const dayName = 'Giornata di Allenamento';
@@ -374,6 +386,10 @@ export default function TopGymApp() {
     if (result.success) {
       setUserXp(prev => prev + 50);
       setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
+      
+      // QUI richiamiamo il caricamento dello storico per aggiornare la vista subito!
+      loadHistory();
+  
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
       setWorkoutSuccessMessage('⚠️ Errore nel salvataggio dell\'allenamento.');
@@ -386,7 +402,6 @@ export default function TopGymApp() {
     const numReps = parseInt(reps, 10);
     const numRpe = parseFloat(rpe);
     if (!numWeight || !numReps) return;
-
     const est1RM = calculate1RM(numWeight, numReps);
     const setVolume = numWeight * numReps;
 
@@ -810,8 +825,8 @@ export default function TopGymApp() {
             )}
           </div>
         )}
-  {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
-  <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
+{/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
+<div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
   {workoutSuccessMessage && (
     <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm animate-fade-in">
       {workoutSuccessMessage}
@@ -825,7 +840,6 @@ export default function TopGymApp() {
     <span>✅ Termina e Salva Allenamento</span>
   </button>
 </div>
-
 {/* TAB 2: CHECK READINESS */}
 {activeTab === 'readiness' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">

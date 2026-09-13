@@ -497,3 +497,25 @@ export async function saveCompletedWorkoutToSupabase(sessionData: {
 
   return { success: true, data };
 }
+export async function getWorkoutHistoryFromSupabase(userId?: string) {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  let query = supabase
+    .from('workout_history')
+    .select('*')
+    .order('completed_at', { ascending: false });
+
+  if (userId && userId !== 'default-user') {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Errore nel recupero dello storico allenamenti:', error.message);
+    return [];
+  }
+
+  return data || [];
+}
