@@ -461,21 +461,7 @@ export default function TopGymApp() {
     { id: '3', title: 'Atleta Consapevole', description: 'Registra Check di Readiness', icon: '🧠', unlocked: readinessHistory.length >= 1 },
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
-  {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
-<div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
-  {workoutSuccessMessage && (
-    <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm animate-fade-in">
-      {workoutSuccessMessage}
-    </div>
-  )}
 
-  <button
-    onClick={handleFinishAndSaveWorkout}
-    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
-  >
-    <span>✅ Termina e Salva Allenamento</span>
-  </button>
-</div>
 
   // --- SCHERMATA LOGIN / REGISTRAZIONE ---
   if (!user) {
@@ -824,6 +810,21 @@ export default function TopGymApp() {
             )}
           </div>
         )}
+  {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
+  <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
+  {workoutSuccessMessage && (
+    <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm animate-fade-in">
+      {workoutSuccessMessage}
+    </div>
+  )}
+
+  <button
+    onClick={handleFinishAndSaveWorkout}
+    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+  >
+    <span>✅ Termina e Salva Allenamento</span>
+  </button>
+</div>
 
 {/* TAB 2: CHECK READINESS */}
 {activeTab === 'readiness' && (
