@@ -122,7 +122,7 @@ export default function TopGymApp() {
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Impostazione Giorni Allenamento nel Builder (2, 3, 4, 5, 6 giorni)
+  // Impostazione Giorni Allenamento nel Builder
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
 
   // Readiness Inputs
@@ -208,7 +208,7 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Controllo Auth con Supabase con tipi espliciti per _event e session (corretto ts 7006)
+  // Controllo Auth con Supabase
   useEffect(() => {
     if (!supabase) return;
     const initAuth = async () => {
@@ -304,6 +304,7 @@ export default function TopGymApp() {
       setShowCoachPinModal(false);
       setPinInput('');
       setPinError(false);
+      if (activeTab === 'workout') setActiveTab('builder');
     } else {
       setPinError(true);
     }
@@ -350,7 +351,7 @@ export default function TopGymApp() {
     const { totalScore, rec } = computeReadiness();
     const newReadiness: ReadinessLog = {
       id: crypto.randomUUID(),
-      date: todayIso(),
+      date: todayIso(), // Salvataggio esplicito con la data del giorno esatto
       sleepHours: parseFloat(sleepHours) || 7,
       sleepQuality,
       stressLevel,
@@ -579,7 +580,7 @@ export default function TopGymApp() {
   // --- DASHBOARD PRINCIPALE ---
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
-      {/* HEADER UTENTE ORIGINALE */}
+      {/* HEADER UTENTE */}
       <header className="max-w-5xl mx-auto bg-[#1E1E1E] rounded-xl p-6 border border-zinc-800 shadow-2xl mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -645,7 +646,7 @@ export default function TopGymApp() {
               <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
                 <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-bold">READINESS</div>
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold">READINESS ({latestReadiness.date})</div>
                   <div className="text-sm font-black">{latestReadiness.readinessScore}%</div>
                 </div>
               </div>
@@ -659,7 +660,6 @@ export default function TopGymApp() {
               </div>
             </div>
 
-            {/* TASTO LOGOUT ORIGINALE */}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
@@ -710,9 +710,11 @@ export default function TopGymApp() {
         </div>
       )}
 
-      {/* NAVIGAZIONE TAB */}
+      {/* NAVIGAZIONE TAB (ESEGUI ALLENAMENTO VISIBILE SOLO PER ATLETA) */}
       <div className="max-w-5xl mx-auto flex flex-wrap gap-2 mb-6">
-        <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>Esegui Allenamento</button>
+        {userRole === 'ATHLETE' && (
+          <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>Esegui Allenamento</button>
+        )}
         <button onClick={() => setActiveTab('readiness')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Gauge className="w-4 h-4 text-green-400" /> Check Readiness</button>
         <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><TrendingUp className="w-4 h-4" /> Progressi</button>
 
@@ -727,8 +729,8 @@ export default function TopGymApp() {
 
       {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-5xl mx-auto">
-        {/* TAB 1: ESEGUI ALLENAMENTO */}
-        {activeTab === 'workout' && (
+        {/* TAB 1: ESEGUI ALLENAMENTO (ACCESSIBILE SOLO PER ATLETA) */}
+        {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
               <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-xl flex items-start gap-3 text-amber-300">
@@ -854,7 +856,7 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO (SOLO SOTTO ESEGUI ALLENAMENTO) */}
+            {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
               {workoutSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
@@ -884,7 +886,7 @@ export default function TopGymApp() {
                       <div>
                         <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
                         <span className="text-zinc-500 text-[10px]">
-                          {item.created_at ? new Date(item.created_at).toLocaleString('it-IT') : 'Data non presente'}
+                          {item.created_at ? new Date(item.created_at).toLocaleString('it-IT') : (item.date || 'Data non presente')}
                         </span>
                       </div>
                       <div className="text-right">
@@ -967,7 +969,7 @@ export default function TopGymApp() {
 
               <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato:</span>
+                  <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span>
                   <span className="text-lg font-black text-[#E50914]">{computeReadiness().totalScore}%</span>
                 </div>
                 <p className="text-xs text-zinc-300 font-medium">
