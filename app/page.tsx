@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
-// Inizializzazione sicura di Supabase
+// Inizializzazione Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
@@ -87,44 +87,36 @@ const todayIso = () => new Date().toISOString().split('T')[0];
 export default function TopGymApp() {
   const router = useRouter();
 
-  // Autenticazione Supabase
+  // Autenticazione & Account
   const [user, setUser] = useState<any>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  // Stato Gestione Account
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
 
-  // Atleti per modalità Coach
-  const [athletes, setAthletes] = useState<Athlete[]>([
-    { id: 'ath-1', displayName: 'Marco Rossi', email: 'marco@topgym.it', xp: 340 },
-    { id: 'ath-2', displayName: 'Giuseppe Di Girolamo', email: 'giuseppe@topgym.it', xp: 520 },
-    { id: 'ath-3', displayName: 'Elena Bianchi', email: 'elena@topgym.it', xp: 180 },
-  ]);
-  const [activeAthleteId, setActiveAthleteId] = useState('ath-2');
+  // Lista Atleti Reali da Supabase (niente dati mock)
+  const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [activeAthleteId, setActiveAthleteId] = useState<string>('');
 
-  // Gestione Ruolo di Default: ATHLETE
+  // Ruolo e PIN
   const [userRole, setUserRole] = useState<UserRole>('ATHLETE');
   const [showCoachPinModal, setShowCoachPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Navigation & XP State
+  // Tab & XP
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard' | 'settings'>('workout');
   const [userXp, setUserXp] = useState(520);
 
-  // Sound & Rest Timer
+  // Sound & Timer
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Impostazione Giorni Builder
+  // Impostazioni Builder & Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
-
-  // Readiness Inputs & Storico
   const [sleepHours, setSleepHours] = useState('7.5');
   const [sleepQuality, setSleepQuality] = useState(8);
   const [stressLevel, setStressLevel] = useState(3);
@@ -189,7 +181,7 @@ export default function TopGymApp() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [currentExId, setCurrentExId] = useState('ex1');
 
-  // Form Inserimento Serie (Atleta)
+  // Logs Serie
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('8');
@@ -197,7 +189,7 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Form Builder Coach
+  // Builder State
   const [builderExName, setBuilderExName] = useState('');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
@@ -208,44 +200,25 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Sincronizzazione dell'utente attivo nell'elenco degli atleti
-  const syncUserToAthletes = (authUser: any) => {
-    if (!authUser) return;
-    const name = authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'Nuovo Atleta';
-    setAthletes(prev => {
-      const exists = prev.some(a => a.id === authUser.id || a.email === authUser.email);
-      if (!exists) {
-        return [...prev, { id: authUser.id, displayName: name, email: authUser.email, xp: 0 }];
-      }
-      return prev;
-    });
-  };
-
-  // Funzione per caricare gli atleti dalla tabella 'profiles' di Supabase
+  // Caricamento atleti da Supabase
   const loadAthletesFromSupabase = async () => {
     if (!supabase) return;
-
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('id, email, username, xp');
-
-    if (!error && profiles && profiles.length > 0) {
+    const { data: profiles, error } = await supabase.from('profiles').select('id, email, username, xp');
+    if (!error && profiles) {
       const formattedAthletes: Athlete[] = profiles.map((p: any) => ({
         id: p.id,
         displayName: p.username || (p.email ? p.email.split('@')[0] : 'Atleta'),
         email: p.email || '',
         xp: p.xp || 0
       }));
-
-      setAthletes(prev => {
-        const existingIds = new Set(prev.map(a => a.id));
-        const newAthletes = formattedAthletes.filter(a => !existingIds.has(a.id));
-        return [...prev, ...newAthletes];
-      });
+      setAthletes(formattedAthletes);
+      if (formattedAthletes.length > 0 && !activeAthleteId) {
+        setActiveAthleteId(formattedAthletes[0].id);
+      }
     }
   };
 
-  // Controllo Auth con Supabase e Caricamento Atleti
+  // Auth & Init Sync
   useEffect(() => {
     if (!supabase) return;
 
@@ -253,27 +226,19 @@ export default function TopGymApp() {
 
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) syncUserToAthletes(currentUser);
+      setUser(session?.user ?? null);
     };
     initAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        syncUserToAthletes(currentUser);
-        loadAthletesFromSupabase();
-      }
+      setUser(session?.user ?? null);
+      loadAthletesFromSupabase();
     });
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Gestione Login / Registrazione Supabase
+  // Handlers Auth & Account
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
@@ -298,28 +263,20 @@ export default function TopGymApp() {
     setUser(null);
   };
 
-  // Recupero Password via Email
   const handlePasswordReset = async () => {
     if (!user?.email || !supabase) return;
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: window.location.origin
     });
-    if (error) {
-      setSettingsMessage(`⚠️ Errore: ${error.message}`);
-    } else {
-      setSettingsMessage('📩 Email per il recupero password inviata con successo! Controlla la tua casella di posta.');
-    }
+    setSettingsMessage(error ? `⚠️ Errore: ${error.message}` : '📩 Email per il recupero password inviata con successo!');
   };
 
-  // Cancellazione Account Utente
   const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm('Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.');
-    if (!confirmDelete || !supabase) return;
-
+    if (!window.confirm('Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.') || !supabase) return;
     try {
       const { error } = await supabase.rpc('delete_user');
       if (error) {
-        setSettingsMessage(`⚠️ Impossibile eliminare l'account automaticamente: ${error.message}`);
+        setSettingsMessage(`⚠️ Impossibile eliminare l'account: ${error.message}`);
       } else {
         alert('Account eliminato con successo.');
         await handleLogout();
@@ -329,7 +286,7 @@ export default function TopGymApp() {
     }
   };
 
-  // Sound & Rest Timer
+  // Sound & Timer
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -388,12 +345,9 @@ export default function TopGymApp() {
     }
   };
 
-  const calculate1RM = (w: number, r: number) => {
-    if (r === 1) return w;
-    return Math.round(w * (1 + r / 30));
-  };
+  const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
 
-  const activeAthlete = athletes.find(a => a.id === activeAthleteId) || athletes[1];
+  const activeAthlete = athletes.find(a => a.id === activeAthleteId) || (athletes.length > 0 ? athletes[0] : { id: 'default', displayName: 'Atleta', email: '', xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
   const activeRoutine = activeDay?.exercises ?? [];
   const currentExercise = activeRoutine.find(e => e.id === currentExId) || activeRoutine[0];
@@ -445,19 +399,13 @@ export default function TopGymApp() {
     setTimeout(() => setReadinessSuccessMessage(null), 4000);
   };
 
-  // Gestione Giorni 2-6 nel Builder Coach
   const handleDayCountChange = (count: DayCount) => {
     setSelectedDayCount(count);
     setProgramDays(prev => {
       if (prev.length < count) {
         const newDays = [...prev];
         for (let i = prev.length + 1; i <= count; i++) {
-          newDays.push({
-            id: `d${i}`,
-            dayNumber: i,
-            title: `Giorno ${i}`,
-            exercises: []
-          });
+          newDays.push({ id: `d${i}`, dayNumber: i, title: `Giorno ${i}`, exercises: [] });
         }
         return newDays;
       } else {
@@ -506,8 +454,6 @@ export default function TopGymApp() {
     const numReps = parseInt(reps, 10);
     const numRpe = parseFloat(rpe);
     if (!numWeight || !numReps) return;
-    const est1RM = calculate1RM(numWeight, numReps);
-    const setVolume = numWeight * numReps;
 
     const newLog: SetLog = {
       id: crypto.randomUUID(),
@@ -516,18 +462,15 @@ export default function TopGymApp() {
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
-      estimated1RM: est1RM,
-      volume: setVolume,
+      estimated1RM: calculate1RM(numWeight, numReps),
+      volume: numWeight * numReps,
       date: todayIso(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setLogs([newLog, ...logs]);
     setUserXp(prev => prev + 10);
-
-    if (currentExercise?.restSeconds) {
-      startRestTimer(currentExercise.restSeconds);
-    }
+    if (currentExercise?.restSeconds) startRestTimer(currentExercise.restSeconds);
     setWeight('');
     setReps('');
   };
@@ -571,7 +514,6 @@ export default function TopGymApp() {
   const userLevel = Math.floor(userXp / 100) + 1;
   const todayLogs = logs.filter(l => l.date === todayIso());
   const latestReadiness = readinessHistory[0];
-
   const recentRpeLogs = logs.slice(0, 4);
   const highFatigueDetected = recentRpeLogs.length >= 2 && recentRpeLogs.every(l => l.rpe >= 9.5);
 
@@ -582,7 +524,6 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  // Nome Utente Dinamico
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
 
   // --- SCHERMATA LOGIN / REGISTRAZIONE ---
@@ -806,7 +747,6 @@ export default function TopGymApp() {
 
         <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Trophy className="w-4 h-4 text-yellow-500" /> Classifica & Badge</button>
 
-        {/* TAB IMPOSTAZIONI ACCOUNT PER ATLETA */}
         {userRole === 'ATHLETE' && (
           <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Settings className="w-4 h-4 text-zinc-300" /> Impostazioni</button>
         )}
@@ -814,7 +754,7 @@ export default function TopGymApp() {
 
       {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-5xl mx-auto">
-        {/* TAB 1: ESEGUI ALLENAMENTO (ACCESSIBILE SOLO PER ATLETA) */}
+        {/* TAB 1: ESEGUI ALLENAMENTO (SOLO ATLETA) */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -941,7 +881,6 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* PULSANTE TERMINA E SALVA ALLENAMENTO */}
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
               {workoutSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
@@ -957,7 +896,6 @@ export default function TopGymApp() {
               </button>
             </div>
 
-            {/* SEZIONE STORICO SCHEDE E ALLENAMENTI SALVATI */}
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 mt-6">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <History className="text-[#E50914]" /> Storico Allenamenti Completati
@@ -1001,7 +939,6 @@ export default function TopGymApp() {
                 </div>
               )}
 
-              {/* COMPILAZIONE CHECK READINESS (SOLO PER ATLETA) */}
               {userRole === 'ATHLETE' && (
                 <form onSubmit={handleSaveReadiness} className="space-y-5">
                   <div className="grid md:grid-cols-2 gap-4">
@@ -1081,7 +1018,6 @@ export default function TopGymApp() {
               )}
             </div>
 
-            {/* STORICO CHECK READINESS GIORNO PER GIORNO */}
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <History className="text-green-400" /> Storico Check Readiness ({userRole === 'COACH' ? activeAthlete.displayName : displayUserName})
@@ -1115,7 +1051,6 @@ export default function TopGymApp() {
               )}
             </div>
 
-            {/* VISTA COACH: STORICO ALLENAMENTI INTEGRATO */}
             {userRole === 'COACH' && (
               <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -1155,7 +1090,6 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400 mt-1">Imposta la frequenza settimanale e componi gli esercizi per ciascuna giornata.</p>
               </div>
 
-              {/* SELETTORE GIORNI 2-3-4-5-6 */}
               <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                 <span className="text-xs font-bold text-zinc-400">Giorni/settimana:</span>
                 <div className="flex gap-1">
@@ -1301,7 +1235,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 6: IMPOSTAZIONI ACCOUNT (SOLO PER ATLETA) */}
+        {/* TAB 6: IMPOSTAZIONI ACCOUNT (SOLO ATLETA) */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>
