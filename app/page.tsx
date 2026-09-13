@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase } from '@/lib/store';
+import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase, deleteWorkoutHistoryFromSupabase } from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -36,7 +36,6 @@ export type MuscleGroup =
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   const name = exerciseName.toLowerCase().trim();
 
-  // 1. PETTO
   if (
     name.includes('panca') || name.includes('chest') || name.includes('croci') || 
     name.includes('dip') || name.includes('push up') || name.includes('piegament') ||
@@ -46,7 +45,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Petto';
   }
 
-  // 2. DORSO
   if (
     name.includes('trazioni') || name.includes('lat') || name.includes('rematore') || 
     name.includes('pulley') || name.includes('stacco') || name.includes('pull down') || 
@@ -58,7 +56,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Dorso';
   }
 
-  // 3. SPALLE
   if (
     name.includes('shoulder') || name.includes('military') || name.includes('lento') || 
     name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') || 
@@ -69,7 +66,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Spalle';
   }
 
-  // 4. QUADRICIPITI
   if (
     name.includes('squat') || name.includes('pressa') || name.includes('leg ext') || 
     name.includes('leg extension') || name.includes('affondi') || name.includes('lunge') || 
@@ -80,7 +76,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Quadricipiti';
   }
 
-  // 5. FEMORALI / ISCHIOCRURALI
   if (
     name.includes('leg curl') || name.includes('stacco rumeno') || name.includes('nordic') || 
     name.includes('rdl') || name.includes('femorale') || name.includes('femorali') || 
@@ -89,7 +84,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Femorali';
   }
 
-  // 6. GLUTEI
   if (
     name.includes('hip thrust') || name.includes('glute') || name.includes('glutei') || 
     name.includes('kickback glutei') || name.includes('abductor') || name.includes('abduzioni') || 
@@ -98,7 +92,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Glutei';
   }
 
-  // 7. BICIPITI
   if (
     name.includes('curl') || name.includes('bicipit') || name.includes('biceps') || 
     name.includes('hammer') || name.includes('scott') || name.includes('panca scott') || 
@@ -107,7 +100,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Bicipiti';
   }
 
-  // 8. TRICIPITI
   if (
     name.includes('pushdown') || name.includes('push down') || name.includes('french') || 
     name.includes('tricipit') || name.includes('triceps') || name.includes('ercolina') || 
@@ -117,7 +109,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Tricipiti';
   }
 
-  // 9. POLPACCI
   if (
     name.includes('polpacc') || name.includes('calf') || name.includes('calves') || 
     name.includes('sollevamenti sulle punte')
@@ -125,7 +116,6 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
     return 'Polpacci';
   }
 
-  // 10. ADDOME / CORE
   if (
     name.includes('crunch') || name.includes('plank') || name.includes('addominal') || 
     name.includes('core') || name.includes('leg raise') || name.includes('sollevamento gambe') || 
@@ -205,7 +195,6 @@ const todayIso = () => new Date().toISOString().split('T')[0];
 export default function TopGymApp() {
   const router = useRouter();
 
-  // Autenticazione & Account
   const [user, setUser] = useState<any>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -214,26 +203,21 @@ export default function TopGymApp() {
   const [errorMessage, setErrorMessage] = useState('');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
 
-  // Lista Atleti Reali da Supabase
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>('');
 
-  // Ruolo e PIN
   const [userRole, setUserRole] = useState<UserRole>('ATHLETE');
   const [showCoachPinModal, setShowCoachPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab & XP
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard' | 'settings'>('workout');
   const [userXp, setUserXp] = useState(520);
 
-  // Sound & Timer
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Impostazioni Builder & Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
   const [sleepHours, setSleepHours] = useState('7.5');
   const [sleepQuality, setSleepQuality] = useState(8);
@@ -257,7 +241,6 @@ export default function TopGymApp() {
     }
   ]);
 
-  // Programma Esercizi
   const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([
     {
@@ -299,7 +282,6 @@ export default function TopGymApp() {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [currentExId, setCurrentExId] = useState('ex1');
 
-  // Logs Serie
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('8');
@@ -307,7 +289,6 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Builder State (con Gruppo Muscolare)
   const [builderExName, setBuilderExName] = useState('');
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
   const [builderSets, setBuilderSets] = useState(3);
@@ -319,7 +300,6 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Caricamento atleti da Supabase
   const loadAthletesFromSupabase = async () => {
     if (!supabase) return;
     const { data: profiles, error } = await supabase.from('profiles').select('id, email, username, xp');
@@ -337,7 +317,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Auth & Init Sync
   useEffect(() => {
     if (!supabase) return;
 
@@ -357,7 +336,6 @@ export default function TopGymApp() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Handlers Auth & Account
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
@@ -405,7 +383,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Sound & Timer
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -441,7 +418,6 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // Switch Ruolo Coach con PIN
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH' && userRole !== 'COACH') {
       setShowCoachPinModal(true);
@@ -567,6 +543,14 @@ export default function TopGymApp() {
     }
   };
 
+  // Funzione per eliminare un allenamento dallo storico
+  const handleDeleteWorkoutHistory = async (workoutId: string) => {
+    if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
+    
+    await deleteWorkoutHistoryFromSupabase(workoutId);
+    setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
+  };
+
   const handleLogSet = (e: React.FormEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
@@ -594,7 +578,6 @@ export default function TopGymApp() {
     setReps('');
   };
 
-  // FUNZIONE CANCELLAZIONE SERIE (Corretta & Globale nel componente)
   const handleDeleteLog = (logId: string) => {
     setLogs(prev => prev.filter(l => l.id !== logId));
   };
@@ -652,7 +635,6 @@ export default function TopGymApp() {
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
 
-  // --- SCHERMATA LOGIN / REGISTRAZIONE ---
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white font-sans">
@@ -726,10 +708,8 @@ export default function TopGymApp() {
     );
   }
 
-  // --- DASHBOARD PRINCIPALE ---
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
-      {/* HEADER UTENTE */}
       <header className="max-w-5xl mx-auto bg-[#1E1E1E] rounded-xl p-6 border border-zinc-800 shadow-2xl mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -817,7 +797,6 @@ export default function TopGymApp() {
         </div>
       </header>
 
-      {/* MODALE PIN COACH */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
@@ -857,7 +836,6 @@ export default function TopGymApp() {
         </div>
       )}
 
-      {/* NAVIGAZIONE TAB */}
       <div className="max-w-5xl mx-auto flex flex-wrap gap-2 mb-6">
         {userRole === 'ATHLETE' && (
           <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>Esegui Allenamento</button>
@@ -878,9 +856,7 @@ export default function TopGymApp() {
         )}
       </div>
 
-      {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-5xl mx-auto">
-        {/* TAB 1: ESEGUI ALLENAMENTO (SOLO ATLETA) */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -1043,27 +1019,39 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400">Nessun allenamento ancora salvato nel database.</p>
               ) : (
                 <div className="space-y-2">
-                  {workoutHistory.map((item, idx) => (
-                    <div key={item.id || idx} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
-                        <span className="text-zinc-400 text-[11px] font-mono">
-                          Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
-                        </span>
+                  {workoutHistory.map((item, idx) => {
+                    const recordId = item.id || idx;
+                    return (
+                      <div key={recordId} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
+                          <span className="text-zinc-400 text-[11px] font-mono">
+                            Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
+                            <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWorkoutHistory(item.id)}
+                            title="Elimina allenamento dallo storico"
+                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
-                        <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB 2: CHECK READINESS */}
         {activeTab === 'readiness' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
@@ -1199,20 +1187,33 @@ export default function TopGymApp() {
                   <p className="text-xs text-zinc-400">Nessun allenamento registrato per questo atleta.</p>
                 ) : (
                   <div className="space-y-2">
-                    {workoutHistory.map((item, idx) => (
-                      <div key={item.id || idx} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                        <div>
-                          <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
-                          <span className="text-zinc-400 text-[11px] font-mono">
-                            Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
-                          </span>
+                    {workoutHistory.map((item, idx) => {
+                      const recordId = item.id || idx;
+                      return (
+                        <div key={recordId} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                          <div>
+                            <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
+                            <span className="text-zinc-400 text-[11px] font-mono">
+                              Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
+                              <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteWorkoutHistory(item.id)}
+                              title="Elimina allenamento dallo storico"
+                              className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
-                          <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1220,7 +1221,6 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 3: BUILDER COACH */}
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
@@ -1328,7 +1328,6 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 4: PROGRESSI & ANALISI VOLUME (ATLETA & COACH) */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 flex justify-between items-center flex-wrap gap-4">
@@ -1512,7 +1511,6 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 5: LEADERBOARD & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
@@ -1561,7 +1559,6 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 6: IMPOSTAZIONI ACCOUNT (SOLO ATLETA) */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>

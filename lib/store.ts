@@ -524,3 +524,19 @@ export async function getWorkoutHistoryFromSupabase(userId?: string) {
 }
 
 export { isSupabaseConfigured };
+export async function deleteWorkoutHistoryFromSupabase(workoutId: string) {
+  const supabase = getSupabase();
+  if (!supabase) return { success: true, localOnly: true };
+
+  const { error } = await supabase
+    .from('workout_history')
+    .delete()
+    .eq('id', workoutId);
+
+  if (error) {
+    console.error('Errore durante l\'eliminazione dell\'allenamento:', error.message);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
