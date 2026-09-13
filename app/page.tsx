@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase, getSupabase } from '@/lib/store';
+import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase } from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -10,6 +10,12 @@ import {
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
   Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History
 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+// Inizializzazione sicura di Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
@@ -92,7 +98,6 @@ export default function TopGymApp() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const supabase = getSupabase();
 
   // Atleti per modalità Coach
   const [athletes] = useState<Athlete[]>([
@@ -117,7 +122,7 @@ export default function TopGymApp() {
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Impostazione Giorni Allenamento nel Builder
+  // Impostazione Giorni Allenamento nel Builder (2, 3, 4, 5, 6 giorni)
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
 
   // Readiness Inputs
@@ -203,7 +208,7 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Controllo Auth con Supabase
+  // Controllo Auth con Supabase con tipi espliciti per _event e session (corretto ts 7006)
   useEffect(() => {
     if (!supabase) return;
     const initAuth = async () => {
@@ -212,16 +217,16 @@ export default function TopGymApp() {
     };
     initAuth();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setUser(session?.user ?? null);
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
-  // Gestione Login / Registrazione
+  // Gestione Login / Registrazione Supabase
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
@@ -246,39 +251,7 @@ export default function TopGymApp() {
     setUser(null);
   };
 
-  // Stato salvataggio e storico
-  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
-  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
-
-  const loadHistory = async () => {
-    const data = await getWorkoutHistoryFromSupabase('default-user');
-    setWorkoutHistory(data || []);
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const handleDayCountChange = (count: DayCount) => {
-    setSelectedDayCount(count);
-    setProgramDays(prev => {
-      if (prev.length < count) {
-        const newDays = [...prev];
-        for (let i = prev.length + 1; i <= count; i++) {
-          newDays.push({
-            id: `d${i}`,
-            dayNumber: i,
-            title: `Giorno ${i}`,
-            exercises: []
-          });
-        }
-        return newDays;
-      } else {
-        return prev.slice(0, count);
-      }
-    });
-  };
-
+  // Timer Sound
   const playTimerSound = () => {
     if (!soundEnabled) return;
     try {
@@ -314,6 +287,7 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
+  // Switch Ruolo Coach con PIN
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH' && userRole !== 'COACH') {
       setShowCoachPinModal(true);
@@ -390,6 +364,39 @@ export default function TopGymApp() {
     setUserXp(prev => prev + 20);
     setActiveTab('workout');
   };
+
+  // Gestione Giorni 2-6 nel Builder Coach
+  const handleDayCountChange = (count: DayCount) => {
+    setSelectedDayCount(count);
+    setProgramDays(prev => {
+      if (prev.length < count) {
+        const newDays = [...prev];
+        for (let i = prev.length + 1; i <= count; i++) {
+          newDays.push({
+            id: `d${i}`,
+            dayNumber: i,
+            title: `Giorno ${i}`,
+            exercises: []
+          });
+        }
+        return newDays;
+      } else {
+        return prev.slice(0, count);
+      }
+    });
+  };
+
+  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
+  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
+
+  const loadHistory = async () => {
+    const data = await getWorkoutHistoryFromSupabase('default-user');
+    setWorkoutHistory(data || []);
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
   const handleFinishAndSaveWorkout = async () => {
     const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
@@ -569,20 +576,17 @@ export default function TopGymApp() {
     );
   }
 
-  // Nome Utente dinamico
-  const displayUserName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Atleta';
-
   // --- DASHBOARD PRINCIPALE ---
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
-      {/* HEADER UTENTE */}
+      {/* HEADER UTENTE ORIGINALE */}
       <header className="max-w-5xl mx-auto bg-[#1E1E1E] rounded-xl p-6 border border-zinc-800 shadow-2xl mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {displayUserName}</p>
+            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {user.email}</p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
@@ -618,6 +622,7 @@ export default function TopGymApp() {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-between flex-wrap">
+            {/* TIMER RECUPERO CON AUDIO */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -635,6 +640,7 @@ export default function TopGymApp() {
               )}
             </div>
 
+            {/* BADGE READINESS */}
             {latestReadiness && (
               <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
                 <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
@@ -653,11 +659,12 @@ export default function TopGymApp() {
               </div>
             </div>
 
+            {/* TASTO LOGOUT ORIGINALE */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg hover:border-red-900 transition-all cursor-pointer"
+              className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
             >
-              <LogOut className="w-4 h-4 text-red-500"/> Esci
+              <LogOut className="w-4 h-4"/> Esci
             </button>
           </div>
         </div>
@@ -847,7 +854,7 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* PULSANTE TERMINA E SALVA ALLENAMENTO */}
+            {/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO (SOLO SOTTO ESEGUI ALLENAMENTO) */}
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
               {workoutSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
@@ -987,6 +994,7 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400 mt-1">Imposta la frequenza settimanale e componi gli esercizi per ciascuna giornata.</p>
               </div>
 
+              {/* SELETTORE GIORNI 2-3-4-5-6 */}
               <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                 <span className="text-xs font-bold text-zinc-400">Giorni/settimana:</span>
                 <div className="flex gap-1">
