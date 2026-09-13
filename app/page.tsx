@@ -221,7 +221,7 @@ export default function TopGymApp() {
     });
   };
 
-  // Funzione per caricare gli atleti registrati da Supabase
+  // Funzione per caricare gli atleti dalla tabella 'profiles' di Supabase
   const loadAthletesFromSupabase = async () => {
     if (!supabase) return;
 
@@ -262,7 +262,10 @@ export default function TopGymApp() {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) syncUserToAthletes(currentUser);
+      if (currentUser) {
+        syncUserToAthletes(currentUser);
+        loadAthletesFromSupabase();
+      }
     });
 
     return () => {
