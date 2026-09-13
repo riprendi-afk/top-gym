@@ -221,9 +221,36 @@ export default function TopGymApp() {
     });
   };
 
-  // Controllo Auth con Supabase
+  // Funzione per caricare gli atleti registrati da Supabase
+  const loadAthletesFromSupabase = async () => {
+    if (!supabase) return;
+
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('id, email, username, xp');
+
+    if (!error && profiles && profiles.length > 0) {
+      const formattedAthletes: Athlete[] = profiles.map((p: any) => ({
+        id: p.id,
+        displayName: p.username || (p.email ? p.email.split('@')[0] : 'Atleta'),
+        email: p.email || '',
+        xp: p.xp || 0
+      }));
+
+      setAthletes(prev => {
+        const existingIds = new Set(prev.map(a => a.id));
+        const newAthletes = formattedAthletes.filter(a => !existingIds.has(a.id));
+        return [...prev, ...newAthletes];
+      });
+    }
+  };
+
+  // Controllo Auth con Supabase e Caricamento Atleti
   useEffect(() => {
     if (!supabase) return;
+
+    loadAthletesFromSupabase();
+
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const currentUser = session?.user ?? null;
@@ -289,7 +316,7 @@ export default function TopGymApp() {
     try {
       const { error } = await supabase.rpc('delete_user');
       if (error) {
-        setSettingsMessage(`⚠️ Impossibile eliminare l'account automaticamente. Contatta l'amministratore: ${error.message}`);
+        setSettingsMessage(`⚠️ Impossibile eliminare l'account automaticamente: ${error.message}`);
       } else {
         alert('Account eliminato con successo.');
         await handleLogout();
