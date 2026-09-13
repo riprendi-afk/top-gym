@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveCompletedWorkoutToSupabase, getWorkoutHistoryFromSupabase, deleteWorkoutHistoryFromSupabase } from '@/lib/store';
+import { 
+  saveCompletedWorkoutToSupabase, 
+  getWorkoutHistoryFromSupabase, 
+  deleteWorkoutHistoryFromSupabase,
+  saveProgramToSupabase,
+  getProgramFromSupabase 
+} from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
@@ -226,6 +232,8 @@ export default function TopGymApp() {
   const [energyLevel, setEnergyLevel] = useState(8);
   const [bodyWeight, setBodyWeight] = useState('78.5');
   const [readinessSuccessMessage, setReadinessSuccessMessage] = useState<string | null>(null);
+  const [builderSuccessMessage, setBuilderSuccessMessage] = useState<string | null>(null);
+  
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([
     {
       id: 'r1',
@@ -335,6 +343,19 @@ export default function TopGymApp() {
 
     return () => authListener.subscription.unsubscribe();
   }, []);
+
+  // Caricamento scheda assegnata all'atleta (o selezionata dal coach)
+  useEffect(() => {
+    const targetId = userRole === 'COACH' ? activeAthleteId : (user?.id || 'default-user');
+    if (targetId && supabase) {
+      getProgramFromSupabase(targetId).then(data => {
+        if (data && data.days_data) {
+          setProgramDays(data.days_data);
+          if (data.program_name) setProgramName(data.program_name);
+        }
+      });
+    }
+  }, [activeAthleteId, userRole, user]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -543,12 +564,25 @@ export default function TopGymApp() {
     }
   };
 
-  // Funzione per eliminare un allenamento dallo storico
   const handleDeleteWorkoutHistory = async (workoutId: string) => {
     if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
     
     await deleteWorkoutHistoryFromSupabase(workoutId);
     setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
+  };
+
+  // Funzione per salvare la scheda creata dal Coach per l'atleta selezionato
+  const handleSaveProgramByCoach = async () => {
+    const targetId = activeAthleteId || 'default-user';
+    const result = await saveProgramToSupabase(targetId, programName, programDays);
+    
+    if (result.success) {
+      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}! L'atleta ora può visualizzarla.`);
+      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+    } else {
+      setBuilderSuccessMessage('⚠️ Errore durante il salvataggio della scheda.');
+      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+    }
   };
 
   const handleLogSet = (e: React.FormEvent) => {
@@ -1325,6 +1359,22 @@ export default function TopGymApp() {
                 </form>
               </div>
             ))}
+
+            {/* Pulsante Salva e Assegna Scheda all'Atleta */}
+            <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
+              {builderSuccessMessage && (
+                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
+                  {builderSuccessMessage}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSaveProgramByCoach}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>💾 Salva e Assegna Scheda all'Atleta ({activeAthlete.displayName})</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -1433,49 +1483,50 @@ export default function TopGymApp() {
               })()}
             </div>
 
+            {/* NUOVO ISTOGRAMMA TONNELLAGGIO NEL TEMPO */}
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
               <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" /> Progressione Tonnellaggio nel Tempo (Kg Totali Sollevati)
+                <TrendingUp className="w-4 h-4 text-emerald-400" /> Istogramma Tonnellaggio nel Tempo (Kg Totali)
               </h3>
 
               {workoutHistory.length === 0 ? (
-                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato per mostrare il grafico del tonnellaggio.</p>
+                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato per generare l'istogramma.</p>
               ) : (
                 <div className="space-y-4">
                   {(() => {
                     const maxVol = Math.max(...workoutHistory.map(w => w.total_volume || w.totalVolume || 1));
                     return (
                       <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                        <div className="flex items-end gap-3 h-44 pt-6 border-b border-zinc-800 pb-2 overflow-x-auto">
-                          {workoutHistory.slice(0, 10).reverse().map((item, idx) => {
+                        <div className="flex items-end gap-3 h-52 pt-8 border-b border-zinc-800 pb-2 overflow-x-auto">
+                          {workoutHistory.slice(0, 12).reverse().map((item, idx) => {
                             const vol = item.total_volume || item.totalVolume || 0;
                             const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : (item.date || '');
-                            const heightPercent = Math.max(12, Math.round((vol / maxVol) * 100));
+                            const heightPercent = Math.max(10, Math.round((vol / maxVol) * 100));
 
                             return (
-                              <div key={idx} className="flex-1 flex flex-col items-center gap-2 min-w-[45px]">
-                                <span className="text-[10px] font-mono font-bold text-emerald-400">
+                              <div key={idx} className="flex-1 flex flex-col items-center gap-2 min-w-[50px] h-full justify-end group">
+                                <span className="text-[10px] font-mono font-bold text-emerald-400 opacity-90 group-hover:opacity-100">
                                   {vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol}
                                 </span>
-                                <div className="w-full bg-zinc-800 rounded-t h-full flex items-end overflow-hidden">
+                                <div className="w-full bg-zinc-800/80 rounded-t-md overflow-hidden flex items-end h-full">
                                   <div
-                                    className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t transition-all duration-500"
+                                    className="w-full bg-gradient-to-t from-emerald-700 via-emerald-500 to-green-400 rounded-t-md transition-all duration-500 group-hover:brightness-125"
                                     style={{ height: `${heightPercent}%` }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-zinc-400 font-mono">{dateStr}</span>
+                                <span className="text-[10px] text-zinc-400 font-mono whitespace-nowrap">{dateStr}</span>
                               </div>
                             );
                           })}
                         </div>
-                        <div className="text-center text-[11px] text-zinc-500 mt-2">
-                          Date di Allenamento Completi
+                        <div className="text-center text-[11px] text-zinc-500 mt-3 font-medium">
+                          Andamento storico dei volumi di carico (Ultime sessioni)
                         </div>
                       </div>
                     );
                   })()}
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto pt-2">
                     <table className="w-full text-xs text-left text-zinc-300">
                       <thead className="bg-zinc-900 text-zinc-400 uppercase text-[10px] border-b border-zinc-800">
                         <tr>

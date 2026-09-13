@@ -540,3 +540,38 @@ export async function deleteWorkoutHistoryFromSupabase(workoutId: string) {
 
   return { success: true };
 }
+export async function saveProgramToSupabase(userId: string, programName: string, days: any[]) {
+  const supabase = getSupabase();
+  if (!supabase) return { success: true, localOnly: true };
+
+  // Salviamo o aggiorniamo la scheda associata all'utente/atleta
+  const { error } = await supabase
+    .from('programs')
+    .upsert({
+      user_id: userId,
+      program_name: programName,
+      days_data: days,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+
+  if (error) {
+    console.error('Errore salvataggio programma:', error.message);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function getProgramFromSupabase(userId: string) {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
