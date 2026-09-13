@@ -8,8 +8,9 @@ import {
   Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
   Zap, Award, Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2
+  Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History
 } from 'lucide-react';
+
 type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
 type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
@@ -25,11 +26,10 @@ interface Exercise {
   executionType: ExecutionType;
   tut: string;
   notes?: string;
- // Nuovi campi dedicati al Cardio / Circuiti
- cardioType?: 'TREADMILL' | 'BIKE' | 'ROW' | 'CIRCUIT';
- speed?: string;
- incline?: string;
- durationMinutes?: number;
+  cardioType?: 'TREADMILL' | 'BIKE' | 'ROW' | 'CIRCUIT';
+  speed?: string;
+  incline?: string;
+  durationMinutes?: number;
 }
 
 interface WorkoutDay {
@@ -92,7 +92,6 @@ export default function TopGymApp() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const supabase = getSupabase();
 
   // Atleti per modalità Coach
   const [athletes] = useState<Athlete[]>([
@@ -116,6 +115,9 @@ export default function TopGymApp() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  // Impostazione Giorni Allenamento nel Builder
+  const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
 
   // Readiness Inputs
   const [sleepHours, setSleepHours] = useState('7.5');
@@ -189,7 +191,7 @@ export default function TopGymApp() {
     { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
   ]);
 
-  // Form Builder Coach
+  // Form Builder Coach per inserimento rapido
   const [builderExName, setBuilderExName] = useState('');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
@@ -198,49 +200,39 @@ export default function TopGymApp() {
   const [builderRest, setBuilderRest] = useState(90);
   const [builderType, setBuilderType] = useState<ExecutionType>('REGULAR');
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
-  const [builderNotes, setBuilderNotes] = useState('');
 
-  // Controllo Auth con Supabase
-  useEffect(() => {
-    if (!supabase) return;
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    };
-    initAuth();
+  // Stato salvataggio e storico
+  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
+  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  // Gestione Login / Registrazione Supabase
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabase) return;
-    setErrorMessage('');
-
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { username: username || email.split('@')[0] } }
-      });
-      if (error) setErrorMessage(error.message);
-      else alert('Registrazione completata! Ora puoi accedere.');
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setErrorMessage(error.message);
-    }
+  const loadHistory = async () => {
+    const data = await getWorkoutHistoryFromSupabase('default-user');
+    setWorkoutHistory(data || []);
   };
 
-  const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
-    setUser(null);
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  // Modifica il numero di giorni di allenamento
+  const handleDayCountChange = (count: DayCount) => {
+    setSelectedDayCount(count);
+    setProgramDays(prev => {
+      if (prev.length < count) {
+        const newDays = [...prev];
+        for (let i = prev.length + 1; i <= count; i++) {
+          newDays.push({
+            id: `d${i}`,
+            dayNumber: i,
+            title: `Giorno ${i}`,
+            exercises: []
+          });
+        }
+        return newDays;
+      } else {
+        return prev.slice(0, count);
+      }
+    });
   };
 
   // Timer Sound
@@ -357,45 +349,28 @@ export default function TopGymApp() {
     setActiveTab('workout');
   };
 
-
-  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
-
-// Storico allenamenti da Supabase
-const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
-
-const loadHistory = async () => {
-  const data = await getWorkoutHistoryFromSupabase('default-user');
-  setWorkoutHistory(data);
-};
-
-useEffect(() => {
-  loadHistory();
-}, []);
-
   const handleFinishAndSaveWorkout = async () => {
-    const dayName = 'Giornata di Allenamento';
-    const totalVol = 12000;
-  
+    const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
+    const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 12000;
+
     const result = await saveCompletedWorkoutToSupabase({
       userId: 'default-user',
       dayName: dayName,
       totalVolume: totalVol,
       exercisesCount: activeRoutine.length,
     });
-  
+
     if (result.success) {
       setUserXp(prev => prev + 50);
       setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
-      
-      // QUI richiamiamo il caricamento dello storico per aggiornare la vista subito!
-      loadHistory();
-  
+      await loadHistory();
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
       setWorkoutSuccessMessage('⚠️ Errore nel salvataggio dell\'allenamento.');
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     }
   };
+
   const handleLogSet = (e: React.FormEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
@@ -441,8 +416,7 @@ useEffect(() => {
       rpeTarget: builderRpe,
       restSeconds: builderRest,
       executionType: builderType,
-      tut: builderTut,
-      notes: builderNotes
+      tut: builderTut
     };
 
     setProgramDays(prev => prev.map(day => day.id === dayId ? { ...day, exercises: [...day.exercises, newEx] } : day));
@@ -477,82 +451,6 @@ useEffect(() => {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-
-  // --- SCHERMATA LOGIN / REGISTRAZIONE ---
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white font-sans">
-        <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
-          <h1 className="mb-2 text-center text-3xl font-black uppercase tracking-wider text-[#E50914] flex items-center justify-center gap-2">
-            <Dumbbell className="w-8 h-8"/> TOP GYM
-          </h1>
-          <p className="text-xs text-center text-zinc-400 mb-6">PWA Gestione Allenamenti & Coaching</p>
-
-          {errorMessage && (
-            <div className="mb-4 rounded bg-red-950/60 p-3 text-xs text-red-200 border border-red-800">
-              {errorMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleAuth} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Username</label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                  placeholder="Nome Atleta"
-                />
-              </div>
-            )}
-            <div>
-              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                placeholder="atleta@topgym.it"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider"
-            >
-              {isSignUp ? 'Crea Account' : 'Accedi al Dashboard'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center text-xs text-zinc-400">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }}
-              className="font-semibold text-[#E50914] hover:underline"
-            >
-              {isSignUp ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- DASHBOARD PRINCIPALE ---
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
       {/* HEADER UTENTE */}
@@ -562,7 +460,7 @@ useEffect(() => {
             <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
               <Dumbbell className="w-8 h-8" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: {user.email}</p>
+            <p className="text-sm text-zinc-300 mt-1 font-bold">Atleta: Demo User</p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
@@ -598,7 +496,6 @@ useEffect(() => {
           </div>
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-between flex-wrap">
-            {/* TIMER RECUPERO CON AUDIO */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -616,7 +513,6 @@ useEffect(() => {
               )}
             </div>
 
-            {/* BADGE READINESS */}
             {latestReadiness && (
               <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
                 <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
@@ -634,13 +530,6 @@ useEffect(() => {
                 <div className="text-sm font-bold text-yellow-500">{userXp} XP</div>
               </div>
             </div>
-
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
-            >
-              <LogOut className="w-4 h-4"/> Esci
-            </button>
           </div>
         </div>
       </header>
@@ -823,25 +712,54 @@ useEffect(() => {
                 </div>
               </div>
             )}
+
+            {/* PULSANTE TERMINA E SALVA ALLENAMENTO (VISIBILE SOLO IN ESEGUI ALLENAMENTO) */}
+            <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
+              {workoutSuccessMessage && (
+                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
+                  {workoutSuccessMessage}
+                </div>
+              )}
+
+              <button
+                onClick={handleFinishAndSaveWorkout}
+                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+              >
+                <span>✅ Termina e Salva Allenamento</span>
+              </button>
+            </div>
+
+            {/* SEZIONE STORICO SCHEDE E ALLENAMENTI SALVATI */}
+            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 mt-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <History className="text-[#E50914]" /> Storico Allenamenti Completati
+              </h3>
+              {workoutHistory.length === 0 ? (
+                <p className="text-xs text-zinc-400">Nessun allenamento ancora salvato nel database.</p>
+              ) : (
+                <div className="space-y-2">
+                  {workoutHistory.map((item, idx) => (
+                    <div key={item.id || idx} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                      <div>
+                        <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
+                        <span className="text-zinc-500 text-[10px]">
+                          {item.created_at ? new Date(item.created_at).toLocaleString('it-IT') : 'Data non presente'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
+                        <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
-{/* SEZIONE CONCLUSIONE E SALVATAGGIO ALLENAMENTO */}
-<div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
-  {workoutSuccessMessage && (
-    <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm animate-fade-in">
-      {workoutSuccessMessage}
-    </div>
-  )}
 
-  <button
-    onClick={handleFinishAndSaveWorkout}
-    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
-  >
-    <span>✅ Termina e Salva Allenamento</span>
-  </button>
-</div>
-{/* TAB 2: CHECK READINESS */}
-{activeTab === 'readiness' && (
+        {/* TAB 2: CHECK READINESS */}
+        {activeTab === 'readiness' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
@@ -906,7 +824,6 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* ANTEPRIMA DEL PUNTEGGIO E CONSIGLIO PRIMA DI SALVARE */}
               <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato:</span>
@@ -930,11 +847,39 @@ useEffect(() => {
         {/* TAB 3: BUILDER COACH */}
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
+                <p className="text-xs text-zinc-400 mt-1">Imposta la frequenza settimanale e componi gli esercizi per ciascuna giornata.</p>
+              </div>
+
+              {/* SELETTORE GIORNI 2-3-4-5-6 */}
+              <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
+                <span className="text-xs font-bold text-zinc-400">Giorni/settimana:</span>
+                <div className="flex gap-1">
+                  {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleDayCountChange(num)}
+                      className={`px-2.5 py-1 text-xs font-black rounded border transition-all ${
+                        selectedDayCount === num
+                          ? 'bg-[#E50914] border-[#E50914] text-white'
+                          : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {programDays.map((day) => (
               <div key={day.id} className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-                <h3 className="font-bold text-white">Giorno {day.dayNumber}: {day.title}</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-white">Giorno {day.dayNumber}: {day.title}</h3>
+                  <span className="text-xs text-zinc-500 font-mono">{day.exercises.length} esercizi</span>
+                </div>
 
                 <div className="space-y-2">
                   {day.exercises.map((ex) => (
@@ -943,7 +888,7 @@ useEffect(() => {
                         <span className="font-bold text-white">{ex.name}</span>
                         <div className="text-zinc-400">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget}</div>
                       </div>
-                      <button onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400">
+                      <button onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400 p-1">
                         <Trash2 className="w-4 h-4"/>
                       </button>
                     </div>
@@ -954,7 +899,7 @@ useEffect(() => {
                   <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => setBuilderExName(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
                   <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
                   <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white" />
-                  <button type="submit" className="bg-[#E50914] text-xs font-bold py-1 rounded text-white">Aggiungi Esercizio</button>
+                  <button type="submit" className="bg-[#E50914] text-xs font-bold py-1 rounded text-white hover:bg-red-700 transition">Aggiungi Esercizio</button>
                 </form>
               </div>
             ))}
