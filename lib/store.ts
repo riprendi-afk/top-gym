@@ -111,9 +111,7 @@ export async function signUpAccount(params: {
     });
 
     if (!data.session) {
-      throw new Error(
-        'Account creato. Conferma la email dal link di Supabase, poi accedi.'
-      );
+      throw new Error('Account creato. Conferma la email dal link di Supabase, poi accedi.');
     }
 
     return {
@@ -229,8 +227,7 @@ async function loadSessionUser(id: string, email: string): Promise<SessionUser> 
     .eq('id', id)
     .maybeSingle();
 
-  const displayName =
-    profile?.display_name || email.split('@')[0] || 'Atleta';
+  const displayName = profile?.display_name || email.split('@')[0] || 'Atleta';
 
   if (!profile) {
     await supabase.from('profiles').insert({
@@ -291,7 +288,10 @@ export async function loadGymState(userId: string): Promise<GymState> {
   return readLocalData(userId) ?? emptyGymState();
 }
 
-export async function saveProgram(userId: string, state: Pick<GymState, 'programName' | 'daysCount' | 'programDays'>) {
+export async function saveProgram(
+  userId: string,
+  state: Pick<GymState, 'programName' | 'daysCount' | 'programDays'>
+) {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from('programs').upsert({
@@ -309,7 +309,12 @@ export async function saveProgram(userId: string, state: Pick<GymState, 'program
   writeLocalData(userId, { ...current, ...state });
 }
 
-export async function saveSetLog(userId: string, log: SetLog, nextXp: number, programDays: WorkoutDay[]) {
+export async function saveSetLog(
+  userId: string,
+  log: SetLog,
+  nextXp: number,
+  programDays: WorkoutDay[]
+) {
   const supabase = getSupabase();
   if (supabase) {
     const { error: logError } = await supabase.from('set_logs').insert({
@@ -453,7 +458,7 @@ function mapSetLog(row: Record<string, unknown>): SetLog {
 function mapReadiness(row: Record<string, unknown>): ReadinessLog {
   return {
     id: String(row.id),
-    date: String(row.logged_date),
+    date: String(row.logged_date || row.created_at),
     sleepHours: Number(row.sleep_hours),
     sleepQuality: Number(row.sleep_quality),
     stressLevel: Number(row.stress_level),
@@ -465,7 +470,7 @@ function mapReadiness(row: Record<string, unknown>): ReadinessLog {
   };
 }
 
-export { isSupabaseConfigured };
+// --- SALVATAGGIO STORICO WORKOUT SU SUPABASE ---
 export async function saveCompletedWorkoutToSupabase(sessionData: {
   userId: string;
   dayName: string;
@@ -474,21 +479,18 @@ export async function saveCompletedWorkoutToSupabase(sessionData: {
 }) {
   const supabase = getSupabase();
   if (!supabase) {
-    // Fallback locale se Supabase non è attivo
     return { success: true, localOnly: true };
   }
 
-  const { data, error } = await supabase
-    .from('workout_history')
-    .insert([
-      {
-        user_id: sessionData.userId,
-        day_name: sessionData.dayName,
-        total_volume: sessionData.totalVolume,
-        exercises_count: sessionData.exercisesCount,
-        completed_at: new Date().toISOString(),
-      }
-    ]);
+  const { data, error } = await supabase.from('workout_history').insert([
+    {
+      user_id: sessionData.userId,
+      day_name: sessionData.dayName,
+      total_volume: sessionData.totalVolume,
+      exercises_count: sessionData.exercisesCount,
+      created_at: new Date().toISOString(),
+    },
+  ]);
 
   if (error) {
     console.error('Errore nel salvataggio dell allenamento:', error.message);
@@ -497,6 +499,7 @@ export async function saveCompletedWorkoutToSupabase(sessionData: {
 
   return { success: true, data };
 }
+
 export async function getWorkoutHistoryFromSupabase(userId?: string) {
   const supabase = getSupabase();
   if (!supabase) return [];
@@ -504,7 +507,7 @@ export async function getWorkoutHistoryFromSupabase(userId?: string) {
   let query = supabase
     .from('workout_history')
     .select('*')
-    .order('completed_at', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (userId && userId !== 'default-user') {
     query = query.eq('user_id', userId);
@@ -519,3 +522,5 @@ export async function getWorkoutHistoryFromSupabase(userId?: string) {
 
   return data || [];
 }
+
+export { isSupabaseConfigured };
