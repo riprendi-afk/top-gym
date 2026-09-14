@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   saveCompletedWorkoutToSupabase, 
@@ -250,42 +250,7 @@ export default function TopGymApp() {
   ]);
 
   const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
-  const [programDays, setProgramDays] = useState<WorkoutDay[]>([
-    {
-      id: 'd1',
-      dayNumber: 1,
-      title: 'Spinta (Push)',
-      exercises: [
-        { id: 'ex1', name: 'Panca Piana Bilanciere', muscleGroup: 'Petto', sets: 4, reps: '8', targetWeight: '90', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Fermo al petto di 1 secondo' },
-        { id: 'ex2', name: 'Spinte Inclinata Manubri', muscleGroup: 'Petto', sets: 3, reps: '10', targetWeight: '32', rpeTarget: 8.5, restSeconds: 90, executionType: 'REST_PAUSE', tut: '2-0-1-0', notes: '20s rest pause all ultima serie' }
-      ]
-    },
-    {
-      id: 'd2',
-      dayNumber: 2,
-      title: 'Trazione (Pull)',
-      exercises: [
-        { id: 'ex3', name: 'Trazioni Zavorrate', muscleGroup: 'Dorso', sets: 4, reps: '6', targetWeight: '15', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Estensione completa dei gomiti' },
-        { id: 'ex4', name: 'Rematore Bilanciere', muscleGroup: 'Dorso', sets: 3, reps: '8', targetWeight: '75', rpeTarget: 8, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Schiena a 45 gradi costante' }
-      ]
-    },
-    {
-      id: 'd3',
-      dayNumber: 3,
-      title: 'Gambe (Legs)',
-      exercises: [
-        { id: 'ex5', name: 'Squat Bilanciere', muscleGroup: 'Quadricipiti', sets: 4, reps: '6', targetWeight: '110', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Buca il parallelo' }
-      ]
-    },
-    {
-      id: 'd4',
-      dayNumber: 4,
-      title: 'Spalle & Braccia',
-      exercises: [
-        { id: 'ex6', name: 'Military Press', muscleGroup: 'Spalle', sets: 4, reps: '8', targetWeight: '50', rpeTarget: 8, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Core ben contratto' }
-      ]
-    }
-  ]);
+  const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [currentExId, setCurrentExId] = useState('ex1');
@@ -308,116 +273,72 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-// 1. Caricamento iniziale degli atleti (Eseguito 1 sola volta senza loop di memoria)
-useEffect(() => {
-  if (!supabase) return;
+  // 1. Caricamento iniziale degli atleti da Supabase (Senza loop continui)
+  useEffect(() => {
+    if (!supabase) return;
 
-  const fetchAthletes = async () => {
-    const { data: profiles } = await supabase.from('profiles').select('id, email, username, xp');
-    if (profiles) {
-      const formatted: Athlete[] = profiles.map((p: any) => ({
-        id: p.id,
-        displayName: p.username || (p.email ? p.email.split('@')[0] : 'Atleta'),
-        email: p.email || '',
-        xp: p.xp || 0
-      }));
-      setAthletes(formatted);
-      if (formatted.length > 0 && !activeAthleteId) {
-        setActiveAthleteId(formatted[0].id);
+    const fetchAthletes = async () => {
+      const { data: profiles } = await supabase.from('profiles').select('id, email, username, xp');
+      if (profiles) {
+        const formatted: Athlete[] = profiles.map((p: any) => ({
+          id: p.id,
+          displayName: p.username || (p.email ? p.email.split('@')[0] : 'Atleta'),
+          email: p.email || '',
+          xp: p.xp || 0
+        }));
+        setAthletes(formatted);
+        if (formatted.length > 0 && !activeAthleteId) {
+          setActiveAthleteId(formatted[0].id);
+        }
       }
-    }
-  };
+    };
 
-  fetchAthletes();
+    fetchAthletes();
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    setUser(session?.user ?? null);
-  });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-  return () => subscription.unsubscribe();
-}, []);
+    return () => subscription.unsubscribe();
+  }, []);
 
-// 2. Caricamento della scheda dell'atleta selezionato (Reset pulito quando cambi atleta)
-useEffect(() => {
-  const currentUserId = user?.id;
-  const targetId = userRole === 'COACH' 
-    ? (activeAthleteId || currentUserId || 'default-user')
-    : (currentUserId || 'default-user');
+  // 2. Caricamento scheda dell'atleta selezionato (Con reset anti-sfarfallio e isolamento giorni)
+  useEffect(() => {
+    if (!supabase) return;
 
-  if (!targetId || !supabase) return;
+    const currentUserId = user?.id;
+    const targetId = userRole === 'COACH' 
+      ? (activeAthleteId || currentUserId || 'default-user')
+      : (currentUserId || 'default-user');
 
-  let isMounted = true;
+    if (!targetId) return;
 
-  getProgramFromSupabase(targetId).then(data => {
-    if (!isMounted) return;
+    let isMounted = true;
+    setProgramDays([]); // Pulisce lo schermo per evitare residui della scheda precedente
 
-    if (data && data.days_data && data.days_data.length > 0) {
-      setProgramDays(data.days_data);
-      if (data.program_name) setProgramName(data.program_name);
-    } else {
-      const ath = athletes.find(a => a.id === targetId);
-      const athleteName = ath ? ath.displayName : 'Atleta';
-
-      setProgramDays([
-        { id: 'd1', dayNumber: 1, title: 'Spinta (Push)', exercises: [] },
-        { id: 'd2', dayNumber: 2, title: 'Trazione (Pull)', exercises: [] },
-        { id: 'd3', dayNumber: 3, title: 'Gambe (Legs)', exercises: [] },
-        { id: 'd4', dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
-      ]);
-      setProgramName(`Scheda Personalizzata - ${athleteName}`);
-    }
-  });
-
-  return () => { isMounted = false; };
-}, [activeAthleteId, userRole, user?.id]);
-
-// Funzione di supporto per recuperare il nome dell'atleta
-const getActiveAthleteName = (id: string) => {
-  const ath = athletes.find(a => a.id === id);
-  return ath ? ath.displayName : 'Atleta';
-};
-
-// Caricamento scheda assegnata all'atleta (o selezionata dal coach)
-useEffect(() => {
-  const targetId = userRole === 'COACH' ? activeAthleteId : (user?.id || 'default-user');
-  if (targetId && supabase) {
     getProgramFromSupabase(targetId).then(data => {
-      if (data && data.days_data) {
+      if (!isMounted) return;
+
+      if (data && data.days_data && data.days_data.length > 0) {
         setProgramDays(data.days_data);
         if (data.program_name) setProgramName(data.program_name);
       } else {
-        // Se l'atleta selezionato non ha una scheda salvata, creiamo una base pulita per lui
+        const ath = athletes.find(a => a.id === targetId);
+        const athleteName = ath ? ath.displayName : 'Atleta';
+        const timestamp = Date.now();
+
         setProgramDays([
-          {
-            id: 'd1',
-            dayNumber: 1,
-            title: 'Spinta (Push)',
-            exercises: []
-          },
-          {
-            id: 'd2',
-            dayNumber: 2,
-            title: 'Trazione (Pull)',
-            exercises: []
-          },
-          {
-            id: 'd3',
-            dayNumber: 3,
-            title: 'Gambe (Legs)',
-            exercises: []
-          },
-          {
-            id: 'd4',
-            dayNumber: 4,
-            title: 'Spalle & Braccia',
-            exercises: []
-          }
+          { id: `day-1-${timestamp}`, dayNumber: 1, title: 'Spinta (Push)', exercises: [] },
+          { id: `day-2-${timestamp}`, dayNumber: 2, title: 'Trazione (Pull)', exercises: [] },
+          { id: `day-3-${timestamp}`, dayNumber: 3, title: 'Gambe (Legs)', exercises: [] },
+          { id: `day-4-${timestamp}`, dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
         ]);
-        setProgramName(`Scheda Personalizzata - ${getActiveAthleteName(targetId)}`);
+        setProgramName(`Scheda Personalizzata - ${athleteName}`);
       }
     });
-  }
-}, [activeAthleteId, userRole, user, athletes]);
+
+    return () => { isMounted = false; };
+  }, [activeAthleteId, userRole, user?.id]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -583,7 +504,12 @@ useEffect(() => {
       if (prev.length < count) {
         const newDays = [...prev];
         for (let i = prev.length + 1; i <= count; i++) {
-          newDays.push({ id: `d${i}`, dayNumber: i, title: `Giorno ${i}`, exercises: [] });
+          newDays.push({ 
+            id: `day-${i}-${Date.now()}`, 
+            dayNumber: i, 
+            title: `Giorno ${i}`, 
+            exercises: [] 
+          });
         }
         return newDays;
       } else {
@@ -633,7 +559,6 @@ useEffect(() => {
     setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
   };
 
-  // Funzione per salvare la scheda creata dal Coach per l'atleta selezionato
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
     const result = await saveProgramToSupabase(targetId, programName, programDays);
@@ -696,7 +621,18 @@ useEffect(() => {
       notes: builderNotes.trim() || undefined
     };
 
-    setProgramDays(prev => prev.map(day => day.id === dayId ? { ...day, exercises: [...day.exercises, newEx] } : day));
+    setProgramDays(prevDays => 
+      prevDays.map(day => {
+        if (day.id === dayId) {
+          return {
+            ...day,
+            exercises: [...(day.exercises || []), newEx]
+          };
+        }
+        return day;
+      })
+    );
+
     setBuilderExName('');
     setBuilderMuscleGroup('Petto');
     setBuilderNotes('');
@@ -730,6 +666,33 @@ useEffect(() => {
   ];
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
+
+  // Calcolo volumi settimanali memorizzato per alleggerire le prestazioni del PC
+  const weeklySetsMap = useMemo(() => {
+    const muscleGroups: MuscleGroup[] = [
+      'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
+      'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
+    ];
+
+    const map = muscleGroups.reduce((acc, mg) => {
+      acc[mg] = 0;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    logs.forEach(log => {
+      const logDate = new Date(log.date);
+      if (logDate >= sevenDaysAgo) {
+        const ex = programDays.flatMap(d => d.exercises).find(e => e.name === log.exerciseName);
+        const mg = ex?.muscleGroup || autoDetectMuscleGroup(log.exerciseName);
+        map[mg] = (map[mg] || 0) + 1;
+      }
+    });
+
+    return map;
+  }, [logs, programDays]);
 
   if (!user) {
     return (
@@ -1331,6 +1294,7 @@ useEffect(() => {
                   {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
                     <button
                       key={num}
+                      type="button"
                       onClick={() => handleDayCountChange(num)}
                       className={`px-2.5 py-1 text-xs font-black rounded border transition-all ${
                         selectedDayCount === num
@@ -1365,7 +1329,11 @@ useEffect(() => {
                         <div className="text-zinc-400 mt-0.5">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}</div>
                         {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
-                      <button onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400 p-1">
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} 
+                        className="text-red-500 hover:text-red-400 p-1"
+                      >
                         <Trash2 className="w-4 h-4"/>
                       </button>
                     </div>
@@ -1416,13 +1384,12 @@ useEffect(() => {
 
                   <div className="flex gap-2">
                     <input type="text" placeholder="Note del Coach (opzionale)" value={builderNotes} onChange={e => setBuilderNotes(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0">Aggiungi</button>
+                    <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0 cursor-pointer">Aggiungi</button>
                   </div>
                 </form>
               </div>
             ))}
 
-            {/* Pulsante Salva e Assegna Scheda all'Atleta */}
             <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
               {builderSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
@@ -1475,77 +1442,50 @@ useEffect(() => {
                 <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
               </div>
 
-              {(() => {
-                const muscleGroups: MuscleGroup[] = [
-                  'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
-                  'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
-                ];
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => {
+                  const count = weeklySetsMap[mg] || 0;
+                  const maxTarget = 22;
+                  const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
 
-                const weeklySetsMap: Record<string, number> = muscleGroups.reduce((acc, mg) => {
-                  acc[mg] = 0;
-                  return acc;
-                }, {} as Record<string, number>);
-
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-                logs.forEach(log => {
-                  const logDate = new Date(log.date);
-                  if (logDate >= sevenDaysAgo) {
-                    const ex = programDays.flatMap(d => d.exercises).find(e => e.name === log.exerciseName);
-                    const mg = ex?.muscleGroup || autoDetectMuscleGroup(log.exerciseName);
-                    weeklySetsMap[mg] = (weeklySetsMap[mg] || 0) + 1;
+                  let statusColor = 'bg-zinc-700';
+                  let textColor = 'text-zinc-400';
+                  if (count >= 10 && count <= 20) {
+                    statusColor = 'bg-emerald-500';
+                    textColor = 'text-emerald-400';
+                  } else if (count > 20) {
+                    statusColor = 'bg-amber-500';
+                    textColor = 'text-amber-400';
+                  } else if (count > 0) {
+                    statusColor = 'bg-blue-500';
+                    textColor = 'text-blue-400';
                   }
-                });
 
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    {muscleGroups.map(mg => {
-                      const count = weeklySetsMap[mg] || 0;
-                      const maxTarget = 22;
-                      const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
+                  return (
+                    <div key={mg} className="bg-zinc-900 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                      <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-zinc-200">{mg}</span>
+                        <span className={textColor}>{count} Serie / sett</span>
+                      </div>
 
-                      let statusColor = 'bg-zinc-700';
-                      let textColor = 'text-zinc-400';
-                      if (count >= 10 && count <= 20) {
-                        statusColor = 'bg-emerald-500';
-                        textColor = 'text-emerald-400';
-                      } else if (count > 20) {
-                        statusColor = 'bg-amber-500';
-                        textColor = 'text-amber-400';
-                      } else if (count > 0) {
-                        statusColor = 'bg-blue-500';
-                        textColor = 'text-blue-400';
-                      }
+                      <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${statusColor} transition-all duration-500`} 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
 
-                      return (
-                        <div key={mg} className="bg-zinc-900 p-3.5 rounded-lg border border-zinc-800 space-y-2">
-                          <div className="flex justify-between items-center text-xs font-bold">
-                            <span className="text-zinc-200">{mg}</span>
-                            <span className={textColor}>{count} Serie / sett</span>
-                          </div>
-
-                          <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full ${statusColor} transition-all duration-500`} 
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-
-                          <div className="flex justify-between text-[10px] text-zinc-500">
-                            <span>0 serie</span>
-                            <span>10 (MEV)</span>
-                            <span>20+ (MRV)</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
+                      <div className="flex justify-between text-[10px] text-zinc-500">
+                        <span>0 serie</span>
+                        <span>10 (MEV)</span>
+                        <span>20+ (MRV)</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* NUOVO ISTOGRAMMA TONNELLAGGIO NEL TEMPO */}
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
               <h3 className="font-bold text-base text-white flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" /> Istogramma Tonnellaggio nel Tempo (Kg Totali)
