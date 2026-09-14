@@ -344,18 +344,53 @@ export default function TopGymApp() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Caricamento scheda assegnata all'atleta (o selezionata dal coach)
-  useEffect(() => {
-    const targetId = userRole === 'COACH' ? activeAthleteId : (user?.id || 'default-user');
-    if (targetId && supabase) {
-      getProgramFromSupabase(targetId).then(data => {
-        if (data && data.days_data) {
-          setProgramDays(data.days_data);
-          if (data.program_name) setProgramName(data.program_name);
-        }
-      });
-    }
-  }, [activeAthleteId, userRole, user]);
+// Funzione di supporto per recuperare il nome dell'atleta
+const getActiveAthleteName = (id: string) => {
+  const ath = athletes.find(a => a.id === id);
+  return ath ? ath.displayName : 'Atleta';
+};
+
+// Caricamento scheda assegnata all'atleta (o selezionata dal coach)
+useEffect(() => {
+  const targetId = userRole === 'COACH' ? activeAthleteId : (user?.id || 'default-user');
+  if (targetId && supabase) {
+    getProgramFromSupabase(targetId).then(data => {
+      if (data && data.days_data) {
+        setProgramDays(data.days_data);
+        if (data.program_name) setProgramName(data.program_name);
+      } else {
+        // Se l'atleta selezionato non ha una scheda salvata, puliamo e creiamo una base vuota per lui
+        setProgramDays([
+          {
+            id: 'd1',
+            dayNumber: 1,
+            title: 'Spinta (Push)',
+            exercises: []
+          },
+          {
+            id: 'd2',
+            dayNumber: 2,
+            title: 'Trazione (Pull)',
+            exercises: []
+          },
+          {
+            id: 'd3',
+            dayNumber: 3,
+            title: 'Gambe (Legs)',
+            exercises: []
+          },
+          {
+            id: 'd4',
+            dayNumber: 4,
+            title: 'Spalle & Braccia',
+            exercises: []
+          }
+        ]);
+        setProgramName(`Scheda Personalizzata - ${getActiveAthleteName(targetId)}`);
+      }
+    });
+  }
+}, [activeAthleteId, userRole, user, athletes]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
