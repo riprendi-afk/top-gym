@@ -308,41 +308,68 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  const loadAthletesFromSupabase = async () => {
-    if (!supabase) return;
-    const { data: profiles, error } = await supabase.from('profiles').select('id, email, username, xp');
-    if (!error && profiles) {
-      const formattedAthletes: Athlete[] = profiles.map((p: any) => ({
+// 1. Caricamento iniziale degli atleti (Eseguito 1 sola volta senza loop di memoria)
+useEffect(() => {
+  if (!supabase) return;
+
+  const fetchAthletes = async () => {
+    const { data: profiles } = await supabase.from('profiles').select('id, email, username, xp');
+    if (profiles) {
+      const formatted: Athlete[] = profiles.map((p: any) => ({
         id: p.id,
         displayName: p.username || (p.email ? p.email.split('@')[0] : 'Atleta'),
         email: p.email || '',
         xp: p.xp || 0
       }));
-      setAthletes(formattedAthletes);
-      if (formattedAthletes.length > 0 && !activeAthleteId) {
-        setActiveAthleteId(formattedAthletes[0].id);
+      setAthletes(formatted);
+      if (formatted.length > 0 && !activeAthleteId) {
+        setActiveAthleteId(formatted[0].id);
       }
     }
   };
 
-  useEffect(() => {
-    if (!supabase) return;
+  fetchAthletes();
 
-    loadAthletesFromSupabase();
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null);
+  });
 
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    };
-    initAuth();
+  return () => subscription.unsubscribe();
+}, []);
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      setUser(session?.user ?? null);
-      loadAthletesFromSupabase();
-    });
+// 2. Caricamento della scheda dell'atleta selezionato (Reset pulito quando cambi atleta)
+useEffect(() => {
+  const currentUserId = user?.id;
+  const targetId = userRole === 'COACH' 
+    ? (activeAthleteId || currentUserId || 'default-user')
+    : (currentUserId || 'default-user');
 
-    return () => authListener.subscription.unsubscribe();
-  }, []);
+  if (!targetId || !supabase) return;
+
+  let isMounted = true;
+
+  getProgramFromSupabase(targetId).then(data => {
+    if (!isMounted) return;
+
+    if (data && data.days_data && data.days_data.length > 0) {
+      setProgramDays(data.days_data);
+      if (data.program_name) setProgramName(data.program_name);
+    } else {
+      const ath = athletes.find(a => a.id === targetId);
+      const athleteName = ath ? ath.displayName : 'Atleta';
+
+      setProgramDays([
+        { id: 'd1', dayNumber: 1, title: 'Spinta (Push)', exercises: [] },
+        { id: 'd2', dayNumber: 2, title: 'Trazione (Pull)', exercises: [] },
+        { id: 'd3', dayNumber: 3, title: 'Gambe (Legs)', exercises: [] },
+        { id: 'd4', dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
+      ]);
+      setProgramName(`Scheda Personalizzata - ${athleteName}`);
+    }
+  });
+
+  return () => { isMounted = false; };
+}, [activeAthleteId, userRole, user?.id]);
 
 // Funzione di supporto per recuperare il nome dell'atleta
 const getActiveAthleteName = (id: string) => {
