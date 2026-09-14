@@ -218,7 +218,7 @@ export default function TopGymApp() {
   const [pinError, setPinError] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard' | 'settings'>('workout');
-  const [userXp, setUserXp] = useState(520);
+  const [userXp, setUserXp] = useState(0);
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
@@ -275,7 +275,7 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // DEFINIZIONE CORRETTA E INIZIALE DI targetUserId (In cima al componente)
+  // Identificazione Utente Target
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
 
   const targetUserId = userRole === 'COACH' 
@@ -702,7 +702,30 @@ export default function TopGymApp() {
     }
   };
 
-  const userLevel = Math.floor(userXp / 100) + 1;
+  // Funzione per assegnare il titolo del grado in base al livello
+  const getRankTitle = (level: number) => {
+    if (level < 10) return "Novizio della Ghisa";
+    if (level < 20) return "Recluta della Sala Pesi";
+    if (level < 30) return "Sollevatore Abituale";
+    if (level < 40) return "Atleta d'Acciaio";
+    if (level < 50) return "Guerriero del Rack";
+    if (level < 60) return "Veterano della Palestra";
+    if (level < 70) return "Macchina da Guerra";
+    if (level < 80) return "Titano della Ghisa";
+    if (level < 90) return "Leggenda Vivente";
+    return "Dio dell'Olimpo TOP GYM";
+  };
+
+  // Sistema 99 Livelli con Progressione Esponenziale di XP
+  const userLevel = Math.min(99, Math.floor(Math.sqrt(userXp / 25)));
+  const userRank = getRankTitle(userLevel);
+
+  const xpForNextLevel = 25 * Math.pow(userLevel + 1, 2);
+  const xpForCurrentLevel = 25 * Math.pow(userLevel, 2);
+  const levelProgressPercentage = userLevel >= 99 
+    ? 100 
+    : Math.min(100, Math.round(((userXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100));
+
   const todayLogs = logs.filter(l => l.date === todayIso());
   const latestReadiness = readinessHistory[0];
   const recentRpeLogs = logs.slice(0, 4);
@@ -885,11 +908,23 @@ export default function TopGymApp() {
               </div>
             )}
 
+            {/* Visualizzazione Grado, Livello 99 e Barra XP */}
             <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
-              <Shield className="text-yellow-500 w-5 h-5" />
-              <div>
-                <div className="text-xs text-zinc-400">LIVELLO {userLevel}</div>
-                <div className="text-sm font-bold text-yellow-500">{userXp} XP</div>
+              <Shield className="text-yellow-500 w-5 h-5 flex-shrink-0" />
+              <div className="w-36">
+                <div className="text-[10px] text-yellow-500 font-black uppercase tracking-wider truncate">
+                  {userRank}
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-zinc-400 font-bold">
+                  <span>Lvl {userLevel}/99</span>
+                  <span className="font-mono">{userXp} XP</span>
+                </div>
+                <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-0.5 overflow-hidden">
+                  <div 
+                    className="bg-yellow-500 h-full transition-all duration-300"
+                    style={{ width: `${levelProgressPercentage}%` }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1330,9 +1365,18 @@ export default function TopGymApp() {
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
-              <div>
+              <div className="space-y-2 flex-1 max-w-md">
                 <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
-                <p className="text-xs text-zinc-400 mt-1">Imposta la frequenza settimanale e componi gli esercizi per ciascuna giornata.</p>
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nome della Scheda</label>
+                  <input
+                    type="text"
+                    value={programName}
+                    onChange={(e) => setProgramName(e.target.value)}
+                    placeholder="Es. Scheda Ipertrofia / Forza"
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
