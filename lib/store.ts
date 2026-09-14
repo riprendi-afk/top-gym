@@ -67,14 +67,35 @@ export async function saveProgramToSupabase(userId: string, programName: string,
   const supabase = getSupabase();
   if (!supabase) return { success: true, localOnly: true };
 
-  const { error } = await supabase
+  const { data: existing } = await supabase
     .from('programs')
-    .upsert({
-      user_id: userId,
-      program_name: programName,
-      days_data: days,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  let error;
+
+  if (existing) {
+    const res = await supabase
+      .from('programs')
+      .update({
+        program_name: programName,
+        days_data: days,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+    error = res.error;
+  } else {
+    const res = await supabase
+      .from('programs')
+      .insert({
+        user_id: userId,
+        program_name: programName,
+        days_data: days,
+        updated_at: new Date().toISOString()
+      });
+    error = res.error;
+  }
 
   if (error) {
     console.error('Errore salvataggio programma:', error.message);
