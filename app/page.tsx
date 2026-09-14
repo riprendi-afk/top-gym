@@ -233,7 +233,9 @@ export default function TopGymApp() {
   const [bodyWeight, setBodyWeight] = useState('78.5');
   const [readinessSuccessMessage, setReadinessSuccessMessage] = useState<string | null>(null);
   const [builderSuccessMessage, setBuilderSuccessMessage] = useState<string | null>(null);
-  
+  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
+  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
+
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([
     {
       id: 'r1',
@@ -273,7 +275,14 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // 1. Caricamento iniziale degli atleti da Supabase (Senza loop continui)
+  // DEFINIZIONE CORRETTA E INIZIALE DI targetUserId (In cima al componente)
+  const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
+
+  const targetUserId = userRole === 'COACH' 
+    ? (activeAthleteId || user?.id || 'default-user')
+    : (user?.id || 'default-user');
+
+  // Caricamento iniziale degli atleti da Supabase
   useEffect(() => {
     if (!supabase) return;
 
@@ -302,28 +311,60 @@ export default function TopGymApp() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Caricamento scheda dell'atleta selezionato (Con reset anti-sfarfallio e isolamento giorni)
+  // Caricamento Storico Allenamenti per l'atleta attivo
+  const loadHistory = async (userId: string) => {
+    if (!userId) return;
+    const data = await getWorkoutHistoryFromSupabase(userId);
+    setWorkoutHistory(data || []);
+  };
+
+  // Caricamento Storico Readiness per l'atleta attivo da Supabase
+  const loadReadinessHistory = async (userId: string) => {
+    if (!supabase || !userId) return;
+    try {
+      const { data, error } = await supabase
+        .from('readiness_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        const formatted = data.map((r: any) => ({
+          id: r.id,
+          date: r.date,
+          sleepHours: r.sleep_hours,
+          sleepQuality: r.sleep_quality,
+          stressLevel: r.stress_level,
+          domsLevel: r.doms_level,
+          energyLevel: r.energy_level,
+          bodyWeight: r.body_weight,
+          readinessScore: r.readiness_score,
+          recommendation: r.recommendation
+        }));
+        setReadinessHistory(formatted);
+      } else {
+        setReadinessHistory([]);
+      }
+    } catch (e) {
+      setReadinessHistory([]);
+    }
+  };
+
+  // Sincronizzazione automatica al cambio di atleta selezionato
   useEffect(() => {
-    if (!supabase) return;
-
-    const currentUserId = user?.id;
-    const targetId = userRole === 'COACH' 
-      ? (activeAthleteId || currentUserId || 'default-user')
-      : (currentUserId || 'default-user');
-
-    if (!targetId) return;
+    if (!supabase || !targetUserId) return;
 
     let isMounted = true;
-    setProgramDays([]); // Pulisce lo schermo per evitare residui della scheda precedente
+    setProgramDays([]); // Reset immediato anti-sfarfallio
 
-    getProgramFromSupabase(targetId).then(data => {
+    getProgramFromSupabase(targetUserId).then(data => {
       if (!isMounted) return;
 
       if (data && data.days_data && data.days_data.length > 0) {
         setProgramDays(data.days_data);
         if (data.program_name) setProgramName(data.program_name);
       } else {
-        const ath = athletes.find(a => a.id === targetId);
+        const ath = athletes.find(a => a.id === targetUserId);
         const athleteName = ath ? ath.displayName : 'Atleta';
         const timestamp = Date.now();
 
@@ -337,8 +378,11 @@ export default function TopGymApp() {
       }
     });
 
+    loadHistory(targetUserId);
+    loadReadinessHistory(targetUserId);
+
     return () => { isMounted = false; };
-  }, [activeAthleteId, userRole, user?.id]);
+  }, [targetUserId, userRole]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -477,7 +521,7 @@ export default function TopGymApp() {
     return { totalScore, rec };
   };
 
-  const handleSaveReadiness = (e: React.FormEvent) => {
+  const handleSaveReadiness = async (e: React.FormEvent) => {
     e.preventDefault();
     const { totalScore, rec } = computeReadiness();
     const newReadiness: ReadinessLog = {
@@ -492,9 +536,27 @@ export default function TopGymApp() {
       readinessScore: totalScore,
       recommendation: rec
     };
-    setReadinessHistory([newReadiness, ...readinessHistory]);
+
+    setReadinessHistory(prev => [newReadiness, ...prev]);
+
+    if (supabase && targetUserId) {
+      await supabase.from('readiness_logs').insert([{
+        id: newReadiness.id,
+        user_id: targetUserId,
+        date: newReadiness.date,
+        sleep_hours: newReadiness.sleepHours,
+        sleep_quality: newReadiness.sleepQuality,
+        stress_level: newReadiness.stressLevel,
+        doms_level: newReadiness.domsLevel,
+        energy_level: newReadiness.energyLevel,
+        body_weight: newReadiness.bodyWeight,
+        readiness_score: newReadiness.readinessScore,
+        recommendation: newReadiness.recommendation
+      }]);
+    }
+
     setUserXp(prev => prev + 20);
-    setReadinessSuccessMessage('🎉 Check Readiness registrato con successo! (+20 XP)');
+    setReadinessSuccessMessage('🎉 Check Readiness salvato nello storico dell\'atleta! (+20 XP)');
     setTimeout(() => setReadinessSuccessMessage(null), 4000);
   };
 
@@ -518,24 +580,12 @@ export default function TopGymApp() {
     });
   };
 
-  const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
-  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
-
-  const loadHistory = async () => {
-    const data = await getWorkoutHistoryFromSupabase('default-user');
-    setWorkoutHistory(data || []);
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
   const handleFinishAndSaveWorkout = async () => {
     const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
     const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 12000;
 
     const result = await saveCompletedWorkoutToSupabase({
-      userId: 'default-user',
+      userId: targetUserId,
       dayName: dayName,
       totalVolume: totalVol,
       exercisesCount: activeRoutine.length,
@@ -544,7 +594,7 @@ export default function TopGymApp() {
     if (result.success) {
       setUserXp(prev => prev + 50);
       setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
-      await loadHistory();
+      await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
       setWorkoutSuccessMessage('⚠️ Errore nel salvataggio dell\'allenamento.');
@@ -665,9 +715,6 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
-
-  // Calcolo volumi settimanali memorizzato per alleggerire le prestazioni del PC
   const weeklySetsMap = useMemo(() => {
     const muscleGroups: MuscleGroup[] = [
       'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
