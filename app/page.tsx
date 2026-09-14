@@ -359,7 +359,7 @@ useEffect(() => {
         setProgramDays(data.days_data);
         if (data.program_name) setProgramName(data.program_name);
       } else {
-        // Se l'atleta selezionato non ha una scheda salvata, puliamo e creiamo una base vuota per lui
+        // Se l'atleta selezionato non ha una scheda salvata, creiamo una base pulita per lui
         setProgramDays([
           {
             id: 'd1',
