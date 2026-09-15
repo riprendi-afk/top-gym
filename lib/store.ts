@@ -8,11 +8,24 @@ export const getSupabase = () => {
   return createClient(supabaseUrl, supabaseAnonKey);
 };
 
+export interface CompletedSetLog {
+  exerciseId?: string;
+  exerciseName: string;
+  weight: number;
+  reps: number;
+  rpe: number;
+  estimated1RM?: number;
+  volume?: number;
+  date?: string;
+  time?: string;
+}
+
 export async function saveCompletedWorkoutToSupabase(workout: {
   userId: string;
   dayName: string;
   totalVolume: number;
   exercisesCount: number;
+  logs: CompletedSetLog[];
 }) {
   const supabase = getSupabase();
   if (!supabase) return { success: true, localOnly: true };
@@ -22,6 +35,7 @@ export async function saveCompletedWorkoutToSupabase(workout: {
     day_name: workout.dayName,
     total_volume: workout.totalVolume,
     exercises_count: workout.exercisesCount,
+    logs: workout.logs ?? [],
   });
 
   if (error) {
@@ -33,11 +47,12 @@ export async function saveCompletedWorkoutToSupabase(workout: {
 
 export async function getWorkoutHistoryFromSupabase(userId: string) {
   const supabase = getSupabase();
-  if (!supabase) return [];
+  if (!supabase || !userId) return [];
 
   const { data, error } = await supabase
     .from('workout_history')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
