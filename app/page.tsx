@@ -438,14 +438,48 @@ export default function TopGymApp() {
     }
   };
 
+  // --- Tabella RPE → % 1RM (Ripetizioni in Riserva), standard powerlifting/forza ---
+  // Righe: RPE da 6 a 10 (step 0.5), Colonne: ripetizioni da 1 a 10.
+  // Fonte: tabella fornita dall'utente (RPE Chart). Non tocca conteggi/volumi: incide solo sulla stima del massimale.
+  const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
+    '10':  [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
+    '9.5': [98,  94, 91, 88, 85, 82, 80, 77, 75, 72],
+    '9':   [96,  92, 89, 86, 84, 81, 79, 76, 74, 71],
+    '8.5': [94,  91, 88, 85, 82, 80, 77, 75, 72, 69],
+    '8':   [92,  89, 86, 84, 81, 79, 76, 74, 71, 68],
+    '7.5': [91,  88, 85, 82, 80, 77, 75, 72, 69, 67],
+    '7':   [89,  86, 84, 81, 79, 76, 74, 71, 68, 65],
+    '6.5': [87,  85, 82, 80, 77, 75, 72, 69, 67, 64],
+    '6':   [86,  84, 81, 79, 76, 74, 71, 68, 65, 62],
+  };
+
+  // Formula di Epley: fallback generico quando l'RPE non è tra quelli in tabella o le reps superano 10
   const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
+
+  // Stima 1RM basata su RPE reale della serie (più precisa di Epley): usa la tabella se reps 1-10 e RPE in tabella,
+  // altrimenti ricade sulla formula generica. weight/reps non validi -> null (nessuna stima possibile).
+  const calculateEstimated1RM = useCallback((weight: number, reps: number, rpe?: number): number | null => {
+    if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(reps) || reps <= 0) return null;
+    if (rpe !== undefined && Number.isFinite(rpe) && reps <= 10) {
+      const row = RPE_PERCENT_1RM_TABLE[String(rpe)];
+      if (row) {
+        const pct = row[Math.round(reps) - 1];
+        if (pct > 0) return Math.round(weight / (pct / 100));
+      }
+    }
+    return calculate1RM(weight, reps);
+  }, []);
 
   // Tutte le serie mai registrate (log di oggi + storico Supabase), usate per stimare il vero 1RM per esercizio
   const allLoggedSets = useMemo(() => {
     const items: { exerciseName: string; weight: number; estimated1RM: number }[] = [];
     logs.forEach(l => {
       if (l.weight > 0 && l.reps > 0) {
-        items.push({ exerciseName: l.exerciseName, weight: l.weight, estimated1RM: l.estimated1RM || calculate1RM(l.weight, l.reps) });
+        items.push({
+          exerciseName: l.exerciseName,
+          weight: l.weight,
+          estimated1RM: l.estimated1RM || calculateEstimated1RM(l.weight, l.reps, l.rpe) || calculate1RM(l.weight, l.reps)
+        });
       }
     });
     workoutHistory.forEach(w => {
@@ -453,18 +487,19 @@ export default function TopGymApp() {
         w.logs.forEach((l: any) => {
           const weight = Number(l?.weight) || 0;
           const reps = Number(l?.reps) || 0;
+          const rpeVal = Number(l?.rpe);
           if (weight > 0 && reps > 0) {
             items.push({
               exerciseName: l.exerciseName || '',
               weight,
-              estimated1RM: Number(l.estimated1RM) || calculate1RM(weight, reps)
+              estimated1RM: Number(l.estimated1RM) || calculateEstimated1RM(weight, reps, Number.isFinite(rpeVal) ? rpeVal : undefined) || calculate1RM(weight, reps)
             });
           }
         });
       }
     });
     return items;
-  }, [logs, workoutHistory]);
+  }, [logs, workoutHistory, calculateEstimated1RM]);
 
   // Miglior 1RM stimato per esercizio, calcolato su tutto lo storico disponibile
   const best1RMByExercise = useMemo(() => {
@@ -489,13 +524,21 @@ export default function TopGymApp() {
     return { pct, label, colorClasses };
   }, [best1RMByExercise]);
 
-  // Anteprima 1RM: null se i campi non contengono numeri validi (prima mostrava NaN)
+  // Anteprima 1RM: usa l'RPE selezionato nel form (più precisa); null se i campi non sono validi (prima mostrava NaN)
   const estimated1RMPreview = useMemo(() => {
     const w = parseFloat(weight);
     const r = parseInt(reps, 10);
+    const rpeVal = parseFloat(rpe);
     if (!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return null;
-    return calculate1RM(w, r);
-  }, [weight, reps]);
+    return calculateEstimated1RM(w, r, Number.isFinite(rpeVal) ? rpeVal : undefined);
+  }, [weight, reps, rpe, calculateEstimated1RM]);
+
+  // Percentuale di 1RM associata a RPE+reps selezionati, letta direttamente dalla tabella (senza passare dal peso)
+  const rpeTablePreviewPct = useMemo(() => {
+    const r = Math.min(10, Math.max(1, parseInt(reps, 10) || 1));
+    const row = RPE_PERCENT_1RM_TABLE[rpe];
+    return row ? row[r - 1] : null;
+  }, [rpe, reps]);
 
   const activeAthlete = athletes.find(a => a.id === activeAthleteId) || (athletes.length > 0 ? athletes[0] : { id: 'default', displayName: 'Atleta', email: '', xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
@@ -609,7 +652,7 @@ export default function TopGymApp() {
     const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 0;
     
     // Il campo 'logs' viene ora salvato correttamente da saveCompletedWorkoutToSupabase
-    let result: { success?: boolean } = {};
+    let result: { success?: boolean; error?: string } = {};
     try {
       result = await saveCompletedWorkoutToSupabase({
         userId: targetUserId,
@@ -618,8 +661,8 @@ export default function TopGymApp() {
         exercisesCount: activeRoutine.length,
         logs: todayLogs
       });
-    } catch {
-      result = { success: false };
+    } catch (e: any) {
+      result = { success: false, error: e?.message };
     }
 
     if (result?.success) {
@@ -629,8 +672,10 @@ export default function TopGymApp() {
       await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
-      setWorkoutSuccessMessage('⚠️ Errore nel salvataggio dell\'allenamento.');
-      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
+      // Mostro il messaggio reale di Supabase (es. colonna mancante, policy RLS) invece di un testo generico
+      const detail = result?.error ? ` (${result.error})` : '';
+      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. I log restano salvati in locale, riprova.`);
+      setTimeout(() => setWorkoutSuccessMessage(null), 8000);
     }
   };
 
@@ -648,18 +693,19 @@ export default function TopGymApp() {
 
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
-    let result: { success?: boolean } = {};
+    let result: { success?: boolean; error?: string } = {};
     try {
       result = await saveProgramToSupabase(targetId, programName, programDays);
-    } catch {
-      result = { success: false };
+    } catch (e: any) {
+      result = { success: false, error: e?.message };
     }
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}! L'atleta ora può visualizzarla.`);
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
-      setBuilderSuccessMessage('⚠️ Errore durante il salvataggio della scheda.');
-      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+      const detail = result?.error ? ` (${result.error})` : '';
+      setBuilderSuccessMessage(`⚠️ Errore durante il salvataggio della scheda${detail}.`);
+      setTimeout(() => setBuilderSuccessMessage(null), 8000);
     }
   };
 
@@ -677,7 +723,7 @@ export default function TopGymApp() {
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
-      estimated1RM: calculate1RM(numWeight, numReps),
+      estimated1RM: calculateEstimated1RM(numWeight, numReps, numRpe) || calculate1RM(numWeight, numReps),
       volume: numWeight * numReps,
       date: todayIso(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1176,6 +1222,9 @@ export default function TopGymApp() {
                       <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold">
                         {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val}>{val}</option>))}
                       </select>
+                      {rpeTablePreviewPct !== null && (
+                        <p className="text-[10px] text-zinc-500 mt-1">≈ {rpeTablePreviewPct}% del 1RM a {parseInt(reps, 10) || 1} reps</p>
+                      )}
                     </div>
                   </div>
                   <button type="submit" className="w-full bg-[#E50914] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase">
