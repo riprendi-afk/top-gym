@@ -440,6 +440,55 @@ export default function TopGymApp() {
 
   const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
 
+  // Tutte le serie mai registrate (log di oggi + storico Supabase), usate per stimare il vero 1RM per esercizio
+  const allLoggedSets = useMemo(() => {
+    const items: { exerciseName: string; weight: number; estimated1RM: number }[] = [];
+    logs.forEach(l => {
+      if (l.weight > 0 && l.reps > 0) {
+        items.push({ exerciseName: l.exerciseName, weight: l.weight, estimated1RM: l.estimated1RM || calculate1RM(l.weight, l.reps) });
+      }
+    });
+    workoutHistory.forEach(w => {
+      if (Array.isArray(w.logs)) {
+        w.logs.forEach((l: any) => {
+          const weight = Number(l?.weight) || 0;
+          const reps = Number(l?.reps) || 0;
+          if (weight > 0 && reps > 0) {
+            items.push({
+              exerciseName: l.exerciseName || '',
+              weight,
+              estimated1RM: Number(l.estimated1RM) || calculate1RM(weight, reps)
+            });
+          }
+        });
+      }
+    });
+    return items;
+  }, [logs, workoutHistory]);
+
+  // Miglior 1RM stimato per esercizio, calcolato su tutto lo storico disponibile
+  const best1RMByExercise = useMemo(() => {
+    const map = new Map<string, number>();
+    allLoggedSets.forEach(({ exerciseName, estimated1RM }) => {
+      if (!exerciseName) return;
+      if (estimated1RM > (map.get(exerciseName) || 0)) map.set(exerciseName, estimated1RM);
+    });
+    return map;
+  }, [allLoggedSets]);
+
+  // Intensità di carico (% 1RM) secondo le fasce standard forza/ipertrofia
+  const getIntensityInfo = useCallback((exerciseName: string, weight: number) => {
+    const best1RM = best1RMByExercise.get(exerciseName);
+    if (!best1RM || best1RM <= 0 || !weight) return null;
+    const pct = Math.round((weight / best1RM) * 100);
+    let label = 'Attivazione';
+    let colorClasses = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+    if (pct >= 90) { label = 'Picco Massimale'; colorClasses = 'bg-red-950 text-red-300 border-red-800'; }
+    else if (pct >= 75) { label = 'Forza'; colorClasses = 'bg-amber-950 text-amber-300 border-amber-800'; }
+    else if (pct >= 55) { label = 'Ipertrofia'; colorClasses = 'bg-emerald-950 text-emerald-300 border-emerald-800'; }
+    return { pct, label, colorClasses };
+  }, [best1RMByExercise]);
+
   // Anteprima 1RM: null se i campi non contengono numeri validi (prima mostrava NaN)
   const estimated1RMPreview = useMemo(() => {
     const w = parseFloat(weight);
@@ -452,6 +501,13 @@ export default function TopGymApp() {
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
   const activeRoutine = activeDay?.exercises ?? [];
   const currentExercise = activeRoutine.find(e => e.id === currentExId) || activeRoutine[0];
+
+  const currentIntensityPreview = useMemo(() => {
+    if (!currentExercise) return null;
+    const w = parseFloat(weight);
+    if (!Number.isFinite(w) || w <= 0) return null;
+    return getIntensityInfo(currentExercise.name, w);
+  }, [currentExercise, weight, getIntensityInfo]);
 
   const exerciseHistory = currentExercise ? logs.filter(l => l.exerciseName === currentExercise.name) : [];
   const lastLoggedSet = exerciseHistory[0];
@@ -552,7 +608,7 @@ export default function TopGymApp() {
     const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
     const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 0;
     
-    // Assicurati che lo store salvi anche l'array 'logs' nel DB per vederlo nelle stats!
+    // Il campo 'logs' viene ora salvato correttamente da saveCompletedWorkoutToSupabase
     let result: { success?: boolean } = {};
     try {
       result = await saveCompletedWorkoutToSupabase({
@@ -560,8 +616,8 @@ export default function TopGymApp() {
         dayName: dayName,
         totalVolume: totalVol,
         exercisesCount: activeRoutine.length,
-        logs: todayLogs // <- Passiamo i log per lo storico espandibile
-      } as any);
+        logs: todayLogs
+      });
     } catch {
       result = { success: false };
     }
@@ -794,6 +850,29 @@ export default function TopGymApp() {
     () => workoutHistory.reduce((max, w) => Math.max(max, w.total_volume || w.totalVolume || 0), 0) || 1,
     [workoutHistory]
   );
+
+  // Serie Volume (tonnellaggio) + Intensità media (% 1RM) per sessione, per il grafico a due linee
+  const volumeIntensitySeries = useMemo(() => {
+    const sessions = workoutHistory.slice(0, 12).reverse();
+    return sessions.map((item, idx) => {
+      const volume = item.total_volume || item.totalVolume || 0;
+      const sessionLogs = Array.isArray(item.logs) ? item.logs : [];
+      const intensities = sessionLogs
+        .map((l: any) => {
+          const best = best1RMByExercise.get(l?.exerciseName);
+          const w = Number(l?.weight) || 0;
+          return best && best > 0 && w > 0 ? (w / best) * 100 : null;
+        })
+        .filter((v: number | null): v is number => v !== null);
+      const avgIntensity = intensities.length
+        ? Math.round(intensities.reduce((a: number, b: number) => a + b, 0) / intensities.length)
+        : null;
+      const dateStr = item.created_at
+        ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+        : (item.date || `#${idx + 1}`);
+      return { key: item.id || item._id || `session-${idx}`, dateStr, volume, avgIntensity };
+    });
+  }, [workoutHistory, best1RMByExercise]);
   // ----------------------------------------------------------------
 
   if (!user) {
@@ -1063,9 +1142,14 @@ export default function TopGymApp() {
                     <p className="text-xs text-zinc-400 mt-1">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
                   </div>
                   {estimated1RMPreview !== null && (
-                    <div className="bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-lg text-right">
+                    <div className="bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-lg text-right space-y-1">
                       <div className="text-[10px] text-zinc-400 uppercase font-bold">1RM Stimato</div>
                       <div className="text-lg font-black text-[#E50914]">{estimated1RMPreview} Kg</div>
+                      {currentIntensityPreview && (
+                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase inline-block ${currentIntensityPreview.colorClasses}`}>
+                          {currentIntensityPreview.pct}% 1RM · {currentIntensityPreview.label}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1102,20 +1186,28 @@ export default function TopGymApp() {
                 <div className="mt-6">
                   <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Serie Registrate Oggi</h4>
                   <div className="space-y-2">
-                    {todayLogs.map((log, i) => (
-                      <div key={log.id} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-zinc-500">Set {i + 1}</span>
-                          <div>
-                            <span className="font-bold text-white block">{log.exerciseName}</span>
-                            <span className="text-zinc-400 font-mono text-[11px]">{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</span>
+                    {todayLogs.map((log, i) => {
+                      const intensity = getIntensityInfo(log.exerciseName, log.weight);
+                      return (
+                        <div key={log.id} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-zinc-500">Set {i + 1}</span>
+                            <div>
+                              <span className="font-bold text-white block">{log.exerciseName}</span>
+                              <span className="text-zinc-400 font-mono text-[11px]">{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</span>
+                            </div>
+                            {intensity && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${intensity.colorClasses}`}>
+                                {intensity.pct}% 1RM · {intensity.label}
+                              </span>
+                            )}
                           </div>
+                          <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1411,31 +1503,74 @@ export default function TopGymApp() {
               ) : (
                 <div className="space-y-4">
                   <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                    <div className="flex items-end gap-3 h-52 pt-8 border-b border-zinc-800 pb-2 overflow-x-auto">
-                      {workoutHistory.slice(0, 12).reverse().map((item, idx) => {
-                        const vol = item.total_volume || item.totalVolume || 0;
-                        const heightPercent = Math.max(10, Math.round((vol / maxHistoryVolume) * 100));
-                        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : (item.date || '');
-                        const intensityColor = heightPercent > 80 ? 'from-red-600 to-orange-500' : heightPercent > 50 ? 'from-emerald-600 to-green-500' : 'from-blue-600 to-indigo-500';
+                    {volumeIntensitySeries.length === 0 ? (
+                      <p className="text-xs text-zinc-400 italic text-center py-8">Nessun dato sufficiente per il grafico.</p>
+                    ) : (
+                      <>
+                        {(() => {
+                          const chartW = 600;
+                          const chartH = 160;
+                          const padX = 24;
+                          const n = volumeIntensitySeries.length;
+                          const stepX = n > 1 ? (chartW - padX * 2) / (n - 1) : 0;
+                          const xAt = (i: number) => padX + stepX * i;
+                          const yVolAt = (v: number) => chartH - (Math.min(1, v / maxHistoryVolume) * (chartH - 20)) - 10;
+                          const yIntAt = (pct: number) => chartH - (Math.min(1, pct / 100) * (chartH - 20)) - 10;
 
-                        return (
-                          <div key={item.id || item._id || `bar-${idx}`} className="flex-1 flex flex-col items-center gap-2 min-w-[50px] h-full justify-end group">
-                            <span className="text-[10px] font-mono font-bold text-white opacity-90 group-hover:opacity-100">
-                              {vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol}
-                            </span>
-                            <div className="w-full bg-zinc-800/80 rounded-t-md overflow-hidden flex items-end h-full">
-                              <div className={`w-full bg-gradient-to-t ${intensityColor} rounded-t-md transition-all duration-500 group-hover:brightness-125`} style={{ height: `${heightPercent}%` }} />
-                            </div>
-                            <span className="text-[10px] text-zinc-400 font-mono whitespace-nowrap">{dateStr}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-center text-[11px] flex items-center justify-center gap-4 mt-3 font-medium">
-                      <span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500" /> Intensità Lieve</span>
-                      <span className="flex items-center gap-1 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" /> Intensità Media</span>
-                      <span className="flex items-center gap-1 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" /> Altissima Intensità</span>
-                    </div>
+                          const volPoints = volumeIntensitySeries.map((s, i) => `${xAt(i)},${yVolAt(s.volume)}`).join(' ');
+                          const intensityPointsWithData = volumeIntensitySeries
+                            .map((s, i) => (s.avgIntensity !== null ? { x: xAt(i), y: yIntAt(s.avgIntensity) } : null))
+                            .filter((p): p is { x: number; y: number } => p !== null);
+                          const intPolyline = intensityPointsWithData.map(p => `${p.x},${p.y}`).join(' ');
+                          const hasIntensityData = intensityPointsWithData.length > 0;
+
+                          return (
+                            <svg viewBox={`0 0 ${chartW} ${chartH + 24}`} className="w-full h-52" preserveAspectRatio="none">
+                              {/* Linee guida orizzontali */}
+                              {[0, 0.25, 0.5, 0.75, 1].map(f => (
+                                <line key={f} x1={padX} x2={chartW - padX} y1={10 + f * (chartH - 20)} y2={10 + f * (chartH - 20)} stroke="#27272a" strokeWidth="1" />
+                              ))}
+
+                              {/* Linea Volume (tonnellaggio) */}
+                              <polyline points={volPoints} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                              {volumeIntensitySeries.map((s, i) => (
+                                <circle key={`vol-${s.key}`} cx={xAt(i)} cy={yVolAt(s.volume)} r="3.5" fill="#3b82f6">
+                                  <title>{`${s.dateStr} · Volume: ${s.volume.toLocaleString('it-IT')} kg`}</title>
+                                </circle>
+                              ))}
+
+                              {/* Linea Intensità media (% 1RM), solo dove disponibile */}
+                              {hasIntensityData && (
+                                <polyline points={intPolyline} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 3" />
+                              )}
+                              {volumeIntensitySeries.map((s, i) =>
+                                s.avgIntensity !== null ? (
+                                  <circle key={`int-${s.key}`} cx={xAt(i)} cy={yIntAt(s.avgIntensity)} r="3.5" fill="#f59e0b">
+                                    <title>{`${s.dateStr} · Intensità media: ${s.avgIntensity}% 1RM`}</title>
+                                  </circle>
+                                ) : null
+                              )}
+
+                              {/* Etichette data sull'asse X */}
+                              {volumeIntensitySeries.map((s, i) => (
+                                <text key={`label-${s.key}`} x={xAt(i)} y={chartH + 16} fontSize="9" fill="#a1a1aa" textAnchor="middle" fontFamily="monospace">
+                                  {s.dateStr}
+                                </text>
+                              ))}
+                            </svg>
+                          );
+                        })()}
+                        <div className="text-center text-[11px] flex items-center justify-center gap-5 mt-2 font-medium">
+                          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-3 h-0.5 rounded-full bg-blue-500 inline-block" /> Volume (kg)</span>
+                          <span className="flex items-center gap-1.5 text-amber-400"><span className="w-3 h-0.5 rounded-full bg-amber-500 inline-block" /> Intensità Media (% 1RM)</span>
+                        </div>
+                        {!volumeIntensitySeries.some(s => s.avgIntensity !== null) && (
+                          <p className="text-[10px] text-zinc-500 italic text-center mt-2">
+                            Nessun dato di intensità disponibile per queste sessioni (probabilmente registrate prima del salvataggio dei dettagli serie).
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   <div className="overflow-x-auto pt-2 space-y-2">
