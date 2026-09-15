@@ -183,6 +183,7 @@ export default function TopGymApp() {
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
+  const [readinessLoadError, setReadinessLoadError] = useState<string | null>(null);
 
   const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
@@ -278,7 +279,10 @@ export default function TopGymApp() {
   }, []);
 
   const loadReadinessHistory = useCallback(async (userId: string) => {
-    if (!supabase || !userId) return;
+    if (!supabase || !userId) {
+      setReadinessLoadError(null);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('readiness_logs')
@@ -286,23 +290,29 @@ export default function TopGymApp() {
         .eq('user_id', userId)
         .order('date', { ascending: false });
 
-      if (!error && data) {
-        const formatted = data.map((r: any) => ({
-          id: r.id,
-          date: r.date,
-          sleepHours: r.sleep_hours,
-          sleepQuality: r.sleep_quality,
-          stressLevel: r.stress_level,
-          domsLevel: r.doms_level,
-          energyLevel: r.energy_level,
-          bodyWeight: r.body_weight,
-          readinessScore: r.readiness_score,
-          recommendation: r.recommendation
-        }));
-        setReadinessHistory(formatted);
+      if (error) {
+        console.error('Errore caricamento storico readiness:', error.message);
+        setReadinessLoadError(error.message);
+        return;
       }
-    } catch {
+
+      setReadinessLoadError(null);
+      const formatted = (data || []).map((r: any) => ({
+        id: r.id,
+        date: r.date,
+        sleepHours: r.sleep_hours,
+        sleepQuality: r.sleep_quality,
+        stressLevel: r.stress_level,
+        domsLevel: r.doms_level,
+        energyLevel: r.energy_level,
+        bodyWeight: r.body_weight,
+        readinessScore: r.readiness_score,
+        recommendation: r.recommendation
+      }));
+      setReadinessHistory(formatted);
+    } catch (e: any) {
       setReadinessHistory([]);
+      setReadinessLoadError(e?.message || 'Errore di rete durante il caricamento.');
     }
   }, []);
 
@@ -1338,6 +1348,12 @@ export default function TopGymApp() {
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <History className="text-green-400" /> Storico Check Readiness ({userRole === 'COACH' ? activeAthlete.displayName : displayUserName})
               </h3>
+              {readinessLoadError && (
+                <div className="mb-4 bg-red-950/40 border border-red-800 text-red-300 p-3 rounded-lg text-xs">
+                  ⚠️ Impossibile caricare lo storico da Supabase: {readinessLoadError}
+                  <br />Controlla le policy RLS (SELECT) sulla tabella <code className="font-mono">readiness_logs</code>.
+                </div>
+              )}
               {readinessHistory.length === 0 ? (
                 <p className="text-xs text-zinc-400">Nessun check readiness ancora registrato.</p>
               ) : (
@@ -1571,7 +1587,6 @@ export default function TopGymApp() {
                             .map((s, i) => (s.avgIntensity !== null ? { x: xAt(i), y: yIntAt(s.avgIntensity) } : null))
                             .filter((p): p is { x: number; y: number } => p !== null);
                           const intPolyline = intensityPointsWithData.map(p => `${p.x},${p.y}`).join(' ');
-                          const hasIntensityData = intensityPointsWithData.length > 0;
 
                           return (
                             <svg viewBox={`0 0 ${chartW} ${chartH + 24}`} className="w-full h-52" preserveAspectRatio="none">
@@ -1588,15 +1603,22 @@ export default function TopGymApp() {
                                 </circle>
                               ))}
 
-                              {/* Linea Intensità media (% 1RM), solo dove disponibile */}
-                              {hasIntensityData && (
+                              {/* Linea Intensità media (% 1RM), solo dove disponibile (serve almeno 2 punti per tracciarla) */}
+                              {intensityPointsWithData.length >= 2 && (
                                 <polyline points={intPolyline} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 3" />
                               )}
                               {volumeIntensitySeries.map((s, i) =>
                                 s.avgIntensity !== null ? (
-                                  <circle key={`int-${s.key}`} cx={xAt(i)} cy={yIntAt(s.avgIntensity)} r="3.5" fill="#f59e0b">
-                                    <title>{`${s.dateStr} · Intensità media: ${s.avgIntensity}% 1RM`}</title>
-                                  </circle>
+                                  <g key={`int-${s.key}`}>
+                                    <circle cx={xAt(i)} cy={yIntAt(s.avgIntensity)} r="3.5" fill="#f59e0b">
+                                      <title>{`${s.dateStr} · Intensità media: ${s.avgIntensity}% 1RM`}</title>
+                                    </circle>
+                                    {intensityPointsWithData.length < 2 && (
+                                      <text x={xAt(i)} y={yIntAt(s.avgIntensity) - 8} fontSize="9" fill="#f59e0b" textAnchor="middle" fontWeight="bold">
+                                        {s.avgIntensity}%
+                                      </text>
+                                    )}
+                                  </g>
                                 ) : null
                               )}
 
@@ -1613,11 +1635,24 @@ export default function TopGymApp() {
                           <span className="flex items-center gap-1.5 text-blue-400"><span className="w-3 h-0.5 rounded-full bg-blue-500 inline-block" /> Volume (kg)</span>
                           <span className="flex items-center gap-1.5 text-amber-400"><span className="w-3 h-0.5 rounded-full bg-amber-500 inline-block" /> Intensità Media (% 1RM)</span>
                         </div>
-                        {!volumeIntensitySeries.some(s => s.avgIntensity !== null) && (
-                          <p className="text-[10px] text-zinc-500 italic text-center mt-2">
-                            Nessun dato di intensità disponibile per queste sessioni (probabilmente registrate prima del salvataggio dei dettagli serie).
-                          </p>
-                        )}
+                        {(() => {
+                          const withData = volumeIntensitySeries.filter(s => s.avgIntensity !== null).length;
+                          if (withData === 0) {
+                            return (
+                              <p className="text-[10px] text-zinc-500 italic text-center mt-2">
+                                Nessun dato di intensità disponibile per queste sessioni (probabilmente registrate prima del salvataggio dei dettagli serie).
+                              </p>
+                            );
+                          }
+                          if (withData === 1) {
+                            return (
+                              <p className="text-[10px] text-zinc-500 italic text-center mt-2">
+                                Solo una sessione con dati di intensità: serve almeno un'altra registrazione completa per tracciare l'andamento.
+                              </p>
+                            );
+                          }
+                          return null;
+                        })()}
                       </>
                     )}
                   </div>
