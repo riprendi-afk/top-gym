@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   saveCompletedWorkoutToSupabase, 
   getWorkoutHistoryFromSupabase, 
@@ -11,10 +10,10 @@ import {
 } from '@/lib/store';
 import {
   Trophy, Shield, Dumbbell, UserCheck,
-  Timer, Plus, CheckCircle, Clock, TrendingUp, BarChart3,
-  Zap, Award, Volume2, VolumeX, Lock, Unlock, Eye,
+  Timer, Plus, CheckCircle, TrendingUp, BarChart3,
+  Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, HeartPulse, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -41,96 +40,16 @@ export type MuscleGroup =
 
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   const name = exerciseName.toLowerCase().trim();
-
-  if (
-    name.includes('panca') || name.includes('chest') || name.includes('croci') || 
-    name.includes('dip') || name.includes('push up') || name.includes('piegament') ||
-    name.includes('pectoral') || name.includes('spinte inclinata') || name.includes('spinte piana') ||
-    name.includes('spinte declinata') || name.includes('svend press') || name.includes('fly')
-  ) {
-    return 'Petto';
-  }
-
-  if (
-    name.includes('trazioni') || name.includes('lat') || name.includes('rematore') || 
-    name.includes('pulley') || name.includes('stacco') || name.includes('pull down') || 
-    name.includes('pull-down') || name.includes('pull over') || name.includes('pullover') || 
-    name.includes('chin up') || name.includes('chin-up') || name.includes('vertical traction') ||
-    name.includes('seal row') || name.includes('t-bar') || name.includes('dorsal') ||
-    name.includes('gran dorsale') || name.includes('back') || name.includes('row')
-  ) {
-    return 'Dorso';
-  }
-
-  if (
-    name.includes('shoulder') || name.includes('military') || name.includes('lento') || 
-    name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') || 
-    name.includes('press spalle') || name.includes('overhead') || name.includes('face pull') || 
-    name.includes('tirate al mento') || name.includes('tirata al mento') || name.includes('rear delt') ||
-    name.includes('shrug') || name.includes('scrollate')
-  ) {
-    return 'Spalle';
-  }
-
-  if (
-    name.includes('squat') || name.includes('pressa') || name.includes('leg ext') || 
-    name.includes('leg extension') || name.includes('affondi') || name.includes('lunge') || 
-    name.includes('hack') || name.includes('sissy') || name.includes('goblet') || 
-    name.includes('step up') || name.includes('step-up') || name.includes('quadricipit') ||
-    name.includes('affondo')
-  ) {
-    return 'Quadricipiti';
-  }
-
-  if (
-    name.includes('leg curl') || name.includes('stacco rumeno') || name.includes('nordic') || 
-    name.includes('rdl') || name.includes('femorale') || name.includes('femorali') || 
-    name.includes('good morning') || name.includes('hamstring') || name.includes('stacco gambe tese')
-  ) {
-    return 'Femorali';
-  }
-
-  if (
-    name.includes('hip thrust') || name.includes('glute') || name.includes('glutei') || 
-    name.includes('kickback glutei') || name.includes('abductor') || name.includes('abduzioni') || 
-    name.includes('ponti glutei') || name.includes('glute bridge')
-  ) {
-    return 'Glutei';
-  }
-
-  if (
-    name.includes('curl') || name.includes('bicipit') || name.includes('biceps') || 
-    name.includes('hammer') || name.includes('scott') || name.includes('panca scott') || 
-    name.includes('concentrato') || name.includes('spider curl')
-  ) {
-    return 'Bicipiti';
-  }
-
-  if (
-    name.includes('pushdown') || name.includes('push down') || name.includes('french') || 
-    name.includes('tricipit') || name.includes('triceps') || name.includes('ercolina') || 
-    name.includes('skull crusher') || name.includes('skullcrusher') || name.includes('distensioni strette') || 
-    name.includes('kickback tricipiti')
-  ) {
-    return 'Tricipiti';
-  }
-
-  if (
-    name.includes('polpacc') || name.includes('calf') || name.includes('calves') || 
-    name.includes('sollevamenti sulle punte')
-  ) {
-    return 'Polpacci';
-  }
-
-  if (
-    name.includes('crunch') || name.includes('plank') || name.includes('addominal') || 
-    name.includes('core') || name.includes('leg raise') || name.includes('sollevamento gambe') || 
-    name.includes('sit up') || name.includes('sit-up') || name.includes('russian twist') || 
-    name.includes('wheel') || name.includes('ab roller')
-  ) {
-    return 'Addome';
-  }
-
+  if (name.includes('panca') || name.includes('chest') || name.includes('croci') || name.includes('dip') || name.includes('push up') || name.includes('piegament') || name.includes('pectoral') || name.includes('spinte') || name.includes('fly')) return 'Petto';
+  if (name.includes('trazioni') || name.includes('lat') || name.includes('rematore') || name.includes('pulley') || name.includes('stacco') || name.includes('pull down') || name.includes('chin up') || name.includes('row')) return 'Dorso';
+  if (name.includes('shoulder') || name.includes('military') || name.includes('lento') || name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') || name.includes('press spalle') || name.includes('shrug')) return 'Spalle';
+  if (name.includes('squat') || name.includes('pressa') || name.includes('leg ext') || name.includes('affondi') || name.includes('lunge') || name.includes('hack') || name.includes('quadricipit')) return 'Quadricipiti';
+  if (name.includes('leg curl') || name.includes('stacco rumeno') || name.includes('rdl') || name.includes('femorale') || name.includes('hamstring')) return 'Femorali';
+  if (name.includes('hip thrust') || name.includes('glute') || name.includes('abductor') || name.includes('bridge')) return 'Glutei';
+  if (name.includes('curl') || name.includes('bicipit') || name.includes('biceps') || name.includes('hammer') || name.includes('scott')) return 'Bicipiti';
+  if (name.includes('pushdown') || name.includes('french') || name.includes('tricipit') || name.includes('triceps') || name.includes('skull crusher')) return 'Tricipiti';
+  if (name.includes('polpacc') || name.includes('calf') || name.includes('calves')) return 'Polpacci';
+  if (name.includes('crunch') || name.includes('plank') || name.includes('addominal') || name.includes('core') || name.includes('leg raise') || name.includes('sit up')) return 'Addome';
   return 'Petto';
 };
 
@@ -196,11 +115,32 @@ interface Athlete {
   xp: number;
 }
 
-const todayIso = () => new Date().toISOString().split('T')[0];
+const todayIso = () => {
+  // Data locale (evita lo sfasamento di fuso orario di toISOString)
+  const d = new Date();
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const clampDayCount = (n: number): DayCount => (Math.min(6, Math.max(2, n)) as DayCount);
+
+// crypto.randomUUID non è disponibile su http o browser datati: serve un fallback
+const makeId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+// Interpreta 'YYYY-MM-DD' come data locale, non UTC
+const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+};
 
 export default function TopGymApp() {
-  const router = useRouter();
-
   const [user, setUser] = useState<any>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -219,37 +159,30 @@ export default function TopGymApp() {
 
   const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard' | 'settings'>('workout');
   const [userXp, setUserXp] = useState(0);
+  const userXpRef = useRef(0);
+  useEffect(() => { userXpRef.current = userXp; }, [userXp]);
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
+  // Readiness States partono da 0
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
-  const [sleepHours, setSleepHours] = useState('7.5');
-  const [sleepQuality, setSleepQuality] = useState(8);
-  const [stressLevel, setStressLevel] = useState(3);
-  const [domsLevel, setDomsLevel] = useState(2);
-  const [energyLevel, setEnergyLevel] = useState(8);
-  const [bodyWeight, setBodyWeight] = useState('78.5');
+  const [sleepHours, setSleepHours] = useState('0');
+  const [sleepQuality, setSleepQuality] = useState(0);
+  const [stressLevel, setStressLevel] = useState(0);
+  const [domsLevel, setDomsLevel] = useState(0);
+  const [energyLevel, setEnergyLevel] = useState(0);
+  const [bodyWeight, setBodyWeight] = useState('');
+  
   const [readinessSuccessMessage, setReadinessSuccessMessage] = useState<string | null>(null);
   const [builderSuccessMessage, setBuilderSuccessMessage] = useState<string | null>(null);
   const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
-  const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([
-    {
-      id: 'r1',
-      date: todayIso(),
-      sleepHours: 7.5,
-      sleepQuality: 8,
-      stressLevel: 3,
-      domsLevel: 2,
-      energyLevel: 8,
-      bodyWeight: 78.5,
-      readinessScore: 88,
-      recommendation: 'Pronto per la massima intensità! Segui i carichi target e spingi al 100%.'
-    }
-  ]);
+  const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
 
   const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
@@ -260,9 +193,7 @@ export default function TopGymApp() {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('8');
-  const [logs, setLogs] = useState<SetLog[]>([
-    { id: 'l1', exerciseId: 'ex1', exerciseName: 'Panca Piana Bilanciere', weight: 90, reps: 8, rpe: 8, estimated1RM: 114, volume: 720, date: todayIso(), time: '10:15' }
-  ]);
+  const [logs, setLogs] = useState<SetLog[]>([]);
 
   const [builderExName, setBuilderExName] = useState('');
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
@@ -275,19 +206,18 @@ export default function TopGymApp() {
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
 
-  // Identificazione Utente Target
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
+  const targetUserId = userRole === 'COACH' ? (activeAthleteId || user?.id || 'default-user') : (user?.id || 'default-user');
+  const targetAthleteName = useMemo(
+    () => athletes.find(a => a.id === targetUserId)?.displayName ?? 'Atleta',
+    [athletes, targetUserId]
+  );
 
-  const targetUserId = userRole === 'COACH' 
-    ? (activeAthleteId || user?.id || 'default-user')
-    : (user?.id || 'default-user');
-
-  // Caricamento iniziale degli atleti da Supabase
+  // Caricamento atleti e XP salvato
   useEffect(() => {
     if (!supabase) return;
-
     const fetchAthletes = async () => {
-      const { data: profiles } = await supabase.from('profiles').select('id, email, username, xp');
+      const { data: profiles } = await supabase.from('profiles').select('id, username, email, xp');
       if (profiles) {
         const formatted: Athlete[] = profiles.map((p: any) => ({
           id: p.id,
@@ -301,25 +231,53 @@ export default function TopGymApp() {
         }
       }
     };
-
     fetchAthletes();
+
+    const loadXp = (userId: string) => {
+      supabase!.from('profiles').select('xp').eq('id', userId).single().then(({ data }) => {
+        if (data && typeof data.xp === 'number') setUserXp(data.xp);
+      });
+    };
+
+    // Ripristina subito la sessione già attiva (evita il flash della schermata di login)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        loadXp(session.user.id);
+      }
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) loadXp(session.user.id);
+      else setUserXp(0);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  // Caricamento Storico Allenamenti per l'atleta attivo
-  const loadHistory = async (userId: string) => {
-    if (!userId) return;
-    const data = await getWorkoutHistoryFromSupabase(userId);
-    setWorkoutHistory(data || []);
-  };
+  const addXp = useCallback(async (amount: number) => {
+    // Uso il ref: evita XP persi quando si registrano più serie una dopo l'altra
+    const newXp = userXpRef.current + amount;
+    userXpRef.current = newXp;
+    setUserXp(newXp);
+    const uid = user?.id;
+    if (supabase && uid) {
+      await supabase.from('profiles').update({ xp: newXp }).eq('id', uid);
+      setAthletes(prev => prev.map(a => (a.id === uid ? { ...a, xp: newXp } : a)));
+    }
+  }, [user?.id]);
 
-  // Caricamento Storico Readiness per l'atleta attivo da Supabase
-  const loadReadinessHistory = async (userId: string) => {
+  const loadHistory = useCallback(async (userId: string) => {
+    if (!userId) return;
+    try {
+      const data = await getWorkoutHistoryFromSupabase(userId);
+      setWorkoutHistory(Array.isArray(data) ? data : []);
+    } catch {
+      setWorkoutHistory([]);
+    }
+  }, []);
+
+  const loadReadinessHistory = useCallback(async (userId: string) => {
     if (!supabase || !userId) return;
     try {
       const { data, error } = await supabase
@@ -328,7 +286,7 @@ export default function TopGymApp() {
         .eq('user_id', userId)
         .order('date', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const formatted = data.map((r: any) => ({
           id: r.id,
           date: r.date,
@@ -342,53 +300,46 @@ export default function TopGymApp() {
           recommendation: r.recommendation
         }));
         setReadinessHistory(formatted);
-      } else {
-        setReadinessHistory([]);
       }
-    } catch (e) {
+    } catch {
       setReadinessHistory([]);
     }
-  };
+  }, []);
 
-  // Sincronizzazione automatica al cambio di atleta selezionato
   useEffect(() => {
     if (!supabase || !targetUserId) return;
-
     let isMounted = true;
-    setProgramDays([]); // Reset immediato anti-sfarfallio
-
+    setProgramDays([]);
+    setSelectedDayIndex(0);
     getProgramFromSupabase(targetUserId).then(data => {
       if (!isMounted) return;
-
       if (data && data.days_data && data.days_data.length > 0) {
         setProgramDays(data.days_data);
+        setSelectedDayCount(clampDayCount(data.days_data.length));
         if (data.program_name) setProgramName(data.program_name);
       } else {
-        const ath = athletes.find(a => a.id === targetUserId);
-        const athleteName = ath ? ath.displayName : 'Atleta';
         const timestamp = Date.now();
-
         setProgramDays([
           { id: `day-1-${timestamp}`, dayNumber: 1, title: 'Spinta (Push)', exercises: [] },
           { id: `day-2-${timestamp}`, dayNumber: 2, title: 'Trazione (Pull)', exercises: [] },
           { id: `day-3-${timestamp}`, dayNumber: 3, title: 'Gambe (Legs)', exercises: [] },
           { id: `day-4-${timestamp}`, dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
         ]);
-        setProgramName(`Scheda Personalizzata - ${athleteName}`);
+        setSelectedDayCount(4);
+        setProgramName(`Scheda Personalizzata - ${targetAthleteName}`);
       }
+    }).catch(() => {
+      if (isMounted) setProgramDays([]);
     });
-
     loadHistory(targetUserId);
     loadReadinessHistory(targetUserId);
-
     return () => { isMounted = false; };
-  }, [targetUserId, userRole]);
+  }, [targetUserId, userRole, targetAthleteName, loadHistory, loadReadinessHistory]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
     setErrorMessage('');
-
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({
         email,
@@ -410,9 +361,7 @@ export default function TopGymApp() {
 
   const handlePasswordReset = async () => {
     if (!user?.email || !supabase) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: window.location.origin
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
     setSettingsMessage(error ? `⚠️ Errore: ${error.message}` : '📩 Email per il recupero password inviata con successo!');
   };
 
@@ -420,9 +369,8 @@ export default function TopGymApp() {
     if (!window.confirm('Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.') || !supabase) return;
     try {
       const { error } = await supabase.rpc('delete_user');
-      if (error) {
-        setSettingsMessage(`⚠️ Impossibile eliminare l'account: ${error.message}`);
-      } else {
+      if (error) setSettingsMessage(`⚠️ Impossibile eliminare l'account: ${error.message}`);
+      else {
         alert('Account eliminato con successo.');
         await handleLogout();
       }
@@ -431,10 +379,12 @@ export default function TopGymApp() {
     }
   };
 
-  const playTimerSound = () => {
+  const playTimerSound = useCallback(() => {
     if (!soundEnabled) return;
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioCtx = new AudioCtx();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
@@ -444,22 +394,23 @@ export default function TopGymApp() {
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.5);
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    } catch (e) {
+      // Rilascia le risorse audio a fine suono
+      osc.onended = () => { audioCtx.close().catch(() => {}); };
+      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    } catch {
       console.log('Audio non abilitato');
     }
-  };
+  }, [soundEnabled]);
 
   useEffect(() => {
-    let interval: any = null;
-    if (isTimerRunning && restTimer !== null && restTimer > 0) {
-      interval = setInterval(() => setRestTimer(prev => (prev ? prev - 1 : 0)), 1000);
-    } else if (restTimer === 0 && isTimerRunning) {
-      setIsTimerRunning(false);
-      playTimerSound();
+    if (!isTimerRunning || restTimer === null) return;
+    if (restTimer > 0) {
+      const interval = setInterval(() => setRestTimer(prev => (prev && prev > 0 ? prev - 1 : 0)), 1000);
+      return () => clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, restTimer]);
+    setIsTimerRunning(false);
+    playTimerSound();
+  }, [isTimerRunning, restTimer, playTimerSound]);
 
   const startRestTimer = (seconds: number) => {
     setRestTimer(seconds);
@@ -467,9 +418,8 @@ export default function TopGymApp() {
   };
 
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
-    if (targetRole === 'COACH' && userRole !== 'COACH') {
-      setShowCoachPinModal(true);
-    } else {
+    if (targetRole === 'COACH' && userRole !== 'COACH') setShowCoachPinModal(true);
+    else {
       setUserRole('ATHLETE');
       if (activeTab === 'builder') setActiveTab('workout');
     }
@@ -490,6 +440,14 @@ export default function TopGymApp() {
 
   const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
 
+  // Anteprima 1RM: null se i campi non contengono numeri validi (prima mostrava NaN)
+  const estimated1RMPreview = useMemo(() => {
+    const w = parseFloat(weight);
+    const r = parseInt(reps, 10);
+    if (!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return null;
+    return calculate1RM(w, r);
+  }, [weight, reps]);
+
   const activeAthlete = athletes.find(a => a.id === activeAthleteId) || (athletes.length > 0 ? athletes[0] : { id: 'default', displayName: 'Atleta', email: '', xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
   const activeRoutine = activeDay?.exercises ?? [];
@@ -506,28 +464,28 @@ export default function TopGymApp() {
     }
   };
 
-  const computeReadiness = () => {
+  const computeReadiness = useCallback(() => {
     const sleepFactor = (sleepQuality * 10) * 0.35;
     const energyFactor = (energyLevel * 10) * 0.30;
-    const stressFactor = ((11 - stressLevel) * 10) * 0.20;
-    const domsFactor = ((11 - domsLevel) * 10) * 0.15;
+    const stressFactor = ((11 - (stressLevel || 1)) * 10) * 0.20;
+    const domsFactor = ((11 - (domsLevel || 1)) * 10) * 0.15;
     const totalScore = Math.round(sleepFactor + energyFactor + stressFactor + domsFactor);
-
     let rec = '';
     if (totalScore >= 80) rec = 'Pronto per la massima intensità! Segui i carichi target e spingi al 100%.';
     else if (totalScore >= 60) rec = 'Stato discreto. Allenamento regolare, ma mantieni 1 rep di margine.';
     else rec = 'Fatica/Stress elevati. Consigliato scarico attivo o riduzione carichi/volume del 15-20%.';
-
     return { totalScore, rec };
-  };
+  }, [sleepQuality, energyLevel, stressLevel, domsLevel]);
+
+  const currentReadiness = useMemo(() => computeReadiness(), [computeReadiness]);
 
   const handleSaveReadiness = async (e: React.FormEvent) => {
     e.preventDefault();
     const { totalScore, rec } = computeReadiness();
     const newReadiness: ReadinessLog = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       date: todayIso(),
-      sleepHours: parseFloat(sleepHours) || 7,
+      sleepHours: parseFloat(sleepHours) || 0,
       sleepQuality,
       stressLevel,
       domsLevel,
@@ -536,11 +494,9 @@ export default function TopGymApp() {
       readinessScore: totalScore,
       recommendation: rec
     };
-
     setReadinessHistory(prev => [newReadiness, ...prev]);
-
     if (supabase && targetUserId) {
-      await supabase.from('readiness_logs').insert([{
+      const { error } = await supabase.from('readiness_logs').insert([{
         id: newReadiness.id,
         user_id: targetUserId,
         date: newReadiness.date,
@@ -553,10 +509,22 @@ export default function TopGymApp() {
         readiness_score: newReadiness.readinessScore,
         recommendation: newReadiness.recommendation
       }]);
+      if (error) {
+        setReadinessHistory(prev => prev.filter(r => r.id !== newReadiness.id));
+        setReadinessSuccessMessage('⚠️ Errore nel salvataggio del check readiness.');
+        setTimeout(() => setReadinessSuccessMessage(null), 4000);
+        return;
+      }
     }
-
-    setUserXp(prev => prev + 20);
+    await addXp(20);
     setReadinessSuccessMessage('🎉 Check Readiness salvato nello storico dell\'atleta! (+20 XP)');
+    // Reset valori a 0
+    setSleepHours('0');
+    setSleepQuality(0);
+    setStressLevel(0);
+    setDomsLevel(0);
+    setEnergyLevel(0);
+    setBodyWeight('');
     setTimeout(() => setReadinessSuccessMessage(null), 4000);
   };
 
@@ -566,34 +534,42 @@ export default function TopGymApp() {
       if (prev.length < count) {
         const newDays = [...prev];
         for (let i = prev.length + 1; i <= count; i++) {
-          newDays.push({ 
-            id: `day-${i}-${Date.now()}`, 
-            dayNumber: i, 
-            title: `Giorno ${i}`, 
-            exercises: [] 
-          });
+          newDays.push({ id: `day-${i}-${makeId()}`, dayNumber: i, title: `Giorno ${i}`, exercises: [] });
         }
         return newDays;
-      } else {
-        return prev.slice(0, count);
       }
+      return prev.slice(0, count);
     });
+    setSelectedDayIndex(prev => Math.min(prev, count - 1));
   };
+
+  const todayLogs = useMemo(() => {
+    const today = todayIso();
+    return logs.filter(l => l.date === today);
+  }, [logs]);
 
   const handleFinishAndSaveWorkout = async () => {
     const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
-    const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 12000;
+    const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 0;
+    
+    // Assicurati che lo store salvi anche l'array 'logs' nel DB per vederlo nelle stats!
+    let result: { success?: boolean } = {};
+    try {
+      result = await saveCompletedWorkoutToSupabase({
+        userId: targetUserId,
+        dayName: dayName,
+        totalVolume: totalVol,
+        exercisesCount: activeRoutine.length,
+        logs: todayLogs // <- Passiamo i log per lo storico espandibile
+      } as any);
+    } catch {
+      result = { success: false };
+    }
 
-    const result = await saveCompletedWorkoutToSupabase({
-      userId: targetUserId,
-      dayName: dayName,
-      totalVolume: totalVol,
-      exercisesCount: activeRoutine.length,
-    });
-
-    if (result.success) {
-      setUserXp(prev => prev + 50);
+    if (result?.success) {
+      await addXp(50);
       setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
+      setLogs([]); // Pulisce i log locali post salvataggio
       await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
@@ -602,18 +578,27 @@ export default function TopGymApp() {
     }
   };
 
-  const handleDeleteWorkoutHistory = async (workoutId: string) => {
+  const handleDeleteWorkoutHistory = async (workoutId?: string) => {
+    if (!workoutId) return;
     if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
-    
-    await deleteWorkoutHistoryFromSupabase(workoutId);
-    setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
+    try {
+      await deleteWorkoutHistoryFromSupabase(workoutId);
+      setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
+    } catch {
+      setWorkoutSuccessMessage('⚠️ Errore durante l\'eliminazione dell\'allenamento.');
+      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
+    }
   };
 
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
-    const result = await saveProgramToSupabase(targetId, programName, programDays);
-    
-    if (result.success) {
+    let result: { success?: boolean } = {};
+    try {
+      result = await saveProgramToSupabase(targetId, programName, programDays);
+    } catch {
+      result = { success: false };
+    }
+    if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}! L'atleta ora può visualizzarla.`);
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
@@ -630,8 +615,8 @@ export default function TopGymApp() {
     if (!numWeight || !numReps) return;
 
     const newLog: SetLog = {
-      id: crypto.randomUUID(),
-      exerciseId: currentExId,
+      id: makeId(),
+      exerciseId: currentExercise?.id || currentExId,
       exerciseName: currentExercise?.name || 'Esercizio',
       weight: numWeight,
       reps: numReps,
@@ -642,8 +627,8 @@ export default function TopGymApp() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setLogs([newLog, ...logs]);
-    setUserXp(prev => prev + 10);
+    setLogs(prev => [newLog, ...prev]);
+    void addXp(10);
     if (currentExercise?.restSeconds) startRestTimer(currentExercise.restSeconds);
     setWeight('');
     setReps('');
@@ -656,9 +641,8 @@ export default function TopGymApp() {
   const handleAddExerciseToDay = (e: React.FormEvent, dayId: string) => {
     e.preventDefault();
     if (!builderExName.trim()) return;
-
     const newEx: Exercise = {
-      id: crypto.randomUUID(),
+      id: makeId(),
       name: builderExName.trim(),
       muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
       sets: builderSets,
@@ -670,26 +654,21 @@ export default function TopGymApp() {
       tut: builderTut,
       notes: builderNotes.trim() || undefined
     };
-
-    setProgramDays(prevDays => 
-      prevDays.map(day => {
-        if (day.id === dayId) {
-          return {
-            ...day,
-            exercises: [...(day.exercises || []), newEx]
-          };
-        }
-        return day;
-      })
-    );
-
+    setProgramDays(prevDays => prevDays.map(day => day.id === dayId ? { ...day, exercises: [...(day.exercises || []), newEx] } : day));
     setBuilderExName('');
-    setBuilderMuscleGroup('Petto');
     setBuilderNotes('');
   };
 
   const handleRemoveExerciseFromDay = (dayId: string, exerciseId: string) => {
-    setProgramDays(prev => prev.map(day => day.id === dayId ? { ...day, exercises: day.exercises.filter(ex => ex.id !== exerciseId) } : day));
+    setProgramDays(prevDays => prevDays.map(day =>
+      day.id === dayId
+        ? { ...day, exercises: (day.exercises || []).filter(ex => ex.id !== exerciseId) }
+        : day
+    ));
+  };
+
+  const handleRenameDay = (dayId: string, title: string) => {
+    setProgramDays(prevDays => prevDays.map(day => (day.id === dayId ? { ...day, title } : day)));
   };
 
   const getBadgeStyle = (type: ExecutionType) => {
@@ -702,7 +681,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Funzione per assegnare il titolo del grado in base al livello
   const getRankTitle = (level: number) => {
     if (level < 10) return "Novizio della Ghisa";
     if (level < 20) return "Recluta della Sala Pesi";
@@ -716,20 +694,23 @@ export default function TopGymApp() {
     return "Dio dell'Olimpo TOP GYM";
   };
 
-  // Sistema 99 Livelli con Progressione Esponenziale di XP
   const userLevel = Math.min(99, Math.floor(Math.sqrt(userXp / 25)));
   const userRank = getRankTitle(userLevel);
-
   const xpForNextLevel = 25 * Math.pow(userLevel + 1, 2);
   const xpForCurrentLevel = 25 * Math.pow(userLevel, 2);
-  const levelProgressPercentage = userLevel >= 99 
-    ? 100 
-    : Math.min(100, Math.round(((userXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100));
+  const levelProgressPercentage = userLevel >= 99 ? 100 : Math.min(100, Math.round(((userXp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100));
 
-  const todayLogs = logs.filter(l => l.date === todayIso());
   const latestReadiness = readinessHistory[0];
   const recentRpeLogs = logs.slice(0, 4);
   const highFatigueDetected = recentRpeLogs.length >= 2 && recentRpeLogs.every(l => l.rpe >= 9.5);
+
+  // Classifica ordinata senza mutare lo stato, con l'XP aggiornato dell'utente corrente
+  const leaderboard = useMemo(
+    () => athletes
+      .map(a => (a.id === user?.id ? { ...a, xp: userXp } : a))
+      .sort((a, b) => b.xp - a.xp),
+    [athletes, user?.id, userXp]
+  );
 
   const achievements: Achievement[] = [
     { id: '1', title: 'Club dei 100kg', description: 'Solleva 100kg o più in un esercizio', icon: '🏋️', unlocked: logs.some(l => l.weight >= 100) },
@@ -738,31 +719,82 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  const weeklySetsMap = useMemo(() => {
-    const muscleGroups: MuscleGroup[] = [
-      'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
-      'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
-    ];
+  // --- CALCOLI PER LE ANALITICHE (in base alla data selezionata) ---
+  const { startOfWeek, endOfWeek, startOfMonth, endOfMonth } = useMemo(() => {
+    const targetDate = parseLocalDate(analyticsDate) || new Date();
 
-    const map = muscleGroups.reduce((acc, mg) => {
-      acc[mg] = 0;
-      return acc;
-    }, {} as Record<string, number>);
+    // Limiti settimana (Lunedì - Domenica)
+    const dayOfWeek = targetDate.getDay();
+    const diffToMonday = targetDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const startW = new Date(targetDate);
+    startW.setDate(diffToMonday);
+    startW.setHours(0, 0, 0, 0);
+    const endW = new Date(startW);
+    endW.setDate(startW.getDate() + 6);
+    endW.setHours(23, 59, 59, 999);
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Limiti mese
+    const startM = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const endM = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    logs.forEach(log => {
-      const logDate = new Date(log.date);
-      if (logDate >= sevenDaysAgo) {
-        const ex = programDays.flatMap(d => d.exercises).find(e => e.name === log.exerciseName);
-        const mg = ex?.muscleGroup || autoDetectMuscleGroup(log.exerciseName);
-        map[mg] = (map[mg] || 0) + 1;
+    return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
+  }, [analyticsDate]);
+
+  // Mappa nome esercizio -> gruppo muscolare, costruita una sola volta (prima era una ricerca per ogni serie)
+  const muscleGroupByExerciseName = useMemo(() => {
+    const map = new Map<string, MuscleGroup>();
+    programDays.forEach(day => {
+      (day.exercises || []).forEach(ex => {
+        if (ex.muscleGroup && !map.has(ex.name)) map.set(ex.name, ex.muscleGroup);
+      });
+    });
+    return map;
+  }, [programDays]);
+
+  // Tutte le serie (locali + storico Supabase) con la relativa data, calcolate una volta sola
+  const allSetsWithDate = useMemo(() => {
+    const items: { name: string; date: Date | null }[] = [];
+    logs.forEach(log => items.push({ name: log.exerciseName, date: parseLocalDate(log.date) }));
+    workoutHistory.forEach(workout => {
+      if (Array.isArray(workout.logs)) {
+        const wDate = parseLocalDate(workout.created_at || workout.date);
+        workout.logs.forEach((log: any) => items.push({ name: log?.exerciseName || '', date: wDate }));
       }
     });
+    return items;
+  }, [logs, workoutHistory]);
 
+  // Conteggio Serie Settimanali per gruppo muscolare
+  const weeklySetsMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    allSetsWithDate.forEach(({ name, date }) => {
+      if (!date || date < startOfWeek || date > endOfWeek) return;
+      const mg = muscleGroupByExerciseName.get(name) || autoDetectMuscleGroup(name || '');
+      map[mg] = (map[mg] || 0) + 1;
+    });
     return map;
-  }, [logs, programDays]);
+  }, [allSetsWithDate, muscleGroupByExerciseName, startOfWeek, endOfWeek]);
+
+  // Conteggio Mensile Totale
+  const monthlySetsCount = useMemo(
+    () => allSetsWithDate.reduce(
+      (count, { date }) => (date && date >= startOfMonth && date <= endOfMonth ? count + 1 : count),
+      0
+    ),
+    [allSetsWithDate, startOfMonth, endOfMonth]
+  );
+
+  // Totale serie di sempre e volume massimo (usati nelle analitiche)
+  const totalSetsEver = useMemo(
+    () => workoutHistory.reduce((s, w) => s + (Array.isArray(w.logs) ? w.logs.length : 0), 0) + logs.length,
+    [workoutHistory, logs]
+  );
+
+  const maxHistoryVolume = useMemo(
+    () => workoutHistory.reduce((max, w) => Math.max(max, w.total_volume || w.totalVolume || 0), 0) || 1,
+    [workoutHistory]
+  );
+  // ----------------------------------------------------------------
 
   if (!user) {
     return (
@@ -884,7 +916,6 @@ export default function TopGymApp() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                title={soundEnabled ? 'Audio Attivo' : 'Audio Disattivato'}
                 className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white"
               >
                 {soundEnabled ? <Volume2 className="w-5 h-5 text-green-400" /> : <VolumeX className="w-5 h-5 text-zinc-600" />}
@@ -908,7 +939,6 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* Visualizzazione Grado, Livello 99 e Barra XP */}
             <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
               <Shield className="text-yellow-500 w-5 h-5 flex-shrink-0" />
               <div className="w-36">
@@ -920,10 +950,7 @@ export default function TopGymApp() {
                   <span className="font-mono">{userXp} XP</span>
                 </div>
                 <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-0.5 overflow-hidden">
-                  <div 
-                    className="bg-yellow-500 h-full transition-all duration-300"
-                    style={{ width: `${levelProgressPercentage}%` }}
-                  />
+                  <div className="bg-yellow-500 h-full transition-all duration-300" style={{ width: `${levelProgressPercentage}%` }} />
                 </div>
               </div>
             </div>
@@ -945,7 +972,6 @@ export default function TopGymApp() {
               <Lock className="text-[#E50914]" /> Area Riservata Coach
             </h3>
             <p className="text-xs text-zinc-400 mb-4">Inserisci il PIN per accedere alla gestione schede (Demo PIN: 1234).</p>
-
             <form onSubmit={verifyCoachPin} className="space-y-4">
               <input
                 type="password"
@@ -956,21 +982,9 @@ export default function TopGymApp() {
                 autoFocus
               />
               {pinError && <p className="text-xs text-[#E50914] text-center font-bold">PIN Errato!</p>}
-
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCoachPinModal(false)}
-                  className="w-1/2 bg-zinc-800 py-2 rounded text-xs font-bold text-zinc-300"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/2 bg-[#E50914] py-2 rounded text-xs font-bold text-white uppercase"
-                >
-                  Sblocca
-                </button>
+                <button type="button" onClick={() => setShowCoachPinModal(false)} className="w-1/2 bg-zinc-800 py-2 rounded text-xs font-bold text-zinc-300">Annulla</button>
+                <button type="submit" className="w-1/2 bg-[#E50914] py-2 rounded text-xs font-bold text-white uppercase">Sblocca</button>
               </div>
             </form>
           </div>
@@ -983,15 +997,12 @@ export default function TopGymApp() {
         )}
         <button onClick={() => setActiveTab('readiness')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Gauge className="w-4 h-4 text-green-400" /> Check Readiness</button>
         <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><TrendingUp className="w-4 h-4" /> Progressi</button>
-
         {userRole === 'COACH' && (
           <button onClick={() => setActiveTab('builder')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
             <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
           </button>
         )}
-
         <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Trophy className="w-4 h-4 text-yellow-500" /> Classifica & Badge</button>
-
         {userRole === 'ATHLETE' && (
           <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Settings className="w-4 h-4 text-zinc-300" /> Impostazioni</button>
         )}
@@ -1005,9 +1016,7 @@ export default function TopGymApp() {
                 <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-sm text-amber-200">Livello di Fatica Accumulata Elevato!</h4>
-                  <p className="text-xs text-amber-300/80 mt-1">
-                    Hai registrato serie consecutive ad RPE 9.5+. Considera di estendere il recupero di 30s.
-                  </p>
+                  <p className="text-xs text-amber-300/80 mt-1">Hai registrato serie consecutive ad RPE 9.5+. Considera di estendere il recupero di 30s.</p>
                 </div>
               </div>
             )}
@@ -1016,7 +1025,6 @@ export default function TopGymApp() {
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <h2 className="text-xl font-bold flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda: {programName}</h2>
               </div>
-
               <div className="flex flex-wrap gap-2 mb-4">
                 {programDays.map((day, index) => (
                   <button
@@ -1029,31 +1037,19 @@ export default function TopGymApp() {
                   </button>
                 ))}
               </div>
-
               <div className="grid gap-3 md:grid-cols-2">
                 {activeRoutine.map((ex) => (
-                  <div
-                    key={ex.id}
-                    onClick={() => setCurrentExId(ex.id)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${currentExId === ex.id ? 'bg-red-950/20 border-[#E50914]' : 'bg-zinc-900 border-zinc-800'}`}
-                  >
+                  <div key={ex.id} onClick={() => setCurrentExId(ex.id)} className={`p-4 rounded-lg border cursor-pointer transition-all ${currentExId === ex.id ? 'bg-red-950/20 border-[#E50914]' : 'bg-zinc-900 border-zinc-800'}`}>
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-bold text-lg text-white">{ex.name}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>
-                        {ex.executionType}
-                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
                     </div>
-
                     <div className="grid grid-cols-3 gap-2 text-xs text-zinc-400 mt-2 border-t border-zinc-800/60 pt-2">
                       <div>Serie/Reps: <b className="text-white">{ex.sets} × {ex.reps}</b></div>
                       <div>Target: <b className="text-white">{ex.targetWeight} Kg</b></div>
                       <div>TUT: <b className="text-yellow-500 font-mono">{ex.tut}</b></div>
                     </div>
-                    {ex.notes && (
-                      <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">
-                        Note: {ex.notes}
-                      </div>
-                    )}
+                    {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">Note: {ex.notes}</div>}
                   </div>
                 ))}
               </div>
@@ -1066,23 +1062,18 @@ export default function TopGymApp() {
                     <h3 className="text-2xl font-black text-white">{currentExercise.name}</h3>
                     <p className="text-xs text-zinc-400 mt-1">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
                   </div>
-
-                  {weight && reps && (
+                  {estimated1RMPreview !== null && (
                     <div className="bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-lg text-right">
                       <div className="text-[10px] text-zinc-400 uppercase font-bold">1RM Stimato</div>
-                      <div className="text-lg font-black text-[#E50914]">{calculate1RM(parseFloat(weight), parseInt(reps, 10))} Kg</div>
+                      <div className="text-lg font-black text-[#E50914]">{estimated1RMPreview} Kg</div>
                     </div>
                   )}
                 </div>
 
                 {lastLoggedSet && (
                   <div className="mb-4 bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 flex items-center justify-between flex-wrap gap-2">
-                    <div className="text-xs text-zinc-400">
-                      Ultimo Carico: <b className="text-white">{lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps</b> (RPE {lastLoggedSet.rpe})
-                    </div>
-                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1">
-                      <Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico
-                    </button>
+                    <div className="text-xs text-zinc-400">Ultimo Carico: <b className="text-white">{lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps</b> (RPE {lastLoggedSet.rpe})</div>
+                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1"><Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico</button>
                   </div>
                 )}
 
@@ -1103,7 +1094,6 @@ export default function TopGymApp() {
                       </select>
                     </div>
                   </div>
-
                   <button type="submit" className="w-full bg-[#E50914] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase">
                     <Plus className="w-5 h-5"/> Registra Serie (+10 XP)
                   </button>
@@ -1121,13 +1111,7 @@ export default function TopGymApp() {
                             <span className="text-zinc-400 font-mono text-[11px]">{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</span>
                           </div>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLog(log.id)}
-                          title="Elimina serie erogata per errore"
-                          className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
-                        >
+                        <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -1138,57 +1122,13 @@ export default function TopGymApp() {
             )}
 
             <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
-              {workoutSuccessMessage && (
-                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">
-                  {workoutSuccessMessage}
-                </div>
-              )}
-
+              {workoutSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">{workoutSuccessMessage}</div>}
               <button
                 onClick={handleFinishAndSaveWorkout}
-                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
               >
                 <span>✅ Termina e Salva Allenamento</span>
               </button>
-            </div>
-
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 mt-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <History className="text-[#E50914]" /> Storico Allenamenti Completati
-              </h3>
-              {workoutHistory.length === 0 ? (
-                <p className="text-xs text-zinc-400">Nessun allenamento ancora salvato nel database.</p>
-              ) : (
-                <div className="space-y-2">
-                  {workoutHistory.map((item, idx) => {
-                    const recordId = item.id || idx;
-                    return (
-                      <div key={recordId} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                        <div>
-                          <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
-                          <span className="text-zinc-400 text-[11px] font-mono">
-                            Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
-                            <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteWorkoutHistory(item.id)}
-                            title="Elimina allenamento dallo storico"
-                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -1196,10 +1136,12 @@ export default function TopGymApp() {
         {activeTab === 'readiness' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-              <div>
-                <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
-                <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
-              </div>
+              {userRole === 'ATHLETE' && (
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
+                  <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
+                </div>
+              )}
 
               {readinessSuccessMessage && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
@@ -1212,74 +1154,39 @@ export default function TopGymApp() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Moon className="w-4 h-4 text-indigo-400"/> Ore di Sonno</label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        value={sleepHours}
-                        onChange={e => setSleepHours(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
-                      />
+                      <input type="number" step="0.5" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"/>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Scale className="w-4 h-4 text-blue-400"/> Peso Corporeo (Kg)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={bodyWeight}
-                        onChange={e => setBodyWeight(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"
-                      />
+                      <input type="number" step="0.1" value={bodyWeight} onChange={e => setBodyWeight(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"/>
                     </div>
                   </div>
 
                   <div className="space-y-4 pt-2">
                     <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-zinc-400 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-yellow-400"/> Qualità del Sonno</span>
-                        <span className="text-yellow-400 font-mono">{sleepQuality} / 10</span>
-                      </div>
-                      <input type="range" min="1" max="10" value={sleepQuality} onChange={e => setSleepQuality(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                      <div className="flex justify-between text-xs font-bold mb-1"><span className="text-zinc-400 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-yellow-400"/> Qualità del Sonno</span><span className="text-yellow-400 font-mono">{sleepQuality} / 10</span></div>
+                      <input type="range" min="0" max="10" value={sleepQuality} onChange={e => setSleepQuality(Number(e.target.value))} className="w-full accent-[#E50914]" />
                     </div>
-
                     <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-zinc-400 flex items-center gap-1.5"><Dumbbell className="w-4 h-4 text-red-400"/> Fatica Muscolare / DOMS (1 = Nessun dolore, 10 = Dolore estremo)</span>
-                        <span className="text-red-400 font-mono">{domsLevel} / 10</span>
-                      </div>
-                      <input type="range" min="1" max="10" value={domsLevel} onChange={e => setDomsLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                      <div className="flex justify-between text-xs font-bold mb-1"><span className="text-zinc-400 flex items-center gap-1.5"><Dumbbell className="w-4 h-4 text-red-400"/> Fatica Muscolare / DOMS (0 = Nessun dolore, 10 = Estremo)</span><span className="text-red-400 font-mono">{domsLevel} / 10</span></div>
+                      <input type="range" min="0" max="10" value={domsLevel} onChange={e => setDomsLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
                     </div>
-
                     <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-zinc-400 flex items-center gap-1.5"><BatteryCharging className="w-4 h-4 text-green-400"/> Energia / Motivazione</span>
-                        <span className="text-green-400 font-mono">{energyLevel} / 10</span>
-                      </div>
-                      <input type="range" min="1" max="10" value={energyLevel} onChange={e => setEnergyLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                      <div className="flex justify-between text-xs font-bold mb-1"><span className="text-zinc-400 flex items-center gap-1.5"><BatteryCharging className="w-4 h-4 text-green-400"/> Energia / Motivazione</span><span className="text-green-400 font-mono">{energyLevel} / 10</span></div>
+                      <input type="range" min="0" max="10" value={energyLevel} onChange={e => setEnergyLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
                     </div>
-
                     <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-zinc-400 flex items-center gap-1.5"><Brain className="w-4 h-4 text-purple-400"/> Stress Percepito</span>
-                        <span className="text-purple-400 font-mono">{stressLevel} / 10</span>
-                      </div>
-                      <input type="range" min="1" max="10" value={stressLevel} onChange={e => setStressLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
+                      <div className="flex justify-between text-xs font-bold mb-1"><span className="text-zinc-400 flex items-center gap-1.5"><Brain className="w-4 h-4 text-purple-400"/> Stress Percepito</span><span className="text-purple-400 font-mono">{stressLevel} / 10</span></div>
+                      <input type="range" min="0" max="10" value={stressLevel} onChange={e => setStressLevel(Number(e.target.value))} className="w-full accent-[#E50914]" />
                     </div>
                   </div>
 
                   <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span>
-                      <span className="text-lg font-black text-[#E50914]">{computeReadiness().totalScore}%</span>
-                    </div>
-                    <p className="text-xs text-zinc-300 font-medium">
-                      <b>Consigliato:</b> {computeReadiness().rec}
-                    </p>
+                    <div className="flex justify-between items-center"><span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span><span className="text-lg font-black text-[#E50914]">{currentReadiness.totalScore}%</span></div>
+                    <p className="text-xs text-zinc-300 font-medium"><b>Consigliato:</b> {currentReadiness.rec}</p>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
+                  <button type="submit" className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
                   </button>
                 </form>
@@ -1297,12 +1204,8 @@ export default function TopGymApp() {
                   {readinessHistory.map((item) => (
                     <div key={item.id} className="bg-zinc-900 p-4 rounded-lg border border-zinc-800 space-y-2 text-xs">
                       <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-                        <span className="font-bold text-white flex items-center gap-1.5">
-                          <CalendarDays className="w-4 h-4 text-zinc-400" /> Data: {item.date}
-                        </span>
-                        <span className={`px-2.5 py-0.5 rounded font-black text-sm ${item.readinessScore >= 80 ? 'bg-green-950 text-green-400 border border-green-800' : 'bg-yellow-950 text-yellow-400 border border-yellow-800'}`}>
-                          Score: {item.readinessScore}%
-                        </span>
+                        <span className="font-bold text-white flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-zinc-400" /> Data: {item.date}</span>
+                        <span className={`px-2.5 py-0.5 rounded font-black text-sm ${item.readinessScore >= 80 ? 'bg-green-950 text-green-400 border border-green-800' : 'bg-yellow-950 text-yellow-400 border border-yellow-800'}`}>Score: {item.readinessScore}%</span>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-zinc-400 pt-1">
                         <div>Sonno: <b className="text-white">{item.sleepHours}h ({item.sleepQuality}/10)</b></div>
@@ -1310,55 +1213,12 @@ export default function TopGymApp() {
                         <div>DOMS: <b className="text-white">{item.domsLevel}/10</b></div>
                         <div>Energia: <b className="text-white">{item.energyLevel}/10</b></div>
                       </div>
-                      <p className="text-[11px] text-zinc-300 italic pt-1 border-t border-zinc-800/40">
-                        Indicazione: {item.recommendation}
-                      </p>
+                      <p className="text-[11px] text-zinc-300 italic pt-1 border-t border-zinc-800/40">Indicazione: {item.recommendation}</p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {userRole === 'COACH' && (
-              <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <History className="text-[#E50914]" /> Storico Allenamenti Atleta ({activeAthlete.displayName})
-                </h3>
-                {workoutHistory.length === 0 ? (
-                  <p className="text-xs text-zinc-400">Nessun allenamento registrato per questo atleta.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {workoutHistory.map((item, idx) => {
-                      const recordId = item.id || idx;
-                      return (
-                        <div key={recordId} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-bold text-white block">{item.day_name || item.dayName || 'Allenamento'}</span>
-                            <span className="text-zinc-400 text-[11px] font-mono">
-                              Data: <b className="text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</b>
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <span className="font-bold text-emerald-400 block">{item.total_volume || item.totalVolume || 0} kg tot.</span>
-                              <span className="text-zinc-400 text-[10px]">{item.exercises_count || item.exercisesCount || 0} esercizi</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteWorkoutHistory(item.id)}
-                              title="Elimina allenamento dallo storico"
-                              className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
@@ -1373,25 +1233,19 @@ export default function TopGymApp() {
                     type="text"
                     value={programName}
                     onChange={(e) => setProgramName(e.target.value)}
-                    placeholder="Es. Scheda Ipertrofia / Forza"
                     className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
                   />
                 </div>
               </div>
-
               <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
-                <span className="text-xs font-bold text-zinc-400">Giorni/settimana:</span>
+                <span className="text-xs font-bold text-zinc-400">Giorni:</span>
                 <div className="flex gap-1">
                   {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
                     <button
                       key={num}
                       type="button"
                       onClick={() => handleDayCountChange(num)}
-                      className={`px-2.5 py-1 text-xs font-black rounded border transition-all ${
-                        selectedDayCount === num
-                          ? 'bg-[#E50914] border-[#E50914] text-white'
-                          : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
-                      }`}
+                      className={`px-2.5 py-1 text-xs font-black rounded border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'}`}
                     >
                       {num}
                     </button>
@@ -1403,7 +1257,15 @@ export default function TopGymApp() {
             {programDays.map((day) => (
               <div key={day.id} className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-white">Giorno {day.dayNumber}: {day.title}</h3>
+                  <div className="flex items-center gap-2 w-full max-w-sm">
+                    <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
+                    <input 
+                      type="text" 
+                      value={day.title}
+                      onChange={(e) => handleRenameDay(day.id, e.target.value)}
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
+                    />
+                  </div>
                   <span className="text-xs text-zinc-500 font-mono">{day.exercises.length} esercizi</span>
                 </div>
 
@@ -1413,52 +1275,26 @@ export default function TopGymApp() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-white">{ex.name}</span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>
-                            {ex.executionType}
-                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
                         </div>
                         <div className="text-zinc-400 mt-0.5">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}</div>
                         {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} 
-                        className="text-red-500 hover:text-red-400 p-1"
-                      >
-                        <Trash2 className="w-4 h-4"/>
-                      </button>
+                      <button type="button" onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400 p-1"><Trash2 className="w-4 h-4"/></button>
                     </div>
                   ))}
                 </div>
 
                 <form onSubmit={e => handleAddExerciseToDay(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Nome Esercizio" 
-                      value={builderExName} 
-                      onChange={e => {
-                        setBuilderExName(e.target.value);
-                        setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                      }} 
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
-                    />
-
-                    <select 
-                      value={builderMuscleGroup} 
-                      onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold"
-                    >
-                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
-                        <option key={mg} value={mg}>{mg}</option>
-                      ))}
+                    <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => { setBuilderExName(e.target.value); setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value)); }} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <select value={builderMuscleGroup} onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold">
+                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (<option key={mg} value={mg}>{mg}</option>))}
                     </select>
-
                     <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="text" placeholder="Reps (es. 8-10)" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="text" placeholder="Carico Target (kg)" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                   </div>
-
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white">
                       <option value="REGULAR">Tecnica: REGULAR</option>
@@ -1467,12 +1303,10 @@ export default function TopGymApp() {
                       <option value="DROP_SET">Tecnica: DROP_SET</option>
                       <option value="CLUSTER">Tecnica: CLUSTER</option>
                     </select>
-
-                    <input type="text" placeholder="TUT (es. 2-0-1-0)" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
+                    <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                   </div>
-
                   <div className="flex gap-2">
                     <input type="text" placeholder="Note del Coach (opzionale)" value={builderNotes} onChange={e => setBuilderNotes(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0 cursor-pointer">Aggiungi</button>
@@ -1480,18 +1314,9 @@ export default function TopGymApp() {
                 </form>
               </div>
             ))}
-
             <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
-              {builderSuccessMessage && (
-                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
-                  {builderSuccessMessage}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={handleSaveProgramByCoach}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
-              >
+              {builderSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">{builderSuccessMessage}</div>}
+              <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
                 <span>💾 Salva e Assegna Scheda all'Atleta ({activeAthlete.displayName})</span>
               </button>
             </div>
@@ -1506,31 +1331,45 @@ export default function TopGymApp() {
                   <BarChart3 className="text-[#E50914]" /> 
                   Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-1">
-                  Monitoraggio delle serie settimanali per distretto muscolare e progressione del tonnellaggio.
-                </p>
+                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio.</p>
               </div>
-
               <div className="flex items-center gap-3">
                 <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Tonnellaggio Totale</span>
-                  <span className="text-lg font-black text-emerald-400">
-                    {logs.reduce((sum, l) => sum + l.volume, 0).toLocaleString('it-IT')} kg
-                  </span>
-                </div>
-                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete</span>
-                  <span className="text-lg font-black text-white">{logs.length}</span>
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete (Sempre)</span>
+                  <span className="text-lg font-black text-white">{totalSetsEver}</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
-              <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-                <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale per Gruppo Muscolare (Serie Allenanti)
-                </h3>
-                <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+              <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-zinc-800 pb-3 gap-4">
+                <div>
+                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale
+                  </h3>
+                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Sett/Mese)</label>
+                    <input 
+                      type="date" 
+                      value={analyticsDate}
+                      onChange={e => setAnalyticsDate(e.target.value)}
+                      className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914]"
+                    />
+                  </div>
+                  <div className="bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800 text-center min-w-[80px]">
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Mensili</span>
+                    <span className="text-sm font-black text-blue-400">{monthlySetsCount}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-zinc-400 font-bold bg-zinc-900/50 p-2 rounded text-center border border-zinc-800/50">
+                Mostrando i dati per la settimana: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
+                <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -1538,19 +1377,12 @@ export default function TopGymApp() {
                   const count = weeklySetsMap[mg] || 0;
                   const maxTarget = 22;
                   const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
-
+                  
                   let statusColor = 'bg-zinc-700';
                   let textColor = 'text-zinc-400';
-                  if (count >= 10 && count <= 20) {
-                    statusColor = 'bg-emerald-500';
-                    textColor = 'text-emerald-400';
-                  } else if (count > 20) {
-                    statusColor = 'bg-amber-500';
-                    textColor = 'text-amber-400';
-                  } else if (count > 0) {
-                    statusColor = 'bg-blue-500';
-                    textColor = 'text-blue-400';
-                  }
+                  if (count >= 10 && count <= 20) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
+                  else if (count > 20) { statusColor = 'bg-amber-500'; textColor = 'text-amber-400'; } 
+                  else if (count > 0) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
 
                   return (
                     <div key={mg} className="bg-zinc-900 p-3.5 rounded-lg border border-zinc-800 space-y-2">
@@ -1558,14 +1390,9 @@ export default function TopGymApp() {
                         <span className="text-zinc-200">{mg}</span>
                         <span className={textColor}>{count} Serie / sett</span>
                       </div>
-
                       <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${statusColor} transition-all duration-500`} 
-                          style={{ width: `${percentage}%` }}
-                        />
+                        <div className={`h-full ${statusColor} transition-all duration-500`} style={{ width: `${percentage}%` }} />
                       </div>
-
                       <div className="flex justify-between text-[10px] text-zinc-500">
                         <span>0 serie</span>
                         <span>10 (MEV)</span>
@@ -1578,74 +1405,94 @@ export default function TopGymApp() {
             </div>
 
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
-              <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" /> Istogramma Tonnellaggio nel Tempo (Kg Totali)
-              </h3>
-
+              <h3 className="font-bold text-base text-white flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità</h3>
               {workoutHistory.length === 0 ? (
-                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato per generare l'istogramma.</p>
+                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato.</p>
               ) : (
                 <div className="space-y-4">
-                  {(() => {
-                    const maxVol = Math.max(...workoutHistory.map(w => w.total_volume || w.totalVolume || 1));
-                    return (
-                      <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                        <div className="flex items-end gap-3 h-52 pt-8 border-b border-zinc-800 pb-2 overflow-x-auto">
-                          {workoutHistory.slice(0, 12).reverse().map((item, idx) => {
-                            const vol = item.total_volume || item.totalVolume || 0;
-                            const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : (item.date || '');
-                            const heightPercent = Math.max(10, Math.round((vol / maxVol) * 100));
+                  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                    <div className="flex items-end gap-3 h-52 pt-8 border-b border-zinc-800 pb-2 overflow-x-auto">
+                      {workoutHistory.slice(0, 12).reverse().map((item, idx) => {
+                        const vol = item.total_volume || item.totalVolume || 0;
+                        const heightPercent = Math.max(10, Math.round((vol / maxHistoryVolume) * 100));
+                        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }) : (item.date || '');
+                        const intensityColor = heightPercent > 80 ? 'from-red-600 to-orange-500' : heightPercent > 50 ? 'from-emerald-600 to-green-500' : 'from-blue-600 to-indigo-500';
 
-                            return (
-                              <div key={idx} className="flex-1 flex flex-col items-center gap-2 min-w-[50px] h-full justify-end group">
-                                <span className="text-[10px] font-mono font-bold text-emerald-400 opacity-90 group-hover:opacity-100">
-                                  {vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol}
-                                </span>
-                                <div className="w-full bg-zinc-800/80 rounded-t-md overflow-hidden flex items-end h-full">
-                                  <div
-                                    className="w-full bg-gradient-to-t from-emerald-700 via-emerald-500 to-green-400 rounded-t-md transition-all duration-500 group-hover:brightness-125"
-                                    style={{ height: `${heightPercent}%` }}
-                                  />
-                                </div>
-                                <span className="text-[10px] text-zinc-400 font-mono whitespace-nowrap">{dateStr}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="text-center text-[11px] text-zinc-500 mt-3 font-medium">
-                          Andamento storico dei volumi di carico (Ultime sessioni)
-                        </div>
-                      </div>
-                    );
-                  })()}
+                        return (
+                          <div key={item.id || item._id || `bar-${idx}`} className="flex-1 flex flex-col items-center gap-2 min-w-[50px] h-full justify-end group">
+                            <span className="text-[10px] font-mono font-bold text-white opacity-90 group-hover:opacity-100">
+                              {vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : vol}
+                            </span>
+                            <div className="w-full bg-zinc-800/80 rounded-t-md overflow-hidden flex items-end h-full">
+                              <div className={`w-full bg-gradient-to-t ${intensityColor} rounded-t-md transition-all duration-500 group-hover:brightness-125`} style={{ height: `${heightPercent}%` }} />
+                            </div>
+                            <span className="text-[10px] text-zinc-400 font-mono whitespace-nowrap">{dateStr}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="text-center text-[11px] flex items-center justify-center gap-4 mt-3 font-medium">
+                      <span className="flex items-center gap-1 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-500" /> Intensità Lieve</span>
+                      <span className="flex items-center gap-1 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" /> Intensità Media</span>
+                      <span className="flex items-center gap-1 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" /> Altissima Intensità</span>
+                    </div>
+                  </div>
 
-                  <div className="overflow-x-auto pt-2">
+                  <div className="overflow-x-auto pt-2 space-y-2">
                     <table className="w-full text-xs text-left text-zinc-300">
                       <thead className="bg-zinc-900 text-zinc-400 uppercase text-[10px] border-b border-zinc-800">
                         <tr>
                           <th className="py-2.5 px-3">Data</th>
-                          <th className="py-2.5 px-3">Scheda / Giorno</th>
-                          <th className="py-2.5 px-3">Esercizi Eseguiti</th>
-                          <th className="py-2.5 px-3 text-right">Tonnellaggio Totale</th>
+                          <th className="py-2.5 px-3">Scheda</th>
+                          <th className="py-2.5 px-3 text-right">Volume</th>
+                          <th className="py-2.5 px-3 text-center">Azioni</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800/60">
-                        {workoutHistory.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-zinc-900/50">
-                            <td className="py-2.5 px-3 font-mono text-zinc-400">
-                              {item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-white">
-                              {item.day_name || item.dayName || 'Allenamento'}
-                            </td>
-                            <td className="py-2.5 px-3 text-zinc-400">
-                              {item.exercises_count || item.exercisesCount || 0} esercizi
-                            </td>
-                            <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
-                              {(item.total_volume || item.totalVolume || 0).toLocaleString('it-IT')} kg
-                            </td>
-                          </tr>
-                        ))}
+                        {workoutHistory.map((item, idx) => {
+                           const rowKey = item.id || item._id || `row-${idx}`;
+                           const isExpanded = expandedHistoryId === rowKey;
+                           return (
+                            <React.Fragment key={rowKey}>
+                              <tr className="hover:bg-zinc-900/50">
+                                <td className="py-2.5 px-3 font-mono text-zinc-400">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</td>
+                                <td className="py-2.5 px-3 font-bold text-white">{item.day_name || item.dayName || 'Allenamento'}</td>
+                                <td className="py-2.5 px-3 text-right font-bold text-emerald-400">{(item.total_volume || item.totalVolume || 0).toLocaleString('it-IT')} kg</td>
+                                <td className="py-2.5 px-3">
+                                  <div className="flex justify-center gap-2">
+                                    <button type="button" onClick={() => setExpandedHistoryId(isExpanded ? null : rowKey)} className="bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded flex items-center gap-1">
+                                      {isExpanded ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>} Dettagli
+                                    </button>
+                                    {userRole === 'COACH' && (
+                                      <button type="button" onClick={() => handleDeleteWorkoutHistory(item.id || item._id)} className="text-zinc-500 hover:text-red-500 p-1"><Trash2 className="w-4 h-4"/></button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr className="bg-zinc-900/40">
+                                  <td colSpan={4} className="p-3">
+                                    {item.logs && Array.isArray(item.logs) && item.logs.length > 0 ? (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                        {item.logs.map((log: any, lIdx: number) => (
+                                          <div key={lIdx} className="bg-zinc-900 border border-zinc-800 p-2 rounded text-[11px]">
+                                            <div className="font-bold text-white mb-1">{log.exerciseName}</div>
+                                            <div className="text-zinc-400 flex justify-between">
+                                              <span>{log.weight} kg × {log.reps}</span>
+                                              <span className="text-red-400">RPE: {log.rpe}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-[11px] text-zinc-500 italic text-center">Nessun dettaglio delle serie salvato per questo allenamento. Assicurati che lo store Supabase salvi l'array 'logs'.</div>
+                                    )}
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                           );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1658,42 +1505,27 @@ export default function TopGymApp() {
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Trophy className="text-yellow-500"/> Classifica Palestra
-              </h2>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Trophy className="text-yellow-500"/> Classifica Palestra</h2>
               <div className="space-y-2">
-                {athletes
-                  .map(ath => ({
-                    ...ath,
-                    displayName: (ath.id === user?.id || ath.email === user?.email) ? displayUserName : ath.displayName,
-                    currentXp: (ath.id === user?.id || ath.email === user?.email) ? userXp : ath.xp
-                  }))
-                  .sort((a, b) => b.currentXp - a.currentXp)
-                  .map((ath, index) => (
-                    <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-zinc-500">#{index + 1}</span>
-                        <span className="font-bold text-white">{ath.displayName}</span>
-                      </div>
-                      <span className="font-black text-yellow-500">{ath.currentXp} XP</span>
+                {leaderboard.map((ath, index) => (
+                  <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-zinc-500">#{index + 1}</span>
+                      <span className="font-bold text-white">{ath.displayName}</span>
                     </div>
-                  ))}
+                    <span className="font-black text-yellow-500">{ath.xp} XP</span>
+                  </div>
+                ))}
               </div>
             </div>
-
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Medal className="text-yellow-500"/> Trofei & Traguardi
-              </h2>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Medal className="text-yellow-500"/> Trofei & Traguardi</h2>
               <div className="grid md:grid-cols-2 gap-3">
                 {achievements.map(ach => (
                   <div key={ach.id} className={`p-4 rounded-lg border flex items-center gap-3 ${ach.unlocked ? 'bg-zinc-900 border-yellow-600/50' : 'bg-zinc-900/40 border-zinc-800 opacity-50'}`}>
                     <span className="text-2xl">{ach.icon}</span>
                     <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">
-                        {ach.title}
-                        {ach.unlocked && <CheckCircle className="w-3.5 h-3.5 text-green-400"/>}
-                      </div>
+                      <div className="font-bold text-sm text-white flex items-center gap-2">{ach.title}{ach.unlocked && <CheckCircle className="w-3.5 h-3.5 text-green-400"/>}</div>
                       <p className="text-xs text-zinc-400 mt-0.5">{ach.description}</p>
                     </div>
                   </div>
@@ -1709,35 +1541,16 @@ export default function TopGymApp() {
               <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Impostazioni Account</h2>
               <p className="text-xs text-zinc-400 mt-1">Gestisci le credenziali del tuo profilo atleta e le opzioni di sicurezza.</p>
             </div>
-
-            {settingsMessage && (
-              <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">
-                {settingsMessage}
-              </div>
-            )}
-
+            {settingsMessage && <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">{settingsMessage}</div>}
             <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2"><Key className="w-4 h-4 text-yellow-500"/> Password e Sicurezza</h3>
-              <p className="text-xs text-zinc-400">Invia un link alla tua email (<b className="text-white">{user?.email}</b>) per cambiare o reimpostare la tua password.</p>
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer"
-              >
-                Invia Email Recupero Password
-              </button>
+              <p className="text-xs text-zinc-400">Invia un link alla tua email per cambiare la tua password.</p>
+              <button type="button" onClick={handlePasswordReset} className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2">Invia Email Recupero Password</button>
             </div>
-
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-900/50 space-y-3">
-              <h3 className="text-sm font-bold text-red-400 flex items-center gap-2"><UserX className="w-4 h-4 text-red-500"/> Zona Pericolo: Cancellazione Account</h3>
-              <p className="text-xs text-zinc-400">Rimuovi definitivamente il tuo profilo Atleta e i dati di avanzamento registrati dal database.</p>
-              <button
-                type="button"
-                onClick={handleDeleteAccount}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-2 cursor-pointer"
-              >
-                Cancella Definitivamente Account
-              </button>
+              <h3 className="text-sm font-bold text-red-400 flex items-center gap-2"><UserX className="w-4 h-4 text-red-500"/> Zona Pericolo</h3>
+              <p className="text-xs text-zinc-400">Rimuovi definitivamente il tuo profilo Atleta.</p>
+              <button type="button" onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-2">Cancella Definitivamente Account</button>
             </div>
           </div>
         )}
