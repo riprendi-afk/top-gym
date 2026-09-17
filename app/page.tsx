@@ -435,9 +435,18 @@ export default function TopGymApp() {
     }
   };
 
+  // Lista email autorizzate al ruolo Coach
+  const ALLOWED_COACH_EMAILS = [
+    'riprendi@gmail.com',
+    'maggiopaolo34@gmail.com'
+  ];
+
   const verifyCoachPin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '1234') {
+
+    const isAuthorizedEmail = ALLOWED_COACH_EMAILS.includes(user?.email || '');
+
+    if (pinInput === '1234' && isAuthorizedEmail) {
       setUserRole('COACH');
       setShowCoachPinModal(false);
       setPinInput('');
