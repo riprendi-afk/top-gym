@@ -13,7 +13,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -200,12 +200,43 @@ export default function TopGymApp() {
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
-  const [builderWeight, setBuilderWeight] = useState('60');
+  const [builderWeight, setBuilderWeight] = useState('0');
   const [builderRpe, setBuilderRpe] = useState(8);
-  const [builderRest, setBuilderRest] = useState(90);
+  const [builderRest, setBuilderRest] = useState(0);
   const [builderType, setBuilderType] = useState<ExecutionType>('REGULAR');
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
+  const [editingDayId, setEditingDayId] = useState<string | null>(null);
+  const [editingExId, setEditingExId] = useState<string | null>(null);
+
+  const handleStartEditExercise = (dayId: string, ex: Exercise) => {
+    setEditingDayId(dayId);
+    setEditingExId(ex.id);
+    setBuilderExName(ex.name);
+    setBuilderMuscleGroup(ex.muscleGroup || autoDetectMuscleGroup(ex.name));
+    setBuilderSets(ex.sets);
+    setBuilderReps(ex.reps);
+    setBuilderWeight(ex.targetWeight);
+    setBuilderRpe(ex.rpeTarget);
+    setBuilderRest(ex.restSeconds);
+    setBuilderType(ex.executionType);
+    setBuilderTut(ex.tut);
+    setBuilderNotes(ex.notes || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDayId(null);
+    setEditingExId(null);
+    setBuilderExName('');
+    setBuilderNotes('');
+    setBuilderSets(3);
+    setBuilderReps('8-10');
+    setBuilderWeight('60');
+    setBuilderRpe(8);
+    setBuilderRest(90);
+    setBuilderType('REGULAR');
+    setBuilderTut('2-0-1-0');
+  };
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
   const targetUserId = userRole === 'COACH' ? (activeAthleteId || user?.id || 'default-user') : (user?.id || 'default-user');
@@ -759,25 +790,63 @@ export default function TopGymApp() {
     setLogs(prev => prev.filter(l => l.id !== logId));
   };
 
-  const handleAddExerciseToDay = (e: React.FormEvent, dayId: string) => {
+  const handleAddOrUpdateExercise = (e: React.FormEvent, dayId: string) => {
     e.preventDefault();
     if (!builderExName.trim()) return;
-    const newEx: Exercise = {
-      id: makeId(),
-      name: builderExName.trim(),
-      muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
-      sets: builderSets,
-      reps: builderReps,
-      targetWeight: builderWeight,
-      rpeTarget: builderRpe,
-      restSeconds: builderRest,
-      executionType: builderType,
-      tut: builderTut,
-      notes: builderNotes.trim() || undefined
-    };
-    setProgramDays(prevDays => prevDays.map(day => day.id === dayId ? { ...day, exercises: [...(day.exercises || []), newEx] } : day));
-    setBuilderExName('');
-    setBuilderNotes('');
+
+    if (editingExId && editingDayId === dayId) {
+      // Modifica esercizio esistente
+      setProgramDays(prevDays =>
+        prevDays.map(day => {
+          if (day.id === dayId) {
+            return {
+              ...day,
+              exercises: day.exercises.map(ex =>
+                ex.id === editingExId
+                  ? {
+                      ...ex,
+                      name: builderExName.trim(),
+                      muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+                      sets: builderSets,
+                      reps: builderReps,
+                      targetWeight: builderWeight,
+                      rpeTarget: builderRpe,
+                      restSeconds: builderRest,
+                      executionType: builderType,
+                      tut: builderTut,
+                      notes: builderNotes.trim() || undefined
+                    }
+                  : ex
+              )
+            };
+          }
+          return day;
+        })
+      );
+      handleCancelEdit();
+    } else {
+      // Aggiunta nuovo esercizio
+      const newEx: Exercise = {
+        id: crypto.randomUUID(),
+        name: builderExName.trim(),
+        muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+        sets: builderSets,
+        reps: builderReps,
+        targetWeight: builderWeight,
+        rpeTarget: builderRpe,
+        restSeconds: builderRest,
+        executionType: builderType,
+        tut: builderTut,
+        notes: builderNotes.trim() || undefined
+      };
+
+      setProgramDays(prevDays =>
+        prevDays.map(day => (day.id === dayId ? { ...day, exercises: [...(day.exercises || []), newEx] } : day))
+      );
+
+      setBuilderExName('');
+      setBuilderNotes('');
+    }
   };
 
   const handleRemoveExerciseFromDay = (dayId: string, exerciseId: string) => {
@@ -1437,30 +1506,76 @@ export default function TopGymApp() {
 
                 <div className="space-y-2">
                   {day.exercises.map((ex) => (
-                    <div key={ex.id} className="bg-[#1E1E1E] p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
+                    <div 
+                      key={ex.id} 
+                      className={`p-3 rounded-lg border flex justify-between items-center text-xs transition-all ${
+                        editingExId === ex.id ? 'bg-red-950/30 border-[#E50914]' : 'bg-[#1E1E1E] border-zinc-800'
+                      }`}
+                    >
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-white">{ex.name}</span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                            {ex.executionType}
+                          </span>
                         </div>
-                        <div className="text-zinc-400 mt-0.5">{ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}</div>
+                        <div className="text-zinc-400 mt-0.5">
+                          {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+                        </div>
                         {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
-                      <button type="button" onClick={() => handleRemoveExerciseFromDay(day.id, ex.id)} className="text-red-500 hover:text-red-400 p-1"><Trash2 className="w-4 h-4"/></button>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditExercise(day.id, ex)}
+                          className="p-1 text-zinc-400 hover:text-yellow-400 hover:bg-zinc-800 rounded transition"
+                          title="Modifica esercizio"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (editingExId === ex.id) handleCancelEdit();
+                            handleRemoveExerciseFromDay(day.id, ex.id);
+                          }} 
+                          className="p-1 text-zinc-400 hover:text-red-500 hover:bg-zinc-800 rounded transition"
+                          title="Elimina esercizio"
+                        >
+                          <Trash2 className="w-4 h-4"/>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                <form onSubmit={e => handleAddExerciseToDay(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
+                <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <input type="text" placeholder="Nome Esercizio" value={builderExName} onChange={e => { setBuilderExName(e.target.value); setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value)); }} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <select value={builderMuscleGroup} onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold">
-                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (<option key={mg} value={mg}>{mg}</option>))}
+                    <input 
+                      type="text" 
+                      placeholder="Nome Esercizio" 
+                      value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
+                      onChange={e => {
+                        setBuilderExName(e.target.value);
+                        setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                      }} 
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
+                    />
+                    <select 
+                      value={builderMuscleGroup} 
+                      onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold"
+                    >
+                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
+                        <option key={mg} value={mg}>{mg}</option>
+                      ))}
                     </select>
                     <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                   </div>
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white">
                       <option value="REGULAR">Tecnica: REGULAR</option>
@@ -1473,9 +1588,39 @@ export default function TopGymApp() {
                     <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                     <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
                   </div>
+
                   <div className="flex gap-2">
-                    <input type="text" placeholder="Note del Coach (opzionale)" value={builderNotes} onChange={e => setBuilderNotes(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0 cursor-pointer">Aggiungi</button>
+                    <input 
+                      type="text" 
+                      placeholder="Note del Coach (opzionale)" 
+                      value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
+                      onChange={e => setBuilderNotes(e.target.value)} 
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
+                    />
+                    {editingExId && editingDayId === day.id ? (
+                      <>
+                        <button 
+                          type="button" 
+                          onClick={handleCancelEdit} 
+                          className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded text-white hover:bg-zinc-600 transition flex-shrink-0 cursor-pointer"
+                        >
+                          Annulla
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="bg-yellow-500 text-xs font-bold px-4 py-1.5 rounded text-black hover:bg-yellow-400 transition flex-shrink-0 cursor-pointer"
+                        >
+                          Aggiorna
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        type="submit" 
+                        className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0 cursor-pointer"
+                      >
+                        Aggiungi
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
