@@ -2,30 +2,31 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
+  supabase,
   saveCompletedWorkoutToSupabase, 
   getWorkoutHistoryFromSupabase, 
   deleteWorkoutHistoryFromSupabase,
   saveProgramToSupabase,
   getProgramFromSupabase 
 } from '@/lib/store';
+
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
 
-// Inizializzazione Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = (supabaseUrl && supabaseAnonKey) ? createClient(supabaseUrl, supabaseAnonKey) : null;
+import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
+import NotificationBell from '@/components/NotificationBell';
+import PersonalRecords from '@/components/PersonalRecords';
+import AthleteGoals from '@/components/AthleteGoals';
+import CoachDashboard from '@/components/CoachDashboard';
 
 type DayCount = 2 | 3 | 4 | 5 | 6;
 type UserRole = 'ATHLETE' | 'COACH';
 type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
-
 export type MuscleGroup = 
   | 'Petto' 
   | 'Dorso' 
@@ -74,7 +75,7 @@ interface WorkoutDay {
   exercises: Exercise[];
 }
 
-interface SetLog {
+export interface SetLog {
   id: string;
   exerciseId: string;
   exerciseName: string;
@@ -85,6 +86,13 @@ interface SetLog {
   volume: number;
   date: string;
   time: string;
+  isBodyweight?: boolean;
+  externalLoad?: number;
+  bodyWeightUsed?: number | null;
+  percentageUsed?: number | null;
+  bodyweightLoad?: number | null;
+  effectiveLoad?: number | null;
+  effectiveVolume?: number | null;
 }
 
 interface ReadinessLog {
@@ -116,7 +124,6 @@ interface Athlete {
 }
 
 const todayIso = () => {
-  // Data locale (evita lo sfasamento di fuso orario di toISOString)
   const d = new Date();
   const pad = (n: number) => n.toString().padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -124,13 +131,11 @@ const todayIso = () => {
 
 const clampDayCount = (n: number): DayCount => (Math.min(6, Math.max(2, n)) as DayCount);
 
-// crypto.randomUUID non è disponibile su http o browser datati: serve un fallback
 const makeId = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-// Interpreta 'YYYY-MM-DD' come data locale, non UTC
 const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
@@ -157,17 +162,25 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'settings'>('workout');
+  // Tab estesi con Coach Dashboard, Records e Goals
+  const [activeTab, setActiveTab] = useState<
+    'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
+  >('workout');
+
   const [userXp, setUserXp] = useState(0);
   const userXpRef = useRef(0);
   useEffect(() => { userXpRef.current = userXp; }, [userXp]);
 
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // TIMER RESILIENTE CON TIMESTAMP ASSOLUTO
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const restEndTimeRef = useRef<number | null>(null);
+
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
-  // Readiness States partono da 0
+  // Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
   const [sleepHours, setSleepHours] = useState('0');
   const [sleepQuality, setSleepQuality] = useState(0);
@@ -179,6 +192,8 @@ export default function TopGymApp() {
   const [readinessSuccessMessage, setReadinessSuccessMessage] = useState<string | null>(null);
   const [builderSuccessMessage, setBuilderSuccessMessage] = useState<string | null>(null);
   const [workoutSuccessMessage, setWorkoutSuccessMessage] = useState<string | null>(null);
+  const [isSavingWorkout, setIsSavingWorkout] = useState(false);
+
   const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
@@ -271,7 +286,6 @@ export default function TopGymApp() {
       });
     };
 
-    // Ripristina subito la sessione già attiva (evita il flash della schermata di login)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
@@ -288,7 +302,6 @@ export default function TopGymApp() {
   }, []);
 
   const addXp = useCallback(async (amount: number) => {
-    // Uso il ref: evita XP persi quando si registrano più serie una dopo l'altra
     const newXp = userXpRef.current + amount;
     userXpRef.current = newXp;
     setUserXp(newXp);
@@ -322,7 +335,6 @@ export default function TopGymApp() {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('Errore caricamento storico readiness:', error.message);
         setReadinessLoadError(error.message);
         return;
       }
@@ -377,7 +389,7 @@ export default function TopGymApp() {
     return () => { isMounted = false; };
   }, [targetUserId, userRole, targetAthleteName, loadHistory, loadReadinessHistory]);
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!supabase) return;
     setErrorMessage('');
@@ -435,7 +447,6 @@ export default function TopGymApp() {
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.5);
-      // Rilascia le risorse audio a fine suono
       osc.onended = () => { audioCtx.close().catch(() => {}); };
       if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([200, 100, 200]);
     } catch {
@@ -443,22 +454,42 @@ export default function TopGymApp() {
     }
   }, [soundEnabled]);
 
-  useEffect(() => {
-    if (!isTimerRunning || restTimer === null) return;
-    if (restTimer > 0) {
-      const interval = setInterval(
-        () => setRestTimer(prev =>
-          (prev && prev > 0 ? prev - 1 : 0)
-        ),
-        1000
-      );
-      return () => clearInterval(interval);
+  // ==========================================
+  // GESTIONE TIMER RESILIENTE CON TIMESTAMP
+  // ==========================================
+  const updateTimerRemaining = useCallback(() => {
+    if (!restEndTimeRef.current) return;
+    const remainingMs = restEndTimeRef.current - Date.now();
+    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+    setRestTimer(remainingSec);
+
+    if (remainingSec <= 0) {
+      restEndTimeRef.current = null;
+      setIsTimerRunning(false);
+      playTimerSound();
     }
-    setIsTimerRunning(false);
-    playTimerSound();
-  }, [isTimerRunning, restTimer, playTimerSound]);
+  }, [playTimerSound]);
+
+  useEffect(() => {
+    if (!isTimerRunning) return;
+    const interval = setInterval(updateTimerRemaining, 1000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateTimerRemaining();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isTimerRunning, updateTimerRemaining]);
 
   const startRestTimer = (seconds: number) => {
+    if (seconds <= 0) return;
+    restEndTimeRef.current = Date.now() + seconds * 1000;
     setRestTimer(seconds);
     setIsTimerRunning(true);
   };
@@ -467,19 +498,18 @@ export default function TopGymApp() {
     if (targetRole === 'COACH' && userRole !== 'COACH') setShowCoachPinModal(true);
     else {
       setUserRole('ATHLETE');
-      if (activeTab === 'builder') setActiveTab('workout');
+      if (activeTab === 'builder' || activeTab === 'coachDashboard') setActiveTab('workout');
     }
   };
 
-  // Lista email autorizzate al ruolo Coach
+  // Lista email autorizzate al ruolo Coach (mantenuta invariata)
   const ALLOWED_COACH_EMAILS = [
     'riprendi@gmail.com',
     'maggiopaolo34@gmail.com'
   ];
 
-  const verifyCoachPin = (e: React.FormEvent) => {
+  const verifyCoachPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
-
     const isAuthorizedEmail = ALLOWED_COACH_EMAILS.includes(user?.email || '');
 
     if (pinInput === '1234' && isAuthorizedEmail) {
@@ -493,9 +523,7 @@ export default function TopGymApp() {
     }
   };
 
-  // --- Tabella RPE → % 1RM (Ripetizioni in Riserva), standard powerlifting/forza ---
-  // Righe: RPE da 6 a 10 (step 0.5), Colonne: ripetizioni da 1 a 10.
-  // Fonte: tabella fornita dall'utente (RPE Chart). Non tocca conteggi/volumi: incide solo sulla stima del massimale.
+  // --- Tabella RPE → % 1RM ---
   const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
     '10':  [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
     '9.5': [98,  94, 91, 88, 85, 82, 80, 77, 75, 72],
@@ -508,11 +536,8 @@ export default function TopGymApp() {
     '6':   [86,  84, 81, 79, 76, 74, 71, 68, 65, 62],
   };
 
-  // Formula di Epley: fallback generico quando l'RPE non è tra quelli in tabella o le reps superano 10
   const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
 
-  // Stima 1RM basata su RPE reale della serie (più precisa di Epley): usa la tabella se reps 1-10 e RPE in tabella,
-  // altrimenti ricade sulla formula generica. weight/reps non validi -> null (nessuna stima possibile).
   const calculateEstimated1RM = useCallback((weight: number, reps: number, rpe?: number): number | null => {
     if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(reps) || reps <= 0) return null;
     if (rpe !== undefined && Number.isFinite(rpe) && reps <= 10) {
@@ -525,22 +550,22 @@ export default function TopGymApp() {
     return calculate1RM(weight, reps);
   }, []);
 
-  // Tutte le serie mai registrate (log di oggi + storico Supabase), usate per stimare il vero 1RM per esercizio
   const allLoggedSets = useMemo(() => {
     const items: { exerciseName: string; weight: number; estimated1RM: number }[] = [];
     logs.forEach(l => {
-      if (l.weight > 0 && l.reps > 0) {
+      const w = l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight;
+      if (w > 0 && l.reps > 0) {
         items.push({
           exerciseName: l.exerciseName,
-          weight: l.weight,
-          estimated1RM: l.estimated1RM || calculateEstimated1RM(l.weight, l.reps, l.rpe) || calculate1RM(l.weight, l.reps)
+          weight: w,
+          estimated1RM: l.estimated1RM || calculateEstimated1RM(w, l.reps, l.rpe) || calculate1RM(w, l.reps)
         });
       }
     });
     workoutHistory.forEach(w => {
       if (Array.isArray(w.logs)) {
         w.logs.forEach((l: any) => {
-          const weight = Number(l?.weight) || 0;
+          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight) || 0;
           const reps = Number(l?.reps) || 0;
           const rpeVal = Number(l?.rpe);
           if (weight > 0 && reps > 0) {
@@ -556,7 +581,6 @@ export default function TopGymApp() {
     return items;
   }, [logs, workoutHistory, calculateEstimated1RM]);
 
-  // Miglior 1RM stimato per esercizio, calcolato su tutto lo storico disponibile
   const best1RMByExercise = useMemo(() => {
     const map = new Map<string, number>();
     allLoggedSets.forEach(({ exerciseName, estimated1RM }) => {
@@ -566,7 +590,6 @@ export default function TopGymApp() {
     return map;
   }, [allLoggedSets]);
 
-  // Intensità di carico (% 1RM) secondo le fasce standard forza/ipertrofia
   const getIntensityInfo = useCallback((exerciseName: string, weight: number) => {
     const best1RM = best1RMByExercise.get(exerciseName);
     if (!best1RM || best1RM <= 0 || !weight) return null;
@@ -579,7 +602,6 @@ export default function TopGymApp() {
     return { pct, label, colorClasses };
   }, [best1RMByExercise]);
 
-  // Anteprima 1RM: usa l'RPE selezionato nel form (più precisa); null se i campi non sono validi (prima mostrava NaN)
   const estimated1RMPreview = useMemo(() => {
     const w = parseFloat(weight);
     const r = parseInt(reps, 10);
@@ -588,7 +610,6 @@ export default function TopGymApp() {
     return calculateEstimated1RM(w, r, Number.isFinite(rpeVal) ? rpeVal : undefined);
   }, [weight, reps, rpe, calculateEstimated1RM]);
 
-  // Percentuale di 1RM associata a RPE+reps selezionati, letta direttamente dalla tabella (senza passare dal peso)
   const rpeTablePreviewPct = useMemo(() => {
     const r = Math.min(10, Math.max(1, parseInt(reps, 10) || 1));
     const row = RPE_PERCENT_1RM_TABLE[rpe];
@@ -607,12 +628,38 @@ export default function TopGymApp() {
     return getIntensityInfo(currentExercise.name, w);
   }, [currentExercise, weight, getIntensityInfo]);
 
-  const exerciseHistory = currentExercise ? logs.filter(l => l.exerciseName === currentExercise.name) : [];
-  const lastLoggedSet = exerciseHistory[0];
+  // Recupera il peso più recente della Readiness (sessione odierna o ultimo check valido)
+  const sessionBodyWeight = useMemo(() => {
+    const todayLog = readinessHistory.find(r => r.date === todayIso() && r.bodyWeight && r.bodyWeight > 0);
+    if (todayLog?.bodyWeight) return todayLog.bodyWeight;
+    const latestValid = readinessHistory.find(r => r.bodyWeight && r.bodyWeight > 0);
+    return latestValid?.bodyWeight || null;
+  }, [readinessHistory]);
+
+  // Riconoscimento corpo libero per l'esercizio attualmente selezionato
+  const currentBodyweightConfig = useMemo(() => {
+    if (!currentExercise) return null;
+    return findBodyweightConfig(currentExercise.name);
+  }, [currentExercise]);
+
+  // Confronto con l'ultima prestazione registrata (sia da log odierni che storico passato)
+  const lastLoggedSet = useMemo(() => {
+    if (!currentExercise) return null;
+    const fromToday = logs.find(l => l.exerciseName === currentExercise.name);
+    if (fromToday) return fromToday;
+
+    for (const w of workoutHistory) {
+      if (Array.isArray(w.logs)) {
+        const found = w.logs.find((l: any) => l.exerciseName === currentExercise.name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, [currentExercise, logs, workoutHistory]);
 
   const handleAutoFillLastLog = () => {
     if (lastLoggedSet) {
-      setWeight(lastLoggedSet.weight.toString());
+      setWeight((lastLoggedSet.externalLoad !== undefined ? lastLoggedSet.externalLoad : lastLoggedSet.weight).toString());
       setReps(lastLoggedSet.reps.toString());
       setRpe(lastLoggedSet.rpe.toString());
     }
@@ -633,7 +680,7 @@ export default function TopGymApp() {
 
   const currentReadiness = useMemo(() => computeReadiness(), [computeReadiness]);
 
-  const handleSaveReadiness = async (e: React.FormEvent) => {
+  const handleSaveReadiness = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const { totalScore, rec } = computeReadiness();
     const newReadiness: ReadinessLog = {
@@ -672,7 +719,6 @@ export default function TopGymApp() {
     }
     await addXp(20);
     setReadinessSuccessMessage('🎉 Check Readiness salvato nello storico dell\'atleta! (+20 XP)');
-    // Reset valori a 0
     setSleepHours('0');
     setSleepQuality(0);
     setStressLevel(0);
@@ -702,11 +748,16 @@ export default function TopGymApp() {
     return logs.filter(l => l.date === today);
   }, [logs]);
 
+  // ==========================================
+  // SALVATAGGIO WORKOUT PROTETTO E ROBUSTO
+  // ==========================================
   const handleFinishAndSaveWorkout = async () => {
+    if (isSavingWorkout) return;
+    setIsSavingWorkout(true);
+
     const dayName = activeDay ? activeDay.title : 'Giornata di Allenamento';
-    const totalVol = todayLogs.reduce((acc, curr) => acc + curr.volume, 0) || 0;
+    const totalVol = todayLogs.reduce((acc, curr) => acc + (curr.effectiveVolume || curr.volume), 0) || 0;
     
-    // Il campo 'logs' viene ora salvato correttamente da saveCompletedWorkoutToSupabase
     let result: { success?: boolean; error?: string } = {};
     try {
       result = await saveCompletedWorkoutToSupabase({
@@ -718,16 +769,17 @@ export default function TopGymApp() {
       });
     } catch (e: any) {
       result = { success: false, error: e?.message };
+    } finally {
+      setIsSavingWorkout(false);
     }
 
     if (result?.success) {
       await addXp(50);
       setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
-      setLogs([]); // Pulisce i log locali post salvataggio
+      setLogs([]);
       await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
-      // Mostro il messaggio reale di Supabase (es. colonna mancante, policy RLS) invece di un testo generico
       const detail = result?.error ? ` (${result.error})` : '';
       setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. I log restano salvati in locale, riprova.`);
       setTimeout(() => setWorkoutSuccessMessage(null), 8000);
@@ -746,6 +798,7 @@ export default function TopGymApp() {
     }
   };
 
+  // Assegnazione scheda con notifica automatica all'atleta
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
     let result: { success?: boolean; error?: string } = {};
@@ -755,7 +808,20 @@ export default function TopGymApp() {
       result = { success: false, error: e?.message };
     }
     if (result?.success) {
-      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}! L'atleta ora può visualizzarla.`);
+      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
+      // Invia notifica persistente in-app
+      if (supabase && targetId) {
+        try {
+          await supabase.from('notifications').insert([{
+            user_id: targetId,
+            title: 'Nuova Scheda di Allenamento!',
+            message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
+            type: 'program_assigned'
+          }]);
+        } catch {
+          // Non interrompe se la notifica fallisce
+        }
+      }
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
@@ -764,24 +830,42 @@ export default function TopGymApp() {
     }
   };
 
-  const handleLogSet = (e: React.FormEvent) => {
+  // ==========================================
+  // REGISTRAZIONE SERIE: FIX CARICO 0 E CORPO LIBERO
+  // ==========================================
+  const handleLogSet = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
     const numReps = parseInt(reps, 10);
     const numRpe = parseFloat(rpe);
-    if (!numWeight || !numReps) return;
+
+    // FIX FONDAMENTALE: Accetta peso >= 0 (carico 0 kg consentito!)
+    if (isNaN(numWeight) || numWeight < 0 || isNaN(numReps) || numReps <= 0) return;
+
+    const exName = currentExercise?.name || 'Esercizio';
+    const effectiveCalc = computeEffectiveLoad(exName, numWeight, numReps, sessionBodyWeight);
+
+    const calc1RMWeight = effectiveCalc.effectiveLoad !== null ? effectiveCalc.effectiveLoad : numWeight;
+    const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
     const newLog: SetLog = {
       id: makeId(),
       exerciseId: currentExercise?.id || currentExId,
-      exerciseName: currentExercise?.name || 'Esercizio',
-      weight: numWeight,
+      exerciseName: exName,
+      weight: numWeight, // Carico esterno inserito (es. 0 o +10 kg)
       reps: numReps,
       rpe: numRpe,
-      estimated1RM: calculateEstimated1RM(numWeight, numReps, numRpe) || calculate1RM(numWeight, numReps),
+      estimated1RM,
       volume: numWeight * numReps,
       date: todayIso(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isBodyweight: effectiveCalc.isBodyweight,
+      externalLoad: effectiveCalc.externalLoad,
+      bodyWeightUsed: effectiveCalc.bodyWeightUsed,
+      percentageUsed: effectiveCalc.percentageUsed,
+      bodyweightLoad: effectiveCalc.bodyweightLoad,
+      effectiveLoad: effectiveCalc.effectiveLoad,
+      effectiveVolume: effectiveCalc.effectiveVolume
     };
 
     setLogs(prev => [newLog, ...prev]);
@@ -795,12 +879,11 @@ export default function TopGymApp() {
     setLogs(prev => prev.filter(l => l.id !== logId));
   };
 
-  const handleAddOrUpdateExercise = (e: React.FormEvent, dayId: string) => {
+  const handleAddOrUpdateExercise = (e: React.SyntheticEvent, dayId: string) => {
     e.preventDefault();
     if (!builderExName.trim()) return;
 
     if (editingExId && editingDayId === dayId) {
-      // Modifica esercizio esistente
       setProgramDays(prevDays =>
         prevDays.map(day => {
           if (day.id === dayId) {
@@ -830,7 +913,6 @@ export default function TopGymApp() {
       );
       handleCancelEdit();
     } else {
-      // Aggiunta nuovo esercizio
       const newEx: Exercise = {
         id: crypto.randomUUID(),
         name: builderExName.trim(),
@@ -899,7 +981,6 @@ export default function TopGymApp() {
   const recentRpeLogs = logs.slice(0, 4);
   const highFatigueDetected = recentRpeLogs.length >= 2 && recentRpeLogs.every(l => l.rpe >= 9.5);
 
-  // Classifica ordinata senza mutare lo stato, con l'XP aggiornato dell'utente corrente
   const leaderboard = useMemo(
     () => athletes
       .map(a => (a.id === user?.id ? { ...a, xp: userXp } : a))
@@ -914,11 +995,8 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  // --- CALCOLI PER LE ANALITICHE (in base alla data selezionata) ---
   const { startOfWeek, endOfWeek, startOfMonth, endOfMonth } = useMemo(() => {
     const targetDate = parseLocalDate(analyticsDate) || new Date();
-
-    // Limiti settimana (Lunedì - Domenica)
     const dayOfWeek = targetDate.getDay();
     const diffToMonday = targetDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
     const startW = new Date(targetDate);
@@ -928,14 +1006,12 @@ export default function TopGymApp() {
     endW.setDate(startW.getDate() + 6);
     endW.setHours(23, 59, 59, 999);
 
-    // Limiti mese
     const startM = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
     const endM = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
 
     return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
   }, [analyticsDate]);
 
-  // Mappa nome esercizio -> gruppo muscolare, costruita una sola volta (prima era una ricerca per ogni serie)
   const muscleGroupByExerciseName = useMemo(() => {
     const map = new Map<string, MuscleGroup>();
     programDays.forEach(day => {
@@ -946,7 +1022,6 @@ export default function TopGymApp() {
     return map;
   }, [programDays]);
 
-  // Tutte le serie (locali + storico Supabase) con la relativa data, calcolate una volta sola
   const allSetsWithDate = useMemo(() => {
     const items: { name: string; date: Date | null }[] = [];
     logs.forEach(log => items.push({ name: log.exerciseName, date: parseLocalDate(log.date) }));
@@ -959,7 +1034,6 @@ export default function TopGymApp() {
     return items;
   }, [logs, workoutHistory]);
 
-  // Conteggio Serie Settimanali per gruppo muscolare
   const weeklySetsMap = useMemo(() => {
     const map: Record<string, number> = {};
     allSetsWithDate.forEach(({ name, date }) => {
@@ -970,7 +1044,6 @@ export default function TopGymApp() {
     return map;
   }, [allSetsWithDate, muscleGroupByExerciseName, startOfWeek, endOfWeek]);
 
-  // Conteggio Mensile Totale
   const monthlySetsCount = useMemo(
     () => allSetsWithDate.reduce(
       (count, { date }) => (date && date >= startOfMonth && date <= endOfMonth ? count + 1 : count),
@@ -979,7 +1052,6 @@ export default function TopGymApp() {
     [allSetsWithDate, startOfMonth, endOfMonth]
   );
 
-  // Totale serie di sempre e volume massimo (usati nelle analitiche)
   const totalSetsEver = useMemo(
     () => workoutHistory.reduce((s, w) => s + (Array.isArray(w.logs) ? w.logs.length : 0), 0) + logs.length,
     [workoutHistory, logs]
@@ -990,7 +1062,6 @@ export default function TopGymApp() {
     [workoutHistory]
   );
 
-  // Serie Volume (tonnellaggio) + Intensità media (% 1RM) per sessione, per il grafico a due linee
   const volumeIntensitySeries = useMemo(() => {
     const sessions = workoutHistory.slice(0, 12).reverse();
     return sessions.map((item, idx) => {
@@ -999,7 +1070,7 @@ export default function TopGymApp() {
       const intensities = sessionLogs
         .map((l: any) => {
           const best = best1RMByExercise.get(l?.exerciseName);
-          const w = Number(l?.weight) || 0;
+          const w = Number(l?.effectiveLoad !== null && l?.effectiveLoad !== undefined ? l.effectiveLoad : l?.weight) || 0;
           return best && best > 0 && w > 0 ? (w / best) * 100 : null;
         })
         .filter((v: number | null): v is number => v !== null);
@@ -1012,7 +1083,6 @@ export default function TopGymApp() {
       return { key: item.id || item._id || `session-${idx}`, dateStr, volume, avgIntensity };
     });
   }, [workoutHistory, best1RMByExercise]);
-  // ----------------------------------------------------------------
 
   if (!user) {
     return (
@@ -1067,7 +1137,7 @@ export default function TopGymApp() {
             </div>
             <button
               type="submit"
-              className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider"
+              className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider cursor-pointer"
             >
               {isSignUp ? 'Crea Account' : 'Accedi al Dashboard'}
             </button>
@@ -1132,9 +1202,11 @@ export default function TopGymApp() {
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-between flex-wrap">
             <div className="flex items-center gap-2">
+              <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
+
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white"
+                className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition"
               >
                 {soundEnabled ? <Volume2 className="w-5 h-5 text-green-400" /> : <VolumeX className="w-5 h-5 text-zinc-600" />}
               </button>
@@ -1183,23 +1255,24 @@ export default function TopGymApp() {
         </div>
       </header>
 
+      {/* PIN COACH MODAL (MANTENUTO INTATTO) */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-2 flex items-center gap-2">
               <Lock className="text-[#E50914]" /> Area Riservata Coach
             </h3>
-            <p className="text-xs text-zinc-400 mb-4">Inserisci il PIN per accedere alla gestione schede (Demo PIN: 1234).</p>
+            <p className="text-xs text-zinc-400 mb-4">Inserisci il PIN per accedere alla gestione coach.</p>
             <form onSubmit={verifyCoachPin} className="space-y-4">
               <input
                 type="password"
                 value={pinInput}
                 onChange={e => setPinInput(e.target.value)}
-                placeholder="PIN (Es. 1234)"
+                placeholder="PIN"
                 className="w-full bg-zinc-900 border border-zinc-700 rounded px-4 py-2.5 text-center text-lg font-mono text-white outline-none focus:border-[#E50914]"
                 autoFocus
               />
-              {pinError && <p className="text-xs text-[#E50914] text-center font-bold">PIN Errato!</p>}
+              {pinError && <p className="text-xs text-[#E50914] text-center font-bold">PIN Errato o non autorizzato!</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowCoachPinModal(false)} className="w-1/2 bg-zinc-800 py-2 rounded text-xs font-bold text-zinc-300">Annulla</button>
                 <button type="submit" className="w-1/2 bg-[#E50914] py-2 rounded text-xs font-bold text-white uppercase">Sblocca</button>
@@ -1209,31 +1282,60 @@ export default function TopGymApp() {
         </div>
       )}
 
+      {/* TABS PRINCIPALI */}
       <div className="max-w-5xl mx-auto flex flex-wrap gap-2 mb-6">
         {userRole === 'ATHLETE' && (
-          <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>Esegui Allenamento</button>
-        )}
-        <button onClick={() => setActiveTab('readiness')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Gauge className="w-4 h-4 text-green-400" /> Check Readiness</button>
-        <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><TrendingUp className="w-4 h-4" /> Progressi</button>
-        {userRole === 'COACH' && (
-          <button onClick={() => setActiveTab('builder')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-<button
-  onClick={() => setActiveTab('coachDashboard')}
-  className="px-5 py-2.5 rounded-lg font-bold text-sm bg-[#E50914] text-white"
->
-  Dashboard Atleti
-</button>
-
-            <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
+          <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+            Esegui Allenamento
           </button>
         )}
-        <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Trophy className="w-4 h-4 text-yellow-500" /> Classifica & Badge</button>
+
+        <button onClick={() => setActiveTab('readiness')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+          <Gauge className="w-4 h-4 text-green-400" /> Check Readiness
+        </button>
+
+        <button onClick={() => setActiveTab('records')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'records' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+          <Trophy className="w-4 h-4 text-yellow-500" /> Record Personali
+        </button>
+
+        <button onClick={() => setActiveTab('goals')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'goals' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+          <Target className="w-4 h-4 text-[#E50914]" /> Obiettivi
+        </button>
+
+        <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+          <TrendingUp className="w-4 h-4" /> Progressi
+        </button>
+
+        {userRole === 'COACH' && (
+          <>
+            <button
+              onClick={() => setActiveTab('coachDashboard')}
+              className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'coachDashboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}
+            >
+              <Users className="w-4 h-4" /> Dashboard Atleti
+            </button>
+            <button
+              onClick={() => setActiveTab('builder')}
+              className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}
+            >
+              <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
+            </button>
+          </>
+        )}
+
+        <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+          <Medal className="w-4 h-4 text-yellow-500" /> Classifica & Badge
+        </button>
+
         {userRole === 'ATHLETE' && (
-          <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><Settings className="w-4 h-4 text-zinc-300" /> Impostazioni</button>
+          <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+            <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
+          </button>
         )}
       </div>
 
       <main className="max-w-5xl mx-auto">
+        {/* TAB 1: WORKOUT */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -1263,28 +1365,41 @@ export default function TopGymApp() {
                 ))}
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                {activeRoutine.map((ex) => (
-                  <div key={ex.id} onClick={() => setCurrentExId(ex.id)} className={`p-4 rounded-lg border cursor-pointer transition-all ${currentExId === ex.id ? 'bg-red-950/20 border-[#E50914]' : 'bg-zinc-900 border-zinc-800'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-bold text-lg text-white">{ex.name}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                {activeRoutine.map((ex) => {
+                  const isBw = !!findBodyweightConfig(ex.name);
+                  return (
+                    <div key={ex.id} onClick={() => setCurrentExId(ex.id)} className={`p-4 rounded-lg border cursor-pointer transition-all ${currentExId === ex.id ? 'bg-red-950/20 border-[#E50914]' : 'bg-zinc-900 border-zinc-800'}`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-bold text-lg text-white block">{ex.name}</span>
+                          {isBw && <span className="text-[10px] text-purple-400 font-bold uppercase">Corpo Libero</span>}
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs text-zinc-400 mt-2 border-t border-zinc-800/60 pt-2">
+                        <div>Serie/Reps: <b className="text-white">{ex.sets} × {ex.reps}</b></div>
+                        <div>Target: <b className="text-white">{ex.targetWeight} Kg</b></div>
+                        <div>TUT: <b className="text-yellow-500 font-mono">{ex.tut}</b></div>
+                      </div>
+                      {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">Note: {ex.notes}</div>}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs text-zinc-400 mt-2 border-t border-zinc-800/60 pt-2">
-                      <div>Serie/Reps: <b className="text-white">{ex.sets} × {ex.reps}</b></div>
-                      <div>Target: <b className="text-white">{ex.targetWeight} Kg</b></div>
-                      <div>TUT: <b className="text-yellow-500 font-mono">{ex.tut}</b></div>
-                    </div>
-                    {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">Note: {ex.notes}</div>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {currentExercise && (
               <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-                <div className="mb-4 pb-4 border-b border-zinc-800 flex justify-between items-end">
+                <div className="mb-4 pb-4 border-b border-zinc-800 flex justify-between items-end flex-wrap gap-2">
                   <div>
-                    <h3 className="text-2xl font-black text-white">{currentExercise.name}</h3>
+                    <h3 className="text-2xl font-black text-white flex items-center gap-2">
+                      {currentExercise.name}
+                      {currentBodyweightConfig && (
+                        <span className="text-xs bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded-full font-bold">
+                          {Math.round(currentBodyweightConfig.percentage * 100)}% BW
+                        </span>
+                      )}
+                    </h3>
                     <p className="text-xs text-zinc-400 mt-1">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
                   </div>
                   {estimated1RMPreview !== null && (
@@ -1300,26 +1415,79 @@ export default function TopGymApp() {
                   )}
                 </div>
 
+                {/* CONFRONTO CON L'ULTIMA SESSIONE */}
                 {lastLoggedSet && (
                   <div className="mb-4 bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 flex items-center justify-between flex-wrap gap-2">
-                    <div className="text-xs text-zinc-400">Ultimo Carico: <b className="text-white">{lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps</b> (RPE {lastLoggedSet.rpe})</div>
-                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1"><Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico</button>
+                    <div className="text-xs text-zinc-400">
+                      Ultima volta:{' '}
+                      {lastLoggedSet.isBodyweight && lastLoggedSet.bodyWeightUsed ? (
+                        <b className="text-white">
+                          BW {lastLoggedSet.bodyWeightUsed} kg + {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
+                          {lastLoggedSet.effectiveLoad ? ` (Carico effettivo: ${lastLoggedSet.effectiveLoad} kg)` : ''}
+                        </b>
+                      ) : (
+                        <b className="text-white">
+                          {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
+                        </b>
+                      )}{' '}
+                      <span className="text-red-400">(RPE {lastLoggedSet.rpe})</span>
+                    </div>
+                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1 hover:underline">
+                      <Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico
+                    </button>
+                  </div>
+                )}
+
+                {/* INFO CARICO EFFETTIVO IN TEMPO REALE */}
+                {currentBodyweightConfig && (
+                  <div className="mb-4 bg-purple-950/20 border border-purple-900/40 p-3 rounded-lg text-xs text-purple-200">
+                    <span className="font-bold">Modalità Corpo Libero ({Math.round(currentBodyweightConfig.percentage * 100)}%): </span>
+                    {sessionBodyWeight ? (
+                      <span>
+                        Peso Readiness: <b>{sessionBodyWeight} kg</b>. 
+                        Quota corporea: <b>{Math.round(sessionBodyWeight * currentBodyweightConfig.percentage * 10) / 10} kg</b>. 
+                        Inserisci <b>0</b> per solo peso corporeo oppure la <b>zavorra</b>.
+                      </span>
+                    ) : (
+                      <span className="text-amber-300">
+                        ⚠️ Nessun peso inserito nel Check Readiness. Il carico effettivo resterà non calcolato.
+                      </span>
+                    )}
                   </div>
                 )}
 
                 <form onSubmit={handleLogSet} className="space-y-4">
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-zinc-400 mb-1">Carico (Kg)</label>
-                      <input type="number" step="0.5" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="80" className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold" />
+                      <label className="block text-xs font-bold text-zinc-400 mb-1">
+                        {currentBodyweightConfig ? 'Zavorra (0 = No Zavorra)' : 'Carico (Kg)'}
+                      </label>
+                      <input 
+                        type="number" 
+                        step="0.5" 
+                        min="0"
+                        required 
+                        value={weight} 
+                        onChange={e => setWeight(e.target.value)} 
+                        placeholder={currentBodyweightConfig ? '0' : '80'} 
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]" 
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1">Reps</label>
-                      <input type="number" required value={reps} onChange={e => setReps(e.target.value)} placeholder="8" className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold" />
+                      <input 
+                        type="number" 
+                        min="1"
+                        required 
+                        value={reps} 
+                        onChange={e => setReps(e.target.value)} 
+                        placeholder="8" 
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]" 
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1">RPE</label>
-                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold">
+                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none">
                         {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val}>{val}</option>))}
                       </select>
                       {rpeTablePreviewPct !== null && (
@@ -1327,7 +1495,7 @@ export default function TopGymApp() {
                       )}
                     </div>
                   </div>
-                  <button type="submit" className="w-full bg-[#E50914] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase">
+                  <button type="submit" className="w-full bg-[#E50914] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase hover:bg-red-700 transition cursor-pointer">
                     <Plus className="w-5 h-5"/> Registra Serie (+10 XP)
                   </button>
                 </form>
@@ -1336,14 +1504,20 @@ export default function TopGymApp() {
                   <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Serie Registrate Oggi</h4>
                   <div className="space-y-2">
                     {todayLogs.map((log, i) => {
-                      const intensity = getIntensityInfo(log.exerciseName, log.weight);
+                      const intensity = getIntensityInfo(log.exerciseName, log.effectiveLoad || log.weight);
                       return (
                         <div key={log.id} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-zinc-500">Set {i + 1}</span>
                             <div>
                               <span className="font-bold text-white block">{log.exerciseName}</span>
-                              <span className="text-zinc-400 font-mono text-[11px]">{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</span>
+                              <span className="text-zinc-400 font-mono text-[11px]">
+                                {log.isBodyweight && log.effectiveLoad !== null ? (
+                                  <>Zavorra: {log.weight} Kg | Carico Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                                ) : (
+                                  <>{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</>
+                                )}
+                              </span>
                             </div>
                             {intensity && (
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${intensity.colorClasses}`}>
@@ -1366,14 +1540,36 @@ export default function TopGymApp() {
               {workoutSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">{workoutSuccessMessage}</div>}
               <button
                 onClick={handleFinishAndSaveWorkout}
-                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+                disabled={isSavingWorkout}
+                className={`w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 text-base cursor-pointer ${
+                  isSavingWorkout ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                <span>✅ Termina e Salva Allenamento</span>
+                <span>{isSavingWorkout ? 'Salvataggio in corso...' : '✅ Termina e Salva Allenamento'}</span>
               </button>
             </div>
           </div>
         )}
 
+        {/* TAB 2: RECORD PERSONALI */}
+        {activeTab === 'records' && (
+          <PersonalRecords 
+            workoutHistory={workoutHistory} 
+            currentLogs={logs} 
+            athleteName={targetAthleteName} 
+          />
+        )}
+
+        {/* TAB 3: OBIETTIVI */}
+        {activeTab === 'goals' && (
+          <AthleteGoals 
+            athleteId={targetUserId} 
+            athleteName={targetAthleteName} 
+            userRole={userRole} 
+          />
+        )}
+
+        {/* TAB 4: READINESS */}
         {activeTab === 'readiness' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
@@ -1441,7 +1637,6 @@ export default function TopGymApp() {
               {readinessLoadError && (
                 <div className="mb-4 bg-red-950/40 border border-red-800 text-red-300 p-3 rounded-lg text-xs">
                   ⚠️ Impossibile caricare lo storico da Supabase: {readinessLoadError}
-                  <br />Controlla le policy RLS (SELECT) sulla tabella <code className="font-mono">readiness_logs</code>.
                 </div>
               )}
               {readinessHistory.length === 0 ? (
@@ -1469,6 +1664,19 @@ export default function TopGymApp() {
           </div>
         )}
 
+        {/* TAB 5: COACH DASHBOARD (SEPARATA) */}
+        {activeTab === 'coachDashboard' && userRole === 'COACH' && (
+          <CoachDashboard
+            athletes={athletes}
+            activeAthleteId={activeAthleteId}
+            onSelectAthlete={(id) => setActiveAthleteId(id)}
+            onNavigateToBuilder={() => setActiveTab('builder')}
+            workoutHistory={workoutHistory}
+            readinessHistory={readinessHistory}
+          />
+        )}
+
+        {/* TAB 6: BUILDER COACH */}
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
@@ -1577,7 +1785,7 @@ export default function TopGymApp() {
                     <select 
                       value={builderMuscleGroup} 
                       onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold"
+                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white font-bold"
                     >
                       {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
                         <option key={mg} value={mg}>{mg}</option>
@@ -1589,7 +1797,7 @@ export default function TopGymApp() {
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white">
+                    <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white">
                       <option value="REGULAR">Tecnica: REGULAR</option>
                       <option value="SUPERSET">Tecnica: SUPERSET</option>
                       <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
@@ -1646,6 +1854,7 @@ export default function TopGymApp() {
           </div>
         )}
 
+        {/* TAB 7: ANALYTICS & STORICO */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 flex justify-between items-center flex-wrap gap-4">
@@ -1654,7 +1863,7 @@ export default function TopGymApp() {
                   <BarChart3 className="text-[#E50914]" /> 
                   Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio.</p>
+                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio (incluso corpo libero).</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
@@ -1756,12 +1965,10 @@ export default function TopGymApp() {
 
                           return (
                             <svg viewBox={`0 0 ${chartW} ${chartH + 24}`} className="w-full h-52" preserveAspectRatio="none">
-                              {/* Linee guida orizzontali */}
                               {[0, 0.25, 0.5, 0.75, 1].map(f => (
                                 <line key={f} x1={padX} x2={chartW - padX} y1={10 + f * (chartH - 20)} y2={10 + f * (chartH - 20)} stroke="#27272a" strokeWidth="1" />
                               ))}
 
-                              {/* Linea Volume (tonnellaggio) */}
                               <polyline points={volPoints} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
                               {volumeIntensitySeries.map((s, i) => (
                                 <circle key={`vol-${s.key}`} cx={xAt(i)} cy={yVolAt(s.volume)} r="3.5" fill="#3b82f6">
@@ -1769,7 +1976,6 @@ export default function TopGymApp() {
                                 </circle>
                               ))}
 
-                              {/* Linea Intensità media (% 1RM), solo dove disponibile (serve almeno 2 punti per tracciarla) */}
                               {intensityPointsWithData.length >= 2 && (
                                 <polyline points={intPolyline} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 3" />
                               )}
@@ -1788,7 +1994,6 @@ export default function TopGymApp() {
                                 ) : null
                               )}
 
-                              {/* Etichette data sull'asse X */}
                               {volumeIntensitySeries.map((s, i) => (
                                 <text key={`label-${s.key}`} x={xAt(i)} y={chartH + 16} fontSize="9" fill="#a1a1aa" textAnchor="middle" fontFamily="monospace">
                                   {s.dateStr}
@@ -1801,24 +2006,6 @@ export default function TopGymApp() {
                           <span className="flex items-center gap-1.5 text-blue-400"><span className="w-3 h-0.5 rounded-full bg-blue-500 inline-block" /> Volume (kg)</span>
                           <span className="flex items-center gap-1.5 text-amber-400"><span className="w-3 h-0.5 rounded-full bg-amber-500 inline-block" /> Intensità Media (% 1RM)</span>
                         </div>
-                        {(() => {
-                          const withData = volumeIntensitySeries.filter(s => s.avgIntensity !== null).length;
-                          if (withData === 0) {
-                            return (
-                              <p className="text-[10px] text-zinc-500 italic text-center mt-2">
-                                Nessun dato di intensità disponibile per queste sessioni (probabilmente registrate prima del salvataggio dei dettagli serie).
-                              </p>
-                            );
-                          }
-                          if (withData === 1) {
-                            return (
-                              <p className="text-[10px] text-zinc-500 italic text-center mt-2">
-                                Solo una sessione con dati di intensità: serve almeno un'altra registrazione completa per tracciare l'andamento.
-                              </p>
-                            );
-                          }
-                          return null;
-                        })()}
                       </>
                     )}
                   </div>
@@ -1862,15 +2049,19 @@ export default function TopGymApp() {
                                         {item.logs.map((log: any, lIdx: number) => (
                                           <div key={lIdx} className="bg-zinc-900 border border-zinc-800 p-2 rounded text-[11px]">
                                             <div className="font-bold text-white mb-1">{log.exerciseName}</div>
-                                            <div className="text-zinc-400 flex justify-between">
-                                              <span>{log.weight} kg × {log.reps}</span>
+                                            <div className="text-zinc-400 flex justify-between flex-wrap">
+                                              {log.isBodyweight && log.effectiveLoad !== null ? (
+                                                <span>BW: +{log.weight} kg (Effettivo: {log.effectiveLoad} kg) × {log.reps}</span>
+                                              ) : (
+                                                <span>{log.weight} kg × {log.reps}</span>
+                                              )}
                                               <span className="text-red-400">RPE: {log.rpe}</span>
                                             </div>
                                           </div>
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="text-[11px] text-zinc-500 italic text-center">Nessun dettaglio delle serie salvato per questo allenamento. Assicurati che lo store Supabase salvi l'array 'logs'.</div>
+                                      <div className="text-[11px] text-zinc-500 italic text-center">Nessun dettaglio delle serie salvato per questo allenamento.</div>
                                     )}
                                   </td>
                                 </tr>
@@ -1887,6 +2078,7 @@ export default function TopGymApp() {
           </div>
         )}
 
+        {/* TAB 8: CLASSIFICA & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
@@ -1920,6 +2112,7 @@ export default function TopGymApp() {
           </div>
         )}
 
+        {/* TAB 9: IMPOSTAZIONI */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>

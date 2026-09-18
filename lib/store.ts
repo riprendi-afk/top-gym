@@ -1,14 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
-export const getSupabase = () => {
-  if (!supabaseUrl || !supabaseAnonKey) return null;
-  return createClient(supabaseUrl, supabaseAnonKey);
-};
+// Client esportato direttamente: mai null per TypeScript
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface CompletedSetLog {
+  id?: string;
   exerciseId?: string;
   exerciseName: string;
   weight: number;
@@ -18,6 +17,13 @@ export interface CompletedSetLog {
   volume?: number;
   date?: string;
   time?: string;
+  isBodyweight?: boolean;
+  externalLoad?: number;
+  bodyWeightUsed?: number | null;
+  percentageUsed?: number | null;
+  bodyweightLoad?: number | null;
+  effectiveLoad?: number | null;
+  effectiveVolume?: number | null;
 }
 
 export async function saveCompletedWorkoutToSupabase(workout: {
@@ -27,9 +33,6 @@ export async function saveCompletedWorkoutToSupabase(workout: {
   exercisesCount: number;
   logs: CompletedSetLog[];
 }) {
-  const supabase = getSupabase();
-  if (!supabase) return { success: true, localOnly: true };
-
   const { error } = await supabase.from('workout_history').insert({
     user_id: workout.userId,
     day_name: workout.dayName,
@@ -46,9 +49,7 @@ export async function saveCompletedWorkoutToSupabase(workout: {
 }
 
 export async function getWorkoutHistoryFromSupabase(userId: string) {
-  const supabase = getSupabase();
-  if (!supabase || !userId) return [];
-
+  if (!userId) return [];
   const { data, error } = await supabase
     .from('workout_history')
     .select('*')
@@ -63,9 +64,6 @@ export async function getWorkoutHistoryFromSupabase(userId: string) {
 }
 
 export async function deleteWorkoutHistoryFromSupabase(workoutId: string) {
-  const supabase = getSupabase();
-  if (!supabase) return { success: true };
-
   const { error } = await supabase
     .from('workout_history')
     .delete()
@@ -79,9 +77,6 @@ export async function deleteWorkoutHistoryFromSupabase(workoutId: string) {
 }
 
 export async function saveProgramToSupabase(userId: string, programName: string, days: any[]) {
-  const supabase = getSupabase();
-  if (!supabase) return { success: true, localOnly: true };
-
   const { data: existing } = await supabase
     .from('programs')
     .select('id')
@@ -121,9 +116,7 @@ export async function saveProgramToSupabase(userId: string, programName: string,
 }
 
 export async function getProgramFromSupabase(userId: string) {
-  const supabase = getSupabase();
-  if (!supabase) return null;
-
+  if (!userId) return null;
   const { data, error } = await supabase
     .from('programs')
     .select('*')
