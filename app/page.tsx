@@ -446,7 +446,12 @@ export default function TopGymApp() {
   useEffect(() => {
     if (!isTimerRunning || restTimer === null) return;
     if (restTimer > 0) {
-      const interval = setInterval(() => setRestTimer(prev => (prev && prev > 0 ? prev - 1 : 0)), 1000);
+      const interval = setInterval(
+        () => setRestTimer(prev =>
+          (prev && prev > 0 ? prev - 1 : 0)
+        ),
+        1000
+      );
       return () => clearInterval(interval);
     }
     setIsTimerRunning(false);
