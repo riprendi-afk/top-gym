@@ -1217,9 +1217,13 @@ export default function TopGymApp() {
         <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><TrendingUp className="w-4 h-4" /> Progressi</button>
         {userRole === 'COACH' && (
           <button onClick={() => setActiveTab('builder')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-            <button onClick={() => setActiveTab('coachDashboard')}>
+<button
+  onClick={() => setActiveTab('coachDashboard')}
+  className="px-5 py-2.5 rounded-lg font-bold text-sm bg-[#E50914] text-white"
+>
   Dashboard Atleti
 </button>
+
             <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
           </button>
         )}
