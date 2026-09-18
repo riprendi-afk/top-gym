@@ -153,6 +153,11 @@ export default function TopGymApp() {
   const [username, setUsername] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [profileHeight, setProfileHeight] = useState('');
+  const [profileTargetWeight, setProfileTargetWeight] = useState('');
+  const [profileGoal, setProfileGoal] = useState('Ipertrofia');
+  const [profileExperience, setProfileExperience] = useState('Intermedio');
+  const [profileNotes, setProfileNotes] = useState('');
 
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>('');
@@ -410,6 +415,47 @@ export default function TopGymApp() {
   const handleLogout = async () => {
     if (supabase) await supabase.auth.signOut();
     setUser(null);
+  };
+
+  // Carica i dati dell'atleta dalla tabella profiles
+  useEffect(() => {
+    if (!user?.id || !supabase) return;
+    supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
+      if (data) {
+        if (data.username) setUsername(data.username);
+        if (data.height) setProfileHeight(String(data.height));
+        if (data.target_weight) setProfileTargetWeight(String(data.target_weight));
+        if (data.training_goal) setProfileGoal(data.training_goal);
+        if (data.experience_level) setProfileExperience(data.experience_level);
+        if (data.physical_notes) setProfileNotes(data.physical_notes);
+      }
+    });
+  }, [user?.id]);
+
+  // Salva username e parametri fisici
+  const handleUpdateProfile = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (!user?.id || !supabase) return;
+
+    await supabase.auth.updateUser({
+      data: { username: username.trim() }
+    });
+
+    const { error } = await supabase.from('profiles').update({
+      username: username.trim(),
+      height: profileHeight ? parseFloat(profileHeight) : null,
+      target_weight: profileTargetWeight ? parseFloat(profileTargetWeight) : null,
+      training_goal: profileGoal,
+      experience_level: profileExperience,
+      physical_notes: profileNotes.trim()
+    }).eq('id', user.id);
+
+    if (error) {
+      setSettingsMessage(`⚠️ Errore salvataggio: ${error.message}`);
+    } else {
+      setSettingsMessage('✅ Profilo aggiornato con successo!');
+      setTimeout(() => setSettingsMessage(null), 3000);
+    }
   };
 
   const handlePasswordReset = async () => {
@@ -2112,19 +2158,73 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 9: IMPOSTAZIONI */}
-        {activeTab === 'settings' && userRole === 'ATHLETE' && (
+{/* TAB 9: IMPOSTAZIONI */}
+{activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>
-              <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Impostazioni Account</h2>
-              <p className="text-xs text-zinc-400 mt-1">Gestisci le credenziali del tuo profilo atleta e le opzioni di sicurezza.</p>
+              <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Profilo & Impostazioni</h2>
+              <p className="text-xs text-zinc-400 mt-1">Aggiorna le tue metriche atletiche e gestisci la sicurezza del tuo account.</p>
             </div>
+
             {settingsMessage && <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">{settingsMessage}</div>}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">Dati Atleta</h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">Nome Utente</label>
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">Altezza (cm)</label>
+                    <input type="number" step="0.5" value={profileHeight} onChange={e => setProfileHeight(e.target.value)} placeholder="185" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">Peso Obiettivo (Kg)</label>
+                    <input type="number" step="0.5" value={profileTargetWeight} onChange={e => setProfileTargetWeight(e.target.value)} placeholder="85" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">Obiettivi & Esperienza</h3>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">Obiettivo Principale</label>
+                    <select value={profileGoal} onChange={e => setProfileGoal(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white font-bold outline-none">
+                      <option value="Ipertrofia">Ipertrofia (Massa Muscolare)</option>
+                      <option value="Forza">Forza / Powerlifting</option>
+                      <option value="Calisthenics">Calisthenics & Skills</option>
+                      <option value="Dimagrimento">Definizione / Dimagrimento</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">Livello di Esperienza</label>
+                    <select value={profileExperience} onChange={e => setProfileExperience(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white font-bold outline-none">
+                      <option value="Principiante">Principiante (&lt; 1 anno)</option>
+                      <option value="Intermedio">Intermedio (1-3 anni)</option>
+                      <option value="Avanzato">Avanzato (3+ anni)</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-400 mb-1">Limitazioni fisiche o note per il Coach</label>
+                  <textarea value={profileNotes} onChange={e => setProfileNotes(e.target.value)} rows={2} placeholder="Es. Lieve fastidio spalla destra su distensioni sopra la testa..." className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition cursor-pointer">
+                Salva Modifiche Profilo
+              </button>
+            </form>
+
             <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2"><Key className="w-4 h-4 text-yellow-500"/> Password e Sicurezza</h3>
               <p className="text-xs text-zinc-400">Invia un link alla tua email per cambiare la tua password.</p>
               <button type="button" onClick={handlePasswordReset} className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2">Invia Email Recupero Password</button>
             </div>
+
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-900/50 space-y-3">
               <h3 className="text-sm font-bold text-red-400 flex items-center gap-2"><UserX className="w-4 h-4 text-red-500"/> Zona Pericolo</h3>
               <p className="text-xs text-zinc-400">Rimuovi definitivamente il tuo profilo Atleta.</p>
@@ -2132,7 +2232,7 @@ export default function TopGymApp() {
             </div>
           </div>
         )}
-      </main>
+        </main>
     </div>
   );
 }
