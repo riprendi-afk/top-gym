@@ -18,42 +18,101 @@ export function findBodyweightConfig(exerciseName: string): BodyweightConfig | n
   if (!exerciseName) return null;
   const name = exerciseName.toLowerCase().trim();
 
-  // 1. Esclusione Macchinari: se contiene queste parole NON è a corpo libero
-  if (
-    name.includes('machine') || 
-    name.includes('macchinario') || 
-    name.includes('guidat') || 
-    name.includes('sedut') ||
-    name.includes('assistit') ||
-    name.includes('press')
-  ) {
+  // 1. FILTRO BLOCCANTE MACCHINARI, DISCHI E BILANCIERI
+  // Se il nome contiene una di queste parole, NON è corpo libero (es. "Dip Machine", "Macchina Dip")
+  const machineKeywords = [
+    'machine',
+    'macchina',
+    'macchinario',
+    'guidat',
+    'sedut',
+    'assistit',
+    'press',
+    'multipower',
+    'smith',
+    'bilanciere',
+    'manubri',
+    'cavi',
+    'cable',
+    'leva',
+    'lever',
+    'pacco pesi'
+  ];
+
+  if (machineKeywords.some(keyword => name.includes(keyword))) {
     return null;
   }
 
-  // 2. Dip (parallele, anelli, zavorrate)
-  if (name.includes('dip')) {
-    return {
-      isBodyweight: true,
-      percentage: 1.0,
-      label: 'Dip'
-    };
-  }
-
-  // 3. Trazioni alla sbarra / Anelli
+  // 2. TRAZIONI ALLA SBARRA / ANELLI (98%)
   if (name.includes('trazioni') || name.includes('pull up') || name.includes('chin up')) {
     return {
       isBodyweight: true,
-      percentage: 1.0,
+      percentage: 0.98,
       label: 'Trazioni'
     };
   }
 
-  // 4. Piegamenti / Push up
+  // 3. DIP PARALLELE / ANELLI (90%)
+  // Si attiva solo se non è stata rilevata una macchina
+  if (name.includes('dip')) {
+    return {
+      isBodyweight: true,
+      percentage: 0.90,
+      label: 'Dip Parallele'
+    };
+  }
+
+  // 4. SQUAT BULGARO (70%)
+  if (name.includes('bulgar') || name.includes('bulgarian')) {
+    return {
+      isBodyweight: true,
+      percentage: 0.70,
+      label: 'Squat Bulgaro'
+    };
+  }
+
+  // 5. PUSH-UP SULLE GINOCCHIA (50%)
+  if (
+    (name.includes('push up') || name.includes('piegament')) && 
+    (name.includes('ginocchi') || name.includes('knee'))
+  ) {
+    return {
+      isBodyweight: true,
+      percentage: 0.50,
+      label: 'Push-up Ginocchia'
+    };
+  }
+
+  // 6. PIEGAMENTI STANDARD / PUSH-UP (65%)
   if (name.includes('push up') || name.includes('piegament')) {
     return {
       isBodyweight: true,
       percentage: 0.65,
       label: 'Piegamenti'
+    };
+  }
+
+  // 7. AFFONDI STATICI / CORPO LIBERO (50%)
+  if (name.includes('affond') || name.includes('lunge')) {
+    return {
+      isBodyweight: true,
+      percentage: 0.50,
+      label: 'Affondi'
+    };
+  }
+
+  // 8. SQUAT A CORPO LIBERO / AIR SQUAT (60%)
+  if (
+    name.includes('air squat') || 
+    name.includes('squat corpo libero') || 
+    name.includes('squat libero') || 
+    name.includes('squat classico') ||
+    name === 'squat'
+  ) {
+    return {
+      isBodyweight: true,
+      percentage: 0.60,
+      label: 'Squat Classico'
     };
   }
 
