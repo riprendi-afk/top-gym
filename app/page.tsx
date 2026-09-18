@@ -157,7 +157,7 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'leaderboard' | 'settings'>('workout');
+  const [activeTab, setActiveTab] = useState<'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'settings'>('workout');
   const [userXp, setUserXp] = useState(0);
   const userXpRef = useRef(0);
   useEffect(() => { userXpRef.current = userXp; }, [userXp]);
@@ -1217,6 +1217,9 @@ export default function TopGymApp() {
         <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}><TrendingUp className="w-4 h-4" /> Progressi</button>
         {userRole === 'COACH' && (
           <button onClick={() => setActiveTab('builder')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
+            <button onClick={() => setActiveTab('coachDashboard')}>
+  Dashboard Atleti
+</button>
             <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
           </button>
         )}
