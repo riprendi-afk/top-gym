@@ -80,6 +80,51 @@ export interface BodyweightConfig {
     }
     return null;
   }
+  export function findBodyweightConfig(exerciseName: string) {
+    if (!exerciseName) return null;
+    const name = exerciseName.toLowerCase().trim();
+  
+    // 1. ESCLUSIONE: se il nome contiene parole legate ai macchinari, NON è corpo libero
+    if (
+      name.includes('machine') || 
+      name.includes('macchinario') || 
+      name.includes('guidat') || 
+      name.includes('sedut') ||
+      name.includes('assistit') ||
+      name.includes('press')
+    ) {
+      return null;
+    }
+  
+    // 2. Riconoscimento DIP a corpo libero (parallele, anelli, zavorre)
+    if (name.includes('dip')) {
+      return {
+        isBodyweight: true,
+        percentage: 1.0, // Calcola il 100% del peso corporeo
+        label: 'Dip'
+      };
+    }
+  
+    // Trazioni (sbarra, anelli)
+    if (name.includes('trazioni') || name.includes('pull up') || name.includes('chin up')) {
+      return {
+        isBodyweight: true,
+        percentage: 1.0,
+        label: 'Trazioni'
+      };
+    }
+  
+    // Piegamenti / Push up
+    if (name.includes('push up') || name.includes('piegament')) {
+      return {
+        isBodyweight: true,
+        percentage: 0.65, // Calcola il 65% del peso corporeo
+        label: 'Piegamenti'
+      };
+    }
+  
+    return null;
+  }
   
   export interface EffectiveLoadResult {
     isBodyweight: boolean;
