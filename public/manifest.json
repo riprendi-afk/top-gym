@@ -1,0 +1,16 @@
+{
+    "name": "TOP GYM",
+    "short_name": "TOP GYM",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0A0A0A",
+    "theme_color": "#E50914",
+    "icons": [
+      {
+        "src": "/wicon.png",
+        "sizes": "192x192 512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      }
+    ]
+  }
