@@ -10,7 +10,6 @@ import {
   getProgramFromSupabase 
 } from '@/lib/store';
 
-
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
@@ -161,6 +160,16 @@ export default function TopGymApp() {
   const [profileExperience, setProfileExperience] = useState('Intermedio');
   const [profileNotes, setProfileNotes] = useState('');
   const [pushLoading, setPushLoading] = useState(false);
+  const [showPushBanner, setShowPushBanner] = useState(false);
+  const [showDeniedModal, setShowDeniedModal] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        setShowPushBanner(true);
+      }
+    }
+  }, []);
 
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>('');
@@ -466,30 +475,28 @@ export default function TopGymApp() {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
     setSettingsMessage(error ? `⚠️ Errore: ${error.message}` : '📩 Email per il recupero password inviata con successo!');
   };
-  
-  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
-              </h3>
-              <p className="text-xs text-zinc-400">
-                Ricevi avvisi sul tuo smartphone per scadenze di abbonamenti, visite mediche e aggiornamenti delle schede.
-              </p>
-              <button
-                type="button"
-                disabled={pushLoading}
-                onClick={async () => {
-                  if (!user?.id) return;
-                  setPushLoading(true);
-                  const res = await subscribeUserToPush(user.id, supabase);
-                  setSettingsMessage(res.message);
-                  setPushLoading(false);
-                  setTimeout(() => setSettingsMessage(null), 4000);
-                }}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
-              </button>
-            </div>
+
+  const handlePushActivation = async () => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      setShowDeniedModal(true);
+      return;
+    }
+
+    if (!user?.id) return;
+    setPushLoading(true);
+    const res = await subscribeUserToPush(user.id, supabase);
+
+    if (!res.success && (res.message.includes('bloccate') || res.message.includes('rifiutato'))) {
+      setShowDeniedModal(true);
+    } else {
+      if (res.success) {
+        setShowPushBanner(false);
+      }
+      setSettingsMessage(res.message);
+      setTimeout(() => setSettingsMessage(null), 5000);
+    }
+    setPushLoading(false);
+  };
 
   const handleDeleteAccount = async () => {
     if (!window.confirm('Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.') || !supabase) return;
@@ -500,7 +507,7 @@ export default function TopGymApp() {
         alert('Account eliminato con successo.');
         await handleLogout();
       }
-    } catch (e: any) {
+    } catch {
       await handleLogout();
     }
   };
@@ -701,7 +708,7 @@ export default function TopGymApp() {
     return getIntensityInfo(currentExercise.name, w);
   }, [currentExercise, weight, getIntensityInfo]);
 
-  // Recupera il peso più recente della Readiness (sessione odierna o ultimo check valido)
+  // Recupera il peso più recente della Readiness
   const sessionBodyWeight = useMemo(() => {
     const todayLog = readinessHistory.find(r => r.date === todayIso() && r.bodyWeight && r.bodyWeight > 0);
     if (todayLog?.bodyWeight) return todayLog.bodyWeight;
@@ -709,13 +716,13 @@ export default function TopGymApp() {
     return latestValid?.bodyWeight || null;
   }, [readinessHistory]);
 
-  // Riconoscimento corpo libero per l'esercizio attualmente selezionato
+  // Riconoscimento corpo libero
   const currentBodyweightConfig = useMemo(() => {
     if (!currentExercise) return null;
     return findBodyweightConfig(currentExercise.name);
   }, [currentExercise]);
 
-  // Confronto con l'ultima prestazione registrata (sia da log odierni che storico passato)
+  // Confronto con l'ultima prestazione registrata
   const lastLoggedSet = useMemo(() => {
     if (!currentExercise) return null;
     const fromToday = logs.find(l => l.exerciseName === currentExercise.name);
@@ -871,56 +878,56 @@ export default function TopGymApp() {
     }
   };
 
-// Assegnazione scheda con notifica automatica all'atleta
-const handleSaveProgramByCoach = async () => {
-  const targetId = activeAthleteId || 'default-user';
-  let result: { success?: boolean; error?: string } = {};
-  try {
-    result = await saveProgramToSupabase(targetId, programName, programDays);
-  } catch (e: any) {
-    result = { success: false, error: e?.message };
-  }
-  if (result?.success) {
-    setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
-    
-    // Invia notifica persistente in-app
-    if (supabase && targetId) {
-      try {
-        await supabase.from('notifications').insert([{
-          user_id: targetId,
-          title: 'Nuova Scheda di Allenamento!',
-          message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
-          type: 'program_assigned'
-        }]);
-      } catch {
-        // Non interrompe se la notifica interna fallisce
-      }
+  // Assegnazione scheda con notifica automatica all'atleta
+  const handleSaveProgramByCoach = async () => {
+    const targetId = activeAthleteId || 'default-user';
+    let result: { success?: boolean; error?: string } = {};
+    try {
+      result = await saveProgramToSupabase(targetId, programName, programDays);
+    } catch (e: any) {
+      result = { success: false, error: e?.message };
     }
-
-    // Invia Notifica Push sullo smartphone dell'atleta
-    if (targetId && targetId !== 'default-user') {
-      try {
-        await sendPushNotification(
-          targetId,
-          'Nuova Scheda Assegnata! 🏋️',
-          `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
-          '/'
-        );
-      } catch {
-        // Non interrompe l'interfaccia se il push non va a buon fine
+    if (result?.success) {
+      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
+      
+      // Invia notifica persistente in-app
+      if (supabase && targetId) {
+        try {
+          await supabase.from('notifications').insert([{
+            user_id: targetId,
+            title: 'Nuova Scheda di Allenamento!',
+            message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
+            type: 'program_assigned'
+          }]);
+        } catch {
+          // Non blocca l'esecuzione
+        }
       }
-    }
 
-    setTimeout(() => setBuilderSuccessMessage(null), 4000);
-  } else {
-    const detail = result?.error ? ` (${result.error})` : '';
-    setBuilderSuccessMessage(`⚠️ Errore durante il salvataggio della scheda${detail}.`);
-    setTimeout(() => setBuilderSuccessMessage(null), 8000);
-  }
-};
+      // Invia Notifica Push sullo smartphone dell'atleta
+      if (targetId && targetId !== 'default-user') {
+        try {
+          await sendPushNotification(
+            targetId,
+            'Nuova Scheda Assegnata! 🏋️',
+            `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
+            '/'
+          );
+        } catch {
+          // Non blocca l'interfaccia
+        }
+      }
+
+      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+    } else {
+      const detail = result?.error ? ` (${result.error})` : '';
+      setBuilderSuccessMessage(`⚠️ Errore durante il salvataggio della scheda${detail}.`);
+      setTimeout(() => setBuilderSuccessMessage(null), 8000);
+    }
+  };
 
   // ==========================================
-  // REGISTRAZIONE SERIE: FIX CARICO 0 E CORPO LIBERO
+  // REGISTRAZIONE SERIE
   // ==========================================
   const handleLogSet = (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -928,7 +935,6 @@ const handleSaveProgramByCoach = async () => {
     const numReps = parseInt(reps, 10);
     const numRpe = parseFloat(rpe);
 
-    // FIX FONDAMENTALE: Accetta peso >= 0 (carico 0 kg consentito!)
     if (isNaN(numWeight) || numWeight < 0 || isNaN(numReps) || numReps <= 0) return;
 
     const exName = currentExercise?.name || 'Esercizio';
@@ -941,7 +947,7 @@ const handleSaveProgramByCoach = async () => {
       id: makeId(),
       exerciseId: currentExercise?.id || currentExId,
       exerciseName: exName,
-      weight: numWeight, // Carico esterno inserito (es. 0 o +10 kg)
+      weight: numWeight,
       reps: numReps,
       rpe: numRpe,
       estimated1RM,
@@ -1344,7 +1350,7 @@ const handleSaveProgramByCoach = async () => {
         </div>
       </header>
 
-      {/* PIN COACH MODAL (MANTENUTO INTATTO) */}
+      {/* PIN COACH MODAL */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
@@ -1424,6 +1430,40 @@ const handleSaveProgramByCoach = async () => {
       </div>
 
       <main className="max-w-5xl mx-auto">
+        {/* Banner Notifiche per Atleta */}
+        {showPushBanner && userRole === 'ATHLETE' && (
+          <div className="bg-gradient-to-r from-red-950/80 to-zinc-900 border border-[#E50914] p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-[#E50914] text-white rounded-lg">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white">Attiva gli avvisi delle Schede!</h4>
+                <p className="text-xs text-zinc-300">
+                  Ricevi un avviso sul telefono quando il Coach aggiorna i tuoi allenamenti o carichi.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setShowPushBanner(false)}
+                className="px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white"
+              >
+                Più tardi
+              </button>
+              <button
+                type="button"
+                disabled={pushLoading}
+                onClick={handlePushActivation}
+                className="w-full sm:w-auto bg-[#E50914] hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50"
+              >
+                {pushLoading ? 'Attivazione...' : 'Attiva con 1 Click'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* TAB 1: WORKOUT */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
@@ -1753,7 +1793,7 @@ const handleSaveProgramByCoach = async () => {
           </div>
         )}
 
-        {/* TAB 5: COACH DASHBOARD (SEPARATA) */}
+        {/* TAB 5: COACH DASHBOARD */}
         {activeTab === 'coachDashboard' && userRole === 'COACH' && (
           <CoachDashboard
             athletes={athletes}
@@ -2201,9 +2241,8 @@ const handleSaveProgramByCoach = async () => {
           </div>
         )}
 
-{/* TAB 9: IMPOSTAZIONI */}
-{activeTab === 'settings' && userRole === 'ATHLETE' && (
-  
+        {/* TAB 9: IMPOSTAZIONI */}
+        {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Profilo & Impostazioni</h2>
@@ -2211,29 +2250,24 @@ const handleSaveProgramByCoach = async () => {
             </div>
 
             {settingsMessage && <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">{settingsMessage}</div>}
+
             <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-        <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
-      </h3>
-      <p className="text-xs text-zinc-400">
-        Ricevi avvisi sullo smartphone per aggiornamenti delle schede e comunicazioni.
-      </p>
-      <button
-        type="button"
-        disabled={pushLoading}
-        onClick={async () => {
-          if (!user?.id) return;
-          setPushLoading(true);
-          const res = await subscribeUserToPush(user.id, supabase);
-          setSettingsMessage(res.message);
-          setPushLoading(false);
-          setTimeout(() => setSettingsMessage(null), 4000);
-        }}
-        className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-      >
-        {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
-      </button>
-    </div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
+              </h3>
+              <p className="text-xs text-zinc-400">
+                Ricevi avvisi sullo smartphone per aggiornamenti delle schede e comunicazioni.
+              </p>
+              <button
+                type="button"
+                disabled={pushLoading}
+                onClick={handlePushActivation}
+                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
+              </button>
+            </div>
+
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">Dati Atleta</h3>
@@ -2298,7 +2332,57 @@ const handleSaveProgramByCoach = async () => {
             </div>
           </div>
         )}
-        </main>
+      </main>
+
+      {/* MODALE GUIDA PERMESSI BLOCCATI (DENIED) */}
+      {showDeniedModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#1E1E1E] p-6 rounded-2xl border border-zinc-800 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 border-b border-zinc-800 pb-3">
+              <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Notifiche Disattivate</h3>
+                <p className="text-xs text-zinc-400">Hai bloccato i permessi nel browser</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-zinc-300 leading-relaxed">
+              <p>
+                Il browser non consente di richiedere nuovamente l&apos;autorizzazione in automatico. Per abilitarle manualmente:
+              </p>
+
+              <div className="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">1</span>
+                  <span>Tocca l&apos;icona delle <b>impostazioni sito / lucchetto</b> a sinistra dell&apos;indirizzo web in alto.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">2</span>
+                  <span>Cerca la voce <b>Notifiche</b> o <b>Autorizzazioni</b>.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">3</span>
+                  <span>Imposta su <b className="text-green-400">Consenti</b> oppure tocca <b>Reimposta autorizzazioni</b>.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">4</span>
+                  <span>Ricarica la pagina e premi di nuovo <i>Attiva Notifiche</i>.</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowDeniedModal(false)}
+              className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer"
+            >
+              Ho capito, chiudi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
