@@ -10,13 +10,15 @@ import {
   getProgramFromSupabase 
 } from '@/lib/store';
 
+
 import {
   Trophy, Shield, Dumbbell, UserCheck,
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell
 } from 'lucide-react';
+import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
 import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
 import NotificationBell from '@/components/NotificationBell';
@@ -158,6 +160,7 @@ export default function TopGymApp() {
   const [profileGoal, setProfileGoal] = useState('Ipertrofia');
   const [profileExperience, setProfileExperience] = useState('Intermedio');
   const [profileNotes, setProfileNotes] = useState('');
+  const [pushLoading, setPushLoading] = useState(false);
 
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>('');
@@ -463,6 +466,30 @@ export default function TopGymApp() {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin });
     setSettingsMessage(error ? `⚠️ Errore: ${error.message}` : '📩 Email per il recupero password inviata con successo!');
   };
+  
+  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
+              </h3>
+              <p className="text-xs text-zinc-400">
+                Ricevi avvisi sul tuo smartphone per scadenze di abbonamenti, visite mediche e aggiornamenti delle schede.
+              </p>
+              <button
+                type="button"
+                disabled={pushLoading}
+                onClick={async () => {
+                  if (!user?.id) return;
+                  setPushLoading(true);
+                  const res = await subscribeUserToPush(user.id, supabase);
+                  setSettingsMessage(res.message);
+                  setPushLoading(false);
+                  setTimeout(() => setSettingsMessage(null), 4000);
+                }}
+                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
+              </button>
+            </div>
 
   const handleDeleteAccount = async () => {
     if (!window.confirm('Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.') || !supabase) return;
@@ -844,37 +871,53 @@ export default function TopGymApp() {
     }
   };
 
-  // Assegnazione scheda con notifica automatica all'atleta
-  const handleSaveProgramByCoach = async () => {
-    const targetId = activeAthleteId || 'default-user';
-    let result: { success?: boolean; error?: string } = {};
-    try {
-      result = await saveProgramToSupabase(targetId, programName, programDays);
-    } catch (e: any) {
-      result = { success: false, error: e?.message };
-    }
-    if (result?.success) {
-      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
-      // Invia notifica persistente in-app
-      if (supabase && targetId) {
-        try {
-          await supabase.from('notifications').insert([{
-            user_id: targetId,
-            title: 'Nuova Scheda di Allenamento!',
-            message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
-            type: 'program_assigned'
-          }]);
-        } catch {
-          // Non interrompe se la notifica fallisce
-        }
+// Assegnazione scheda con notifica automatica all'atleta
+const handleSaveProgramByCoach = async () => {
+  const targetId = activeAthleteId || 'default-user';
+  let result: { success?: boolean; error?: string } = {};
+  try {
+    result = await saveProgramToSupabase(targetId, programName, programDays);
+  } catch (e: any) {
+    result = { success: false, error: e?.message };
+  }
+  if (result?.success) {
+    setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
+    
+    // Invia notifica persistente in-app
+    if (supabase && targetId) {
+      try {
+        await supabase.from('notifications').insert([{
+          user_id: targetId,
+          title: 'Nuova Scheda di Allenamento!',
+          message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
+          type: 'program_assigned'
+        }]);
+      } catch {
+        // Non interrompe se la notifica interna fallisce
       }
-      setTimeout(() => setBuilderSuccessMessage(null), 4000);
-    } else {
-      const detail = result?.error ? ` (${result.error})` : '';
-      setBuilderSuccessMessage(`⚠️ Errore durante il salvataggio della scheda${detail}.`);
-      setTimeout(() => setBuilderSuccessMessage(null), 8000);
     }
-  };
+
+    // Invia Notifica Push sullo smartphone dell'atleta
+    if (targetId && targetId !== 'default-user') {
+      try {
+        await sendPushNotification(
+          targetId,
+          'Nuova Scheda Assegnata! 🏋️',
+          `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
+          '/'
+        );
+      } catch {
+        // Non interrompe l'interfaccia se il push non va a buon fine
+      }
+    }
+
+    setTimeout(() => setBuilderSuccessMessage(null), 4000);
+  } else {
+    const detail = result?.error ? ` (${result.error})` : '';
+    setBuilderSuccessMessage(`⚠️ Errore durante il salvataggio della scheda${detail}.`);
+    setTimeout(() => setBuilderSuccessMessage(null), 8000);
+  }
+};
 
   // ==========================================
   // REGISTRAZIONE SERIE: FIX CARICO 0 E CORPO LIBERO
