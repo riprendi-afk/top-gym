@@ -1422,30 +1422,6 @@ const handleSaveProgramByCoach = async () => {
           </button>
         )}
       </div>
-      {/* Box Notifiche Push Universale */}
-<div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3 my-4">
-  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-    <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
-  </h3>
-  <p className="text-xs text-zinc-400">
-    Ricevi avvisi sullo smartphone per aggiornamenti delle schede e comunicazioni.
-  </p>
-  <button
-    type="button"
-    disabled={pushLoading}
-    onClick={async () => {
-      if (!user?.id) return;
-      setPushLoading(true);
-      const res = await subscribeUserToPush(user.id, supabase);
-      setSettingsMessage(res.message);
-      setPushLoading(false);
-      setTimeout(() => setSettingsMessage(null), 4000);
-    }}
-    className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-  >
-    {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
-  </button>
-</div>
 
       <main className="max-w-5xl mx-auto">
         {/* TAB 1: WORKOUT */}
@@ -2227,6 +2203,7 @@ const handleSaveProgramByCoach = async () => {
 
 {/* TAB 9: IMPOSTAZIONI */}
 {activeTab === 'settings' && userRole === 'ATHLETE' && (
+  
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Profilo & Impostazioni</h2>
@@ -2234,7 +2211,29 @@ const handleSaveProgramByCoach = async () => {
             </div>
 
             {settingsMessage && <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">{settingsMessage}</div>}
-
+            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+        <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
+      </h3>
+      <p className="text-xs text-zinc-400">
+        Ricevi avvisi sullo smartphone per aggiornamenti delle schede e comunicazioni.
+      </p>
+      <button
+        type="button"
+        disabled={pushLoading}
+        onClick={async () => {
+          if (!user?.id) return;
+          setPushLoading(true);
+          const res = await subscribeUserToPush(user.id, supabase);
+          setSettingsMessage(res.message);
+          setPushLoading(false);
+          setTimeout(() => setSettingsMessage(null), 4000);
+        }}
+        className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+      >
+        {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
+      </button>
+    </div>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">Dati Atleta</h3>
