@@ -44,15 +44,20 @@ function urlBase64ToUint8Array(base64String: string) {
       const subJson = subscription.toJSON();
   
       if (supabaseClient) {
-        // Salva o aggiorna associando sia l'utente che l'endpoint specifico del telefono
-        const { error } = await supabaseClient.from('push_subscriptions').upsert(
-          {
+        // 1. Elimina eventuali sottoscrizioni obsolete per questo utente
+        await supabaseClient
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', userId);
+
+        // 2. Inserisce la nuova subscription valida
+        const { error } = await supabaseClient
+          .from('push_subscriptions')
+          .insert({
             user_id: userId,
             subscription: subJson
-          },
-          { onConflict: 'user_id' } // oppure lascia vuoto se la tabella non ha unique constraint
-        );
-  
+          });
+
         if (error) {
           console.error('Errore salvataggio Supabase subscription:', error);
           throw error;
