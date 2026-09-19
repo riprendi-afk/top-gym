@@ -1,10 +1,17 @@
 self.addEventListener('push', function (event) {
-    if (!event.data) return;
+    let data = {};
+    
+    if (event.data) {
+      try {
+        data = event.data.json();
+      } catch (e) {
+        data = { body: event.data.text() };
+      }
+    }
   
-    const data = event.data.json();
     const title = data.title || 'TOP GYM';
     const options = {
-      body: data.body,
+      body: data.body || 'Nuovo aggiornamento disponibile',
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
       vibrate: [100, 50, 100],
@@ -18,7 +25,19 @@ self.addEventListener('push', function (event) {
   
   self.addEventListener('notificationclick', function (event) {
     event.notification.close();
+    const targetUrl = event.notification.data?.url || '/';
+    
     event.waitUntil(
-      clients.openWindow(event.notification.data.url)
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+        for (let i = 0; i < clientList.length; i++) {
+          let client = clientList[i];
+          if (client.url.includes(targetUrl) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      })
     );
   });
