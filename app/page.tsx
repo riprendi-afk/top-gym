@@ -15,7 +15,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
@@ -25,9 +25,9 @@ import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
 
-type DayCount = 2 | 3 | 4 | 5 | 6;
-type UserRole = 'ATHLETE' | 'COACH';
-type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
+export type DayCount = 2 | 3 | 4 | 5 | 6;
+export type UserRole = 'ATHLETE' | 'COACH';
+export type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
 export type MuscleGroup = 
   | 'Petto' 
   | 'Dorso' 
@@ -39,6 +39,10 @@ export type MuscleGroup =
   | 'Tricipiti' 
   | 'Polpacci' 
   | 'Addome';
+
+export type MacroBlock = 'BLOCCO_1_FORZA' | 'BLOCCO_2_TRASFORMAZIONE' | 'BLOCCO_3_QUALITA';
+export type MicroWeek = 1 | 2 | 3 | 4;
+export type TopGymStimulus = 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC';
 
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   const name = exerciseName.toLowerCase().trim();
@@ -59,6 +63,7 @@ export interface Exercise {
   id: string;
   name: string;
   muscleGroup?: MuscleGroup;
+  stimulusType?: TopGymStimulus;
   sets: number;
   reps: string;
   targetWeight: string;
@@ -80,6 +85,7 @@ export interface SetLog {
   id: string;
   exerciseId: string;
   exerciseName: string;
+  muscleGroup?: MuscleGroup;
   weight: number;
   reps: number;
   rpe: number;
@@ -197,6 +203,10 @@ export default function TopGymApp() {
 
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
+  // METODO TOPGYM (MACRO, MESO, MICROCICLO)
+  const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
+  const [manualWeek, setManualWeek] = useState<MicroWeek | null>(null);
+
   // Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
   const [sleepHours, setSleepHours] = useState('0');
@@ -217,7 +227,7 @@ export default function TopGymApp() {
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
   const [readinessLoadError, setReadinessLoadError] = useState<string | null>(null);
 
-  const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
+  const [programName, setProgramName] = useState('Scheda Metodo TOPGYM');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -228,24 +238,56 @@ export default function TopGymApp() {
   const [rpe, setRpe] = useState('8');
   const [logs, setLogs] = useState<SetLog[]>([]);
 
+  // State Builder con Preset Topgym
   const [builderExName, setBuilderExName] = useState('');
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
+  const [builderStimulus, setBuilderStimulus] = useState<TopGymStimulus>('HYPERTROPHIC');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
   const [builderWeight, setBuilderWeight] = useState('0');
   const [builderRpe, setBuilderRpe] = useState(8);
-  const [builderRest, setBuilderRest] = useState(0);
+  const [builderRest, setBuilderRest] = useState(90);
   const [builderType, setBuilderType] = useState<ExecutionType>('REGULAR');
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
   const [editingDayId, setEditingDayId] = useState<string | null>(null);
   const [editingExId, setEditingExId] = useState<string | null>(null);
 
+  const handleApplyTopGymPreset = (stimulus: TopGymStimulus) => {
+    setBuilderStimulus(stimulus);
+    if (stimulus === 'NEURAL') {
+      setBuilderSets(4);
+      setBuilderReps('4-6');
+      setBuilderRpe(8);
+      setBuilderRest(180);
+      setBuilderType('REGULAR');
+      setBuilderTut('2-0-X-0');
+      setBuilderNotes('Metodo TOPGYM: Spinta esplosiva sui fondamentali, RIR 2, no cedimento.');
+    } else if (stimulus === 'HYPERTROPHIC') {
+      setBuilderSets(3);
+      setBuilderReps('8-10');
+      setBuilderRpe(8.5);
+      setBuilderRest(90);
+      setBuilderType('REGULAR');
+      setBuilderTut('2-0-1-0');
+      setBuilderNotes('Metodo TOPGYM: Tensione continua, cedimento eventuale solo all\'ultima serie.');
+    } else {
+      setBuilderSets(3);
+      setBuilderReps('12-15');
+      setBuilderRpe(10);
+      setBuilderRest(60);
+      setBuilderType('DROP_SET');
+      setBuilderTut('2-0-1-1');
+      setBuilderNotes('Metodo TOPGYM: Stress metabolico/pompaggio, cedimento concentrico reale.');
+    }
+  };
+
   const handleStartEditExercise = (dayId: string, ex: Exercise) => {
     setEditingDayId(dayId);
     setEditingExId(ex.id);
     setBuilderExName(ex.name);
     setBuilderMuscleGroup(ex.muscleGroup || autoDetectMuscleGroup(ex.name));
+    setBuilderStimulus((ex as any).stimulusType || 'HYPERTROPHIC');
     setBuilderSets(ex.sets);
     setBuilderReps(ex.reps);
     setBuilderWeight(ex.targetWeight);
@@ -268,6 +310,23 @@ export default function TopGymApp() {
     setBuilderRest(90);
     setBuilderType('REGULAR');
     setBuilderTut('2-0-1-0');
+  };
+
+  const handleApplyDeloadWeekToProgram = () => {
+    if (!window.confirm('Vuoi convertire la scheda in SETTIMANA DI DELOAD (-40% volume, RIR 3-4, nessuna tecnica d\'intensità)?')) return;
+    setProgramDays(prevDays => prevDays.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex => ({
+        ...ex,
+        sets: Math.max(2, Math.round(ex.sets * 0.6)),
+        rpeTarget: 6.5,
+        executionType: 'REGULAR',
+        notes: (ex.notes ? ex.notes + ' · ' : '') + 'SETTIMANA DI DELOAD: Volume ridotto, focus tecnico, nessun cedimento.'
+      }))
+    })));
+    setManualWeek(4);
+    setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Deload (Week 4)!');
+    setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
@@ -396,7 +455,7 @@ export default function TopGymApp() {
           { id: `day-4-${timestamp}`, dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
         ]);
         setSelectedDayCount(4);
-        setProgramName(`Scheda Personalizzata - ${targetAthleteName}`);
+        setProgramName(`Scheda TOPGYM - ${targetAthleteName}`);
       }
     }).catch(() => {
       if (isMounted) setProgramDays([]);
@@ -574,7 +633,7 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // Apertura immediata della modale PIN Coach
+  // APERTURA DIRETTA DELLA MODALE PIN AL CLICK SU COACH
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH') {
       setShowCoachPinModal(true);
@@ -584,6 +643,7 @@ export default function TopGymApp() {
     }
   };
 
+  // PIN COACH ACCESSIBILE CON 1234
   const verifyCoachPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (pinInput.trim() === '1234' || pinInput.trim() === 'admin') {
@@ -639,7 +699,7 @@ export default function TopGymApp() {
     workoutHistory.forEach(w => {
       if (Array.isArray(w.logs)) {
         w.logs.forEach((l: any) => {
-          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight) || 0;
+          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l?.weight) || 0;
           const reps = Number(l?.reps) || 0;
           const rpeVal = Number(l?.rpe);
           if (weight > 0 && reps > 0) {
@@ -884,7 +944,6 @@ export default function TopGymApp() {
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
       
-      // Invia notifica persistente in-app
       if (supabase && targetId) {
         try {
           await supabase.from('notifications').insert([{
@@ -893,12 +952,9 @@ export default function TopGymApp() {
             message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
             type: 'program_assigned'
           }]);
-        } catch {
-          // Non blocca l'esecuzione
-        }
+        } catch {}
       }
 
-      // Invia Notifica Push sullo smartphone dell'atleta
       if (targetId && targetId !== 'default-user') {
         try {
           await sendPushNotification(
@@ -907,9 +963,7 @@ export default function TopGymApp() {
             `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
             '/'
           );
-        } catch {
-          // Non blocca l'interfaccia
-        }
+        } catch {}
       }
 
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
@@ -1344,7 +1398,7 @@ export default function TopGymApp() {
         </div>
       </header>
 
-      {/* PIN COACH MODAL (Z-INDEX ALTO E GARANTITO) */}
+      {/* PIN COACH MODAL CON Z-INDEX MASSIMO */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
