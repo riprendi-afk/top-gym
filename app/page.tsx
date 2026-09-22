@@ -15,7 +15,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Flame
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Flame, Calendar, RefreshCw, Layers
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
@@ -25,9 +25,9 @@ import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
 
-type DayCount = 2 | 3 | 4 | 5 | 6;
-type UserRole = 'ATHLETE' | 'COACH';
-type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
+export type DayCount = 2 | 3 | 4 | 5 | 6;
+export type UserRole = 'ATHLETE' | 'COACH';
+export type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
 export type MuscleGroup = 
   | 'Petto' 
   | 'Dorso' 
@@ -39,6 +39,10 @@ export type MuscleGroup =
   | 'Tricipiti' 
   | 'Polpacci' 
   | 'Addome';
+
+export type MacroBlock = 'BLOCCO_1_FORZA' | 'BLOCCO_2_TRASFORMAZIONE' | 'BLOCCO_3_QUALITA';
+export type MicroWeek = 1 | 2 | 3 | 4;
+export type TopGymStimulus = 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC';
 
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   const name = exerciseName.toLowerCase().trim();
@@ -59,6 +63,7 @@ export interface Exercise {
   id: string;
   name: string;
   muscleGroup?: MuscleGroup;
+  stimulusType?: TopGymStimulus;
   sets: number;
   reps: string;
   targetWeight: string;
@@ -80,6 +85,7 @@ export interface SetLog {
   id: string;
   exerciseId: string;
   exerciseName: string;
+  muscleGroup?: MuscleGroup;
   weight: number;
   reps: number;
   rpe: number;
@@ -179,7 +185,7 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab estesi
+  // Tab
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
   >('workout');
@@ -196,6 +202,10 @@ export default function TopGymApp() {
   const restEndTimeRef = useRef<number | null>(null);
 
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
+
+  // STRUTTURA METODO TOPGYM (MACRO, MESO, MICROCICLO)
+  const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
+  const [currentWeek, setCurrentWeek] = useState<MicroWeek>(1);
 
   // Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
@@ -217,7 +227,7 @@ export default function TopGymApp() {
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
   const [readinessLoadError, setReadinessLoadError] = useState<string | null>(null);
 
-  const [programName, setProgramName] = useState('Scheda Ipertrofia / Forza');
+  const [programName, setProgramName] = useState('Scheda Metodo TOPGYM');
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -228,24 +238,56 @@ export default function TopGymApp() {
   const [rpe, setRpe] = useState('8');
   const [logs, setLogs] = useState<SetLog[]>([]);
 
+  // State Builder
   const [builderExName, setBuilderExName] = useState('');
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
+  const [builderStimulus, setBuilderStimulus] = useState<TopGymStimulus>('HYPERTROPHIC');
   const [builderSets, setBuilderSets] = useState(3);
   const [builderReps, setBuilderReps] = useState('8-10');
   const [builderWeight, setBuilderWeight] = useState('0');
   const [builderRpe, setBuilderRpe] = useState(8);
-  const [builderRest, setBuilderRest] = useState(0);
+  const [builderRest, setBuilderRest] = useState(90);
   const [builderType, setBuilderType] = useState<ExecutionType>('REGULAR');
   const [builderTut, setBuilderTut] = useState('2-0-1-0');
   const [builderNotes, setBuilderNotes] = useState('');
   const [editingDayId, setEditingDayId] = useState<string | null>(null);
   const [editingExId, setEditingExId] = useState<string | null>(null);
 
+  const handleApplyTopGymPreset = (stimulus: TopGymStimulus) => {
+    setBuilderStimulus(stimulus);
+    if (stimulus === 'NEURAL') {
+      setBuilderSets(4);
+      setBuilderReps('4-6');
+      setBuilderRpe(8);
+      setBuilderRest(180);
+      setBuilderType('REGULAR');
+      setBuilderTut('2-0-X-0');
+      setBuilderNotes('Metodo TOPGYM: Spinta esplosiva sui fondamentali, RIR 2, no cedimento.');
+    } else if (stimulus === 'HYPERTROPHIC') {
+      setBuilderSets(3);
+      setBuilderReps('8-10');
+      setBuilderRpe(8.5);
+      setBuilderRest(90);
+      setBuilderType('REGULAR');
+      setBuilderTut('2-0-1-0');
+      setBuilderNotes('Metodo TOPGYM: Tensione continua, cedimento eventuale solo all\'ultima serie.');
+    } else {
+      setBuilderSets(3);
+      setBuilderReps('12-15');
+      setBuilderRpe(10);
+      setBuilderRest(60);
+      setBuilderType('DROP_SET');
+      setBuilderTut('2-0-1-1');
+      setBuilderNotes('Metodo TOPGYM: Stress metabolico/pompaggio, cedimento concentrico reale.');
+    }
+  };
+
   const handleStartEditExercise = (dayId: string, ex: Exercise) => {
     setEditingDayId(dayId);
     setEditingExId(ex.id);
     setBuilderExName(ex.name);
     setBuilderMuscleGroup(ex.muscleGroup || autoDetectMuscleGroup(ex.name));
+    setBuilderStimulus(ex.stimulusType || 'HYPERTROPHIC');
     setBuilderSets(ex.sets);
     setBuilderReps(ex.reps);
     setBuilderWeight(ex.targetWeight);
@@ -263,11 +305,28 @@ export default function TopGymApp() {
     setBuilderNotes('');
     setBuilderSets(3);
     setBuilderReps('8-10');
-    setBuilderWeight('60');
+    setBuilderWeight('0');
     setBuilderRpe(8);
     setBuilderRest(90);
     setBuilderType('REGULAR');
     setBuilderTut('2-0-1-0');
+  };
+
+  const handleApplyDeloadWeekToProgram = () => {
+    if (!window.confirm('Vuoi convertire la scheda in SETTIMANA DI DELOAD (-40% volume, RIR 3-4, nessuna tecnica d\'intensità)?')) return;
+    setProgramDays(prevDays => prevDays.map(day => ({
+      ...day,
+      exercises: day.exercises.map(ex => ({
+        ...ex,
+        sets: Math.max(2, Math.round(ex.sets * 0.6)),
+        rpeTarget: 6.5,
+        executionType: 'REGULAR',
+        notes: (ex.notes ? ex.notes + ' · ' : '') + 'SETTIMANA DI DELOAD: Volume ridotto, focus tecnico, nessun cedimento.'
+      }))
+    })));
+    setCurrentWeek(4);
+    setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Deload (Week 4)!');
+    setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
@@ -277,7 +336,6 @@ export default function TopGymApp() {
     [athletes, targetUserId]
   );
 
-  // Caricamento atleti e XP salvato
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
@@ -396,7 +454,7 @@ export default function TopGymApp() {
           { id: `day-4-${timestamp}`, dayNumber: 4, title: 'Spalle & Braccia', exercises: [] }
         ]);
         setSelectedDayCount(4);
-        setProgramName(`Scheda Personalizzata - ${targetAthleteName}`);
+        setProgramName(`Scheda TOPGYM - ${targetAthleteName}`);
       }
     }).catch(() => {
       if (isMounted) setProgramDays([]);
@@ -429,7 +487,6 @@ export default function TopGymApp() {
     setUser(null);
   };
 
-  // Carica i dati dell'atleta dalla tabella profiles
   useEffect(() => {
     if (!user?.id || !supabase) return;
     supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
@@ -444,7 +501,6 @@ export default function TopGymApp() {
     });
   }, [user?.id]);
 
-  // Salva username e parametri fisici
   const handleUpdateProfile = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!user?.id || !supabase) return;
@@ -481,17 +537,13 @@ export default function TopGymApp() {
       setShowDeniedModal(true);
       return;
     }
-
     if (!user?.id) return;
     setPushLoading(true);
     const res = await subscribeUserToPush(user.id, supabase);
-
     if (!res.success && (res.message.includes('bloccate') || res.message.includes('rifiutato'))) {
       setShowDeniedModal(true);
     } else {
-      if (res.success) {
-        setShowPushBanner(false);
-      }
+      if (res.success) setShowPushBanner(false);
       setSettingsMessage(res.message);
       setTimeout(() => setSettingsMessage(null), 5000);
     }
@@ -534,13 +586,11 @@ export default function TopGymApp() {
     }
   }, [soundEnabled]);
 
-  // TIMER RESILIENTE CON TIMESTAMP
   const updateTimerRemaining = useCallback(() => {
     if (!restEndTimeRef.current) return;
     const remainingMs = restEndTimeRef.current - Date.now();
     const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
     setRestTimer(remainingSec);
-
     if (remainingSec <= 0) {
       restEndTimeRef.current = null;
       setIsTimerRunning(false);
@@ -551,14 +601,10 @@ export default function TopGymApp() {
   useEffect(() => {
     if (!isTimerRunning) return;
     const interval = setInterval(updateTimerRemaining, 1000);
-
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        updateTimerRemaining();
-      }
+      if (document.visibilityState === 'visible') updateTimerRemaining();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -588,7 +634,6 @@ export default function TopGymApp() {
   const verifyCoachPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const isAuthorizedEmail = ALLOWED_COACH_EMAILS.includes(user?.email || '');
-
     if (pinInput === '1234' && isAuthorizedEmail) {
       setUserRole('COACH');
       setShowCoachPinModal(false);
@@ -600,7 +645,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Tabella RPE → % 1RM
   const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
     '10':  [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
     '9.5': [98,  94, 91, 88, 85, 82, 80, 77, 75, 72],
@@ -705,7 +749,6 @@ export default function TopGymApp() {
     return getIntensityInfo(currentExercise.name, w);
   }, [currentExercise, weight, getIntensityInfo]);
 
-  // Recupera il peso più recente della Readiness
   const sessionBodyWeight = useMemo(() => {
     const todayLog = readinessHistory.find(r => r.date === todayIso() && r.bodyWeight && r.bodyWeight > 0);
     if (todayLog?.bodyWeight) return todayLog.bodyWeight;
@@ -722,7 +765,6 @@ export default function TopGymApp() {
     if (!currentExercise) return null;
     const fromToday = logs.find(l => l.exerciseName === currentExercise.name);
     if (fromToday) return fromToday;
-
     for (const w of workoutHistory) {
       if (Array.isArray(w.logs)) {
         const found = w.logs.find((l: any) => l.exerciseName === currentExercise.name);
@@ -793,7 +835,7 @@ export default function TopGymApp() {
       }
     }
     await addXp(20);
-    setReadinessSuccessMessage('🎉 Check Readiness salvato nello storico! (+20 XP)');
+    setReadinessSuccessMessage('🎉 Check Readiness salvato nello storico dell\'atleta! (+20 XP)');
     setSleepHours('0');
     setSleepQuality(0);
     setStressLevel(0);
@@ -818,10 +860,7 @@ export default function TopGymApp() {
     setSelectedDayIndex(prev => Math.min(prev, count - 1));
   };
 
-  const todayLogs = useMemo(() => {
-    const today = todayIso();
-    return logs.filter(l => l.date === today);
-  }, [logs]);
+  const todayLogs = useMemo(() => logs.filter(l => l.date === todayIso()), [logs]);
 
   const handleFinishAndSaveWorkout = async () => {
     if (isSavingWorkout) return;
@@ -834,7 +873,7 @@ export default function TopGymApp() {
     try {
       result = await saveCompletedWorkoutToSupabase({
         userId: targetUserId,
-        dayName: dayName,
+        dayName,
         totalVolume: totalVol,
         exercisesCount: activeRoutine.length,
         logs: todayLogs
@@ -853,7 +892,7 @@ export default function TopGymApp() {
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
-      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. I log restano salvati in locale, riprova.`);
+      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`);
       setTimeout(() => setWorkoutSuccessMessage(null), 8000);
     }
   };
@@ -880,29 +919,26 @@ export default function TopGymApp() {
     }
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
-      
       if (supabase && targetId) {
         try {
           await supabase.from('notifications').insert([{
             user_id: targetId,
-            title: 'Nuova Scheda di Allenamento!',
+            title: 'Nuova Scheda Metodo TOPGYM!',
             message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
             type: 'program_assigned'
           }]);
         } catch {}
       }
-
       if (targetId && targetId !== 'default-user') {
         try {
           await sendPushNotification(
             targetId,
             'Nuova Scheda Assegnata! 🏋️',
-            `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
+            `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || 'Nuova scheda'}).`,
             '/'
           );
         } catch {}
       }
-
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
@@ -921,7 +957,6 @@ export default function TopGymApp() {
 
     const exName = currentExercise?.name || 'Esercizio';
     const effectiveCalc = computeEffectiveLoad(exName, numWeight, numReps, sessionBodyWeight);
-
     const calc1RMWeight = effectiveCalc.effectiveLoad !== null ? effectiveCalc.effectiveLoad : numWeight;
     const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
@@ -929,6 +964,7 @@ export default function TopGymApp() {
       id: makeId(),
       exerciseId: currentExercise?.id || currentExId,
       exerciseName: exName,
+      muscleGroup: currentExercise?.muscleGroup || autoDetectMuscleGroup(exName),
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
@@ -952,9 +988,7 @@ export default function TopGymApp() {
     setReps('');
   };
 
-  const handleDeleteLog = (logId: string) => {
-    setLogs(prev => prev.filter(l => l.id !== logId));
-  };
+  const handleDeleteLog = (logId: string) => setLogs(prev => prev.filter(l => l.id !== logId));
 
   const handleAddOrUpdateExercise = (e: React.SyntheticEvent, dayId: string) => {
     e.preventDefault();
@@ -972,6 +1006,7 @@ export default function TopGymApp() {
                       ...ex,
                       name: builderExName.trim(),
                       muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+                      stimulusType: builderStimulus,
                       sets: builderSets,
                       reps: builderReps,
                       targetWeight: builderWeight,
@@ -994,6 +1029,7 @@ export default function TopGymApp() {
         id: crypto.randomUUID(),
         name: builderExName.trim(),
         muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+        stimulusType: builderStimulus,
         sets: builderSets,
         reps: builderReps,
         targetWeight: builderWeight,
@@ -1007,7 +1043,6 @@ export default function TopGymApp() {
       setProgramDays(prevDays =>
         prevDays.map(day => (day.id === dayId ? { ...day, exercises: [...(day.exercises || []), newEx] } : day))
       );
-
       setBuilderExName('');
       setBuilderNotes('');
     }
@@ -1072,6 +1107,7 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
+  // CONTEGGIO SCIENTIFICO SERIE SETTIMANALI CON CALENDARIO (DA LUNEDÌ A DOMENICA)
   const { startOfWeek, endOfWeek, startOfMonth, endOfMonth } = useMemo(() => {
     const targetDate = parseLocalDate(analyticsDate) || new Date();
     const dayOfWeek = targetDate.getDay();
@@ -1089,15 +1125,35 @@ export default function TopGymApp() {
     return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
   }, [analyticsDate]);
 
-  const muscleGroupByExerciseName = useMemo(() => {
-    const map = new Map<string, MuscleGroup>();
-    programDays.forEach(day => {
-      (day.exercises || []).forEach(ex => {
-        if (ex.muscleGroup && !map.has(ex.name)) map.set(ex.name, ex.muscleGroup);
-      });
+  // Calcolo delle serie per distretto muscolare dal lunedì alla domenica
+  const weeklyMuscleSetsMap = useMemo(() => {
+    const map: Record<MuscleGroup, number> = {
+      Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0,
+      Femorali: 0, Glutei: 0, Bicipiti: 0, Tricipiti: 0,
+      Polpacci: 0, Addome: 0
+    };
+
+    const allLoggedSetsArray: { name: string; date: Date | null; muscleGroup?: MuscleGroup }[] = [];
+    logs.forEach(l => allLoggedSetsArray.push({ name: l.exerciseName, date: parseLocalDate(l.date), muscleGroup: l.muscleGroup }));
+    workoutHistory.forEach(w => {
+      if (Array.isArray(w.logs)) {
+        const wDate = parseLocalDate(w.created_at || w.date);
+        w.logs.forEach((log: any) => {
+          allLoggedSetsArray.push({ name: log?.exerciseName || '', date: wDate, muscleGroup: log?.muscleGroup });
+        });
+      }
     });
+
+    allLoggedSetsArray.forEach(({ name, date, muscleGroup }) => {
+      if (!date || date < startOfWeek || date > endOfWeek) return;
+      const mg = (muscleGroup || autoDetectMuscleGroup(name || '')) as MuscleGroup;
+      if (mg && typeof map[mg] === 'number') {
+        map[mg] += 1;
+      }
+    });
+
     return map;
-  }, [programDays]);
+  }, [logs, workoutHistory, startOfWeek, endOfWeek]);
 
   const allSetsWithDate = useMemo(() => {
     const items: { name: string; date: Date | null }[] = [];
@@ -1110,16 +1166,6 @@ export default function TopGymApp() {
     });
     return items;
   }, [logs, workoutHistory]);
-
-  const weeklySetsMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    allSetsWithDate.forEach(({ name, date }) => {
-      if (!date || date < startOfWeek || date > endOfWeek) return;
-      const mg = muscleGroupByExerciseName.get(name) || autoDetectMuscleGroup(name || '');
-      map[mg] = (map[mg] || 0) + 1;
-    });
-    return map;
-  }, [allSetsWithDate, muscleGroupByExerciseName, startOfWeek, endOfWeek]);
 
   const monthlySetsCount = useMemo(
     () => allSetsWithDate.reduce(
@@ -1161,78 +1207,65 @@ export default function TopGymApp() {
     });
   }, [workoutHistory, best1RMByExercise]);
 
+  const getMicroWeekDescription = (week: MicroWeek) => {
+    switch (week) {
+      case 1: return { title: 'Week 1 · Intro & Accumulo', desc: 'RIR 2 (buffer 2 reps). Esegui con carichi target senza arrivare al limite.' };
+      case 2: return { title: 'Week 2 · Sovraccarico Progressivo', desc: 'RIR 1-2. Spingi per incrementare 1 ripetizione o carico (+1-2.5 kg).' };
+      case 3: return { title: 'Week 3 · Overreaching Controllato', desc: 'RIR 0 sull\'ultima serie. Massima spremitura muscolare prima del riposo.' };
+      case 4: return { title: 'Week 4 · Deload / Scarico Attivo', desc: '-40% Volume (2 serie per esercizio), RIR 3-4, nessuna tecnica d\'intensità. Dissipa la fatica sistemica.' };
+    }
+  };
+
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#090A0D] p-4 text-white font-sans selection:bg-red-500 selection:text-white">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12151B]/95 backdrop-blur-xl p-8 shadow-2xl shadow-black/80">
+      <div className="flex min-h-screen items-center justify-center bg-[#090A0D] p-4 text-white font-sans">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12151B]/95 backdrop-blur-xl p-8 shadow-2xl">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#E50914] to-red-600 flex items-center justify-center shadow-lg shadow-red-950/60 mb-3 border border-red-400/20">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#E50914] to-red-600 flex items-center justify-center shadow-lg mb-3">
               <Dumbbell className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-black tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-              TOP GYM
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1 tracking-wide">PWA Gestione Allenamenti & Coaching</p>
+            <h1 className="text-3xl font-black tracking-wider uppercase">TOP GYM</h1>
+            <p className="text-xs text-zinc-400 mt-1">PWA Gestione Allenamenti & Coaching</p>
           </div>
-
           {errorMessage && (
-            <div className="mb-4 rounded-xl bg-rose-500/10 p-3 text-xs text-rose-300 border border-rose-500/20 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-rose-400" />
-              <span>{errorMessage}</span>
+            <div className="mb-4 rounded-xl bg-rose-500/10 p-3 text-xs text-rose-300 border border-rose-500/20">
+              {errorMessage}
             </div>
           )}
-
           <form onSubmit={handleAuth} className="space-y-4">
             {isSignUp && (
-              <div>
-                <label className="mb-1.5 block text-xs uppercase font-bold text-zinc-400">Username</label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914] transition"
-                  placeholder="Nome Atleta"
-                />
-              </div>
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914]"
+                placeholder="Nome Atleta"
+              />
             )}
-            <div>
-              <label className="mb-1.5 block text-xs uppercase font-bold text-zinc-400">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914] transition"
-                placeholder="atleta@topgym.it"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs uppercase font-bold text-zinc-400">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914] transition"
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 py-3.5 font-bold uppercase text-sm tracking-wider text-white hover:brightness-110 active:scale-[0.99] transition shadow-lg shadow-red-950/40 cursor-pointer"
-            >
-              {isSignUp ? 'Crea Account' : 'Accedi al Dashboard'}
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914]"
+              placeholder="Email"
+            />
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl bg-zinc-900/90 p-3 text-sm text-white border border-white/10 outline-none focus:border-[#E50914]"
+              placeholder="Password"
+            />
+            <button type="submit" className="w-full rounded-xl bg-[#E50914] py-3.5 font-bold uppercase text-sm text-white hover:brightness-110 cursor-pointer">
+              {isSignUp ? 'Crea Account' : 'Accedi'}
             </button>
           </form>
-
           <div className="mt-6 text-center text-xs text-zinc-400">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }}
-              className="font-semibold text-zinc-300 hover:text-[#E50914] transition"
-            >
-              {isSignUp ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
+            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }} className="hover:text-white">
+              {isSignUp ? 'Hai già un account? Accedi' : 'Registrati'}
             </button>
           </div>
         </div>
@@ -1241,125 +1274,54 @@ export default function TopGymApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090A0D] text-white font-sans p-3 sm:p-5 md:p-8 selection:bg-[#E50914] selection:text-white">
-      {/* HEADER COMPATTO MODERNO */}
-      <header className="max-w-6xl mx-auto bg-[#12151B]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/10 shadow-2xl mb-6 transition-all">
+    <div className="min-h-screen bg-[#090A0D] text-white font-sans p-3 sm:p-5 md:p-8">
+      {/* HEADER COMPATTO */}
+      <header className="max-w-6xl mx-auto bg-[#12151B]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/10 shadow-xl mb-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          {/* Logo, User & Role */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E50914] to-red-700 flex items-center justify-center shadow-md shadow-red-900/40 border border-white/10">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E50914] to-red-700 flex items-center justify-center shadow-md">
                 <Dumbbell className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl font-black tracking-wider uppercase leading-none">TOP GYM</h1>
-                <p className="text-[11px] text-zinc-400 font-medium mt-1">
-                  Atleta: <span className="text-white font-bold">{displayUserName}</span>
-                </p>
+                <p className="text-[11px] text-zinc-400 mt-1">Utente: <span className="text-white font-bold">{displayUserName}</span></p>
               </div>
             </div>
 
-            {/* Segmented Switch Atleta/Coach */}
             <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/5 text-xs font-semibold">
               <button
                 onClick={() => handleRoleSwitchRequest('ATHLETE')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  userRole === 'ATHLETE' 
-                    ? 'bg-[#E50914] text-white shadow font-bold' 
-                    : 'text-zinc-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${userRole === 'ATHLETE' ? 'bg-[#E50914] text-white shadow font-bold' : 'text-zinc-400 hover:text-white'}`}
               >
                 <Eye className="w-3.5 h-3.5" /> Atleta
               </button>
               <button
                 onClick={() => handleRoleSwitchRequest('COACH')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  userRole === 'COACH' 
-                    ? 'bg-[#E50914] text-white shadow font-bold' 
-                    : 'text-zinc-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${userRole === 'COACH' ? 'bg-[#E50914] text-white shadow font-bold' : 'text-zinc-400 hover:text-white'}`}
               >
-                {userRole === 'COACH' ? <Unlock className="w-3.5 h-3.5 text-emerald-400" /> : <Lock className="w-3.5 h-3.5" />}
-                Coach
+                {userRole === 'COACH' ? <Unlock className="w-3.5 h-3.5 text-emerald-400" /> : <Lock className="w-3.5 h-3.5 text-zinc-400" />} Coach
               </button>
             </div>
-
-            {userRole === 'COACH' && (
-              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                <span className="text-zinc-400 text-xs">Atleta:</span>
-                <select
-                  value={activeAthleteId}
-                  onChange={e => setActiveAthleteId(e.target.value)}
-                  className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2 py-1 font-bold outline-none"
-                >
-                  {athletes.map(ath => (
-                    <option key={ath.id} value={ath.id}>{ath.displayName}</option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
-          {/* Quick Metrics & Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
-            {/* Timer attivo (se presente) */}
+          <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
             {restTimer !== null && (
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
-                restTimer === 0 
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                  : 'bg-red-500/10 border-red-500/30 text-red-400'
-              }`}>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
                 <Timer className="w-4 h-4 animate-pulse" />
-                <span>{restTimer === 0 ? 'RECUPERO FINE' : `${Math.floor(restTimer / 60)}:${(restTimer % 60).toString().padStart(2, '0')}`}</span>
+                <span>{Math.floor(restTimer / 60)}:{(restTimer % 60).toString().padStart(2, '0')}</span>
               </div>
             )}
-
-            {/* Readiness Widget Compatto */}
-            {latestReadiness && (
-              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-xs">
-                <Gauge className={`w-4 h-4 ${latestReadiness.readinessScore >= 80 ? 'text-emerald-400' : 'text-amber-400'}`} />
-                <div>
-                  <div className="text-[9px] uppercase font-bold text-zinc-400 leading-none">Readiness</div>
-                  <div className="font-black text-white text-xs leading-tight">{latestReadiness.readinessScore}%</div>
-                </div>
-              </div>
-            )}
-
-            {/* Livello / XP Widget Compatto */}
             <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-xs">
-              <Shield className="text-amber-400 w-4 h-4 flex-shrink-0" />
-              <div className="w-28">
-                <div className="flex justify-between items-center text-[10px] font-bold">
-                  <span className="text-amber-300 truncate">Lvl {userLevel}</span>
-                  <span className="text-zinc-400 font-mono text-[9px]">{userXp} XP</span>
-                </div>
-                <div className="w-full bg-zinc-800 h-1 rounded-full mt-1 overflow-hidden">
-                  <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${levelProgressPercentage}%` }} />
-                </div>
+              <Shield className="text-amber-400 w-4 h-4" />
+              <div>
+                <span className="text-[10px] text-zinc-400 font-bold block">Lvl {userLevel} · {userXp} XP</span>
               </div>
             </div>
-
-            {/* Azioni secondarie (Notifiche, Audio, Esci) */}
-            <div className="flex items-center gap-1.5">
-              <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
-
-              <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-2 bg-black/40 hover:bg-zinc-800/80 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition"
-                title="Attiva/Disattiva Audio"
-              >
-                {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-zinc-500" />}
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 text-xs font-semibold text-zinc-400 hover:text-rose-400 bg-black/40 hover:bg-zinc-800/80 border border-white/5 px-2.5 py-2 rounded-xl transition"
-                title="Disconnetti"
-              >
-                <LogOut className="w-4 h-4 text-rose-500" />
-                <span className="hidden sm:inline">Esci</span>
-              </button>
-            </div>
+            <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
+            <button onClick={handleLogout} className="text-xs font-semibold text-zinc-400 hover:text-rose-400 bg-black/40 border border-white/5 px-2.5 py-2 rounded-xl">
+              <LogOut className="w-4 h-4 text-rose-500 inline" /> Esci
+            </button>
           </div>
         </div>
       </header>
@@ -1383,118 +1345,75 @@ export default function TopGymApp() {
               />
               {pinError && <p className="text-xs text-rose-500 text-center font-bold">PIN Errato o non autorizzato!</p>}
               <div className="flex gap-2">
-                <button type="button" onClick={() => setShowCoachPinModal(false)} className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-700 transition">Annulla</button>
-                <button type="submit" className="w-1/2 bg-[#E50914] py-2.5 rounded-xl text-xs font-bold text-white uppercase hover:brightness-110 transition">Sblocca</button>
+                <button type="button" onClick={() => setShowCoachPinModal(false)} className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300">Annulla</button>
+                <button type="submit" className="w-1/2 bg-[#E50914] py-2.5 rounded-xl text-xs font-bold text-white uppercase">Sblocca</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* NAVBAR UNIFICATA STILE APP NATALE (PILL SCROLLABILE) */}
+      {/* NAVBAR */}
       <nav className="max-w-6xl mx-auto mb-6">
         <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-[#12151B]/80 backdrop-blur-md border border-white/10 rounded-2xl scrollbar-none shadow-lg">
           {userRole === 'ATHLETE' && (
             <button
               onClick={() => setActiveTab('workout')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                activeTab === 'workout'
-                  ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'workout' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
             >
               <Dumbbell className="w-4 h-4" /> Allenamento
             </button>
           )}
-
           <button
             onClick={() => setActiveTab('readiness')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'readiness'
-                ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
           >
             <Gauge className="w-4 h-4 text-emerald-400" /> Check Readiness
           </button>
-
           <button
             onClick={() => setActiveTab('records')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'records'
-                ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'records' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
           >
             <Trophy className="w-4 h-4 text-amber-400" /> Record Personali
           </button>
-
           <button
             onClick={() => setActiveTab('goals')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'goals'
-                ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'goals' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
           >
             <Target className="w-4 h-4 text-rose-400" /> Obiettivi
           </button>
-
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'analytics'
-                ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
           >
             <TrendingUp className="w-4 h-4 text-blue-400" /> Progressi
           </button>
-
           {userRole === 'COACH' && (
             <>
               <button
                 onClick={() => setActiveTab('coachDashboard')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                  activeTab === 'coachDashboard'
-                    ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'coachDashboard' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
               >
                 <Users className="w-4 h-4 text-indigo-400" /> Dashboard Atleti
               </button>
               <button
                 onClick={() => setActiveTab('builder')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                  activeTab === 'builder'
-                    ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'builder' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
               >
-                <UserCheck className="w-4 h-4 text-emerald-400" /> Gestisci Scheda
+                <UserCheck className="w-4 h-4 text-emerald-400" /> Gestisci Scheda (Metodo TOPGYM)
               </button>
             </>
           )}
-
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-              activeTab === 'leaderboard'
-                ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
           >
             <Medal className="w-4 h-4 text-amber-400" /> Classifica & Badge
           </button>
-
           {userRole === 'ATHLETE' && (
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
-                activeTab === 'settings'
-                  ? 'bg-[#E50914] text-white shadow-md shadow-red-950/50'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
             >
               <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
             </button>
@@ -1521,7 +1440,7 @@ export default function TopGymApp() {
               <button
                 type="button"
                 onClick={() => setShowPushBanner(false)}
-                className="px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white transition"
+                className="px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white"
               >
                 Più tardi
               </button>
@@ -1529,7 +1448,7 @@ export default function TopGymApp() {
                 type="button"
                 disabled={pushLoading}
                 onClick={handlePushActivation}
-                className="w-full sm:w-auto bg-[#E50914] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer disabled:opacity-50 shadow-md"
+                className="w-full sm:w-auto bg-[#E50914] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer disabled:opacity-50"
               >
                 {pushLoading ? 'Attivazione...' : 'Attiva con 1 Click'}
               </button>
@@ -1537,7 +1456,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 1: WORKOUT (INTERFACCIA RIDISEGNATA) */}
+        {/* TAB 1: WORKOUT (CON VISIBILITÀ DEL BLOCCO E DELLA SETTIMANA ATTIVA PER L'ATLETA) */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -1550,7 +1469,20 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* SEZIONE SCHEDA E SELETTORE GIORNI */}
+            {/* Banner Informativo Metodo TOPGYM per l'Atleta */}
+            <div className="bg-gradient-to-r from-red-950/40 via-zinc-900 to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
+                  Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità (Cut)'}
+                </span>
+                <h4 className="text-sm font-bold text-white mt-0.5">{getMicroWeekDescription(currentWeek).title}</h4>
+                <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(currentWeek).desc}</p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-amber-400">
+                Settimana {currentWeek} / 4
+              </span>
+            </div>
+
             <div className="bg-[#12151B]/90 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-white/10 shadow-xl">
               <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
                 <div className="flex items-center gap-2.5">
@@ -1564,29 +1496,21 @@ export default function TopGymApp() {
                 </div>
               </div>
 
-              {/* Bottoni Giorni (Pill Minimali) */}
+              {/* Bottoni Giorni */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none mb-4">
-                {programDays.map((day, index) => {
-                  const isSelected = selectedDayIndex === index;
-                  return (
-                    <button
-                      key={day.id}
-                      type="button"
-                      onClick={() => { setSelectedDayIndex(index); if (day.exercises[0]) setCurrentExId(day.exercises[0].id); }}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border ${
-                        isSelected 
-                          ? 'bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/40' 
-                          : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-zinc-600'}`} />
-                      Giorno {day.dayNumber} · {day.title}
-                    </button>
-                  );
-                })}
+                {programDays.map((day, index) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => { setSelectedDayIndex(index); if (day.exercises[0]) setCurrentExId(day.exercises[0].id); }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border ${selectedDayIndex === index ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:text-white'}`}
+                  >
+                    Giorno {day.dayNumber} · {day.title}
+                  </button>
+                ))}
               </div>
 
-              {/* Grid Esercizi (Stile Hevy / Strong) */}
+              {/* Card Esercizi */}
               <div className="grid gap-3 sm:grid-cols-2">
                 {activeRoutine.map((ex) => {
                   const isBw = !!findBodyweightConfig(ex.name);
@@ -1595,78 +1519,48 @@ export default function TopGymApp() {
                     <div 
                       key={ex.id} 
                       onClick={() => setCurrentExId(ex.id)} 
-                      className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden ${
-                        isCurrent 
-                          ? 'bg-zinc-900/90 border-[#E50914] ring-1 ring-[#E50914]/50 shadow-lg shadow-black/40' 
-                          : 'bg-zinc-900/40 border-white/5 hover:border-zinc-700/60 hover:bg-zinc-900/60'
-                      }`}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all relative overflow-hidden ${isCurrent ? 'bg-zinc-900/90 border-[#E50914] ring-1 ring-[#E50914]/50 shadow-lg' : 'bg-zinc-900/40 border-white/5 hover:border-zinc-700'}`}
                     >
-                      {isCurrent && (
-                        <div className="absolute top-0 left-0 w-1 h-full bg-[#E50914]" />
-                      )}
-
+                      {isCurrent && <div className="absolute top-0 left-0 w-1 h-full bg-[#E50914]" />}
                       <div className="flex justify-between items-start mb-3">
-                        <div className="pr-2">
+                        <div>
                           <span className="font-bold text-base text-white block leading-snug">{ex.name}</span>
+                          <span className="text-[10px] text-zinc-400 font-mono">
+                            {ex.stimulusType === 'NEURAL' ? '⚡ Neurale (Forza)' : ex.stimulusType === 'METABOLIC' ? '🔥 Metabolico' : '💪 Ipertrofico'}
+                          </span>
                           {isBw && (
-                            <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                            <span className="ml-2 inline-block text-[9px] font-bold uppercase text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
                               Corpo Libero
                             </span>
                           )}
                         </div>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${getBadgeStyle(ex.executionType)}`}>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
                           {ex.executionType}
                         </span>
                       </div>
-
-                      {/* Metriche pulite stile tabella */}
                       <div className="grid grid-cols-3 gap-2 text-xs bg-black/30 p-2.5 rounded-lg border border-white/5">
-                        <div>
-                          <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Serie/Reps</div>
-                          <div className="font-black text-white mt-0.5">{ex.sets} × {ex.reps}</div>
-                        </div>
-                        <div>
-                          <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Target</div>
-                          <div className="font-black text-white mt-0.5">{ex.targetWeight} <span className="text-[10px] text-zinc-400">Kg</span></div>
-                        </div>
-                        <div>
-                          <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">TUT</div>
-                          <div className="font-mono font-bold text-amber-400 mt-0.5">{ex.tut}</div>
-                        </div>
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Serie/Reps</span><b className="text-white">{ex.sets} × {ex.reps}</b></div>
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Target</span><b className="text-white">{ex.targetWeight} Kg</b></div>
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">TUT</span><b className="text-amber-400 font-mono">{ex.tut}</b></div>
                       </div>
-
-                      {ex.notes && (
-                        <div className="text-[11px] text-zinc-400 italic mt-2.5 pt-2 border-t border-white/5">
-                          Note: {ex.notes}
-                        </div>
-                      )}
+                      {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2.5 pt-2 border-t border-white/5">Note: {ex.notes}</div>}
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* SEZIONE INSERIMENTO DATI E REGISTRAZIONE SERIE */}
+            {/* Inserimento Serie Workout */}
             {currentExercise && (
               <div className="bg-[#12151B]/90 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-white/10 shadow-xl space-y-5">
                 <div className="pb-4 border-b border-white/10 flex justify-between items-end flex-wrap gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-[#E50914] px-2 py-0.5 rounded-md font-bold uppercase">
-                        In Esecuzione
-                      </span>
-                      {currentBodyweightConfig && (
-                        <span className="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-md font-bold">
-                          {Math.round(currentBodyweightConfig.percentage * 100)}% BW
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-[#E50914] px-2 py-0.5 rounded-md font-bold uppercase">
+                      In Esecuzione
+                    </span>
                     <h3 className="text-2xl font-black text-white mt-1.5">{currentExercise.name}</h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">
-                      Target Coach: <b className="text-white">{currentExercise.sets} Serie × {currentExercise.reps} Reps</b> @ <b className="text-white">{currentExercise.targetWeight} Kg</b> (RPE {currentExercise.rpeTarget})
-                    </p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Target: {currentExercise.sets} × {currentExercise.reps} @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
                   </div>
-
                   {estimated1RMPreview !== null && (
                     <div className="bg-black/40 border border-white/10 px-3.5 py-2 rounded-xl text-right">
                       <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">1RM Stimato</div>
@@ -1680,7 +1574,6 @@ export default function TopGymApp() {
                   )}
                 </div>
 
-                {/* Confronto con l'ultima sessione */}
                 {lastLoggedSet && (
                   <div className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex items-center justify-between flex-wrap gap-2 text-xs">
                     <div className="text-zinc-400 flex items-center gap-2">
@@ -1699,23 +1592,18 @@ export default function TopGymApp() {
                         <span className="text-red-400 font-semibold">(RPE {lastLoggedSet.rpe})</span>
                       </span>
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={handleAutoFillLastLog} 
-                      className="text-[#E50914] font-bold flex items-center gap-1.5 hover:underline"
-                    >
+                    <button type="button" onClick={handleAutoFillLastLog} className="text-[#E50914] font-bold flex items-center gap-1.5 hover:underline">
                       <Copy className="w-3.5 h-3.5"/> Copia Carico
                     </button>
                   </div>
                 )}
 
-                {/* Info corpo libero */}
                 {currentBodyweightConfig && (
                   <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl text-xs text-purple-200">
                     <span className="font-bold">Modalità Corpo Libero ({Math.round(currentBodyweightConfig.percentage * 100)}%): </span>
                     {sessionBodyWeight ? (
                       <span>
-                        Peso da Check: <b>{sessionBodyWeight} kg</b>. Quota: <b>{Math.round(sessionBodyWeight * currentBodyweightConfig.percentage * 10) / 10} kg</b>. Inserisci <b>0</b> se a corpo libero oppure la <b>zavorra</b>.
+                        Peso da Check: <b>{sessionBodyWeight} kg</b>. Quota corporea: <b>{Math.round(sessionBodyWeight * currentBodyweightConfig.percentage * 10) / 10} kg</b>. Inserisci <b>0</b> se a corpo libero oppure la <b>zavorra</b>.
                       </span>
                     ) : (
                       <span className="text-amber-300">
@@ -1725,43 +1613,19 @@ export default function TopGymApp() {
                   </div>
                 )}
 
-                {/* Form inserimento serie */}
                 <form onSubmit={handleLogSet} className="space-y-4">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">
-                        {currentBodyweightConfig ? 'Zavorra (Kg)' : 'Carico (Kg)'}
-                      </label>
-                      <input 
-                        type="number" 
-                        step="0.5" 
-                        min="0"
-                        required 
-                        value={weight} 
-                        onChange={e => setWeight(e.target.value)} 
-                        placeholder={currentBodyweightConfig ? '0' : '80'} 
-                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
-                      />
+                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">{currentBodyweightConfig ? 'Zavorra (Kg)' : 'Carico (Kg)'}</label>
+                      <input type="number" step="0.5" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="80" className="w-full bg-transparent text-xl font-black text-white outline-none" />
                     </div>
                     <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
                       <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Reps</label>
-                      <input 
-                        type="number" 
-                        min="1"
-                        required 
-                        value={reps} 
-                        onChange={e => setReps(e.target.value)} 
-                        placeholder="8" 
-                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
-                      />
+                      <input type="number" min="1" required value={reps} onChange={e => setReps(e.target.value)} placeholder="8" className="w-full bg-transparent text-xl font-black text-white outline-none" />
                     </div>
                     <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">RPE (Fatica)</label>
-                      <select 
-                        value={rpe} 
-                        onChange={e => setRpe(e.target.value)} 
-                        className="w-full bg-transparent text-lg font-black text-white outline-none cursor-pointer"
-                      >
+                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">RPE</label>
+                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-transparent text-lg font-black text-white outline-none cursor-pointer">
                         {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val} className="bg-zinc-900 text-white">RPE {val}</option>))}
                       </select>
                       {rpeTablePreviewPct !== null && (
@@ -1769,105 +1633,54 @@ export default function TopGymApp() {
                       )}
                     </div>
                   </div>
-
-                  <button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-[#E50914] to-red-600 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wider text-sm hover:brightness-110 active:scale-[0.99] transition shadow-lg shadow-red-950/40 cursor-pointer"
-                  >
-                    <Plus className="w-5 h-5"/> Registra Serie (+10 XP)
+                  <button type="submit" className="w-full bg-gradient-to-r from-[#E50914] to-red-600 text-white font-bold py-3.5 rounded-xl uppercase text-sm hover:brightness-110 cursor-pointer">
+                    <Plus className="w-5 h-5 inline mr-1"/> Registra Serie (+10 XP)
                   </button>
                 </form>
 
-                {/* Serie registrate oggi */}
                 <div>
-                  <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">
-                    Serie Registrate Oggi ({todayLogs.length})
-                  </h4>
-                  {todayLogs.length === 0 ? (
-                    <div className="text-xs text-zinc-500 italic p-3 text-center bg-black/20 rounded-xl border border-white/5">
-                      Nessuna serie registrata oggi per questa sessione.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {todayLogs.map((log, i) => {
-                        const intensity = getIntensityInfo(log.exerciseName, log.effectiveLoad || log.weight);
-                        return (
-                          <div key={log.id} className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-zinc-500 font-mono w-10">#{i + 1}</span>
-                              <div>
-                                <span className="font-bold text-white block">{log.exerciseName}</span>
-                                <span className="text-zinc-400 font-mono text-[11px]">
-                                  {log.isBodyweight && log.effectiveLoad !== null ? (
-                                    <>Zav: {log.weight} Kg · Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
-                                  ) : (
-                                    <><b className="text-white">{log.weight} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
-                                  )}
-                                </span>
-                              </div>
-                              {intensity && (
-                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase hidden sm:inline-block ${intensity.colorClasses}`}>
-                                  {intensity.pct}% 1RM
-                                </span>
+                  <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">Serie Registrate Oggi ({todayLogs.length})</h4>
+                  <div className="space-y-2">
+                    {todayLogs.map((log, i) => (
+                      <div key={log.id} className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-zinc-500 font-mono w-10">#{i + 1}</span>
+                          <div>
+                            <span className="font-bold text-white block">{log.exerciseName}</span>
+                            <span className="text-zinc-400 font-mono text-[11px]">
+                              {log.isBodyweight && log.effectiveLoad !== null ? (
+                                <>Zav: {log.weight} Kg · Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                              ) : (
+                                <><b className="text-white">{log.weight} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
                               )}
-                            </div>
-                            <button 
-                              type="button" 
-                              onClick={() => handleDeleteLog(log.id)} 
-                              title="Elimina serie" 
-                              className="p-2 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        </div>
+                        <button type="button" onClick={() => handleDeleteLog(log.id)} className="p-2 text-zinc-500 hover:text-rose-400"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Salva Workout Footer */}
-            <div className="pt-2 space-y-4">
-              {workoutSuccessMessage && (
-                <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm backdrop-blur-md">
-                  {workoutSuccessMessage}
-                </div>
-              )}
-              <button
-                onClick={handleFinishAndSaveWorkout}
-                disabled={isSavingWorkout}
-                className={`w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:brightness-110 text-white font-black py-4 rounded-2xl uppercase tracking-wider shadow-xl shadow-green-950/40 transition-all flex items-center justify-center gap-2 text-base cursor-pointer ${
-                  isSavingWorkout ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.99]'
-                }`}
-              >
-                <CheckCircle className="w-5 h-5" />
-                <span>{isSavingWorkout ? 'Salvataggio in corso...' : 'Termina e Salva Allenamento'}</span>
-              </button>
-            </div>
+            <button onClick={handleFinishAndSaveWorkout} disabled={isSavingWorkout} className="w-full bg-emerald-600 hover:brightness-110 text-white font-black py-4 rounded-2xl uppercase tracking-wider cursor-pointer">
+              {isSavingWorkout ? 'Salvataggio...' : 'Termina e Salva Allenamento'}
+            </button>
           </div>
         )}
 
         {/* TAB 2: RECORD PERSONALI */}
         {activeTab === 'records' && (
-          <PersonalRecords 
-            workoutHistory={workoutHistory} 
-            currentLogs={logs} 
-            athleteName={targetAthleteName} 
-          />
+          <PersonalRecords workoutHistory={workoutHistory} currentLogs={logs} athleteName={targetAthleteName} />
         )}
 
         {/* TAB 3: OBIETTIVI */}
         {activeTab === 'goals' && (
-          <AthleteGoals 
-            athleteId={targetUserId} 
-            athleteName={targetAthleteName} 
-            userRole={userRole} 
-          />
+          <AthleteGoals athleteId={targetUserId} athleteName={targetAthleteName} userRole={userRole} />
         )}
 
-        {/* TAB 4: READINESS */}
+        {/* TAB 4: READINESS COMPLETO DI FORM E STORICO ORIGINALE */}
         {activeTab === 'readiness' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
@@ -1923,7 +1736,7 @@ export default function TopGymApp() {
                     <p className="text-xs text-zinc-300 font-medium"><b>Consigliato:</b> {currentReadiness.rec}</p>
                   </div>
 
-                  <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-red-950/40">
+                  <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg">
                     <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
                   </button>
                 </form>
@@ -1964,7 +1777,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 5: COACH DASHBOARD */}
+        {/* TAB 5: COACH DASHBOARD (LEGGERA E PULITA) */}
         {activeTab === 'coachDashboard' && userRole === 'COACH' && (
           <CoachDashboard
             athletes={athletes}
@@ -1976,14 +1789,141 @@ export default function TopGymApp() {
           />
         )}
 
-        {/* TAB 6: BUILDER COACH */}
+        {/* TAB 6: BUILDER COACH METODO TOPGYM COMPLETO */}
         {activeTab === 'builder' && userRole === 'COACH' && (
-          <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
-              <div className="space-y-2 flex-1 max-w-md">
-                <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nome della Scheda</label>
+          <div className="space-y-6">
+            {/* CABINA DI REGIA PERIODIZZAZIONE */}
+            <div className="bg-[#12151B]/90 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-white/10 shadow-xl space-y-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[#E50914]" />
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    Cabina di Regia Periodizzazione · Metodo TOPGYM
+                  </h3>
+                </div>
+                <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
+              </div>
+
+              {/* Selettore Blocco Macrociclo */}
+              <div>
+                <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                  1. Imposta Blocco / Mesociclo Attivo:
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-black/20 border-white/5 text-zinc-400'}`}
+                  >
+                    <b className="text-white text-xs block font-black">Blocco 1: Forza Ipertrofica</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Focus Neurale, Tecnica, Accumulo carichi alti sui Fondamentali</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-black/20 border-white/5 text-zinc-400'}`}
+                  >
+                    <b className="text-white text-xs block font-black">Blocco 2: Trasformazione</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Range 6-12 reps, Complementari pesanti, Back-off</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-black/20 border-white/5 text-zinc-400'}`}
+                  >
+                    <b className="text-white text-xs block font-black">Blocco 3: Qualità (Cut)</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Mantenimento Forza, Volume mirato (18-22 set), Pompaggio/Cavi</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Progressione Microcicli */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+                    2. Settimana Corrente (Microciclo):
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleApplyDeloadWeekToProgram}
+                    className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Applica Settimana di Deload Automatica
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[1, 2, 3, 4].map(w => {
+                    const desc = getMicroWeekDescription(w as MicroWeek);
+                    return (
+                      <button
+                        key={w}
+                        type="button"
+                        onClick={() => setCurrentWeek(w as MicroWeek)}
+                        className={`p-3 rounded-xl border text-left transition ${currentWeek === w ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-black/30 border-white/5 text-zinc-400'}`}
+                      >
+                        <b className={`text-xs block ${currentWeek === w ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
+                        <span className={`text-[10px] block mt-1 ${currentWeek === w ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Monitoraggio Serie Settimanali per Distretto (Calendario Lun-Dom) */}
+              <div className="pt-2 border-t border-white/10 space-y-3">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-[#E50914]" /> Controllo Volume Settimanale (Dal Lunedì alla Domenica)
+                    </h4>
+                    <span className="text-[11px] text-zinc-400">
+                      Settimana: <b className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</b>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-400">Cambia Settimana:</span>
+                    <input
+                      type="date"
+                      value={analyticsDate}
+                      onChange={e => setAnalyticsDate(e.target.value)}
+                      className="bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white font-bold outline-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                  {(Object.keys(weeklyMuscleSetsMap) as MuscleGroup[]).map(mg => {
+                    const count = weeklyMuscleSetsMap[mg];
+                    const isCut = currentBlock === 'BLOCCO_3_QUALITA';
+                    let badgeColor = 'text-zinc-400 border-white/5 bg-zinc-900/40';
+                    if (isCut) {
+                      if (count >= 18 && count <= 22) badgeColor = 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+                      else if (count > 22) badgeColor = 'text-rose-400 border-rose-500/30 bg-rose-500/10';
+                    } else {
+                      if (count >= 15 && count <= 25) badgeColor = 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
+                      else if (count > 25) badgeColor = 'text-rose-400 border-rose-500/30 bg-rose-500/10';
+                      else if (count >= 10) badgeColor = 'text-blue-400 border-blue-500/30 bg-blue-500/10';
+                    }
+
+                    return (
+                      <div key={mg} className={`p-2.5 rounded-xl border flex justify-between items-center ${badgeColor}`}>
+                        <span>{mg}</span>
+                        <b className="font-mono text-sm">{count} set</b>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* STRUTTURA GIORNI ESERCIZI */}
+            <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
+                <div className="space-y-2 flex-1 max-w-md">
+                  <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Struttura Giorni Scheda ({activeAthlete.displayName})</h2>
                   <input
                     type="text"
                     value={programName}
@@ -1991,170 +1931,184 @@ export default function TopGymApp() {
                     className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
                   />
                 </div>
-              </div>
-              <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
-                <span className="text-xs font-bold text-zinc-400">Giorni:</span>
-                <div className="flex gap-1">
-                  {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => handleDayCountChange(num)}
-                      className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-800 border-white/5 text-zinc-400 hover:text-white'}`}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {programDays.map((day) => (
-              <div key={day.id} className="bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-white/5 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 w-full max-w-sm">
-                    <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
-                    <input 
-                      type="text" 
-                      value={day.title}
-                      onChange={(e) => handleRenameDay(day.id, e.target.value)}
-                      className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
-                    />
+                <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
+                  <span className="text-xs font-bold text-zinc-400">Giorni:</span>
+                  <div className="flex gap-1">
+                    {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => handleDayCountChange(num)}
+                        className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-800 border-white/5 text-zinc-400'}`}
+                      >
+                        {num}
+                      </button>
+                    ))}
                   </div>
-                  <span className="text-xs text-zinc-400 font-mono">{day.exercises.length} esercizi</span>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  {day.exercises.map((ex) => (
-                    <div 
-                      key={ex.id} 
-                      className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${
-                        editingExId === ex.id ? 'bg-rose-500/10 border-[#E50914]' : 'bg-[#12151B] border-white/5'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">{ex.name}</span>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
-                            {ex.executionType}
-                          </span>
+              {programDays.map((day) => (
+                <div key={day.id} className="bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-white/5 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 w-full max-w-sm">
+                      <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
+                      <input 
+                        type="text" 
+                        value={day.title}
+                        onChange={(e) => handleRenameDay(day.id, e.target.value)}
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
+                      />
+                    </div>
+                    <span className="text-xs text-zinc-400 font-mono">{day.exercises.length} esercizi</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {day.exercises.map((ex) => (
+                      <div 
+                        key={ex.id} 
+                        className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${editingExId === ex.id ? 'bg-rose-500/10 border-[#E50914]' : 'bg-[#12151B] border-white/5'}`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">{ex.name}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                              {ex.executionType}
+                            </span>
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              ({ex.stimulusType === 'NEURAL' ? 'Neurale' : ex.stimulusType === 'METABOLIC' ? 'Metabolico' : 'Ipertrofico'})
+                            </span>
+                          </div>
+                          <div className="text-zinc-400 mt-1">
+                            {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+                          </div>
+                          {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                         </div>
-                        <div className="text-zinc-400 mt-1">
-                          {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditExercise(day.id, ex)}
+                            className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              if (editingExId === ex.id) handleCancelEdit();
+                              handleRemoveExerciseFromDay(day.id, ex.id);
+                            }} 
+                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4"/>
+                          </button>
                         </div>
-                        {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
+                    ))}
+                  </div>
 
-                      <div className="flex items-center gap-1">
+                  {/* Form aggiunta esercizio con preset Metodo TOPGYM */}
+                  <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-3 border-t border-white/5">
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                        Preset Stimolo Metodo TOPGYM:
+                      </span>
+                      <div className="flex gap-2 flex-wrap">
                         <button
                           type="button"
-                          onClick={() => handleStartEditExercise(day.id, ex)}
-                          className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
-                          title="Modifica esercizio"
+                          onClick={() => handleApplyTopGymPreset('NEURAL')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${builderStimulus === 'NEURAL' ? 'bg-[#E50914] text-white border-[#E50914]' : 'bg-zinc-800 border-white/5 text-zinc-300'}`}
                         >
-                          <Pencil className="w-4 h-4" />
+                          1. Neurale / Forza (4-6 reps · Rec 3')
                         </button>
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            if (editingExId === ex.id) handleCancelEdit();
-                            handleRemoveExerciseFromDay(day.id, ex.id);
-                          }} 
-                          className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition"
-                          title="Elimina esercizio"
+                        <button
+                          type="button"
+                          onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${builderStimulus === 'HYPERTROPHIC' ? 'bg-[#E50914] text-white border-[#E50914]' : 'bg-zinc-800 border-white/5 text-zinc-300'}`}
                         >
-                          <Trash2 className="w-4 h-4"/>
+                          2. Ipertrofico (8-10 reps · Rec 90s)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyTopGymPreset('METABOLIC')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${builderStimulus === 'METABOLIC' ? 'bg-[#E50914] text-white border-[#E50914]' : 'bg-zinc-800 border-white/5 text-zinc-300'}`}
+                        >
+                          3. Metabolico / Cavi (12-15 reps · Rec 60s)
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-3 border-t border-white/5">
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Nome Esercizio" 
-                      value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
-                      onChange={e => {
-                        setBuilderExName(e.target.value);
-                        setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                      }} 
-                      className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
-                    />
-                    <select 
-                      value={builderMuscleGroup} 
-                      onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
-                      className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                    >
-                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
-                        <option key={mg} value={mg}>{mg}</option>
-                      ))}
-                    </select>
-                    <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
-                      <option value="REGULAR">Tecnica: REGULAR</option>
-                      <option value="SUPERSET">Tecnica: SUPERSET</option>
-                      <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
-                      <option value="DROP_SET">Tecnica: DROP_SET</option>
-                      <option value="CLUSTER">Tecnica: CLUSTER</option>
-                    </select>
-                    <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Note del Coach (opzionale)" 
-                      value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
-                      onChange={e => setBuilderNotes(e.target.value)} 
-                      className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
-                    />
-                    {editingExId && editingDayId === day.id ? (
-                      <>
-                        <button 
-                          type="button" 
-                          onClick={handleCancelEdit} 
-                          className="bg-zinc-700 text-xs font-bold px-3 py-2 rounded-xl text-white hover:bg-zinc-600 transition flex-shrink-0 cursor-pointer"
-                        >
-                          Annulla
-                        </button>
-                        <button 
-                          type="submit" 
-                          className="bg-amber-400 text-xs font-bold px-4 py-2 rounded-xl text-black hover:bg-amber-300 transition flex-shrink-0 cursor-pointer"
-                        >
-                          Aggiorna
-                        </button>
-                      </>
-                    ) : (
-                      <button 
-                        type="submit" 
-                        className="bg-[#E50914] text-xs font-bold px-4 py-2 rounded-xl text-white hover:brightness-110 transition flex-shrink-0 cursor-pointer"
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Nome Esercizio" 
+                        value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
+                        onChange={e => {
+                          setBuilderExName(e.target.value);
+                          setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                        }} 
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                      />
+                      <select 
+                        value={builderMuscleGroup} 
+                        onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
                       >
-                        Aggiungi
-                      </button>
-                    )}
-                  </div>
-                </form>
+                        {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
+                          <option key={mg} value={mg}>{mg}</option>
+                        ))}
+                      </select>
+                      <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                        <option value="REGULAR">Tecnica: REGULAR</option>
+                        <option value="SUPERSET">Tecnica: SUPERSET</option>
+                        <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
+                        <option value="DROP_SET">Tecnica: DROP_SET</option>
+                        <option value="CLUSTER">Tecnica: CLUSTER</option>
+                      </select>
+                      <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Note del Coach (Metodo TOPGYM)" 
+                        value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
+                        onChange={e => setBuilderNotes(e.target.value)} 
+                        className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                      />
+                      {editingExId && editingDayId === day.id ? (
+                        <>
+                          <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-2 rounded-xl text-white">Annulla</button>
+                          <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-2 rounded-xl text-black">Aggiorna</button>
+                        </>
+                      ) : (
+                        <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-2 rounded-xl text-white hover:brightness-110">Aggiungi</button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                {builderSuccessMessage && <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">{builderSuccessMessage}</div>}
+                <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:brightness-110 text-white font-black py-4 rounded-xl uppercase tracking-wider transition shadow-xl cursor-pointer">
+                  Salva e Assegna Scheda Metodo TOPGYM ({activeAthlete.displayName})
+                </button>
               </div>
-            ))}
-            <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
-              {builderSuccessMessage && <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">{builderSuccessMessage}</div>}
-              <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:brightness-110 text-white font-black py-4 rounded-xl uppercase tracking-wider transition shadow-xl shadow-green-950/40 cursor-pointer flex items-center justify-center gap-2">
-                <span>Salva e Assegna Scheda all'Atleta ({activeAthlete.displayName})</span>
-              </button>
             </div>
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS & STORICO */}
+        {/* TAB 7: ANALYTICS & STORICO COMPLETO ORIGINALE (GRAFICO SVG E TABELLA RIGHE ESPANDIBILI) */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl flex justify-between items-center flex-wrap gap-4">
@@ -2184,7 +2138,7 @@ export default function TopGymApp() {
 
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno</label>
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Sett/Mese)</label>
                     <input 
                       type="date" 
                       value={analyticsDate}
@@ -2206,7 +2160,7 @@ export default function TopGymApp() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => {
-                  const count = weeklySetsMap[mg] || 0;
+                  const count = weeklyMuscleSetsMap[mg] || 0;
                   const maxTarget = 22;
                   const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
                   
@@ -2378,7 +2332,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 8: CLASSIFICA & BADGE */}
+        {/* TAB 8: CLASSIFICA & BADGE ORIGINALE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl">
@@ -2402,7 +2356,7 @@ export default function TopGymApp() {
                   <div key={ach.id} className={`p-4 rounded-xl border flex items-center gap-3 transition ${ach.unlocked ? 'bg-zinc-900/80 border-amber-500/30' : 'bg-black/20 border-white/5 opacity-50'}`}>
                     <span className="text-2xl">{ach.icon}</span>
                     <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">{ach.title}{ach.unlocked && <CheckCircle className="w-4 h-4 text-emerald-400"/>}</div>
+                      <div className="font-bold text-sm text-white flex items-center gap-2">{ach.title}{ach.unlocked && <CheckCircle className="w-3.5 h-3.5 text-emerald-400"/>}</div>
                       <p className="text-xs text-zinc-400 mt-0.5">{ach.description}</p>
                     </div>
                   </div>
@@ -2412,7 +2366,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 9: IMPOSTAZIONI */}
+        {/* TAB 9: IMPOSTAZIONI COMPLETO ORIGINALE */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
             <div>
@@ -2485,7 +2439,7 @@ export default function TopGymApp() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-lg shadow-red-950/40">
+              <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-lg">
                 Salva Modifiche Profilo
               </button>
             </form>
@@ -2505,52 +2459,13 @@ export default function TopGymApp() {
         )}
       </main>
 
-      {/* MODALE GUIDA PERMESSI BLOCCATI (DENIED) */}
+      {/* MODALE PERMESSI NOTIFICHE */}
       {showDeniedModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-              <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Notifiche Disattivate</h3>
-                <p className="text-xs text-zinc-400">Hai bloccato i permessi nel browser</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-xs text-zinc-300 leading-relaxed">
-              <p>
-                Il browser non consente di richiedere nuovamente l&apos;autorizzazione in automatico. Per abilitarle manualmente:
-              </p>
-
-              <div className="bg-black/30 p-3.5 rounded-xl border border-white/5 space-y-2.5">
-                <div className="flex items-start gap-2.5">
-                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">1</span>
-                  <span>Tocca l&apos;icona delle <b>impostazioni sito / lucchetto</b> a sinistra dell&apos;indirizzo web in alto.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">2</span>
-                  <span>Cerca la voce <b>Notifiche</b> o <b>Autorizzazioni</b>.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">3</span>
-                  <span>Imposta su <b className="text-emerald-400">Consenti</b> oppure tocca <b>Reimposta autorizzazioni</b>.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">4</span>
-                  <span>Ricarica la pagina e premi di nuovo <i>Attiva Notifiche</i>.</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowDeniedModal(false)}
-              className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer"
-            >
-              Ho capito, chiudi
-            </button>
+            <h3 className="text-base font-bold text-white">Notifiche Disattivate</h3>
+            <p className="text-xs text-zinc-400">Hai bloccato i permessi nel browser. Riabilitali dalle impostazioni del sito.</p>
+            <button type="button" onClick={() => setShowDeniedModal(false)} className="w-full bg-[#E50914] text-white font-bold text-xs py-3 rounded-xl">Ho capito, chiudi</button>
           </div>
         </div>
       )}
