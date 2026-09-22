@@ -1069,6 +1069,19 @@ export default function TopGymApp() {
     }
   };
 
+  const getRankTitle = (level: number) => {
+    if (level < 10) return "Novizio della Ghisa";
+    if (level < 20) return "Recluta Sala Pesi";
+    if (level < 30) return "Sollevatore Abituale";
+    if (level < 40) return "Atleta d'Acciaio";
+    if (level < 50) return "Guerriero del Rack";
+    if (level < 60) return "Veterano Gym";
+    if (level < 70) return "Macchina da Guerra";
+    if (level < 80) return "Titano della Ghisa";
+    if (level < 90) return "Leggenda Vivente";
+    return "Dio dell'Olimpo TOP GYM";
+  };
+
   const userLevel = Math.min(99, Math.floor(Math.sqrt(userXp / 25)));
   const userRank = getRankTitle(userLevel);
   const xpForNextLevel = 25 * Math.pow(userLevel + 1, 2);
@@ -1310,7 +1323,7 @@ export default function TopGymApp() {
               </button>
             </div>
 
-            {/* SELETTORE ATLETA NELL'HEADER PER IL COACH */}
+            {/* SELETTORE ATLETA SEMPRE DISPONIBILE NELL'HEADER PER IL COACH */}
             {userRole === 'COACH' && (
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
                 <span className="text-zinc-400 text-xs">Gestisci Atleta:</span>
@@ -1379,14 +1392,14 @@ export default function TopGymApp() {
         </div>
       </header>
 
-      {/* PIN COACH MODAL APRIBILE CON Z-INDEX MASSIMO */}
+      {/* PIN COACH MODAL CON Z-INDEX MASSIMO */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
           <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl space-y-4">
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <Lock className="text-[#E50914] w-5 h-5" /> Area Riservata Coach
             </h3>
-            <p className="text-xs text-zinc-400">Inserisci il PIN per accedere alla gestione coach.</p>
+            <p className="text-xs text-zinc-400">Inserisci il PIN (default: 1234) per accedere alla gestione coach.</p>
             <form onSubmit={verifyCoachPin} className="space-y-4">
               <input
                 type="password"
@@ -1517,7 +1530,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 1: WORKOUT (CON SETTIMANA CALCOLATA AUTOMATICAMENTE) */}
+        {/* TAB 1: WORKOUT */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -1530,7 +1543,7 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* Banner Metodo TOPGYM con Settimana Calcolata in Automatico */}
+            {/* Banner Metodo TOPGYM */}
             <div className="bg-gradient-to-r from-red-950/40 via-zinc-900 to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
