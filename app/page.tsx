@@ -15,7 +15,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
@@ -27,7 +27,18 @@ import CoachDashboard from '@/components/CoachDashboard';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
-export type ExecutionType = 'REGULAR' | 'SUPERSET' | 'REST_PAUSE' | 'DROP_SET' | 'CLUSTER';
+
+export type ExecutionType = 
+  | 'REGULAR' 
+  | 'STRIPPING' 
+  | '10_PIU_MAX' 
+  | 'REST_PAUSE' 
+  | 'BACK_OFF' 
+  | 'PARZIALI' 
+  | 'ISOMETRIE' 
+  | 'SUPERSET' 
+  | 'CLUSTER';
+
 export type MuscleGroup = 
   | 'Petto' 
   | 'Dorso' 
@@ -41,7 +52,7 @@ export type MuscleGroup =
   | 'Addome';
 
 export type MacroBlock = 'BLOCCO_1_FORZA' | 'BLOCCO_2_TRASFORMAZIONE' | 'BLOCCO_3_QUALITA';
-export type MicroWeek = 1 | 2 | 3 | 4;
+export type MicroWeek = 1 | 2 | 3 | 4; // Map: 1=Fase I, 2=Fase II, 3=Scarico, 4=Fase III
 export type TopGymStimulus = 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC';
 
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
@@ -143,13 +154,14 @@ const makeId = (): string => {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
+const parseLocalDate = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  if (!isNaN(d.getTime())) return d;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return null;
 };
 
 export default function TopGymApp() {
@@ -200,6 +212,7 @@ export default function TopGymApp() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
 
+  // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
   // METODO TOPGYM
@@ -257,27 +270,27 @@ export default function TopGymApp() {
     if (stimulus === 'NEURAL') {
       setBuilderSets(4);
       setBuilderReps('4-6');
-      setBuilderRpe(8);
+      setBuilderRpe(7.5); // Buffer 2-3
       setBuilderRest(180);
       setBuilderType('REGULAR');
-      setBuilderTut('2-0-X-0');
-      setBuilderNotes('Metodo TOPGYM: Spinta esplosiva sui fondamentali, RIR 2, no cedimento.');
+      setBuilderTut('2-0-X-1'); // 1" fermo
+      setBuilderNotes('Metodo TOPGYM: Spinta esplosiva sui fondamentali, rigoroso BUFFER (RIR 2-4). Mai a cedimento per non bruciare il SNC.');
     } else if (stimulus === 'HYPERTROPHIC') {
       setBuilderSets(3);
-      setBuilderReps('8-10');
+      setBuilderReps('8-12');
       setBuilderRpe(8.5);
       setBuilderRest(90);
       setBuilderType('REGULAR');
       setBuilderTut('2-0-1-0');
-      setBuilderNotes('Metodo TOPGYM: Tensione continua, cedimento eventuale solo all\'ultima serie.');
+      setBuilderNotes('Metodo TOPGYM: Tensione meccanica, Buffer 1-2 nelle prime serie, cedimento/back-off solo all\'ultima serie.');
     } else {
       setBuilderSets(3);
-      setBuilderReps('12-15');
+      setBuilderReps('12-20');
       setBuilderRpe(10);
       setBuilderRest(60);
-      setBuilderType('DROP_SET');
+      setBuilderType('STRIPPING');
       setBuilderTut('2-0-1-1');
-      setBuilderNotes('Metodo TOPGYM: Stress metabolico/pompaggio, cedimento concentrico reale.');
+      setBuilderNotes('Metodo TOPGYM: Isolamento. Ricerca del cedimento concentrico reale e tecniche di intensità.');
     }
   };
 
@@ -286,7 +299,7 @@ export default function TopGymApp() {
     setEditingExId(ex.id);
     setBuilderExName(ex.name);
     setBuilderMuscleGroup(ex.muscleGroup || autoDetectMuscleGroup(ex.name));
-    setBuilderStimulus((ex as any).stimulusType || 'HYPERTROPHIC');
+    setBuilderStimulus(ex.stimulusType || 'HYPERTROPHIC');
     setBuilderSets(ex.sets);
     setBuilderReps(ex.reps);
     setBuilderWeight(ex.targetWeight);
@@ -312,7 +325,7 @@ export default function TopGymApp() {
   };
 
   const handleApplyDeloadWeekToProgram = () => {
-    if (!window.confirm('Vuoi convertire la scheda in SETTIMANA DI DELOAD (-40% volume, RIR 3-4, nessuna tecnica d\'intensità)?')) return;
+    if (!window.confirm('Vuoi convertire la scheda in SETTIMANA DI SCARICO (-40% volume, carichi submassimali, nessuna tecnica d\'intensità)?')) return;
     setProgramDays(prevDays => prevDays.map(day => ({
       ...day,
       exercises: day.exercises.map(ex => ({
@@ -320,11 +333,11 @@ export default function TopGymApp() {
         sets: Math.max(2, Math.round(ex.sets * 0.6)),
         rpeTarget: 6.5,
         executionType: 'REGULAR',
-        notes: (ex.notes ? ex.notes + ' · ' : '') + 'SETTIMANA DI DELOAD: Volume ridotto, focus tecnico, nessun cedimento.'
+        notes: (ex.notes ? ex.notes + ' · ' : '') + 'DELOAD: Volume ridotto, carichi submassimali, nessun cedimento.'
       }))
     })));
-    setManualWeek(4);
-    setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Deload (Week 4)!');
+    setManualWeek(3); // La fase 3 è sempre lo Scarico/Deload nel nuovo sistema
+    setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Scarico (Fase III)!');
     setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
 
@@ -639,7 +652,6 @@ export default function TopGymApp() {
     }
   };
 
-  // --- Tabella RPE → % 1RM ---
   const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
     '10':  [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
     '9.5': [98,  94, 91, 88, 85, 82, 80, 77, 75, 72],
@@ -779,7 +791,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Pulsanti rapidi + / - per il carico
   const adjustWeight = (delta: number) => {
     const current = parseFloat(weight) || 0;
     const updated = Math.max(0, current + delta);
@@ -926,6 +937,7 @@ export default function TopGymApp() {
     }
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
+      
       if (supabase && targetId) {
         try {
           await supabase.from('notifications').insert([{
@@ -936,6 +948,7 @@ export default function TopGymApp() {
           }]);
         } catch {}
       }
+
       if (targetId && targetId !== 'default-user') {
         try {
           await sendPushNotification(
@@ -946,6 +959,7 @@ export default function TopGymApp() {
           );
         } catch {}
       }
+
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
@@ -1074,7 +1088,11 @@ export default function TopGymApp() {
     switch (type) {
       case 'SUPERSET': return 'bg-purple-950 text-purple-300 border-purple-800';
       case 'REST_PAUSE': return 'bg-amber-950 text-amber-300 border-amber-800';
-      case 'DROP_SET': return 'bg-red-950 text-red-300 border-red-800';
+      case 'STRIPPING': return 'bg-rose-950 text-rose-300 border-rose-800';
+      case '10_PIU_MAX': return 'bg-red-950 text-red-300 border-red-800';
+      case 'BACK_OFF': return 'bg-orange-950 text-orange-300 border-orange-800';
+      case 'PARZIALI': return 'bg-pink-950 text-pink-300 border-pink-800';
+      case 'ISOMETRIE': return 'bg-cyan-950 text-cyan-300 border-cyan-800';
       case 'CLUSTER': return 'bg-blue-950 text-blue-300 border-blue-800';
       default: return 'bg-zinc-800 text-zinc-300 border-zinc-700';
     }
@@ -1117,6 +1135,7 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
+  // 1. CALENDARIO SETTIMANALE SCIENTIFICO (DA LUNEDÌ A DOMENICA)
   const { startOfWeek, endOfWeek, startOfMonth, endOfMonth } = useMemo(() => {
     const targetDate = parseLocalDate(analyticsDate) || new Date();
     const dayOfWeek = targetDate.getDay();
@@ -1134,15 +1153,96 @@ export default function TopGymApp() {
     return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
   }, [analyticsDate]);
 
-  const muscleGroupByExerciseName = useMemo(() => {
-    const map = new Map<string, MuscleGroup>();
-    programDays.forEach(day => {
-      (day.exercises || []).forEach(ex => {
-        if (ex.muscleGroup && !map.has(ex.name)) map.set(ex.name, ex.muscleGroup);
-      });
+  // 2. CONTEGGIO SERIE REALE PER DISTRETTO (DEDUPLICAZIONE RIGOROSA)
+  const weeklyMuscleSetsMap = useMemo(() => {
+    const map: Record<MuscleGroup, number> = {
+      Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0,
+      Femorali: 0, Glutei: 0, Bicipiti: 0, Tricipiti: 0,
+      Polpacci: 0, Addome: 0
+    };
+
+    const startMs = startOfWeek.getTime();
+    const endMs = endOfWeek.getTime();
+    const countedSetIds = new Set<string>();
+
+    logs.forEach(l => {
+      const d = parseLocalDate(l.date);
+      if (d && d.getTime() >= startMs && d.getTime() <= endMs) {
+        countedSetIds.add(l.id);
+        const mg = (l.muscleGroup || autoDetectMuscleGroup(l.exerciseName || '')) as MuscleGroup;
+        if (mg && typeof map[mg] === 'number') map[mg] += 1;
+      }
     });
+
+    workoutHistory.forEach(w => {
+      const wDate = parseLocalDate(w.created_at || w.date);
+      if (wDate && wDate.getTime() >= startMs && wDate.getTime() <= endMs && Array.isArray(w.logs)) {
+        w.logs.forEach((log: any, index: number) => {
+          const uniqueKey = log.id || `${w.id || w._id}-${log.exerciseName}-${index}`;
+          if (!countedSetIds.has(uniqueKey)) {
+            countedSetIds.add(uniqueKey);
+            const mg = (log?.muscleGroup || autoDetectMuscleGroup(log?.exerciseName || '')) as MuscleGroup;
+            if (mg && typeof map[mg] === 'number') map[mg] += 1;
+          }
+        });
+      }
+    });
+
     return map;
-  }, [programDays]);
+  }, [logs, workoutHistory, startOfWeek, endOfWeek]);
+
+  // 3. CALCOLO AUTOMATICO SETTIMANA E FASE (BLOCCO 1-2-3)
+  const calculatedCurrentRealWeek = useMemo(() => {
+    const daysInRoutine = Math.max(1, programDays.length || 4);
+    const completedCount = workoutHistory.length;
+    return Math.floor(completedCount / daysInRoutine) + 1;
+  }, [programDays.length, workoutHistory.length]);
+
+  const calculatedCurrentPhase: MicroWeek = useMemo(() => {
+    if (manualWeek !== null) return manualWeek;
+    const w = calculatedCurrentRealWeek;
+    
+    if (currentBlock === 'BLOCCO_1_FORZA') {
+      if (w <= 6) return 1;
+      if (w <= 9) return 2;
+      if (w === 10) return 3;
+      return 4; // Sett 11-15+
+    } else {
+      // Blocco 2 e 3
+      if (w <= 5) return 1;
+      if (w <= 9) return 2;
+      if (w === 10) return 3;
+      return 4; // Sett 11-15+
+    }
+  }, [manualWeek, calculatedCurrentRealWeek, currentBlock]);
+
+  const getPhaseDescription = (block: MacroBlock, phase: MicroWeek) => {
+    if (block === 'BLOCCO_1_FORZA') {
+      switch (phase) {
+        case 1: return { title: 'Fase I: Accumulo (Sett 1-6)', desc: 'Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica.' };
+        case 2: return { title: 'Fase II: Conversione (Sett 7-9)', desc: 'Aumento reps/serie e riduzione progressiva del buffer percepito.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: 'Riduzione del volume per dissipare la fatica. Nessun cedimento.' };
+        case 4: return { title: 'Fase IV: Intensificazione (Sett 11-15)', desc: 'Meno volume, aumento carichi costante. Test massimale a fine ciclo.' };
+      }
+    }
+    if (block === 'BLOCCO_2_TRASFORMAZIONE') {
+      switch (phase) {
+        case 1: return { title: 'Fase I: Volume & Stripping (Sett 1-5)', desc: 'Forza costante sui base. Volume complementari con tecnica 10+MAX.' };
+        case 2: return { title: 'Fase II: Ibrida (Sett 6-9)', desc: 'Lavoro pesante + back-off sui base. Complementari a cedimento.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: 'Riduzione volume, zero tecniche. Carichi submassimali di recupero.' };
+        case 4: return { title: 'Fase IV: Trasformazione (Sett 11-15)', desc: 'Aumento intensità. Stripping e saturazione massima sui secondari.' };
+      }
+    }
+    if (block === 'BLOCCO_3_QUALITA') {
+      switch (phase) {
+        case 1: return { title: 'Fase I: Accumulo Ipertrofico (Sett 1-5)', desc: 'Progressione di volume. Inserimento Back-off, Stripping e 10+MAX.' };
+        case 2: return { title: 'Fase II: Densità (Sett 6-9)', desc: 'Aggiunta Rest-Pause su macchine guidate e ripetizioni parziali finali.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: '-40% Volume, zero tecniche d\'intensità. Dissipazione fatica profonda.' };
+        case 4: return { title: 'Fase IV: Massimo Pompaggio (Sett 11-15)', desc: 'Taglio volume sui base (es. 3x3). Massimo effort metabolico e isometrie.' };
+      }
+    }
+    return { title: '', desc: '' };
+  };
 
   const allSetsWithDate = useMemo(() => {
     const items: { name: string; date: Date | null }[] = [];
@@ -1155,16 +1255,6 @@ export default function TopGymApp() {
     });
     return items;
   }, [logs, workoutHistory]);
-
-  const weeklySetsMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    allSetsWithDate.forEach(({ name, date }) => {
-      if (!date || date < startOfWeek || date > endOfWeek) return;
-      const mg = muscleGroupByExerciseName.get(name) || autoDetectMuscleGroup(name || '');
-      map[mg] = (map[mg] || 0) + 1;
-    });
-    return map;
-  }, [allSetsWithDate, muscleGroupByExerciseName, startOfWeek, endOfWeek]);
 
   const monthlySetsCount = useMemo(
     () => allSetsWithDate.reduce(
@@ -1205,23 +1295,6 @@ export default function TopGymApp() {
       return { key: item.id || item._id || `session-${idx}`, dateStr, volume, avgIntensity };
     });
   }, [workoutHistory, best1RMByExercise]);
-
-  const calculatedCurrentWeek: MicroWeek = useMemo(() => {
-    if (manualWeek !== null) return manualWeek;
-    const daysInRoutine = Math.max(1, programDays.length || 4);
-    const completedCount = workoutHistory.length;
-    const computed = Math.floor(completedCount / daysInRoutine) + 1;
-    return Math.min(4, Math.max(1, computed)) as MicroWeek;
-  }, [manualWeek, programDays.length, workoutHistory.length]);
-
-  const getMicroWeekDescription = (week: MicroWeek) => {
-    switch (week) {
-      case 1: return { title: 'Week 1 · Intro & Accumulo', desc: 'RIR 2 (buffer 2 reps). Esegui con carichi target senza arrivare al limite.' };
-      case 2: return { title: 'Week 2 · Sovraccarico Progressivo', desc: 'RIR 1-2. Spingi per incrementare 1 ripetizione o carico (+1-2.5 kg).' };
-      case 3: return { title: 'Week 3 · Overreaching Controllato', desc: 'RIR 0 sull\'ultima serie. Massima spremitura muscolare prima del riposo.' };
-      case 4: return { title: 'Week 4 · Deload / Scarico Attivo', desc: '-40% Volume (2 serie per esercizio), RIR 3-4, nessuna tecnica d\'intensità. Dissipa la fatica.' };
-    }
-  };
 
   if (!user) {
     return (
@@ -1507,7 +1580,7 @@ export default function TopGymApp() {
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
-              <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-xl flex items-start gap-3 text-amber-300 backdrop-blur-md">
+              <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-2xl flex items-start gap-3 text-amber-300 backdrop-blur-md">
                 <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-sm text-amber-200">Livello di Fatica Accumulata Elevato!</h4>
@@ -1520,17 +1593,17 @@ export default function TopGymApp() {
             <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl">
               <div>
                 <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
-                  Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità (Cut)'}
+                  Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità Muscolare'}
                 </span>
-                <h4 className="text-sm font-bold text-white mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).title}</h4>
-                <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).desc}</p>
+                <h4 className="text-sm font-bold text-white mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).title}</h4>
+                <p className="text-xs text-zinc-400 mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).desc}</p>
               </div>
               <div className="text-right">
                 <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-yellow-400 block">
-                  Settimana {calculatedCurrentWeek} / 4 (Automatica)
+                  Settimana Reale: {calculatedCurrentRealWeek} (Fase Automatica {calculatedCurrentPhase})
                 </span>
                 <span className="text-[10px] text-zinc-500 mt-1 block">
-                  {workoutHistory.length} sessioni completate
+                  {workoutHistory.length} allenamenti completati nello storico
                 </span>
               </div>
             </div>
@@ -1545,7 +1618,7 @@ export default function TopGymApp() {
                     key={day.id}
                     type="button"
                     onClick={() => { setSelectedDayIndex(index); if (day.exercises[0]) setCurrentExId(day.exercises[0].id); }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${selectedDayIndex === index ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-900 border-white/5 text-zinc-400'}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${selectedDayIndex === index ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white'}`}
                   >
                     Giorno {day.dayNumber} · {day.title}
                   </button>
@@ -1608,7 +1681,7 @@ export default function TopGymApp() {
                       <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">1RM Stimato</div>
                       <div className="text-xl font-black text-[#E50914]">{estimated1RMPreview} Kg</div>
                       {currentIntensityPreview && (
-                        <div className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase inline-block mt-1 ${currentIntensityPreview.colorClasses}`}>
+                        <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border uppercase inline-block mt-1 ${currentIntensityPreview.colorClasses}`}>
                           {currentIntensityPreview.pct}% 1RM · {currentIntensityPreview.label}
                         </div>
                       )}
@@ -1653,7 +1726,7 @@ export default function TopGymApp() {
                       </span>
                     ) : (
                       <span className="text-amber-300">
-                        ⚠️ Nessun peso inserito nel Check Readiness.
+                        ⚠️ Nessun peso inserito nel Check Readiness. Il carico effettivo resterà non calcolato.
                       </span>
                     )}
                   </div>
@@ -1704,7 +1777,7 @@ export default function TopGymApp() {
                       )}
                     </div>
                   </div>
-                  <button type="submit" className="w-full bg-gradient-to-r from-[#E50914] to-red-600 hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase text-sm tracking-wider cursor-pointer shadow-lg">
+                  <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase text-sm tracking-wider transition-transform active:scale-95 cursor-pointer shadow-lg">
                     <Plus className="w-5 h-5 inline mr-1"/> Registra Serie (+10 XP)
                   </button>
                 </form>
@@ -1712,26 +1785,34 @@ export default function TopGymApp() {
                 <div className="mt-6">
                   <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">Serie Registrate Oggi ({todayLogs.length})</h4>
                   <div className="space-y-2">
-                    {todayLogs.map((log, i) => (
-                      <div key={log.id} className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-zinc-500 font-mono w-10">#{i + 1}</span>
-                          <div>
-                            <span className="font-bold text-white block">{log.exerciseName}</span>
-                            <span className="text-zinc-400 font-mono text-[11px]">
-                              {log.isBodyweight && log.effectiveLoad !== null ? (
-                                <>Zav: {log.weight} Kg · Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
-                              ) : (
-                                <><b className="text-white">{log.weight} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
-                              )}
-                            </span>
+                    {todayLogs.map((log, i) => {
+                      const intensity = getIntensityInfo(log.exerciseName, log.effectiveLoad || log.weight);
+                      return (
+                        <div key={log.id} className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-zinc-500 font-mono w-10">#{i + 1}</span>
+                            <div>
+                              <span className="font-bold text-white block">{log.exerciseName}</span>
+                              <span className="text-zinc-400 font-mono text-[11px]">
+                                {log.isBodyweight && log.effectiveLoad !== null ? (
+                                  <>Zav: {log.weight} Kg · Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                                ) : (
+                                  <><b className="text-white">{log.weight} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                                )}
+                              </span>
+                            </div>
+                            {intensity && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${intensity.colorClasses}`}>
+                                {intensity.pct}% 1RM · {intensity.label}
+                              </span>
+                            )}
                           </div>
+                          <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-2 text-zinc-500 hover:text-rose-400 rounded-lg transition cursor-pointer">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-2 text-zinc-500 hover:text-rose-400 rounded-lg transition cursor-pointer">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1882,6 +1963,7 @@ export default function TopGymApp() {
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="space-y-6">
+            {/* CABINA DI REGIA PERIODIZZAZIONE */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-5">
               <div className="flex justify-between items-center border-b border-white/10 pb-3">
                 <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -1898,28 +1980,28 @@ export default function TopGymApp() {
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
-                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
                   >
                     <b className="text-white text-xs block font-black">Blocco 1: Forza Ipertrofica</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Focus Neurale, Tecnica, Accumulo carichi alti sui Fondamentali</span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Consolida gli schemi motori, costruisce efficienza neurale e alza i carichi base. Lavoro a Buffer.</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
-                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
                   >
                     <b className="text-white text-xs block font-black">Blocco 2: Trasformazione</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Range 6-12 reps, Complementari pesanti, Back-off</span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Lavoro ibrido pesante + back-off. Si spinge l'effort fino al cedimento nei complementari.</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
-                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
                   >
-                    <b className="text-white text-xs block font-black">Blocco 3: Qualità (Cut)</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Mantenimento Forza, Volume mirato (18-22 set), Pompaggio/Cavi</span>
+                    <b className="text-white text-xs block font-black">Blocco 3: Qualità Muscolare</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Massimo sforzo e qualità. Tecniche di intensità massicce (Stripping, Rest-Pause, Back-off).</span>
                   </button>
                 </div>
               </div>
@@ -1927,27 +2009,27 @@ export default function TopGymApp() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    2. Settimana (Microciclo): Attuale automatica = <b className="text-yellow-400">Week {calculatedCurrentWeek}</b>
+                    2. Fasi del Microciclo (Fase Attuale Auto = <b className="text-yellow-400">Fase {calculatedCurrentPhase}</b>):
                   </label>
                   <button
                     type="button"
                     onClick={handleApplyDeloadWeekToProgram}
                     className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" /> Applica Settimana di Deload Automatica
+                    <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
                   </button>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[1, 2, 3, 4].map(w => {
-                    const desc = getMicroWeekDescription(w as MicroWeek);
-                    const isSelected = calculatedCurrentWeek === w;
+                    const desc = getPhaseDescription(currentBlock, w as MicroWeek);
+                    const isSelected = calculatedCurrentPhase === w;
                     return (
                       <button
                         key={w}
                         type="button"
                         onClick={() => setManualWeek(w as MicroWeek)}
-                        className={`p-3 rounded-xl border text-left transition ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400'}`}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
                       >
                         <b className={`text-xs block ${isSelected ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
                         <span className={`text-[10px] block mt-1 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
@@ -1980,7 +2062,7 @@ export default function TopGymApp() {
                         key={num}
                         type="button"
                         onClick={() => handleDayCountChange(num)}
-                        className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-800 border-white/5 text-zinc-400'}`}
+                        className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-800 border-white/5 text-zinc-400 hover:text-white cursor-pointer'}`}
                       >
                         {num}
                       </button>
@@ -2019,7 +2101,7 @@ export default function TopGymApp() {
                               {ex.executionType}
                             </span>
                           </div>
-                          <div className="text-zinc-400 mt-1">
+                          <div className="text-zinc-400 mt-0.5">
                             {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
                           </div>
                           {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
@@ -2029,7 +2111,7 @@ export default function TopGymApp() {
                           <button
                             type="button"
                             onClick={() => handleStartEditExercise(day.id, ex)}
-                            className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
+                            className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
                             title="Modifica esercizio"
                           >
                             <Pencil className="w-4 h-4" />
@@ -2040,7 +2122,7 @@ export default function TopGymApp() {
                               if (editingExId === ex.id) handleCancelEdit();
                               handleRemoveExerciseFromDay(day.id, ex.id);
                             }} 
-                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition"
+                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
                             title="Elimina esercizio"
                           >
                             <Trash2 className="w-4 h-4"/>
@@ -2061,21 +2143,21 @@ export default function TopGymApp() {
                           onClick={() => handleApplyTopGymPreset('NEURAL')}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                         >
-                          ⚡ Neurale (4-6 reps · 3')
+                          ⚡ Neurale (2-6 reps · Buffer)
                         </button>
                         <button
                           type="button"
                           onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                         >
-                          💪 Ipertrofico (8-10 reps · 90s)
+                          💪 Meccanico (6-12 reps · Cedimento/Buffer)
                         </button>
                         <button
                           type="button"
                           onClick={() => handleApplyTopGymPreset('METABOLIC')}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                         >
-                          🔥 Metabolico (12-15 reps · 60s)
+                          🔥 Metabolico (12-20 reps · Isolamento)
                         </button>
                       </div>
                     </div>
@@ -2109,8 +2191,12 @@ export default function TopGymApp() {
                       <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
                         <option value="REGULAR">Tecnica: REGULAR</option>
                         <option value="SUPERSET">Tecnica: SUPERSET</option>
-                        <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
-                        <option value="DROP_SET">Tecnica: DROP_SET</option>
+                        <option value="STRIPPING">Tecnica: STRIPPING (Drop Set)</option>
+                        <option value="10_PIU_MAX">Tecnica: 10 + MAX</option>
+                        <option value="REST_PAUSE">Tecnica: REST-PAUSE</option>
+                        <option value="BACK_OFF">Tecnica: BACK-OFF a Cedimento</option>
+                        <option value="PARZIALI">Tecnica: RIPETIZIONI PARZIALI</option>
+                        <option value="ISOMETRIE">Tecnica: ISOMETRIE FINALI</option>
                         <option value="CLUSTER">Tecnica: CLUSTER</option>
                       </select>
                       <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
@@ -2128,11 +2214,11 @@ export default function TopGymApp() {
                       />
                       {editingExId && editingDayId === day.id ? (
                         <>
-                          <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-2 rounded-xl text-white cursor-pointer">Annulla</button>
-                          <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-2 rounded-xl text-black cursor-pointer">Aggiorna</button>
+                          <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer">Annulla</button>
+                          <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer">Aggiorna</button>
                         </>
                       ) : (
-                        <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-2 rounded-xl text-white hover:brightness-110 cursor-pointer">Aggiungi</button>
+                        <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer">Aggiungi</button>
                       )}
                     </div>
                   </form>
@@ -2149,7 +2235,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS & STORICO */}
+        {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md flex justify-between items-center flex-wrap gap-4">
@@ -2158,7 +2244,7 @@ export default function TopGymApp() {
                   <BarChart3 className="text-[#E50914]" /> 
                   Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio (incluso corpo libero).</p>
+                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie settimanali reali dal lunedì alla domenica per singolo gruppo muscolare.</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
@@ -2172,14 +2258,14 @@ export default function TopGymApp() {
               <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-white/10 pb-3 gap-4">
                 <div>
                   <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale
+                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale per Singolo Gruppo Muscolare
                   </h3>
-                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+                  <span className="text-xs text-zinc-400">Target ipertrofico: 15 - 25 serie per distretto (18-22 in cut)</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Sett/Mese)</label>
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Settimana)</label>
                     <input 
                       type="date" 
                       value={analyticsDate}
@@ -2195,21 +2281,21 @@ export default function TopGymApp() {
               </div>
 
               <div className="text-[11px] text-zinc-400 font-bold bg-black/30 p-2.5 rounded-xl text-center border border-white/5">
-                Mostrando i dati per la settimana: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
+                Mostrando i dati per la settimana da Lunedì a Domenica: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
                 <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => {
-                  const count = weeklySetsMap[mg] || 0;
+                  const count = weeklyMuscleSetsMap[mg] || 0;
                   const maxTarget = 22;
                   const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
                   
                   let statusColor = 'bg-zinc-700';
                   let textColor = 'text-zinc-400';
-                  if (count >= 10 && count <= 20) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
-                  else if (count > 20) { statusColor = 'bg-amber-500'; textColor = 'text-amber-400'; } 
-                  else if (count > 0) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
+                  if (count >= 15 && count <= 25) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
+                  else if (count > 25) { statusColor = 'bg-rose-500'; textColor = 'text-rose-400'; } 
+                  else if (count >= 10) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
 
                   return (
                     <div key={mg} className="bg-zinc-900/60 p-3.5 rounded-xl border border-white/5 space-y-2">
