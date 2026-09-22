@@ -24,7 +24,6 @@ import NotificationBell from '@/components/NotificationBell';
 import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
-import { processDynamicWorkout } from '@/lib/topgym-engine';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -271,29 +270,29 @@ export default function TopGymApp() {
     if (stimulus === 'NEURAL') {
       setBuilderSets(4);
       setBuilderReps('4-6');
-      setBuilderRpe(7.5); // Corrisponde a Buffer 2-3
+      setBuilderRpe(7.5); // Buffer 2-3
       setBuilderRest(180);
       setBuilderType('REGULAR');
-      setBuilderTut('2-0-X-1'); // 1" di fermo in contrazione
+      setBuilderTut('2-0-X-1'); // 1" fermo
       setBuilderNotes('Metodo TOPGYM: Spinta esplosiva sui fondamentali, rigoroso BUFFER (RIR 2-4). Mai a cedimento per non bruciare il SNC.');
     } else if (stimulus === 'HYPERTROPHIC') {
       setBuilderSets(3);
       setBuilderReps('8-12');
-      setBuilderRpe(8.5); // Corrisponde a Buffer 1-2
+      setBuilderRpe(8.5);
       setBuilderRest(90);
       setBuilderType('REGULAR');
       setBuilderTut('2-0-1-0');
-      setBuilderNotes('Metodo TOPGYM: Tensione meccanica. Buffer 1-2 nelle prime serie, cedimento consentito solo all\'ultima serie o back-off.');
+      setBuilderNotes('Metodo TOPGYM: Tensione meccanica, Buffer 1-2 nelle prime serie, cedimento/back-off solo all\'ultima serie.');
     } else {
       setBuilderSets(3);
       setBuilderReps('12-20');
       setBuilderRpe(10);
       setBuilderRest(60);
-      setBuilderType('STRIPPING'); // Tecnica base per il metabolico
+      setBuilderType('STRIPPING');
       setBuilderTut('2-0-1-1');
       setBuilderNotes('Metodo TOPGYM: Isolamento. Ricerca del cedimento concentrico reale e tecniche di intensità.');
     }
-  }
+  };
 
   const handleStartEditExercise = (dayId: string, ex: Exercise) => {
     setEditingDayId(dayId);
@@ -747,40 +746,8 @@ export default function TopGymApp() {
 
   const activeAthlete = athletes.find(a => a.id === activeAthleteId) || (athletes.length > 0 ? athletes[0] : { id: 'default', displayName: 'Atleta', email: '', xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
-  
-  // 1. Calcolo Settimana Reale
-  const calculatedCurrentRealWeek = useMemo(() => {
-    const daysInRoutine = Math.max(1, programDays.length || 4);
-    const completedCount = workoutHistory.length;
-    return Math.floor(completedCount / daysInRoutine) + 1;
-  }, [programDays.length, workoutHistory.length]);
-  
-  // 2. Calcolo Fase del Blocco
-  const calculatedCurrentPhase: MicroWeek = useMemo(() => {
-    if (manualWeek !== null) return manualWeek;
-    const w = calculatedCurrentRealWeek;
-    if (currentBlock === 'BLOCCO_1_FORZA') {
-      if (w <= 6) return 1;
-      if (w <= 9) return 2;
-      if (w === 10) return 3; // Scarico
-      return 4;
-    } else {
-      if (w <= 5) return 1;
-      if (w <= 9) return 2;
-      if (w === 10) return 3; // Scarico
-      return 4;
-    }
-  }, [manualWeek, calculatedCurrentRealWeek, currentBlock]);
-  
-  // 3. Il Motore che elabora la scheda in base alla fase
-  const dynamicActiveDay = useMemo(() => {
-    if (!activeDay) return null;
-    if (userRole === 'COACH' && activeTab === 'builder') return activeDay;
-    return processDynamicWorkout(activeDay as any, calculatedCurrentRealWeek, calculatedCurrentPhase as any, currentBlock as any);
-  }, [activeDay, userRole, activeTab, calculatedCurrentRealWeek, calculatedCurrentPhase, currentBlock]);
-  
-  const activeRoutine = dynamicActiveDay?.exercises ?? [];
-  const currentExercise = activeRoutine.find((e: any) => e.id === currentExId) || activeRoutine[0];
+  const activeRoutine = activeDay?.exercises ?? [];
+  const currentExercise = activeRoutine.find(e => e.id === currentExId) || activeRoutine[0];
 
   const currentIntensityPreview = useMemo(() => {
     if (!currentExercise) return null;
@@ -1225,29 +1192,53 @@ export default function TopGymApp() {
   }, [logs, workoutHistory, startOfWeek, endOfWeek]);
 
   // 3. CALCOLO AUTOMATICO SETTIMANA E FASE (BLOCCO 1-2-3)
+  const calculatedCurrentRealWeek = useMemo(() => {
+    const daysInRoutine = Math.max(1, programDays.length || 4);
+    const completedCount = workoutHistory.length;
+    return Math.floor(completedCount / daysInRoutine) + 1;
+  }, [programDays.length, workoutHistory.length]);
+
+  const calculatedCurrentPhase: MicroWeek = useMemo(() => {
+    if (manualWeek !== null) return manualWeek;
+    const w = calculatedCurrentRealWeek;
+    
+    if (currentBlock === 'BLOCCO_1_FORZA') {
+      if (w <= 6) return 1;
+      if (w <= 9) return 2;
+      if (w === 10) return 3;
+      return 4; // Sett 11-15+
+    } else {
+      // Blocco 2 e 3
+      if (w <= 5) return 1;
+      if (w <= 9) return 2;
+      if (w === 10) return 3;
+      return 4; // Sett 11-15+
+    }
+  }, [manualWeek, calculatedCurrentRealWeek, currentBlock]);
+
   const getPhaseDescription = (block: MacroBlock, phase: MicroWeek) => {
     if (block === 'BLOCCO_1_FORZA') {
       switch (phase) {
-        case 1: return { title: 'Fase I: Accumulo', desc: 'Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica.' };
-        case 2: return { title: 'Fase II: Conversione', desc: 'Aumento reps/serie e riduzione progressiva del buffer.' };
-        case 3: return { title: 'Fase III: Scarico (Deload)', desc: 'Riduzione del volume per dissipare la fatica. Nessun cedimento.' };
-        case 4: return { title: 'Fase IV: Intensificazione', desc: 'Meno volume, aumento carichi. Test massimale a fine ciclo.' };
+        case 1: return { title: 'Fase I: Accumulo (Sett 1-6)', desc: 'Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica.' };
+        case 2: return { title: 'Fase II: Conversione (Sett 7-9)', desc: 'Aumento reps/serie e riduzione progressiva del buffer percepito.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: 'Riduzione del volume per dissipare la fatica. Nessun cedimento.' };
+        case 4: return { title: 'Fase IV: Intensificazione (Sett 11-15)', desc: 'Meno volume, aumento carichi costante. Test massimale a fine ciclo.' };
       }
     }
     if (block === 'BLOCCO_2_TRASFORMAZIONE') {
       switch (phase) {
-        case 1: return { title: 'Fase I: Volume & Stripping', desc: 'Forza costante sui base. Complementari con 10+MAX.' };
-        case 2: return { title: 'Fase II: Ibrida', desc: 'Lavoro pesante + back-off sui base. Complementari a cedimento.' };
-        case 3: return { title: 'Fase III: Scarico (Deload)', desc: 'Riduzione volume, zero tecniche. Carichi submassimali.' };
-        case 4: return { title: 'Fase IV: Trasformazione', desc: 'Aumento intensità. Stripping e saturazione massima.' };
+        case 1: return { title: 'Fase I: Volume & Stripping (Sett 1-5)', desc: 'Forza costante sui base. Volume complementari con tecnica 10+MAX.' };
+        case 2: return { title: 'Fase II: Ibrida (Sett 6-9)', desc: 'Lavoro pesante + back-off sui base. Complementari a cedimento.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: 'Riduzione volume, zero tecniche. Carichi submassimali di recupero.' };
+        case 4: return { title: 'Fase IV: Trasformazione (Sett 11-15)', desc: 'Aumento intensità. Stripping e saturazione massima sui secondari.' };
       }
     }
     if (block === 'BLOCCO_3_QUALITA') {
       switch (phase) {
-        case 1: return { title: 'Fase I: Accumulo Ipertrofico', desc: 'Progressione di volume. Inserimento Back-off, Stripping e 10+MAX.' };
-        case 2: return { title: 'Fase II: Densità', desc: 'Aggiunta Rest-Pause su macchine guidate e parziali finali.' };
-        case 3: return { title: 'Fase III: Scarico (Deload)', desc: '-40% Volume, zero tecniche d\'intensità. Dissipazione fatica.' };
-        case 4: return { title: 'Fase IV: Massimo Pompaggio', desc: 'Taglio volume sui base. Massimo effort metabolico e isometrie.' };
+        case 1: return { title: 'Fase I: Accumulo Ipertrofico (Sett 1-5)', desc: 'Progressione di volume. Inserimento Back-off, Stripping e 10+MAX.' };
+        case 2: return { title: 'Fase II: Densità (Sett 6-9)', desc: 'Aggiunta Rest-Pause su macchine guidate e ripetizioni parziali finali.' };
+        case 3: return { title: 'Fase III: Scarico (Sett 10)', desc: '-40% Volume, zero tecniche d\'intensità. Dissipazione fatica profonda.' };
+        case 4: return { title: 'Fase IV: Massimo Pompaggio (Sett 11-15)', desc: 'Taglio volume sui base (es. 3x3). Massimo effort metabolico e isometrie.' };
       }
     }
     return { title: '', desc: '' };
