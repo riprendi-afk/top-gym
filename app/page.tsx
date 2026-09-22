@@ -15,11 +15,11 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
-import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
+import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/bodyweight';
 import NotificationBell from '@/components/NotificationBell';
 import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
@@ -143,14 +143,21 @@ const makeId = (): string => {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
+const parseSafeDate = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  if (!isNaN(d.getTime())) return d;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return null;
 };
+
+// Alias usato dai calcoli di Analytics (range settimana/mese corrente e storico serie).
+// Prima mancava questa definizione: l'app andava in crash con
+// "parseLocalDate is not defined" ad ogni render, perché è invocata già nei
+// useMemo calcolati subito dopo il login (non solo aprendo la tab Progressi).
+const parseLocalDate = parseSafeDate;
 
 export default function TopGymApp() {
   const [user, setUser] = useState<any>(null);
@@ -185,7 +192,6 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab estesi con Coach Dashboard, Records e Goals
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
   >('workout');
@@ -196,14 +202,15 @@ export default function TopGymApp() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // TIMER RESILIENTE CON TIMESTAMP ASSOLUTO
+  // Timer resiliente
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
 
+  // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
-  // METODO TOPGYM (MACRO, MESO, MICROCICLO)
+  // METODO TOPGYM
   const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
   const [manualWeek, setManualWeek] = useState<MicroWeek | null>(null);
 
@@ -238,7 +245,7 @@ export default function TopGymApp() {
   const [rpe, setRpe] = useState('8');
   const [logs, setLogs] = useState<SetLog[]>([]);
 
-  // State Builder con Preset Topgym
+  // State Builder
   const [builderExName, setBuilderExName] = useState('');
   const [builderMuscleGroup, setBuilderMuscleGroup] = useState<MuscleGroup>('Petto');
   const [builderStimulus, setBuilderStimulus] = useState<TopGymStimulus>('HYPERTROPHIC');
@@ -336,7 +343,6 @@ export default function TopGymApp() {
     [athletes, targetUserId]
   );
 
-  // Caricamento atleti e XP salvato
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
@@ -488,7 +494,6 @@ export default function TopGymApp() {
     setUser(null);
   };
 
-  // Carica i dati dell'atleta dalla tabella profiles
   useEffect(() => {
     if (!user?.id || !supabase) return;
     supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
@@ -503,7 +508,6 @@ export default function TopGymApp() {
     });
   }, [user?.id]);
 
-  // Salva username e parametri fisici
   const handleUpdateProfile = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!user?.id || !supabase) return;
@@ -540,17 +544,13 @@ export default function TopGymApp() {
       setShowDeniedModal(true);
       return;
     }
-
     if (!user?.id) return;
     setPushLoading(true);
     const res = await subscribeUserToPush(user.id, supabase);
-
     if (!res.success && (res.message.includes('bloccate') || res.message.includes('rifiutato'))) {
       setShowDeniedModal(true);
     } else {
-      if (res.success) {
-        setShowPushBanner(false);
-      }
+      if (res.success) setShowPushBanner(false);
       setSettingsMessage(res.message);
       setTimeout(() => setSettingsMessage(null), 5000);
     }
@@ -593,15 +593,11 @@ export default function TopGymApp() {
     }
   }, [soundEnabled]);
 
-  // ==========================================
-  // GESTIONE TIMER RESILIENTE CON TIMESTAMP
-  // ==========================================
   const updateTimerRemaining = useCallback(() => {
     if (!restEndTimeRef.current) return;
     const remainingMs = restEndTimeRef.current - Date.now();
     const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
     setRestTimer(remainingSec);
-
     if (remainingSec <= 0) {
       restEndTimeRef.current = null;
       setIsTimerRunning(false);
@@ -612,14 +608,10 @@ export default function TopGymApp() {
   useEffect(() => {
     if (!isTimerRunning) return;
     const interval = setInterval(updateTimerRemaining, 1000);
-
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        updateTimerRemaining();
-      }
+      if (document.visibilityState === 'visible') updateTimerRemaining();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -633,7 +625,6 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // APERTURA DIRETTA DELLA MODALE PIN AL CLICK SU COACH
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH') {
       setShowCoachPinModal(true);
@@ -643,7 +634,6 @@ export default function TopGymApp() {
     }
   };
 
-  // PIN COACH ACCESSIBILE CON 1234
   const verifyCoachPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (pinInput.trim() === '1234' || pinInput.trim() === 'admin') {
@@ -699,7 +689,7 @@ export default function TopGymApp() {
     workoutHistory.forEach(w => {
       if (Array.isArray(w.logs)) {
         w.logs.forEach((l: any) => {
-          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l?.weight) || 0;
+          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight) || 0;
           const reps = Number(l?.reps) || 0;
           const rpeVal = Number(l?.rpe);
           if (weight > 0 && reps > 0) {
@@ -770,13 +760,11 @@ export default function TopGymApp() {
     return latestValid?.bodyWeight || null;
   }, [readinessHistory]);
 
-  // Riconoscimento corpo libero
   const currentBodyweightConfig = useMemo(() => {
     if (!currentExercise) return null;
     return findBodyweightConfig(currentExercise.name);
   }, [currentExercise]);
 
-  // Confronto con l'ultima prestazione registrata
   const lastLoggedSet = useMemo(() => {
     if (!currentExercise) return null;
     const fromToday = logs.find(l => l.exerciseName === currentExercise.name);
@@ -882,9 +870,7 @@ export default function TopGymApp() {
     return logs.filter(l => l.date === today);
   }, [logs]);
 
-  // ==========================================
   // SALVATAGGIO WORKOUT PROTETTO E ROBUSTO
-  // ==========================================
   const handleFinishAndSaveWorkout = async () => {
     if (isSavingWorkout) return;
     setIsSavingWorkout(true);
@@ -932,7 +918,6 @@ export default function TopGymApp() {
     }
   };
 
-  // Assegnazione scheda con notifica automatica all'atleta
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
     let result: { success?: boolean; error?: string } = {};
@@ -974,9 +959,6 @@ export default function TopGymApp() {
     }
   };
 
-  // ==========================================
-  // REGISTRAZIONE SERIE
-  // ==========================================
   const handleLogSet = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
@@ -988,7 +970,7 @@ export default function TopGymApp() {
     const exName = currentExercise?.name || 'Esercizio';
     const effectiveCalc = computeEffectiveLoad(exName, numWeight, numReps, sessionBodyWeight);
 
-    const calc1RMWeight = effectiveCalc.effectiveLoad !== null ? effectiveCalc.effectiveLoad : numWeight;
+    const calc1RMWeight = effectiveCalc.effectiveLoad !== null && effectiveCalc.effectiveLoad !== undefined ? effectiveCalc.effectiveLoad : numWeight;
     const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
     const newLog: SetLog = {
@@ -1057,7 +1039,7 @@ export default function TopGymApp() {
       handleCancelEdit();
     } else {
       const newEx: Exercise = {
-        id: crypto.randomUUID(),
+        id: makeId(),
         name: builderExName.trim(),
         muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
         sets: builderSets,
@@ -1398,7 +1380,7 @@ export default function TopGymApp() {
         </div>
       </header>
 
-      {/* PIN COACH MODAL CON Z-INDEX MASSIMO */}
+      {/* PIN COACH MODAL (Z-INDEX GARANTITO) */}
       {showCoachPinModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
@@ -1689,7 +1671,7 @@ export default function TopGymApp() {
                             <div>
                               <span className="font-bold text-white block">{log.exerciseName}</span>
                               <span className="text-zinc-400 font-mono text-[11px]">
-                                {log.isBodyweight && log.effectiveLoad !== null ? (
+                                {log.isBodyweight && log.effectiveLoad !== null && log.effectiveLoad !== undefined ? (
                                   <>Zavorra: {log.weight} Kg | Carico Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
                                 ) : (
                                   <>{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</>
@@ -2227,7 +2209,7 @@ export default function TopGymApp() {
                                           <div key={lIdx} className="bg-zinc-900 border border-zinc-800 p-2 rounded text-[11px]">
                                             <div className="font-bold text-white mb-1">{log.exerciseName}</div>
                                             <div className="text-zinc-400 flex justify-between flex-wrap">
-                                              {log.isBodyweight && log.effectiveLoad !== null ? (
+                                              {log.isBodyweight && log.effectiveLoad !== null && log.effectiveLoad !== undefined ? (
                                                 <span>BW: +{log.weight} kg (Effettivo: {log.effectiveLoad} kg) × {log.reps}</span>
                                               ) : (
                                                 <span>{log.weight} kg × {log.reps}</span>
