@@ -15,11 +15,11 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
-import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/bodyweight';
+import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
 import NotificationBell from '@/components/NotificationBell';
 import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
@@ -143,21 +143,14 @@ const makeId = (): string => {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const parseSafeDate = (value: any): Date | null => {
+const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  const d = new Date(value);
-  if (!isNaN(d.getTime())) return d;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
 };
-
-// Alias usato dai calcoli di Analytics (range settimana/mese corrente e storico serie).
-// Prima mancava questa definizione: l'app andava in crash con
-// "parseLocalDate is not defined" ad ogni render, perché è invocata già nei
-// useMemo calcolati subito dopo il login (non solo aprendo la tab Progressi).
-const parseLocalDate = parseSafeDate;
 
 export default function TopGymApp() {
   const [user, setUser] = useState<any>(null);
@@ -192,6 +185,7 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
+  // Tab estesi con Coach Dashboard, Records e Goals
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
   >('workout');
@@ -202,15 +196,14 @@ export default function TopGymApp() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Timer resiliente
+  // TIMER RESILIENTE CON TIMESTAMP ASSOLUTO
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
 
-  // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
-  // METODO TOPGYM
+  // METODO TOPGYM (MACRO, MESO, MICROCICLO)
   const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
   const [manualWeek, setManualWeek] = useState<MicroWeek | null>(null);
 
@@ -343,6 +336,7 @@ export default function TopGymApp() {
     [athletes, targetUserId]
   );
 
+  // Caricamento atleti e XP salvato
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
@@ -625,6 +619,7 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
+  // APERTURA DIRETTA MODALE PIN COACH
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH') {
       setShowCoachPinModal(true);
@@ -970,7 +965,7 @@ export default function TopGymApp() {
     const exName = currentExercise?.name || 'Esercizio';
     const effectiveCalc = computeEffectiveLoad(exName, numWeight, numReps, sessionBodyWeight);
 
-    const calc1RMWeight = effectiveCalc.effectiveLoad !== null && effectiveCalc.effectiveLoad !== undefined ? effectiveCalc.effectiveLoad : numWeight;
+    const calc1RMWeight = effectiveCalc.effectiveLoad !== null ? effectiveCalc.effectiveLoad : numWeight;
     const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
     const newLog: SetLog = {
@@ -1020,6 +1015,7 @@ export default function TopGymApp() {
                       ...ex,
                       name: builderExName.trim(),
                       muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+                      stimulusType: builderStimulus,
                       sets: builderSets,
                       reps: builderReps,
                       targetWeight: builderWeight,
@@ -1039,9 +1035,10 @@ export default function TopGymApp() {
       handleCancelEdit();
     } else {
       const newEx: Exercise = {
-        id: makeId(),
+        id: crypto.randomUUID(),
         name: builderExName.trim(),
         muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
+        stimulusType: builderStimulus,
         sets: builderSets,
         reps: builderReps,
         targetWeight: builderWeight,
@@ -1208,6 +1205,23 @@ export default function TopGymApp() {
       return { key: item.id || item._id || `session-${idx}`, dateStr, volume, avgIntensity };
     });
   }, [workoutHistory, best1RMByExercise]);
+
+  const calculatedCurrentWeek: MicroWeek = useMemo(() => {
+    if (manualWeek !== null) return manualWeek;
+    const daysInRoutine = Math.max(1, programDays.length || 4);
+    const completedCount = workoutHistory.length;
+    const computed = Math.floor(completedCount / daysInRoutine) + 1;
+    return Math.min(4, Math.max(1, computed)) as MicroWeek;
+  }, [manualWeek, programDays.length, workoutHistory.length]);
+
+  const getMicroWeekDescription = (week: MicroWeek) => {
+    switch (week) {
+      case 1: return { title: 'Week 1 · Intro & Accumulo', desc: 'RIR 2 (buffer 2 reps). Esegui con carichi target senza arrivare al limite.' };
+      case 2: return { title: 'Week 2 · Sovraccarico Progressivo', desc: 'RIR 1-2. Spingi per incrementare 1 ripetizione o carico (+1-2.5 kg).' };
+      case 3: return { title: 'Week 3 · Overreaching Controllato', desc: 'RIR 0 sull\'ultima serie. Massima spremitura muscolare prima del riposo.' };
+      case 4: return { title: 'Week 4 · Deload / Scarico Attivo', desc: '-40% Volume (2 serie per esercizio), RIR 3-4, nessuna tecnica d\'intensità. Dissipa la fatica.' };
+    }
+  };
 
   if (!user) {
     return (
@@ -1507,6 +1521,25 @@ export default function TopGymApp() {
               </div>
             )}
 
+            {/* Banner Metodo TOPGYM */}
+            <div className="bg-gradient-to-r from-red-950/40 via-zinc-900 to-[#1E1E1E] border border-zinc-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
+                  Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità (Cut)'}
+                </span>
+                <h4 className="text-sm font-bold text-white mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).title}</h4>
+                <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).desc}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-mono font-bold bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800 text-yellow-400 block">
+                  Settimana {calculatedCurrentWeek} / 4 (Automatica)
+                </span>
+                <span className="text-[10px] text-zinc-500 mt-1 block">
+                  {workoutHistory.length} sessioni completate
+                </span>
+              </div>
+            </div>
+
             <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <h2 className="text-xl font-bold flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda: {programName}</h2>
@@ -1671,7 +1704,7 @@ export default function TopGymApp() {
                             <div>
                               <span className="font-bold text-white block">{log.exerciseName}</span>
                               <span className="text-zinc-400 font-mono text-[11px]">
-                                {log.isBodyweight && log.effectiveLoad !== null && log.effectiveLoad !== undefined ? (
+                                {log.isBodyweight && log.effectiveLoad !== null ? (
                                   <>Zavorra: {log.weight} Kg | Carico Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
                                 ) : (
                                   <>{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</>
@@ -1835,9 +1868,80 @@ export default function TopGymApp() {
           />
         )}
 
-        {/* TAB 6: BUILDER COACH */}
+        {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === 'builder' && userRole === 'COACH' && (
           <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
+            {/* CABINA DI REGIA PERIODIZZAZIONE (METODO TOPGYM) */}
+            <div className="bg-zinc-900 p-5 rounded-xl border border-zinc-800 space-y-4 mb-6">
+              <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Calendar className="text-[#E50914] w-4 h-4"/> Cabina di Regia Periodizzazione · Metodo TOPGYM
+                </h3>
+                <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                  1. Imposta Blocco / Mesociclo Attivo:
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
+                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                  >
+                    Blocco 1: Forza Ipertrofica[cite: 3, 4, 5]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
+                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                  >
+                    Blocco 2: Trasformazione[cite: 4, 5]
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
+                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                  >
+                    Blocco 3: Qualità / Cut[cite: 3]
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+                    2. Microciclo Settimanale (Auto = Week {calculatedCurrentWeek}):
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleApplyDeloadWeekToProgram}
+                    className="text-[11px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 hover:bg-amber-500/20 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Applica Deload (Week 4)[cite: 3, 4, 5]
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map(w => {
+                    const desc = getMicroWeekDescription(w as MicroWeek);
+                    const isSelected = calculatedCurrentWeek === w;
+                    return (
+                      <button
+                        key={w}
+                        type="button"
+                        onClick={() => setManualWeek(w as MicroWeek)}
+                        className={`p-2.5 rounded-lg border text-left transition text-xs ${isSelected ? 'bg-yellow-500 border-yellow-400 text-black font-black' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}
+                      >
+                        <b>{desc.title}</b>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
               <div className="space-y-2 flex-1 max-w-md">
                 <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
@@ -1930,6 +2034,35 @@ export default function TopGymApp() {
                 </div>
 
                 <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                      Preset Stimolo Metodo TOPGYM:
+                    </span>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTopGymPreset('NEURAL')}
+                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
+                      >
+                        ⚡ Neurale (4-6 reps · 3')[cite: 4, 5, 6]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
+                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
+                      >
+                        💪 Ipertrofico (8-10 reps · 90s)[cite: 4, 5, 6]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTopGymPreset('METABOLIC')}
+                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
+                      >
+                        🔥 Metabolico (12-15 reps · 60s)[cite: 4, 5, 6]
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                     <input 
                       type="text" 
@@ -1971,7 +2104,7 @@ export default function TopGymApp() {
                   <div className="flex gap-2">
                     <input 
                       type="text" 
-                      placeholder="Note del Coach (opzionale)" 
+                      placeholder="Note del Coach (Metodo TOPGYM)" 
                       value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
                       onChange={e => setBuilderNotes(e.target.value)} 
                       className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
@@ -2007,7 +2140,7 @@ export default function TopGymApp() {
             <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
               {builderSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">{builderSuccessMessage}</div>}
               <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
-                <span>💾 Salva e Assegna Scheda all'Atleta ({activeAthlete.displayName})</span>
+                <span>💾 Salva e Assegna Scheda Metodo TOPGYM ({activeAthlete.displayName})</span>
               </button>
             </div>
           </div>
@@ -2038,7 +2171,7 @@ export default function TopGymApp() {
                   <h3 className="font-bold text-base text-white flex items-center gap-2">
                     <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale
                   </h3>
-                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana[cite: 3, 5]</span>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -2059,7 +2192,7 @@ export default function TopGymApp() {
               </div>
 
               <div className="text-[11px] text-zinc-400 font-bold bg-zinc-900/50 p-2 rounded text-center border border-zinc-800/50">
-                Mostrando i dati per la settimana: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
+                Mostrando i dati per la settimana (Lunedì-Domenica): <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
                 <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
               </div>
 
@@ -2086,8 +2219,8 @@ export default function TopGymApp() {
                       </div>
                       <div className="flex justify-between text-[10px] text-zinc-500">
                         <span>0 serie</span>
-                        <span>10 (MEV)</span>
-                        <span>20+ (MRV)</span>
+                        <span>10 (MEV)[cite: 3, 5]</span>
+                        <span>20+ (MRV)[cite: 3, 5]</span>
                       </div>
                     </div>
                   );
@@ -2209,7 +2342,7 @@ export default function TopGymApp() {
                                           <div key={lIdx} className="bg-zinc-900 border border-zinc-800 p-2 rounded text-[11px]">
                                             <div className="font-bold text-white mb-1">{log.exerciseName}</div>
                                             <div className="text-zinc-400 flex justify-between flex-wrap">
-                                              {log.isBodyweight && log.effectiveLoad !== null && log.effectiveLoad !== undefined ? (
+                                              {log.isBodyweight && log.effectiveLoad !== null ? (
                                                 <span>BW: +{log.weight} kg (Effettivo: {log.effectiveLoad} kg) × {log.reps}</span>
                                               ) : (
                                                 <span>{log.weight} kg × {log.reps}</span>
