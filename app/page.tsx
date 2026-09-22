@@ -24,7 +24,7 @@ import NotificationBell from '@/components/NotificationBell';
 import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
-import { processDynamicWorkout } from '@/lib/topgym-engine';
+import { processDynamicWorkout, applyPhaseToProgram } from '@/lib/topgym-engine';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -325,6 +325,7 @@ export default function TopGymApp() {
     setBuilderTut('2-0-1-0');
   };
 
+  
   const handleApplyDeloadWeekToProgram = () => {
     if (!window.confirm('Vuoi convertire la scheda in SETTIMANA DI SCARICO (-40% volume, carichi submassimali, nessuna tecnica d\'intensità)?')) return;
     setProgramDays(prevDays => prevDays.map(day => ({
@@ -340,6 +341,14 @@ export default function TopGymApp() {
     setManualWeek(3); // La fase 3 è sempre lo Scarico/Deload nel nuovo sistema
     setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Scarico (Fase III)!');
     setTimeout(() => setBuilderSuccessMessage(null), 4000);
+  };
+
+  const handleApplyEngineToCurrentProgram = () => {
+    if (!window.confirm(`Vuoi aggiornare tutti gli esercizi della scheda con le regole del ${currentBlock} · Fase ${calculatedCurrentPhase}?`)) return;
+    const updated = applyPhaseToProgram(programDays as any, currentBlock, calculatedCurrentPhase);
+    setProgramDays(updated as any);
+    setBuilderSuccessMessage(`⚡ Scheda aggiornata con successo alle regole del ${currentBlock} · Fase ${calculatedCurrentPhase}! Ora puoi visionarla o modificarla.`);
+    setTimeout(() => setBuilderSuccessMessage(null), 5000);
   };
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
@@ -2020,13 +2029,23 @@ export default function TopGymApp() {
                   <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
                     2. Fasi del Microciclo (Fase Attuale Auto = <b className="text-yellow-400">Fase {calculatedCurrentPhase}</b>):
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleApplyDeloadWeekToProgram}
-                    className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
-                  </button>
+                  
+                  <div className="flex items-center gap-2 flex-wrap">
+  <button
+    type="button"
+    onClick={handleApplyEngineToCurrentProgram}
+    className="text-xs bg-[#E50914] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg font-black flex items-center gap-1.5 shadow-md cursor-pointer transition"
+  >
+    ⚡ Applica Progressione Motore alla Scheda
+  </button>
+  <button
+    type="button"
+    onClick={handleApplyDeloadWeekToProgram}
+    className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
+  >
+    <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
+  </button>
+</div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
