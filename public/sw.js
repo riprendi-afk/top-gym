@@ -1,3 +1,12 @@
+// Forza l'attivazione immediata del Service Worker senza attendere la chiusura delle schede
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+  });
+  
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+  });
+  
 self.addEventListener('push', function (event) {
     let data = {};
     

@@ -13,19 +13,50 @@ function urlBase64ToUint8Array(base64String: string) {
     userId: string,
     supabaseClient?: any
   ): Promise<{ success: boolean; message: string }> {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (typeof window === 'undefined') {
+      return { success: false, message: 'Ambiente non valido.' };
+    }
+  
+    // 1. Rileva se l'utente è su iPhone/iPad (iOS)
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+  
+    // Su iOS Apple consente i Web Push SOLO se l'app è installata sulla Home
+    if (isIos && !isStandalone) {
+      return {
+        success: false,
+        message: '📱 Su iPhone tocca il tasto Condividi (quadrato con freccia) e seleziona "Aggiungi alla schermata Home" per attivare le notifiche.'
+      };
+    }
+  
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       return { success: false, message: 'Le notifiche push non sono supportate da questo browser/dispositivo.' };
+    }
+  
+    // Controllo preventivo permessi bloccati
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      return {
+        success: false,
+        message: '⚠️ Notifiche bloccate! Tocca il lucchetto/cursori a sinistra dell\'indirizzo web e imposta Notifiche su "Consenti".'
+      };
     }
   
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!publicKey) {
-      return { success: false, message: 'Chiave VAPID pubblica mancante (NEXT_PUBLIC_VAPID_PUBLIC_KEY).' };
+      return { success: false, message: 'Chiave VAPID pubblica mancante.' };
     }
   
     try {
       const permission = await Notification.requestPermission();
+      if (permission === 'denied') {
+        return {
+          success: false,
+          message: '⚠️ Permesso rifiutato. Per abilitarle in seguito dovrai consentirle dalle impostazioni del browser.'
+        };
+      }
+  
       if (permission !== 'granted') {
-        return { success: false, message: 'Permesso per le notifiche rifiutato dal browser o sistema operativo.' };
+        return { success: false, message: 'Permesso per le notifiche rifiutato.' };
       }
   
       // Registra e attendi il Service Worker
@@ -37,7 +68,7 @@ function urlBase64ToUint8Array(base64String: string) {
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey)
+          applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource
         });
       }
   
@@ -49,7 +80,7 @@ function urlBase64ToUint8Array(base64String: string) {
           .from('push_subscriptions')
           .delete()
           .eq('user_id', userId);
-
+  
         // 2. Inserisce la nuova subscription valida
         const { error } = await supabaseClient
           .from('push_subscriptions')
@@ -57,7 +88,7 @@ function urlBase64ToUint8Array(base64String: string) {
             user_id: userId,
             subscription: subJson
           });
-
+  
         if (error) {
           console.error('Errore salvataggio Supabase subscription:', error);
           throw error;
@@ -73,8 +104,6 @@ function urlBase64ToUint8Array(base64String: string) {
   
   export async function sendPushNotification(userId: string, title: string, body: string, url: string = '/') {
     try {
-      // NOTA: Se la tua route è app/api/push/send/route.ts usa '/api/push/send'
-      // Se la route è app/api/send-push/route.ts usa '/api/send-push'
       const endpoint = '/api/push/send'; 
   
       const res = await fetch(endpoint, {
@@ -89,7 +118,7 @@ function urlBase64ToUint8Array(base64String: string) {
       }
       return data;
     } catch (error) {
-      console.error('Errore chiamata sendPushNotification:', error);
+      console.error('Errore chiamata send-push:', error);
       return null;
     }
   }
