@@ -620,10 +620,13 @@ export default function TopGymApp() {
   };
 
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
-    if (targetRole === 'COACH' && userRole !== 'COACH') setShowCoachPinModal(true);
-    else {
+    if (targetRole === 'COACH') {
+      setShowCoachPinModal(true);
+    } else {
       setUserRole('ATHLETE');
-      if (activeTab === 'builder' || activeTab === 'coachDashboard') setActiveTab('workout');
+      if (activeTab === 'builder' || activeTab === 'coachDashboard') {
+        setActiveTab('workout');
+      }
     }
   };
 
