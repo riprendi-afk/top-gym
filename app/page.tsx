@@ -15,7 +15,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
@@ -185,7 +185,6 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab estesi con Coach Dashboard, Records e Goals
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
   >('workout');
@@ -196,14 +195,14 @@ export default function TopGymApp() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // TIMER RESILIENTE CON TIMESTAMP ASSOLUTO
+  // Timer resiliente
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
 
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
-  // METODO TOPGYM (MACRO, MESO, MICROCICLO)
+  // METODO TOPGYM
   const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
   const [manualWeek, setManualWeek] = useState<MicroWeek | null>(null);
 
@@ -305,7 +304,7 @@ export default function TopGymApp() {
     setBuilderNotes('');
     setBuilderSets(3);
     setBuilderReps('8-10');
-    setBuilderWeight('60');
+    setBuilderWeight('0');
     setBuilderRpe(8);
     setBuilderRest(90);
     setBuilderType('REGULAR');
@@ -336,7 +335,6 @@ export default function TopGymApp() {
     [athletes, targetUserId]
   );
 
-  // Caricamento atleti e XP salvato
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
@@ -619,7 +617,6 @@ export default function TopGymApp() {
     setIsTimerRunning(true);
   };
 
-  // APERTURA DIRETTA MODALE PIN COACH
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
     if (targetRole === 'COACH') {
       setShowCoachPinModal(true);
@@ -782,6 +779,13 @@ export default function TopGymApp() {
     }
   };
 
+  // Pulsanti rapidi + / - per il carico
+  const adjustWeight = (delta: number) => {
+    const current = parseFloat(weight) || 0;
+    const updated = Math.max(0, current + delta);
+    setWeight(updated.toString());
+  };
+
   const computeReadiness = useCallback(() => {
     const sleepFactor = (sleepQuality * 10) * 0.35;
     const energyFactor = (energyLevel * 10) * 0.30;
@@ -865,7 +869,6 @@ export default function TopGymApp() {
     return logs.filter(l => l.date === today);
   }, [logs]);
 
-  // SALVATAGGIO WORKOUT PROTETTO E ROBUSTO
   const handleFinishAndSaveWorkout = async () => {
     if (isSavingWorkout) return;
     setIsSavingWorkout(true);
@@ -896,7 +899,7 @@ export default function TopGymApp() {
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
-      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. I log restano salvati in locale, riprova.`);
+      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`);
       setTimeout(() => setWorkoutSuccessMessage(null), 8000);
     }
   };
@@ -923,29 +926,26 @@ export default function TopGymApp() {
     }
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
-      
       if (supabase && targetId) {
         try {
           await supabase.from('notifications').insert([{
             user_id: targetId,
-            title: 'Nuova Scheda di Allenamento!',
+            title: 'Nuova Scheda Metodo TOPGYM!',
             message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
             type: 'program_assigned'
           }]);
         } catch {}
       }
-
       if (targetId && targetId !== 'default-user') {
         try {
           await sendPushNotification(
             targetId,
             'Nuova Scheda Assegnata! 🏋️',
-            `Il Coach ha aggiornato il tuo programma di allenamento (${programName || 'Nuova scheda'}).`,
+            `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || 'Nuova scheda'}).`,
             '/'
           );
         } catch {}
       }
-
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } else {
       const detail = result?.error ? ` (${result.error})` : '';
@@ -1297,38 +1297,38 @@ export default function TopGymApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-4 md:p-8">
-      <header className="max-w-5xl mx-auto bg-[#1E1E1E] rounded-xl p-6 border border-zinc-800 shadow-2xl mb-8">
+    <div className="min-h-screen bg-[#090A0D] text-white font-sans p-4 md:p-8 pb-28">
+      <header className="max-w-5xl mx-auto bg-[#12151B] rounded-2xl p-5 border border-white/10 shadow-2xl mb-6 backdrop-blur-md">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
-              <Dumbbell className="w-8 h-8" /> TOP GYM
+            <h1 className="text-2xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
+              <Dumbbell className="w-7 h-7" /> TOP GYM
             </h1>
-            <p className="text-sm text-zinc-300 mt-1 font-bold">Utente: <span className="text-[#E50914]">{displayUserName}</span></p>
+            <p className="text-xs text-zinc-400 mt-1">Utente: <span className="text-white font-bold">{displayUserName}</span></p>
 
             <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs font-bold">
+              <div className="flex bg-black/50 p-1 rounded-xl border border-white/5 text-xs font-semibold">
                 <button
                   onClick={() => handleRoleSwitchRequest('ATHLETE')}
-                  className={`px-3 py-1 rounded transition-all flex items-center gap-1 ${userRole === 'ATHLETE' ? 'bg-[#E50914] text-white' : 'text-zinc-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${userRole === 'ATHLETE' ? 'bg-[#E50914] text-white shadow font-bold' : 'text-zinc-400 hover:text-white'}`}
                 >
                   <Eye className="w-3.5 h-3.5" /> Atleta
                 </button>
                 <button
                   onClick={() => handleRoleSwitchRequest('COACH')}
-                  className={`px-3 py-1 rounded transition-all flex items-center gap-1 ${userRole === 'COACH' ? 'bg-[#E50914] text-white' : 'text-zinc-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${userRole === 'COACH' ? 'bg-[#E50914] text-white shadow font-bold' : 'text-zinc-400 hover:text-white'}`}
                 >
-                  {userRole === 'COACH' ? <Unlock className="w-3.5 h-3.5 text-green-400" /> : <Lock className="w-3.5 h-3.5" />} Trainer / Coach
+                  {userRole === 'COACH' ? <Unlock className="w-3.5 h-3.5 text-green-400" /> : <Lock className="w-3.5 h-3.5" />} Coach
                 </button>
               </div>
 
               {userRole === 'COACH' && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
                   <span className="text-zinc-400 text-xs font-bold">Gestisci Atleta:</span>
                   <select
                     value={activeAthleteId}
                     onChange={e => setActiveAthleteId(e.target.value)}
-                    className="bg-zinc-950 border border-zinc-700 text-white text-xs rounded px-2.5 py-1 font-bold outline-none"
+                    className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 font-bold outline-none cursor-pointer"
                   >
                     {athletes.map(ath => (
                       <option key={ath.id} value={ath.id}>{ath.displayName}</option>
@@ -1339,46 +1339,39 @@ export default function TopGymApp() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto justify-between flex-wrap">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between flex-wrap">
             <div className="flex items-center gap-2">
               <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
 
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition"
+                className="p-2.5 bg-black/40 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition"
               >
-                {soundEnabled ? <Volume2 className="w-5 h-5 text-green-400" /> : <VolumeX className="w-5 h-5 text-zinc-600" />}
+                {soundEnabled ? <Volume2 className="w-4 h-4 text-green-400" /> : <VolumeX className="w-4 h-4 text-zinc-600" />}
               </button>
-
-              {restTimer !== null && (
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border font-mono font-bold ${restTimer === 0 ? 'bg-green-950 border-green-600 text-green-400' : 'bg-red-950/40 border-[#E50914] text-white'}`}>
-                  <Timer className="w-5 h-5 animate-pulse text-[#E50914]" />
-                  <span>{restTimer === 0 ? 'RECUPERO FINE!' : `${Math.floor(restTimer / 60)}:${(restTimer % 60).toString().padStart(2, '0')}`}</span>
-                </div>
-              )}
             </div>
 
             {latestReadiness && (
-              <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
-                <Gauge className={`w-5 h-5 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
+              <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
+                <Gauge className={`w-4 h-4 ${latestReadiness.readinessScore >= 80 ? 'text-green-400' : 'text-yellow-400'}`} />
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-bold">READINESS</div>
-                  <div className="text-sm font-black">{latestReadiness.readinessScore}%</div>
+                  <div className="text-[9px] text-zinc-400 uppercase font-bold">READINESS</div>
+                  <div className="text-xs font-black">{latestReadiness.readinessScore}%</div>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
-              <Shield className="text-yellow-500 w-5 h-5 flex-shrink-0" />
-              <div className="w-36">
-                <div className="text-[10px] text-yellow-500 font-black uppercase tracking-wider truncate">
+            <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
+              <Shield className="text-yellow-500 w-4 h-4 flex-shrink-0" />
+              <div className="w-32">
+                <div className="text-[9px] text-yellow-500 font-black uppercase tracking-wider truncate">
                   {userRank}
                 </div>
-                <div className="flex justify-between items-center text-[10px] text-zinc-400 font-bold">
+                <div className="flex justify-between items-center text-[9px] text-zinc-400 font-bold">
                   <span>Lvl {userLevel}/99</span>
                   <span className="font-mono">{userXp} XP</span>
                 </div>
-                <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-0.5 overflow-hidden">
+                <div className="w-full bg-zinc-800 h-1 rounded-full mt-0.5 overflow-hidden">
                   <div className="bg-yellow-500 h-full transition-all duration-300" style={{ width: `${levelProgressPercentage}%` }} />
                 </div>
               </div>
@@ -1386,7 +1379,7 @@ export default function TopGymApp() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-2 rounded-lg"
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-black/40 border border-white/5 px-3 py-2.5 rounded-xl"
             >
               <LogOut className="w-4 h-4 text-red-500"/> Esci
             </button>
@@ -1396,9 +1389,9 @@ export default function TopGymApp() {
 
       {/* PIN COACH MODAL (Z-INDEX GARANTITO) */}
       {showCoachPinModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-          <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 max-w-sm w-full shadow-2xl">
-            <h3 className="text-xl font-black text-white mb-2 flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
               <Lock className="text-[#E50914]" /> Area Riservata Coach
             </h3>
             <p className="text-xs text-zinc-400 mb-4">Inserisci il PIN (default: 1234) per accedere alla gestione coach.</p>
@@ -1408,77 +1401,79 @@ export default function TopGymApp() {
                 value={pinInput}
                 onChange={e => setPinInput(e.target.value)}
                 placeholder="PIN"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded px-4 py-2.5 text-center text-lg font-mono text-white outline-none focus:border-[#E50914]"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-center text-xl font-mono text-white outline-none focus:border-[#E50914]"
                 autoFocus
               />
               {pinError && <p className="text-xs text-[#E50914] text-center font-bold">PIN Errato o non autorizzato!</p>}
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setShowCoachPinModal(false); setPinInput(''); setPinError(false); }} className="w-1/2 bg-zinc-800 py-2 rounded text-xs font-bold text-zinc-300">Annulla</button>
-                <button type="submit" className="w-1/2 bg-[#E50914] py-2 rounded text-xs font-bold text-white uppercase">Sblocca</button>
+                <button type="button" onClick={() => { setShowCoachPinModal(false); setPinInput(''); setPinError(false); }} className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300 cursor-pointer">Annulla</button>
+                <button type="submit" className="w-1/2 bg-[#E50914] hover:brightness-110 py-2.5 rounded-xl text-xs font-bold text-white uppercase cursor-pointer">Sblocca</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* TABS PRINCIPALI */}
-      <div className="max-w-5xl mx-auto flex flex-wrap gap-2 mb-6">
-        {userRole === 'ATHLETE' && (
-          <button onClick={() => setActiveTab('workout')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-            Esegui Allenamento
-          </button>
-        )}
-
-        <button onClick={() => setActiveTab('readiness')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-          <Gauge className="w-4 h-4 text-green-400" /> Check Readiness
-        </button>
-
-        <button onClick={() => setActiveTab('records')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'records' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-          <Trophy className="w-4 h-4 text-yellow-500" /> Record Personali
-        </button>
-
-        <button onClick={() => setActiveTab('goals')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'goals' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-          <Target className="w-4 h-4 text-[#E50914]" /> Obiettivi
-        </button>
-
-        <button onClick={() => setActiveTab('analytics')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-          <TrendingUp className="w-4 h-4" /> Progressi
-        </button>
-
-        {userRole === 'COACH' && (
-          <>
-            <button
-              onClick={() => setActiveTab('coachDashboard')}
-              className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'coachDashboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}
-            >
-              <Users className="w-4 h-4" /> Dashboard Atleti
+      {/* NAVBAR A SCORRIMENTO MODERNA */}
+      <nav className="max-w-5xl mx-auto mb-6">
+        <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-[#12151B] backdrop-blur-md border border-white/10 rounded-2xl scrollbar-none shadow-lg">
+          {userRole === 'ATHLETE' && (
+            <button onClick={() => setActiveTab('workout')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+              Esegui Allenamento
             </button>
-            <button
-              onClick={() => setActiveTab('builder')}
-              className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}
-            >
-              <UserCheck className="w-4 h-4" /> Gestisci Scheda (Coach)
-            </button>
-          </>
-        )}
+          )}
 
-        <button onClick={() => setActiveTab('leaderboard')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-          <Medal className="w-4 h-4 text-yellow-500" /> Classifica & Badge
-        </button>
-
-        {userRole === 'ATHLETE' && (
-          <button onClick={() => setActiveTab('settings')} className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'bg-[#E50914] text-white' : 'bg-[#1E1E1E] text-zinc-400 hover:text-white'}`}>
-            <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
+          <button onClick={() => setActiveTab('readiness')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'readiness' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+            <Gauge className="w-4 h-4 text-green-400" /> Check Readiness
           </button>
-        )}
-      </div>
 
-      <main className="max-w-5xl mx-auto">
+          <button onClick={() => setActiveTab('records')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'records' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+            <Trophy className="w-4 h-4 text-yellow-500" /> Record
+          </button>
+
+          <button onClick={() => setActiveTab('goals')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'goals' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+            <Target className="w-4 h-4 text-[#E50914]" /> Obiettivi
+          </button>
+
+          <button onClick={() => setActiveTab('analytics')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'analytics' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+            <TrendingUp className="w-4 h-4 text-blue-400" /> Progressi
+          </button>
+
+          {userRole === 'COACH' && (
+            <>
+              <button
+                onClick={() => setActiveTab('coachDashboard')}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'coachDashboard' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}
+              >
+                <Users className="w-4 h-4 text-indigo-400" /> Dashboard Atleti
+              </button>
+              <button
+                onClick={() => setActiveTab('builder')}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'builder' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}
+              >
+                <UserCheck className="w-4 h-4 text-emerald-400" /> Gestisci Scheda (Coach)
+              </button>
+            </>
+          )}
+
+          <button onClick={() => setActiveTab('leaderboard')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'leaderboard' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+            <Medal className="w-4 h-4 text-yellow-500" /> Classifica
+          </button>
+
+          {userRole === 'ATHLETE' && (
+            <button onClick={() => setActiveTab('settings')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'settings' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
+              <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
+            </button>
+          )}
+        </div>
+      </nav>
+
+      <main className="max-w-5xl mx-auto space-y-6">
         {/* Banner Notifiche per Atleta */}
         {showPushBanner && userRole === 'ATHLETE' && (
-          <div className="bg-gradient-to-r from-red-950/80 to-zinc-900 border border-[#E50914] p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg animate-pulse">
+          <div className="bg-gradient-to-r from-red-950/80 to-[#12151B] border border-[#E50914]/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#E50914] text-white rounded-lg">
+              <div className="p-2.5 bg-[#E50914] text-white rounded-xl">
                 <Bell className="w-5 h-5" />
               </div>
               <div>
@@ -1500,7 +1495,7 @@ export default function TopGymApp() {
                 type="button"
                 disabled={pushLoading}
                 onClick={handlePushActivation}
-                className="w-full sm:w-auto bg-[#E50914] hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto bg-[#E50914] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer disabled:opacity-50"
               >
                 {pushLoading ? 'Attivazione...' : 'Attiva con 1 Click'}
               </button>
@@ -1512,7 +1507,7 @@ export default function TopGymApp() {
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
-              <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-xl flex items-start gap-3 text-amber-300">
+              <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-xl flex items-start gap-3 text-amber-300 backdrop-blur-md">
                 <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-sm text-amber-200">Livello di Fatica Accumulata Elevato!</h4>
@@ -1522,7 +1517,7 @@ export default function TopGymApp() {
             )}
 
             {/* Banner Metodo TOPGYM */}
-            <div className="bg-gradient-to-r from-red-950/40 via-zinc-900 to-[#1E1E1E] border border-zinc-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl">
               <div>
                 <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
                   Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità (Cut)'}
@@ -1531,7 +1526,7 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).desc}</p>
               </div>
               <div className="text-right">
-                <span className="text-xs font-mono font-bold bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800 text-yellow-400 block">
+                <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-yellow-400 block">
                   Settimana {calculatedCurrentWeek} / 4 (Automatica)
                 </span>
                 <span className="text-[10px] text-zinc-500 mt-1 block">
@@ -1540,9 +1535,9 @@ export default function TopGymApp() {
               </div>
             </div>
 
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-                <h2 className="text-xl font-bold flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda: {programName}</h2>
+                <h2 className="text-xl font-black text-white flex items-center gap-2"><Dumbbell className="text-[#E50914]" /> Scheda: {programName}</h2>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 {programDays.map((day, index) => (
@@ -1550,7 +1545,7 @@ export default function TopGymApp() {
                     key={day.id}
                     type="button"
                     onClick={() => { setSelectedDayIndex(index); if (day.exercises[0]) setCurrentExId(day.exercises[0].id); }}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${selectedDayIndex === index ? 'bg-[#E50914] border-[#E50914] text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${selectedDayIndex === index ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-900 border-white/5 text-zinc-400'}`}
                   >
                     Giorno {day.dayNumber} · {day.title}
                   </button>
@@ -1559,21 +1554,37 @@ export default function TopGymApp() {
               <div className="grid gap-3 md:grid-cols-2">
                 {activeRoutine.map((ex) => {
                   const isBw = !!findBodyweightConfig(ex.name);
+                  const hasLoggedToday = logs.some(l => l.exerciseName === ex.name && l.date === todayIso());
                   return (
-                    <div key={ex.id} onClick={() => setCurrentExId(ex.id)} className={`p-4 rounded-lg border cursor-pointer transition-all ${currentExId === ex.id ? 'bg-red-950/20 border-[#E50914]' : 'bg-zinc-900 border-zinc-800'}`}>
+                    <div 
+                      key={ex.id} 
+                      onClick={() => setCurrentExId(ex.id)} 
+                      className={`p-4 rounded-xl border cursor-pointer transition-all relative overflow-hidden ${
+                        currentExId === ex.id 
+                          ? 'bg-zinc-900/90 border-[#E50914] ring-1 ring-[#E50914]/50 shadow-lg' 
+                          : 'bg-zinc-900/40 border-white/5 hover:border-zinc-700'
+                      }`}
+                    >
+                      {currentExId === ex.id && <div className="absolute top-0 left-0 w-1 h-full bg-[#E50914]" />}
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <span className="font-bold text-lg text-white block">{ex.name}</span>
-                          {isBw && <span className="text-[10px] text-purple-400 font-bold uppercase">Corpo Libero</span>}
+                          <span className="font-bold text-base text-white block">{ex.name}</span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-zinc-400 font-mono">
+                              {ex.stimulusType === 'NEURAL' ? '⚡ Neurale' : ex.stimulusType === 'METABOLIC' ? '🔥 Metabolico' : '💪 Ipertrofico'}
+                            </span>
+                            {isBw && <span className="text-[9px] text-purple-400 font-bold uppercase bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">Corpo Libero</span>}
+                            {hasLoggedToday && <span className="text-[9px] text-green-400 font-bold uppercase bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 flex items-center gap-1"><CheckCircle className="w-2.5 h-2.5"/> Completato oggi</span>}
+                          </div>
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-xs text-zinc-400 mt-2 border-t border-zinc-800/60 pt-2">
-                        <div>Serie/Reps: <b className="text-white">{ex.sets} × {ex.reps}</b></div>
-                        <div>Target: <b className="text-white">{ex.targetWeight} Kg</b></div>
-                        <div>TUT: <b className="text-yellow-500 font-mono">{ex.tut}</b></div>
+                      <div className="grid grid-cols-3 gap-2 text-xs bg-black/30 p-2.5 rounded-lg border border-white/5 mt-3">
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Serie/Reps</span><b className="text-white">{ex.sets} × {ex.reps}</b></div>
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Target</span><b className="text-white">{ex.targetWeight} Kg</b></div>
+                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">TUT</span><b className="text-yellow-500 font-mono">{ex.tut}</b></div>
                       </div>
-                      {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2 border-t border-zinc-800/40 pt-1">Note: {ex.notes}</div>}
+                      {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2.5 pt-2 border-t border-white/5">Note: {ex.notes}</div>}
                     </div>
                   );
                 })}
@@ -1581,25 +1592,23 @@ export default function TopGymApp() {
             </div>
 
             {currentExercise && (
-              <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-                <div className="mb-4 pb-4 border-b border-zinc-800 flex justify-between items-end flex-wrap gap-2">
+              <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-5">
+                <div className="pb-4 border-b border-white/10 flex justify-between items-end flex-wrap gap-2">
                   <div>
-                    <h3 className="text-2xl font-black text-white flex items-center gap-2">
+                    <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-[#E50914] px-2 py-0.5 rounded-md font-bold uppercase">
+                      In Esecuzione
+                    </span>
+                    <h3 className="text-2xl font-black text-white flex items-center gap-2 mt-1.5">
                       {currentExercise.name}
-                      {currentBodyweightConfig && (
-                        <span className="text-xs bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded-full font-bold">
-                          {Math.round(currentBodyweightConfig.percentage * 100)}% BW
-                        </span>
-                      )}
                     </h3>
-                    <p className="text-xs text-zinc-400 mt-1">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
                   </div>
                   {estimated1RMPreview !== null && (
-                    <div className="bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-lg text-right space-y-1">
-                      <div className="text-[10px] text-zinc-400 uppercase font-bold">1RM Stimato</div>
-                      <div className="text-lg font-black text-[#E50914]">{estimated1RMPreview} Kg</div>
+                    <div className="bg-black/40 border border-white/10 px-3.5 py-2 rounded-xl text-right">
+                      <div className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">1RM Stimato</div>
+                      <div className="text-xl font-black text-[#E50914]">{estimated1RMPreview} Kg</div>
                       {currentIntensityPreview && (
-                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase inline-block ${currentIntensityPreview.colorClasses}`}>
+                        <div className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase inline-block mt-1 ${currentIntensityPreview.colorClasses}`}>
                           {currentIntensityPreview.pct}% 1RM · {currentIntensityPreview.label}
                         </div>
                       )}
@@ -1609,30 +1618,32 @@ export default function TopGymApp() {
 
                 {/* CONFRONTO CON L'ULTIMA SESSIONE */}
                 {lastLoggedSet && (
-                  <div className="mb-4 bg-zinc-900/80 p-3 rounded-lg border border-zinc-800 flex items-center justify-between flex-wrap gap-2">
-                    <div className="text-xs text-zinc-400">
-                      Ultima volta:{' '}
-                      {lastLoggedSet.isBodyweight && lastLoggedSet.bodyWeightUsed ? (
-                        <b className="text-white">
-                          BW {lastLoggedSet.bodyWeightUsed} kg + {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
-                          {lastLoggedSet.effectiveLoad ? ` (Carico effettivo: ${lastLoggedSet.effectiveLoad} kg)` : ''}
-                        </b>
-                      ) : (
-                        <b className="text-white">
-                          {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
-                        </b>
-                      )}{' '}
-                      <span className="text-red-400">(RPE {lastLoggedSet.rpe})</span>
+                  <div className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div className="text-zinc-400 flex items-center gap-2">
+                      <History className="w-4 h-4 text-zinc-400" />
+                      <span>
+                        Ultima volta:{' '}
+                        {lastLoggedSet.isBodyweight && lastLoggedSet.bodyWeightUsed ? (
+                          <b className="text-white">
+                            BW {lastLoggedSet.bodyWeightUsed} kg + {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
+                          </b>
+                        ) : (
+                          <b className="text-white">
+                            {lastLoggedSet.externalLoad ?? lastLoggedSet.weight} kg × {lastLoggedSet.reps} reps
+                          </b>
+                        )}{' '}
+                        <span className="text-red-400 font-semibold">(RPE {lastLoggedSet.rpe})</span>
+                      </span>
                     </div>
-                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1 hover:underline">
+                    <button type="button" onClick={handleAutoFillLastLog} className="text-xs text-[#E50914] font-bold flex items-center gap-1.5 hover:underline cursor-pointer">
                       <Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico
                     </button>
                   </div>
                 )}
 
-                {/* INFO CARICO EFFETTIVO IN TEMPO REALE */}
+                {/* INFO CORPO LIBERO */}
                 {currentBodyweightConfig && (
-                  <div className="mb-4 bg-purple-950/20 border border-purple-900/40 p-3 rounded-lg text-xs text-purple-200">
+                  <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl text-xs text-purple-200">
                     <span className="font-bold">Modalità Corpo Libero ({Math.round(currentBodyweightConfig.percentage * 100)}%): </span>
                     {sessionBodyWeight ? (
                       <span>
@@ -1642,7 +1653,7 @@ export default function TopGymApp() {
                       </span>
                     ) : (
                       <span className="text-amber-300">
-                        ⚠️ Nessun peso inserito nel Check Readiness. Il carico effettivo resterà non calcolato.
+                        ⚠️ Nessun peso inserito nel Check Readiness.
                       </span>
                     )}
                   </div>
@@ -1650,10 +1661,16 @@ export default function TopGymApp() {
 
                 <form onSubmit={handleLogSet} className="space-y-4">
                   <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-400 mb-1">
-                        {currentBodyweightConfig ? 'Zavorra (0 = No Zavorra)' : 'Carico (Kg)'}
-                      </label>
+                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] uppercase font-bold text-zinc-400">
+                          {currentBodyweightConfig ? 'Zavorra (Kg)' : 'Carico (Kg)'}
+                        </label>
+                        <div className="flex gap-1">
+                          <button type="button" onClick={() => adjustWeight(-2.5)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold rounded text-zinc-300">-2.5</button>
+                          <button type="button" onClick={() => adjustWeight(2.5)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold rounded text-zinc-300">+2.5</button>
+                        </div>
+                      </div>
                       <input 
                         type="number" 
                         step="0.5" 
@@ -1662,11 +1679,11 @@ export default function TopGymApp() {
                         value={weight} 
                         onChange={e => setWeight(e.target.value)} 
                         placeholder={currentBodyweightConfig ? '0' : '80'} 
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]" 
+                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-400 mb-1">Reps</label>
+                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Reps</label>
                       <input 
                         type="number" 
                         min="1"
@@ -1674,70 +1691,70 @@ export default function TopGymApp() {
                         value={reps} 
                         onChange={e => setReps(e.target.value)} 
                         placeholder="8" 
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]" 
+                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-400 mb-1">RPE</label>
-                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none">
-                        {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val}>{val}</option>))}
+                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">RPE</label>
+                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-transparent text-lg font-black text-white outline-none cursor-pointer">
+                        {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val} className="bg-zinc-900 text-white">RPE {val}</option>))}
                       </select>
                       {rpeTablePreviewPct !== null && (
-                        <p className="text-[10px] text-zinc-500 mt-1">≈ {rpeTablePreviewPct}% del 1RM a {parseInt(reps, 10) || 1} reps</p>
+                        <p className="text-[9px] text-zinc-500 mt-1 font-semibold truncate">≈ {rpeTablePreviewPct}% 1RM</p>
                       )}
                     </div>
                   </div>
-                  <button type="submit" className="w-full bg-[#E50914] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase hover:bg-red-700 transition cursor-pointer">
-                    <Plus className="w-5 h-5"/> Registra Serie (+10 XP)
+                  <button type="submit" className="w-full bg-gradient-to-r from-[#E50914] to-red-600 hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase text-sm tracking-wider cursor-pointer shadow-lg">
+                    <Plus className="w-5 h-5 inline mr-1"/> Registra Serie (+10 XP)
                   </button>
                 </form>
 
                 <div className="mt-6">
-                  <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Serie Registrate Oggi</h4>
+                  <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">Serie Registrate Oggi ({todayLogs.length})</h4>
                   <div className="space-y-2">
-                    {todayLogs.map((log, i) => {
-                      const intensity = getIntensityInfo(log.exerciseName, log.effectiveLoad || log.weight);
-                      return (
-                        <div key={log.id} className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 flex justify-between items-center text-xs">
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-zinc-500">Set {i + 1}</span>
-                            <div>
-                              <span className="font-bold text-white block">{log.exerciseName}</span>
-                              <span className="text-zinc-400 font-mono text-[11px]">
-                                {log.isBodyweight && log.effectiveLoad !== null ? (
-                                  <>Zavorra: {log.weight} Kg | Carico Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
-                                ) : (
-                                  <>{log.weight} Kg × {log.reps} reps (RPE {log.rpe})</>
-                                )}
-                              </span>
-                            </div>
-                            {intensity && (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${intensity.colorClasses}`}>
-                                {intensity.pct}% 1RM · {intensity.label}
-                              </span>
-                            )}
+                    {todayLogs.map((log, i) => (
+                      <div key={log.id} className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-zinc-500 font-mono w-10">#{i + 1}</span>
+                          <div>
+                            <span className="font-bold text-white block">{log.exerciseName}</span>
+                            <span className="text-zinc-400 font-mono text-[11px]">
+                              {log.isBodyweight && log.effectiveLoad !== null ? (
+                                <>Zav: {log.weight} Kg · Effettivo: <b className="text-white">{log.effectiveLoad} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                              ) : (
+                                <><b className="text-white">{log.weight} Kg</b> × {log.reps} reps (RPE {log.rpe})</>
+                              )}
+                            </span>
                           </div>
-                          <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
-                      );
-                    })}
+                        <button type="button" onClick={() => handleDeleteLog(log.id)} title="Elimina serie" className="p-2 text-zinc-500 hover:text-rose-400 rounded-lg transition cursor-pointer">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="mt-8 pt-6 border-t border-zinc-800 space-y-4">
-              {workoutSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-xl text-center font-bold text-sm">{workoutSuccessMessage}</div>}
+            {/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
+            <div className="fixed bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {restTimer !== null ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
+                    <Timer className="w-4 h-4 animate-pulse" />
+                    <span>Recupero: {Math.floor(restTimer / 60)}:{(restTimer % 60).toString().padStart(2, '0')}</span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-zinc-400 font-medium">Sessione in corso · {todayLogs.length} set registrati</span>
+                )}
+              </div>
               <button
                 onClick={handleFinishAndSaveWorkout}
                 disabled={isSavingWorkout}
-                className={`w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-black py-4 rounded-xl uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 text-base cursor-pointer ${
-                  isSavingWorkout ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="bg-emerald-600 hover:brightness-110 text-white font-black px-6 py-3 rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all disabled:opacity-50"
               >
-                <span>{isSavingWorkout ? 'Salvataggio in corso...' : '✅ Termina e Salva Allenamento'}</span>
+                {isSavingWorkout ? 'Salvataggio...' : 'Termina e Salva'}
               </button>
             </div>
           </div>
@@ -1745,35 +1762,29 @@ export default function TopGymApp() {
 
         {/* TAB 2: RECORD PERSONALI */}
         {activeTab === 'records' && (
-          <PersonalRecords 
-            workoutHistory={workoutHistory} 
-            currentLogs={logs} 
-            athleteName={targetAthleteName} 
-          />
+          <PersonalRecords workoutHistory={workoutHistory} currentLogs={logs} athleteName={targetAthleteName} />
         )}
 
         {/* TAB 3: OBIETTIVI */}
         {activeTab === 'goals' && (
-          <AthleteGoals 
-            athleteId={targetUserId} 
-            athleteName={targetAthleteName} 
-            userRole={userRole} 
-          />
+          <AthleteGoals athleteId={targetUserId} athleteName={targetAthleteName} userRole={userRole} />
         )}
 
         {/* TAB 4: READINESS */}
         {activeTab === 'readiness' && (
           <div className="space-y-6">
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
               {userRole === 'ATHLETE' && (
                 <div>
-                  <h2 className="text-xl font-bold flex items-center gap-2"><Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma</h2>
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                    <Gauge className="text-green-400"/> Check-in Giornaliero dello Stato di Forma
+                  </h2>
                   <p className="text-xs text-zinc-400 mt-1">Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.</p>
                 </div>
               )}
 
               {readinessSuccessMessage && (
-                <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">
                   {readinessSuccessMessage}
                 </div>
               )}
@@ -1783,11 +1794,11 @@ export default function TopGymApp() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Moon className="w-4 h-4 text-indigo-400"/> Ore di Sonno</label>
-                      <input type="number" step="0.5" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"/>
+                      <input type="number" step="0.5" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-[#E50914]"/>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-zinc-400 mb-1 flex items-center gap-1.5"><Scale className="w-4 h-4 text-blue-400"/> Peso Corporeo (Kg)</label>
-                      <input type="number" step="0.1" value={bodyWeight} onChange={e => setBodyWeight(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white font-bold outline-none focus:border-[#E50914]"/>
+                      <input type="number" step="0.1" value={bodyWeight} onChange={e => setBodyWeight(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-[#E50914]"/>
                     </div>
                   </div>
 
@@ -1810,24 +1821,24 @@ export default function TopGymApp() {
                     </div>
                   </div>
 
-                  <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-2">
+                  <div className="bg-black/30 border border-white/10 p-4 rounded-xl space-y-2">
                     <div className="flex justify-between items-center"><span className="text-xs text-zinc-400 uppercase font-bold">Score Stimato ({todayIso()}):</span><span className="text-lg font-black text-[#E50914]">{currentReadiness.totalScore}%</span></div>
                     <p className="text-xs text-zinc-300 font-medium"><b>Consigliato:</b> {currentReadiness.rec}</p>
                   </div>
 
-                  <button type="submit" className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg">
                     <Gauge className="w-5 h-5"/> Salva Check Readiness (+20 XP)
                   </button>
                 </form>
               )}
             </div>
 
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <History className="text-green-400" /> Storico Check Readiness ({userRole === 'COACH' ? activeAthlete.displayName : displayUserName})
               </h3>
               {readinessLoadError && (
-                <div className="mb-4 bg-red-950/40 border border-red-800 text-red-300 p-3 rounded-lg text-xs">
+                <div className="mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 p-3 rounded-xl text-xs">
                   ⚠️ Impossibile caricare lo storico da Supabase: {readinessLoadError}
                 </div>
               )}
@@ -1836,10 +1847,10 @@ export default function TopGymApp() {
               ) : (
                 <div className="space-y-3">
                   {readinessHistory.map((item) => (
-                    <div key={item.id} className="bg-zinc-900 p-4 rounded-lg border border-zinc-800 space-y-2 text-xs">
-                      <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <div key={item.id} className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-2 text-xs">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
                         <span className="font-bold text-white flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-zinc-400" /> Data: {item.date}</span>
-                        <span className={`px-2.5 py-0.5 rounded font-black text-sm ${item.readinessScore >= 80 ? 'bg-green-950 text-green-400 border border-green-800' : 'bg-yellow-950 text-yellow-400 border border-yellow-800'}`}>Score: {item.readinessScore}%</span>
+                        <span className={`px-2.5 py-0.5 rounded-md font-black text-sm ${item.readinessScore >= 80 ? 'bg-green-950 text-green-400 border border-green-800' : 'bg-yellow-950 text-yellow-400 border border-yellow-800'}`}>Score: {item.readinessScore}%</span>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-zinc-400 pt-1">
                         <div>Sonno: <b className="text-white">{item.sleepHours}h ({item.sleepQuality}/10)</b></div>
@@ -1847,7 +1858,7 @@ export default function TopGymApp() {
                         <div>DOMS: <b className="text-white">{item.domsLevel}/10</b></div>
                         <div>Energia: <b className="text-white">{item.energyLevel}/10</b></div>
                       </div>
-                      <p className="text-[11px] text-zinc-300 italic pt-1 border-t border-zinc-800/40">Indicazione: {item.recommendation}</p>
+                      <p className="text-[11px] text-zinc-300 italic pt-1 border-t border-white/5">Indicazione: {item.recommendation}</p>
                     </div>
                   ))}
                 </div>
@@ -1870,12 +1881,11 @@ export default function TopGymApp() {
 
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === 'builder' && userRole === 'COACH' && (
-          <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
-            {/* CABINA DI REGIA PERIODIZZAZIONE (METODO TOPGYM) */}
-            <div className="bg-zinc-900 p-5 rounded-xl border border-zinc-800 space-y-4 mb-6">
-              <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <Calendar className="text-[#E50914] w-4 h-4"/> Cabina di Regia Periodizzazione · Metodo TOPGYM
+          <div className="space-y-6">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-5">
+              <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Calendar className="text-[#E50914] w-5 h-5"/> Cabina di Regia Periodizzazione · Metodo TOPGYM
                 </h3>
                 <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
               </div>
@@ -1884,27 +1894,32 @@ export default function TopGymApp() {
                 <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
                   1. Imposta Blocco / Mesociclo Attivo:
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
-                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
                   >
-                    Blocco 1: Forza Ipertrofica[cite: 3, 4, 5]
+                    <b className="text-white text-xs block font-black">Blocco 1: Forza Ipertrofica</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Focus Neurale, Tecnica, Accumulo carichi alti sui Fondamentali</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
-                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
                   >
-                    Blocco 2: Trasformazione[cite: 4, 5]
+                    <b className="text-white text-xs block font-black">Blocco 2: Trasformazione</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Range 6-12 reps, Complementari pesanti, Back-off</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
-                    className={`p-2.5 rounded-lg border text-left transition text-xs ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-[#E50914] border-[#E50914] text-white font-bold' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
+                    className={`p-3 rounded-xl border text-left transition ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400'}`}
                   >
-                    Blocco 3: Qualità / Cut[cite: 3]
+                    <b className="text-white text-xs block font-black">Blocco 3: Qualità (Cut)</b>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">Mantenimento Forza, Volume mirato (18-22 set), Pompaggio/Cavi</span>
                   </button>
                 </div>
               </div>
@@ -1912,18 +1927,18 @@ export default function TopGymApp() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    2. Microciclo Settimanale (Auto = Week {calculatedCurrentWeek}):
+                    2. Settimana (Microciclo): Attuale automatica = <b className="text-yellow-400">Week {calculatedCurrentWeek}</b>
                   </label>
                   <button
                     type="button"
                     onClick={handleApplyDeloadWeekToProgram}
-                    className="text-[11px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 hover:bg-amber-500/20 cursor-pointer"
+                    className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" /> Applica Deload (Week 4)[cite: 3, 4, 5]
+                    <RefreshCw className="w-3.5 h-3.5" /> Applica Settimana di Deload Automatica
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[1, 2, 3, 4].map(w => {
                     const desc = getMicroWeekDescription(w as MicroWeek);
                     const isSelected = calculatedCurrentWeek === w;
@@ -1932,9 +1947,10 @@ export default function TopGymApp() {
                         key={w}
                         type="button"
                         onClick={() => setManualWeek(w as MicroWeek)}
-                        className={`p-2.5 rounded-lg border text-left transition text-xs ${isSelected ? 'bg-yellow-500 border-yellow-400 text-black font-black' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}
+                        className={`p-3 rounded-xl border text-left transition ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400'}`}
                       >
-                        <b>{desc.title}</b>
+                        <b className={`text-xs block ${isSelected ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
+                        <span className={`text-[10px] block mt-1 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
                       </button>
                     );
                   })}
@@ -1942,206 +1958,193 @@ export default function TopGymApp() {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-zinc-800">
-              <div className="space-y-2 flex-1 max-w-md">
-                <h2 className="text-xl font-bold flex items-center gap-2"><UserCheck className="text-[#E50914]"/> Area Coach / Gestione Programma ({activeAthlete.displayName})</h2>
-                <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nome della Scheda</label>
-                  <input
-                    type="text"
-                    value={programName}
-                    onChange={(e) => setProgramName(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-zinc-800">
-                <span className="text-xs font-bold text-zinc-400">Giorni:</span>
-                <div className="flex gap-1">
-                  {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => handleDayCountChange(num)}
-                      className={`px-2.5 py-1 text-xs font-black rounded border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'}`}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {programDays.map((day) => (
-              <div key={day.id} className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 w-full max-w-sm">
-                    <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
-                    <input 
-                      type="text" 
-                      value={day.title}
-                      onChange={(e) => handleRenameDay(day.id, e.target.value)}
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
+                <div className="space-y-2 flex-1 max-w-md">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-white"><UserCheck className="text-[#E50914]"/> Gestione Scheda · {activeAthlete.displayName}</h2>
+                  <div>
+                    <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nome della Scheda</label>
+                    <input
+                      type="text"
+                      value={programName}
+                      onChange={(e) => setProgramName(e.target.value)}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
                     />
                   </div>
-                  <span className="text-xs text-zinc-500 font-mono">{day.exercises.length} esercizi</span>
                 </div>
+                <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
+                  <span className="text-xs font-bold text-zinc-400">Giorni:</span>
+                  <div className="flex gap-1">
+                    {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => handleDayCountChange(num)}
+                        className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? 'bg-[#E50914] border-[#E50914] text-white shadow' : 'bg-zinc-800 border-white/5 text-zinc-400'}`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-                <div className="space-y-2">
-                  {day.exercises.map((ex) => (
-                    <div 
-                      key={ex.id} 
-                      className={`p-3 rounded-lg border flex justify-between items-center text-xs transition-all ${
-                        editingExId === ex.id ? 'bg-red-950/30 border-[#E50914]' : 'bg-[#1E1E1E] border-zinc-800'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">{ex.name}</span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${getBadgeStyle(ex.executionType)}`}>
-                            {ex.executionType}
-                          </span>
+              {programDays.map((day) => (
+                <div key={day.id} className="bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-white/5 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 w-full max-w-sm">
+                      <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
+                      <input 
+                        type="text" 
+                        value={day.title}
+                        onChange={(e) => handleRenameDay(day.id, e.target.value)}
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
+                      />
+                    </div>
+                    <span className="text-xs text-zinc-400 font-mono">{day.exercises.length} esercizi</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {day.exercises.map((ex) => (
+                      <div 
+                        key={ex.id} 
+                        className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${
+                          editingExId === ex.id ? 'bg-red-950/30 border-[#E50914]' : 'bg-[#12151B] border-white/5'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">{ex.name}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                              {ex.executionType}
+                            </span>
+                          </div>
+                          <div className="text-zinc-400 mt-1">
+                            {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+                          </div>
+                          {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                         </div>
-                        <div className="text-zinc-400 mt-0.5">
-                          {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditExercise(day.id, ex)}
+                            className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition"
+                            title="Modifica esercizio"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              if (editingExId === ex.id) handleCancelEdit();
+                              handleRemoveExerciseFromDay(day.id, ex.id);
+                            }} 
+                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition"
+                            title="Elimina esercizio"
+                          >
+                            <Trash2 className="w-4 h-4"/>
+                          </button>
                         </div>
-                        {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
                       </div>
+                    ))}
+                  </div>
 
-                      <div className="flex items-center gap-1">
+                  <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-3 border-t border-white/5">
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                        Preset Stimolo Metodo TOPGYM:
+                      </span>
+                      <div className="flex gap-2 flex-wrap">
                         <button
                           type="button"
-                          onClick={() => handleStartEditExercise(day.id, ex)}
-                          className="p-1 text-zinc-400 hover:text-yellow-400 hover:bg-zinc-800 rounded transition"
-                          title="Modifica esercizio"
+                          onClick={() => handleApplyTopGymPreset('NEURAL')}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                         >
-                          <Pencil className="w-4 h-4" />
+                          ⚡ Neurale (4-6 reps · 3')
                         </button>
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            if (editingExId === ex.id) handleCancelEdit();
-                            handleRemoveExerciseFromDay(day.id, ex.id);
-                          }} 
-                          className="p-1 text-zinc-400 hover:text-red-500 hover:bg-zinc-800 rounded transition"
-                          title="Elimina esercizio"
+                        <button
+                          type="button"
+                          onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                         >
-                          <Trash2 className="w-4 h-4"/>
+                          💪 Ipertrofico (8-10 reps · 90s)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyTopGymPreset('METABOLIC')}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                        >
+                          🔥 Metabolico (12-15 reps · 60s)
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-2 border-t border-zinc-800/80">
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                      Preset Stimolo Metodo TOPGYM:
-                    </span>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTopGymPreset('NEURAL')}
-                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Nome Esercizio" 
+                        value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
+                        onChange={e => {
+                          setBuilderExName(e.target.value);
+                          setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                        }} 
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                      />
+                      <select 
+                        value={builderMuscleGroup} 
+                        onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
                       >
-                        ⚡ Neurale (4-6 reps · 3')[cite: 4, 5, 6]
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
-                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
-                      >
-                        💪 Ipertrofico (8-10 reps · 90s)[cite: 4, 5, 6]
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTopGymPreset('METABOLIC')}
-                        className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-zinc-700 transition"
-                      >
-                        🔥 Metabolico (12-15 reps · 60s)[cite: 4, 5, 6]
-                      </button>
+                        {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
+                          <option key={mg} value={mg}>{mg}</option>
+                        ))}
+                      </select>
+                      <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Nome Esercizio" 
-                      value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
-                      onChange={e => {
-                        setBuilderExName(e.target.value);
-                        setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                      }} 
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
-                    />
-                    <select 
-                      value={builderMuscleGroup} 
-                      onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
-                      className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white font-bold"
-                    >
-                      {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
-                        <option key={mg} value={mg}>{mg}</option>
-                      ))}
-                    </select>
-                    <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                  </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                        <option value="REGULAR">Tecnica: REGULAR</option>
+                        <option value="SUPERSET">Tecnica: SUPERSET</option>
+                        <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
+                        <option value="DROP_SET">Tecnica: DROP_SET</option>
+                        <option value="CLUSTER">Tecnica: CLUSTER</option>
+                      </select>
+                      <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                      <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                    </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white">
-                      <option value="REGULAR">Tecnica: REGULAR</option>
-                      <option value="SUPERSET">Tecnica: SUPERSET</option>
-                      <option value="REST_PAUSE">Tecnica: REST_PAUSE</option>
-                      <option value="DROP_SET">Tecnica: DROP_SET</option>
-                      <option value="CLUSTER">Tecnica: CLUSTER</option>
-                    </select>
-                    <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                    <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" />
-                  </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Note del Coach (Metodo TOPGYM)" 
+                        value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
+                        onChange={e => setBuilderNotes(e.target.value)} 
+                        className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                      />
+                      {editingExId && editingDayId === day.id ? (
+                        <>
+                          <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-2 rounded-xl text-white cursor-pointer">Annulla</button>
+                          <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-2 rounded-xl text-black cursor-pointer">Aggiorna</button>
+                        </>
+                      ) : (
+                        <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-2 rounded-xl text-white hover:brightness-110 cursor-pointer">Aggiungi</button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              ))}
 
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Note del Coach (Metodo TOPGYM)" 
-                      value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
-                      onChange={e => setBuilderNotes(e.target.value)} 
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white" 
-                    />
-                    {editingExId && editingDayId === day.id ? (
-                      <>
-                        <button 
-                          type="button" 
-                          onClick={handleCancelEdit} 
-                          className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded text-white hover:bg-zinc-600 transition flex-shrink-0 cursor-pointer"
-                        >
-                          Annulla
-                        </button>
-                        <button 
-                          type="submit" 
-                          className="bg-yellow-500 text-xs font-bold px-4 py-1.5 rounded text-black hover:bg-yellow-400 transition flex-shrink-0 cursor-pointer"
-                        >
-                          Aggiorna
-                        </button>
-                      </>
-                    ) : (
-                      <button 
-                        type="submit" 
-                        className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded text-white hover:bg-red-700 transition flex-shrink-0 cursor-pointer"
-                      >
-                        Aggiungi
-                      </button>
-                    )}
-                  </div>
-                </form>
+              <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
+                {builderSuccessMessage && <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">{builderSuccessMessage}</div>}
+                <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:brightness-110 text-white font-black py-4 rounded-xl uppercase tracking-wider transition shadow-xl cursor-pointer">
+                  Salva e Assegna Scheda Metodo TOPGYM ({activeAthlete.displayName})
+                </button>
               </div>
-            ))}
-            <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
-              {builderSuccessMessage && <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-3 rounded-lg text-center font-bold text-xs">{builderSuccessMessage}</div>}
-              <button type="button" onClick={handleSaveProgramByCoach} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2">
-                <span>💾 Salva e Assegna Scheda Metodo TOPGYM ({activeAthlete.displayName})</span>
-              </button>
             </div>
           </div>
         )}
@@ -2149,7 +2152,7 @@ export default function TopGymApp() {
         {/* TAB 7: ANALYTICS & STORICO */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 flex justify-between items-center flex-wrap gap-4">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md flex justify-between items-center flex-wrap gap-4">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <BarChart3 className="text-[#E50914]" /> 
@@ -2158,20 +2161,20 @@ export default function TopGymApp() {
                 <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio (incluso corpo libero).</p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 text-center">
+                <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
                   <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete (Sempre)</span>
                   <span className="text-lg font-black text-white">{totalSetsEver}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
-              <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-zinc-800 pb-3 gap-4">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
+              <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-white/10 pb-3 gap-4">
                 <div>
                   <h3 className="font-bold text-base text-white flex items-center gap-2">
                     <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale
                   </h3>
-                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana[cite: 3, 5]</span>
+                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -2181,18 +2184,18 @@ export default function TopGymApp() {
                       type="date" 
                       value={analyticsDate}
                       onChange={e => setAnalyticsDate(e.target.value)}
-                      className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914]"
+                      className="bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914]"
                     />
                   </div>
-                  <div className="bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800 text-center min-w-[80px]">
+                  <div className="bg-black/40 px-3.5 py-1.5 rounded-xl border border-white/5 text-center min-w-[80px]">
                     <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Mensili</span>
                     <span className="text-sm font-black text-blue-400">{monthlySetsCount}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-[11px] text-zinc-400 font-bold bg-zinc-900/50 p-2 rounded text-center border border-zinc-800/50">
-                Mostrando i dati per la settimana (Lunedì-Domenica): <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
+              <div className="text-[11px] text-zinc-400 font-bold bg-black/30 p-2.5 rounded-xl text-center border border-white/5">
+                Mostrando i dati per la settimana: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
                 <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
               </div>
 
@@ -2209,7 +2212,7 @@ export default function TopGymApp() {
                   else if (count > 0) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
 
                   return (
-                    <div key={mg} className="bg-zinc-900 p-3.5 rounded-lg border border-zinc-800 space-y-2">
+                    <div key={mg} className="bg-zinc-900/60 p-3.5 rounded-xl border border-white/5 space-y-2">
                       <div className="flex justify-between items-center text-xs font-bold">
                         <span className="text-zinc-200">{mg}</span>
                         <span className={textColor}>{count} Serie / sett</span>
@@ -2217,10 +2220,10 @@ export default function TopGymApp() {
                       <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
                         <div className={`h-full ${statusColor} transition-all duration-500`} style={{ width: `${percentage}%` }} />
                       </div>
-                      <div className="flex justify-between text-[10px] text-zinc-500">
+                      <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
                         <span>0 serie</span>
-                        <span>10 (MEV)[cite: 3, 5]</span>
-                        <span>20+ (MRV)[cite: 3, 5]</span>
+                        <span>10 (MEV)</span>
+                        <span>20+ (MRV)</span>
                       </div>
                     </div>
                   );
@@ -2228,13 +2231,13 @@ export default function TopGymApp() {
               </div>
             </div>
 
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-4">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
               <h3 className="font-bold text-base text-white flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità</h3>
               {workoutHistory.length === 0 ? (
                 <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato.</p>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                  <div className="bg-black/30 p-4 rounded-xl border border-white/5">
                     {volumeIntensitySeries.length === 0 ? (
                       <p className="text-xs text-zinc-400 italic text-center py-8">Nessun dato sufficiente per il grafico.</p>
                     ) : (
@@ -2304,7 +2307,7 @@ export default function TopGymApp() {
 
                   <div className="overflow-x-auto pt-2 space-y-2">
                     <table className="w-full text-xs text-left text-zinc-300">
-                      <thead className="bg-zinc-900 text-zinc-400 uppercase text-[10px] border-b border-zinc-800">
+                      <thead className="bg-black/40 text-zinc-400 uppercase text-[10px] border-b border-white/5">
                         <tr>
                           <th className="py-2.5 px-3">Data</th>
                           <th className="py-2.5 px-3">Scheda</th>
@@ -2312,34 +2315,34 @@ export default function TopGymApp() {
                           <th className="py-2.5 px-3 text-center">Azioni</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-800/60">
+                      <tbody className="divide-y divide-white/5">
                         {workoutHistory.map((item, idx) => {
                            const rowKey = item.id || item._id || `row-${idx}`;
                            const isExpanded = expandedHistoryId === rowKey;
                            return (
                             <React.Fragment key={rowKey}>
-                              <tr className="hover:bg-zinc-900/50">
+                              <tr className="hover:bg-zinc-800/30 transition">
                                 <td className="py-2.5 px-3 font-mono text-zinc-400">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</td>
                                 <td className="py-2.5 px-3 font-bold text-white">{item.day_name || item.dayName || 'Allenamento'}</td>
                                 <td className="py-2.5 px-3 text-right font-bold text-emerald-400">{(item.total_volume || item.totalVolume || 0).toLocaleString('it-IT')} kg</td>
                                 <td className="py-2.5 px-3">
                                   <div className="flex justify-center gap-2">
-                                    <button type="button" onClick={() => setExpandedHistoryId(isExpanded ? null : rowKey)} className="bg-zinc-800 hover:bg-zinc-700 text-white px-2 py-1 rounded flex items-center gap-1">
+                                    <button type="button" onClick={() => setExpandedHistoryId(isExpanded ? null : rowKey)} className="bg-zinc-800 hover:bg-zinc-700 text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
                                       {isExpanded ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>} Dettagli
                                     </button>
                                     {userRole === 'COACH' && (
-                                      <button type="button" onClick={() => handleDeleteWorkoutHistory(item.id || item._id)} className="text-zinc-500 hover:text-red-500 p-1"><Trash2 className="w-4 h-4"/></button>
+                                      <button type="button" onClick={() => handleDeleteWorkoutHistory(item.id || item._id)} className="text-zinc-500 hover:text-rose-400 p-1"><Trash2 className="w-4 h-4"/></button>
                                     )}
                                   </div>
                                 </td>
                               </tr>
                               {isExpanded && (
-                                <tr className="bg-zinc-900/40">
+                                <tr className="bg-black/30">
                                   <td colSpan={4} className="p-3">
                                     {item.logs && Array.isArray(item.logs) && item.logs.length > 0 ? (
                                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                                         {item.logs.map((log: any, lIdx: number) => (
-                                          <div key={lIdx} className="bg-zinc-900 border border-zinc-800 p-2 rounded text-[11px]">
+                                          <div key={lIdx} className="bg-zinc-900 border border-white/5 p-2.5 rounded-xl text-[11px]">
                                             <div className="font-bold text-white mb-1">{log.exerciseName}</div>
                                             <div className="text-zinc-400 flex justify-between flex-wrap">
                                               {log.isBodyweight && log.effectiveLoad !== null ? (
@@ -2347,7 +2350,7 @@ export default function TopGymApp() {
                                               ) : (
                                                 <span>{log.weight} kg × {log.reps}</span>
                                               )}
-                                              <span className="text-red-400">RPE: {log.rpe}</span>
+                                              <span className="text-red-400 font-semibold">RPE: {log.rpe}</span>
                                             </div>
                                           </div>
                                         ))}
@@ -2373,13 +2376,13 @@ export default function TopGymApp() {
         {/* TAB 8: CLASSIFICA & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Trophy className="text-yellow-500"/> Classifica Palestra</h2>
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white"><Trophy className="text-yellow-500"/> Classifica Palestra</h2>
               <div className="space-y-2">
                 {leaderboard.map((ath, index) => (
-                  <div key={ath.id} className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 flex justify-between items-center text-sm">
+                  <div key={ath.id} className="p-4 bg-zinc-900/60 rounded-xl border border-white/5 flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <span className="font-bold text-zinc-500">#{index + 1}</span>
+                      <span className="font-bold text-zinc-500 font-mono">#{index + 1}</span>
                       <span className="font-bold text-white">{ath.displayName}</span>
                     </div>
                     <span className="font-black text-yellow-500">{ath.xp} XP</span>
@@ -2387,11 +2390,11 @@ export default function TopGymApp() {
                 ))}
               </div>
             </div>
-            <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Medal className="text-yellow-500"/> Trofei & Traguardi</h2>
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-white"><Medal className="text-yellow-500"/> Trofei & Traguardi</h2>
               <div className="grid md:grid-cols-2 gap-3">
                 {achievements.map(ach => (
-                  <div key={ach.id} className={`p-4 rounded-lg border flex items-center gap-3 ${ach.unlocked ? 'bg-zinc-900 border-yellow-600/50' : 'bg-zinc-900/40 border-zinc-800 opacity-50'}`}>
+                  <div key={ach.id} className={`p-4 rounded-xl border flex items-center gap-3 transition ${ach.unlocked ? 'bg-zinc-900/80 border-amber-500/30' : 'bg-black/20 border-white/5 opacity-50'}`}>
                     <span className="text-2xl">{ach.icon}</span>
                     <div>
                       <div className="font-bold text-sm text-white flex items-center gap-2">{ach.title}{ach.unlocked && <CheckCircle className="w-3.5 h-3.5 text-green-400"/>}</div>
@@ -2406,15 +2409,15 @@ export default function TopGymApp() {
 
         {/* TAB 9: IMPOSTAZIONI */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
-          <div className="bg-[#1E1E1E] p-6 rounded-xl border border-zinc-800 space-y-6">
+          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Settings className="text-[#E50914]"/> Profilo & Impostazioni</h2>
               <p className="text-xs text-zinc-400 mt-1">Aggiorna le tue metriche atletiche e gestisci la sicurezza del tuo account.</p>
             </div>
 
-            {settingsMessage && <div className="bg-zinc-900 border border-zinc-700 p-3 rounded-lg text-xs font-bold text-zinc-200">{settingsMessage}</div>}
+            {settingsMessage && <div className="bg-zinc-900 border border-white/10 p-3 rounded-xl text-xs font-bold text-zinc-200">{settingsMessage}</div>}
 
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+            <div className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Bell className="w-4 h-4 text-[#E50914]" /> Notifiche Push
               </h3>
@@ -2425,37 +2428,37 @@ export default function TopGymApp() {
                 type="button"
                 disabled={pushLoading}
                 onClick={handlePushActivation}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/10 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {pushLoading ? 'Attivazione in corso...' : 'Attiva Notifiche su questo Telefono'}
               </button>
             </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+              <div className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">Dati Atleta</h3>
                 <div className="grid md:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 mb-1">Nome Utente</label>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white outline-none focus:border-[#E50914]" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 mb-1">Altezza (cm)</label>
-                    <input type="number" step="0.5" value={profileHeight} onChange={e => setProfileHeight(e.target.value)} placeholder="185" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                    <input type="number" step="0.5" value={profileHeight} onChange={e => setProfileHeight(e.target.value)} placeholder="185" className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white outline-none focus:border-[#E50914]" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 mb-1">Peso Obiettivo (Kg)</label>
-                    <input type="number" step="0.5" value={profileTargetWeight} onChange={e => setProfileTargetWeight(e.target.value)} placeholder="85" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                    <input type="number" step="0.5" value={profileTargetWeight} onChange={e => setProfileTargetWeight(e.target.value)} placeholder="85" className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white outline-none focus:border-[#E50914]" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+              <div className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-3">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">Obiettivi & Esperienza</h3>
                 <div className="grid md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 mb-1">Obiettivo Principale</label>
-                    <select value={profileGoal} onChange={e => setProfileGoal(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white font-bold outline-none">
+                    <select value={profileGoal} onChange={e => setProfileGoal(e.target.value)} className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white font-bold outline-none">
                       <option value="Ipertrofia">Ipertrofia (Massa Muscolare)</option>
                       <option value="Forza">Forza / Powerlifting</option>
                       <option value="Calisthenics">Calisthenics & Skills</option>
@@ -2464,7 +2467,7 @@ export default function TopGymApp() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-zinc-400 mb-1">Livello di Esperienza</label>
-                    <select value={profileExperience} onChange={e => setProfileExperience(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white font-bold outline-none">
+                    <select value={profileExperience} onChange={e => setProfileExperience(e.target.value)} className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white font-bold outline-none">
                       <option value="Principiante">Principiante (&lt; 1 anno)</option>
                       <option value="Intermedio">Intermedio (1-3 anni)</option>
                       <option value="Avanzato">Avanzato (3+ anni)</option>
@@ -2473,25 +2476,25 @@ export default function TopGymApp() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-zinc-400 mb-1">Limitazioni fisiche o note per il Coach</label>
-                  <textarea value={profileNotes} onChange={e => setProfileNotes(e.target.value)} rows={2} placeholder="Es. Lieve fastidio spalla destra su distensioni sopra la testa..." className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-white outline-none focus:border-[#E50914]" />
+                  <textarea value={profileNotes} onChange={e => setProfileNotes(e.target.value)} rows={2} placeholder="Es. Lieve fastidio spalla destra su distensioni sopra la testa..." className="w-full bg-zinc-800 border border-white/10 rounded-xl p-2.5 text-sm text-white outline-none focus:border-[#E50914]" />
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition cursor-pointer">
+              <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider transition cursor-pointer shadow-lg">
                 Salva Modifiche Profilo
               </button>
             </form>
 
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
+            <div className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2"><Key className="w-4 h-4 text-yellow-500"/> Password e Sicurezza</h3>
               <p className="text-xs text-zinc-400">Invia un link alla tua email per cambiare la tua password.</p>
-              <button type="button" onClick={handlePasswordReset} className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2 rounded-lg border border-zinc-700 transition flex items-center gap-2">Invia Email Recupero Password</button>
+              <button type="button" onClick={handlePasswordReset} className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/10 transition flex items-center gap-2 cursor-pointer">Invia Email Recupero Password</button>
             </div>
 
-            <div className="bg-red-950/20 p-4 rounded-xl border border-red-900/50 space-y-3">
-              <h3 className="text-sm font-bold text-red-400 flex items-center gap-2"><UserX className="w-4 h-4 text-red-500"/> Zona Pericolo</h3>
+            <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20 space-y-3">
+              <h3 className="text-sm font-bold text-rose-400 flex items-center gap-2"><UserX className="w-4 h-4 text-rose-500"/> Zona Pericolo</h3>
               <p className="text-xs text-zinc-400">Rimuovi definitivamente il tuo profilo Atleta.</p>
-              <button type="button" onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-2">Cancella Definitivamente Account</button>
+              <button type="button" onClick={handleDeleteAccount} className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer">Cancella Definitivamente Account</button>
             </div>
           </div>
         )}
@@ -2500,8 +2503,8 @@ export default function TopGymApp() {
       {/* MODALE GUIDA PERMESSI BLOCCATI (DENIED) */}
       {showDeniedModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#1E1E1E] p-6 rounded-2xl border border-zinc-800 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 border-b border-zinc-800 pb-3">
+          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
               <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
                 <AlertTriangle className="w-6 h-6" />
               </div>
@@ -2516,7 +2519,7 @@ export default function TopGymApp() {
                 Il browser non consente di richiedere nuovamente l&apos;autorizzazione in automatico. Per abilitarle manualmente:
               </p>
 
-              <div className="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800 space-y-2.5">
+              <div className="bg-zinc-900 p-3.5 rounded-xl border border-white/5 space-y-2.5">
                 <div className="flex items-start gap-2.5">
                   <span className="flex-shrink-0 w-5 h-5 bg-[#E50914] text-white rounded-full flex items-center justify-center font-bold text-[11px]">1</span>
                   <span>Tocca l&apos;icona delle <b>impostazioni sito / lucchetto</b> a sinistra dell&apos;indirizzo web in alto.</span>
@@ -2539,7 +2542,7 @@ export default function TopGymApp() {
             <button
               type="button"
               onClick={() => setShowDeniedModal(false)}
-              className="w-full bg-[#E50914] hover:bg-red-700 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer"
+              className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold text-xs py-3 rounded-xl transition cursor-pointer"
             >
               Ho capito, chiudi
             </button>
