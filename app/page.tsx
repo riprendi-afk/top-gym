@@ -15,7 +15,7 @@ import {
   Timer, Plus, CheckCircle, TrendingUp, BarChart3,
   Volume2, VolumeX, Lock, Unlock, Eye,
   AlertTriangle, Copy, Sparkles, Scale, LogOut, Medal,
-  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Flame, Calendar, RefreshCw, Layers
+  Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2, History, Settings, Key, UserX, ChevronDown, ChevronUp, Pencil, Target, Users, Bell, Calendar, RefreshCw, Layers
 } from 'lucide-react';
 import { subscribeUserToPush, sendPushNotification } from '@/lib/push';
 
@@ -143,13 +143,14 @@ const makeId = (): string => {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const parseLocalDate = (value: string | Date | undefined | null): Date | null => {
+const parseSafeDate = (value: any): Date | null => {
   if (!value) return null;
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  if (!isNaN(d.getTime())) return d;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return null;
 };
 
 export default function TopGymApp() {
@@ -185,7 +186,6 @@ export default function TopGymApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  // Tab
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
   >('workout');
@@ -196,16 +196,17 @@ export default function TopGymApp() {
 
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // TIMER RESILIENTE CON TIMESTAMP ASSOLUTO
+  // Timer
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
 
+  // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
 
-  // STRUTTURA METODO TOPGYM (MACRO, MESO, MICROCICLO)
+  // METODO TOPGYM
   const [currentBlock, setCurrentBlock] = useState<MacroBlock>('BLOCCO_1_FORZA');
-  const [currentWeek, setCurrentWeek] = useState<MicroWeek>(1);
+  const [manualWeek, setManualWeek] = useState<MicroWeek | null>(null);
 
   // Readiness
   const [selectedDayCount, setSelectedDayCount] = useState<DayCount>(4);
@@ -324,7 +325,7 @@ export default function TopGymApp() {
         notes: (ex.notes ? ex.notes + ' · ' : '') + 'SETTIMANA DI DELOAD: Volume ridotto, focus tecnico, nessun cedimento.'
       }))
     })));
-    setCurrentWeek(4);
+    setManualWeek(4);
     setBuilderSuccessMessage('✅ Scheda convertita in Settimana di Deload (Week 4)!');
     setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
@@ -645,6 +646,7 @@ export default function TopGymApp() {
     }
   };
 
+  // Tabella RPE per % 1RM
   const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
     '10':  [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
     '9.5': [98,  94, 91, 88, 85, 82, 80, 77, 75, 72],
@@ -659,16 +661,16 @@ export default function TopGymApp() {
 
   const calculate1RM = (w: number, r: number) => (r === 1 ? w : Math.round(w * (1 + r / 30)));
 
-  const calculateEstimated1RM = useCallback((weight: number, reps: number, rpe?: number): number | null => {
-    if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(reps) || reps <= 0) return null;
-    if (rpe !== undefined && Number.isFinite(rpe) && reps <= 10) {
-      const row = RPE_PERCENT_1RM_TABLE[String(rpe)];
+  const calculateEstimated1RM = useCallback((weightVal: number, repsVal: number, rpeVal?: number): number | null => {
+    if (!Number.isFinite(weightVal) || weightVal <= 0 || !Number.isFinite(repsVal) || repsVal <= 0) return null;
+    if (rpeVal !== undefined && Number.isFinite(rpeVal) && repsVal <= 10) {
+      const row = RPE_PERCENT_1RM_TABLE[String(rpeVal)];
       if (row) {
-        const pct = row[Math.round(reps) - 1];
-        if (pct > 0) return Math.round(weight / (pct / 100));
+        const pct = row[Math.round(repsVal) - 1];
+        if (pct > 0) return Math.round(weightVal / (pct / 100));
       }
     }
-    return calculate1RM(weight, reps);
+    return calculate1RM(weightVal, repsVal);
   }, []);
 
   const allLoggedSets = useMemo(() => {
@@ -679,28 +681,27 @@ export default function TopGymApp() {
         items.push({
           exerciseName: l.exerciseName,
           weight: w,
-          estimated1RM: l.estimated1RM || calculateEstimated1RM(w, l.reps, l.rpe) || calculate1RM(w, l.reps)
+          estimated1RM: l.estimated1RM || calculate1RM(w, l.reps)
         });
       }
     });
     workoutHistory.forEach(w => {
       if (Array.isArray(w.logs)) {
         w.logs.forEach((l: any) => {
-          const weight = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight) || 0;
-          const reps = Number(l?.reps) || 0;
-          const rpeVal = Number(l?.rpe);
-          if (weight > 0 && reps > 0) {
+          const weightVal = Number(l.effectiveLoad !== null && l.effectiveLoad !== undefined ? l.effectiveLoad : l.weight) || 0;
+          const repsVal = Number(l?.reps) || 0;
+          if (weightVal > 0 && repsVal > 0) {
             items.push({
               exerciseName: l.exerciseName || '',
-              weight,
-              estimated1RM: Number(l.estimated1RM) || calculateEstimated1RM(weight, reps, Number.isFinite(rpeVal) ? rpeVal : undefined) || calculate1RM(weight, reps)
+              weight: weightVal,
+              estimated1RM: Number(l.estimated1RM) || calculate1RM(weightVal, repsVal)
             });
           }
         });
       }
     });
     return items;
-  }, [logs, workoutHistory, calculateEstimated1RM]);
+  }, [logs, workoutHistory]);
 
   const best1RMByExercise = useMemo(() => {
     const map = new Map<string, number>();
@@ -711,10 +712,10 @@ export default function TopGymApp() {
     return map;
   }, [allLoggedSets]);
 
-  const getIntensityInfo = useCallback((exerciseName: string, weight: number) => {
+  const getIntensityInfo = useCallback((exerciseName: string, weightVal: number) => {
     const best1RM = best1RMByExercise.get(exerciseName);
-    if (!best1RM || best1RM <= 0 || !weight) return null;
-    const pct = Math.round((weight / best1RM) * 100);
+    if (!best1RM || best1RM <= 0 || !weightVal) return null;
+    const pct = Math.round((weightVal / best1RM) * 100);
     let label = 'Attivazione';
     let colorClasses = 'bg-zinc-800 text-zinc-300 border-zinc-700';
     if (pct >= 90) { label = 'Massimale'; colorClasses = 'bg-rose-950/80 text-rose-300 border-rose-800/80'; }
@@ -723,6 +724,7 @@ export default function TopGymApp() {
     return { pct, label, colorClasses };
   }, [best1RMByExercise]);
 
+  // Anteprima 1RM Stimato e Percentuale RPE calcolata
   const estimated1RMPreview = useMemo(() => {
     const w = parseFloat(weight);
     const r = parseInt(reps, 10);
@@ -1107,9 +1109,9 @@ export default function TopGymApp() {
     { id: '4', title: 'Costanza d\'Acciaio', description: 'Accumula oltre 500 XP', icon: '⚡', unlocked: userXp >= 500 }
   ];
 
-  // CONTEGGIO SCIENTIFICO SERIE SETTIMANALI CON CALENDARIO (DA LUNEDÌ A DOMENICA)
+  // 1. CALENDARIO SETTIMANALE SCIENTIFICO (DA LUNEDÌ A DOMENICA)
   const { startOfWeek, endOfWeek, startOfMonth, endOfMonth } = useMemo(() => {
-    const targetDate = parseLocalDate(analyticsDate) || new Date();
+    const targetDate = parseSafeDate(analyticsDate) || new Date();
     const dayOfWeek = targetDate.getDay();
     const diffToMonday = targetDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
     const startW = new Date(targetDate);
@@ -1125,7 +1127,7 @@ export default function TopGymApp() {
     return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
   }, [analyticsDate]);
 
-  // Calcolo delle serie per distretto muscolare dal lunedì alla domenica
+  // 2. CONTEGGIO SERIE REALE PER DISTRETTO (UNIFICA LOGS ODIERNI + STORICO SETTIMANA SELEZIONATA)
   const weeklyMuscleSetsMap = useMemo(() => {
     const map: Record<MuscleGroup, number> = {
       Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0,
@@ -1133,34 +1135,48 @@ export default function TopGymApp() {
       Polpacci: 0, Addome: 0
     };
 
-    const allLoggedSetsArray: { name: string; date: Date | null; muscleGroup?: MuscleGroup }[] = [];
-    logs.forEach(l => allLoggedSetsArray.push({ name: l.exerciseName, date: parseLocalDate(l.date), muscleGroup: l.muscleGroup }));
-    workoutHistory.forEach(w => {
-      if (Array.isArray(w.logs)) {
-        const wDate = parseLocalDate(w.created_at || w.date);
-        w.logs.forEach((log: any) => {
-          allLoggedSetsArray.push({ name: log?.exerciseName || '', date: wDate, muscleGroup: log?.muscleGroup });
-        });
+    const startMs = startOfWeek.getTime();
+    const endMs = endOfWeek.getTime();
+
+    // Aggiungi serie registrate nella sessione odierna (se dentro la settimana)
+    logs.forEach(l => {
+      const d = parseSafeDate(l.date);
+      if (d && d.getTime() >= startMs && d.getTime() <= endMs) {
+        const mg = (l.muscleGroup || autoDetectMuscleGroup(l.exerciseName || '')) as MuscleGroup;
+        if (mg && typeof map[mg] === 'number') map[mg] += 1;
       }
     });
 
-    allLoggedSetsArray.forEach(({ name, date, muscleGroup }) => {
-      if (!date || date < startOfWeek || date > endOfWeek) return;
-      const mg = (muscleGroup || autoDetectMuscleGroup(name || '')) as MuscleGroup;
-      if (mg && typeof map[mg] === 'number') {
-        map[mg] += 1;
+    // Aggiungi serie registrate nello storico Supabase
+    workoutHistory.forEach(w => {
+      const wDate = parseSafeDate(w.created_at || w.date);
+      if (wDate && wDate.getTime() >= startMs && wDate.getTime() <= endMs && Array.isArray(w.logs)) {
+        w.logs.forEach((log: any) => {
+          const mg = (log?.muscleGroup || autoDetectMuscleGroup(log?.exerciseName || '')) as MuscleGroup;
+          if (mg && typeof map[mg] === 'number') map[mg] += 1;
+        });
       }
     });
 
     return map;
   }, [logs, workoutHistory, startOfWeek, endOfWeek]);
 
+  // 3. CALCOLO AUTOMATICO SETTIMANA (MICROCICLO 1 -> 2 -> 3 -> 4)
+  const calculatedCurrentWeek: MicroWeek = useMemo(() => {
+    if (manualWeek !== null) return manualWeek;
+    const daysInRoutine = Math.max(1, programDays.length || 4);
+    const completedCount = workoutHistory.length;
+    const computed = Math.floor(completedCount / daysInRoutine) + 1;
+    const clamped = Math.min(4, Math.max(1, computed)) as MicroWeek;
+    return clamped;
+  }, [manualWeek, programDays.length, workoutHistory.length]);
+
   const allSetsWithDate = useMemo(() => {
     const items: { name: string; date: Date | null }[] = [];
-    logs.forEach(log => items.push({ name: log.exerciseName, date: parseLocalDate(log.date) }));
+    logs.forEach(log => items.push({ name: log.exerciseName, date: parseSafeDate(log.date) }));
     workoutHistory.forEach(workout => {
       if (Array.isArray(workout.logs)) {
-        const wDate = parseLocalDate(workout.created_at || workout.date);
+        const wDate = parseSafeDate(workout.created_at || workout.date);
         workout.logs.forEach((log: any) => items.push({ name: log?.exerciseName || '', date: wDate }));
       }
     });
@@ -1275,7 +1291,7 @@ export default function TopGymApp() {
 
   return (
     <div className="min-h-screen bg-[#090A0D] text-white font-sans p-3 sm:p-5 md:p-8">
-      {/* HEADER COMPATTO */}
+      {/* HEADER COMPLETO CON SELETTORE ATLETA COACH INTEGRATO */}
       <header className="max-w-6xl mx-auto bg-[#12151B]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/10 shadow-xl mb-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -1303,6 +1319,22 @@ export default function TopGymApp() {
                 {userRole === 'COACH' ? <Unlock className="w-3.5 h-3.5 text-emerald-400" /> : <Lock className="w-3.5 h-3.5 text-zinc-400" />} Coach
               </button>
             </div>
+
+            {/* SELETTORE ATLETA SEMPRE DISPONIBILE NELL'HEADER PER IL COACH */}
+            {userRole === 'COACH' && (
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                <span className="text-zinc-400 text-xs">Gestisci Atleta:</span>
+                <select
+                  value={activeAthleteId}
+                  onChange={e => setActiveAthleteId(e.target.value)}
+                  className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2 py-1 font-bold outline-none cursor-pointer"
+                >
+                  {athletes.map(ath => (
+                    <option key={ath.id} value={ath.id}>{ath.displayName}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
@@ -1312,46 +1344,50 @@ export default function TopGymApp() {
                 <span>{Math.floor(restTimer / 60)}:{(restTimer % 60).toString().padStart(2, '0')}</span>
               </div>
             )}
+
+            {latestReadiness && (
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-xs">
+                <Gauge className={`w-4 h-4 ${latestReadiness.readinessScore >= 80 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                <div>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase block leading-none">Readiness</span>
+                  <b className="text-white text-xs font-mono leading-tight">{latestReadiness.readinessScore}%</b>
+                </div>
+              </div>
+            )}
+
+            {/* WIDGET RANGO & XP PROGRESS BAR */}
             <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-xs">
-              <Shield className="text-amber-400 w-4 h-4" />
-              <div>
-                <span className="text-[10px] text-zinc-400 font-bold block">Lvl {userLevel} · {userXp} XP</span>
+              <Shield className="text-amber-400 w-4 h-4 flex-shrink-0" />
+              <div className="w-28 sm:w-32">
+                <div className="text-[9px] text-amber-400 font-black uppercase tracking-wider truncate">
+                  {userRank}
+                </div>
+                <div className="flex justify-between items-center text-[9px] text-zinc-400 font-bold">
+                  <span>Lvl {userLevel}/99</span>
+                  <span className="font-mono">{userXp} XP</span>
+                </div>
+                <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-0.5 overflow-hidden">
+                  <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${levelProgressPercentage}%` }} />
+                </div>
               </div>
             </div>
-            <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
-            <button onClick={handleLogout} className="text-xs font-semibold text-zinc-400 hover:text-rose-400 bg-black/40 border border-white/5 px-2.5 py-2 rounded-xl">
-              <LogOut className="w-4 h-4 text-rose-500 inline" /> Esci
-            </button>
+
+            <div className="flex items-center gap-1.5">
+              <NotificationBell userId={targetUserId} onNavigateToWorkout={() => setActiveTab('workout')} />
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="p-2 bg-black/40 hover:bg-zinc-800 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition"
+                title="Suoni"
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-zinc-500" />}
+              </button>
+              <button onClick={handleLogout} className="text-xs font-semibold text-zinc-400 hover:text-rose-400 bg-black/40 border border-white/5 px-2.5 py-2 rounded-xl">
+                <LogOut className="w-4 h-4 text-rose-500 inline" /> Esci
+              </button>
+            </div>
           </div>
         </div>
       </header>
-
-      {/* PIN COACH MODAL */}
-      {showCoachPinModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl space-y-4">
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <Lock className="text-[#E50914] w-5 h-5" /> Area Riservata Coach
-            </h3>
-            <p className="text-xs text-zinc-400">Inserisci il PIN per accedere alla gestione coach.</p>
-            <form onSubmit={verifyCoachPin} className="space-y-4">
-              <input
-                type="password"
-                value={pinInput}
-                onChange={e => setPinInput(e.target.value)}
-                placeholder="••••"
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-center text-xl font-mono text-white outline-none focus:border-[#E50914]"
-                autoFocus
-              />
-              {pinError && <p className="text-xs text-rose-500 text-center font-bold">PIN Errato o non autorizzato!</p>}
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setShowCoachPinModal(false)} className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300">Annulla</button>
-                <button type="submit" className="w-1/2 bg-[#E50914] py-2.5 rounded-xl text-xs font-bold text-white uppercase">Sblocca</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* NAVBAR */}
       <nav className="max-w-6xl mx-auto mb-6">
@@ -1456,7 +1492,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 1: WORKOUT (CON VISIBILITÀ DEL BLOCCO E DELLA SETTIMANA ATTIVA PER L'ATLETA) */}
+        {/* TAB 1: WORKOUT (CON SETTIMANA CALCOLATA AUTOMATICAMENTE) */}
         {activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
@@ -1469,18 +1505,23 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* Banner Informativo Metodo TOPGYM per l'Atleta */}
+            {/* Banner Metodo TOPGYM con Settimana Calcolata in Automatico */}
             <div className="bg-gradient-to-r from-red-950/40 via-zinc-900 to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
                   Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità (Cut)'}
                 </span>
-                <h4 className="text-sm font-bold text-white mt-0.5">{getMicroWeekDescription(currentWeek).title}</h4>
-                <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(currentWeek).desc}</p>
+                <h4 className="text-sm font-bold text-white mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).title}</h4>
+                <p className="text-xs text-zinc-400 mt-0.5">{getMicroWeekDescription(calculatedCurrentWeek).desc}</p>
               </div>
-              <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-amber-400">
-                Settimana {currentWeek} / 4
-              </span>
+              <div className="text-right">
+                <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-amber-400 block">
+                  Settimana {calculatedCurrentWeek} / 4 (Automatica)
+                </span>
+                <span className="text-[10px] text-zinc-500 mt-1 block">
+                  {workoutHistory.length} sessioni completate
+                </span>
+              </div>
             </div>
 
             <div className="bg-[#12151B]/90 backdrop-blur-md p-5 sm:p-6 rounded-2xl border border-white/10 shadow-xl">
@@ -1680,7 +1721,7 @@ export default function TopGymApp() {
           <AthleteGoals athleteId={targetUserId} athleteName={targetAthleteName} userRole={userRole} />
         )}
 
-        {/* TAB 4: READINESS COMPLETO DI FORM E STORICO ORIGINALE */}
+        {/* TAB 4: READINESS COMPLETO */}
         {activeTab === 'readiness' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
@@ -1801,7 +1842,18 @@ export default function TopGymApp() {
                     Cabina di Regia Periodizzazione · Metodo TOPGYM
                   </h3>
                 </div>
-                <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-400">Atleta:</span>
+                  <select
+                    value={activeAthleteId}
+                    onChange={e => setActiveAthleteId(e.target.value)}
+                    className="bg-zinc-900 border border-white/10 text-white font-bold text-xs rounded-xl px-2.5 py-1 outline-none cursor-pointer"
+                  >
+                    {athletes.map(ath => (
+                      <option key={ath.id} value={ath.id}>{ath.displayName}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Selettore Blocco Macrociclo */}
@@ -1839,11 +1891,11 @@ export default function TopGymApp() {
                 </div>
               </div>
 
-              {/* Progressione Microcicli */}
+              {/* Progressione Microcicli con indicatore settimana automatica */}
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    2. Settimana Corrente (Microciclo):
+                    2. Settimana (Microciclo): Attuale automatica = <b className="text-amber-400">Week {calculatedCurrentWeek}</b>
                   </label>
                   <button
                     type="button"
@@ -1857,22 +1909,23 @@ export default function TopGymApp() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[1, 2, 3, 4].map(w => {
                     const desc = getMicroWeekDescription(w as MicroWeek);
+                    const isSelected = calculatedCurrentWeek === w;
                     return (
                       <button
                         key={w}
                         type="button"
-                        onClick={() => setCurrentWeek(w as MicroWeek)}
-                        className={`p-3 rounded-xl border text-left transition ${currentWeek === w ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-black/30 border-white/5 text-zinc-400'}`}
+                        onClick={() => setManualWeek(w as MicroWeek)}
+                        className={`p-3 rounded-xl border text-left transition ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-black/30 border-white/5 text-zinc-400'}`}
                       >
-                        <b className={`text-xs block ${currentWeek === w ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
-                        <span className={`text-[10px] block mt-1 ${currentWeek === w ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
+                        <b className={`text-xs block ${isSelected ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
+                        <span className={`text-[10px] block mt-1 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Monitoraggio Serie Settimanali per Distretto (Calendario Lun-Dom) */}
+              {/* Monitoraggio Reale Serie Settimanali per Distretto (Lun - Dom) */}
               <div className="pt-2 border-t border-white/10 space-y-3">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                   <div>
@@ -1880,7 +1933,7 @@ export default function TopGymApp() {
                       <Layers className="w-4 h-4 text-[#E50914]" /> Controllo Volume Settimanale (Dal Lunedì alla Domenica)
                     </h4>
                     <span className="text-[11px] text-zinc-400">
-                      Settimana: <b className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</b>
+                      Settimana selezionata: <b className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</b>
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2108,7 +2161,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS & STORICO COMPLETO ORIGINALE (GRAFICO SVG E TABELLA RIGHE ESPANDIBILI) */}
+        {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl flex justify-between items-center flex-wrap gap-4">
@@ -2117,7 +2170,7 @@ export default function TopGymApp() {
                   <BarChart3 className="text-[#E50914]" /> 
                   Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie e progressione tonnellaggio (incluso corpo libero).</p>
+                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie settimanali reali dal lunedì alla domenica per singolo gruppo muscolare.</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="bg-black/30 px-4 py-2 rounded-xl border border-white/5 text-center">
@@ -2131,14 +2184,14 @@ export default function TopGymApp() {
               <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-white/5 pb-3 gap-4">
                 <div>
                   <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale
+                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale per Singolo Gruppo Muscolare
                   </h3>
-                  <span className="text-xs text-zinc-400">Target ottimale: 10 - 20 serie/settimana</span>
+                  <span className="text-xs text-zinc-400">Target ipertrofico: 15 - 25 serie per distretto (18-22 in cut)</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Sett/Mese)</label>
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Settimana)</label>
                     <input 
                       type="date" 
                       value={analyticsDate}
@@ -2154,10 +2207,11 @@ export default function TopGymApp() {
               </div>
 
               <div className="text-[11px] text-zinc-400 font-bold bg-black/20 p-2.5 rounded-xl text-center border border-white/5">
-                Mostrando i dati per la settimana: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
+                Mostrando i dati per la settimana da Lunedì a Domenica: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
                 <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
               </div>
 
+              {/* GRIGLIA CONTEGGIO SERIE REALI PER MUSCOLO */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => {
                   const count = weeklyMuscleSetsMap[mg] || 0;
@@ -2166,9 +2220,9 @@ export default function TopGymApp() {
                   
                   let statusColor = 'bg-zinc-700';
                   let textColor = 'text-zinc-400';
-                  if (count >= 10 && count <= 20) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
-                  else if (count > 20) { statusColor = 'bg-amber-500'; textColor = 'text-amber-400'; } 
-                  else if (count > 0) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
+                  if (count >= 15 && count <= 25) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
+                  else if (count > 25) { statusColor = 'bg-rose-500'; textColor = 'text-rose-400'; } 
+                  else if (count >= 10) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
 
                   return (
                     <div key={mg} className="bg-zinc-900/60 p-3.5 rounded-xl border border-white/5 space-y-2">
@@ -2190,6 +2244,7 @@ export default function TopGymApp() {
               </div>
             </div>
 
+            {/* Grafico SVG e Tabella Storico */}
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-4">
               <h3 className="font-bold text-base text-white flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità</h3>
               {workoutHistory.length === 0 ? (
@@ -2332,7 +2387,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 8: CLASSIFICA & BADGE ORIGINALE */}
+        {/* TAB 8: CLASSIFICA & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl">
@@ -2366,7 +2421,7 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 9: IMPOSTAZIONI COMPLETO ORIGINALE */}
+        {/* TAB 9: IMPOSTAZIONI COMPLETO */}
         {activeTab === 'settings' && userRole === 'ATHLETE' && (
           <div className="bg-[#12151B]/90 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl space-y-6">
             <div>
@@ -2464,7 +2519,7 @@ export default function TopGymApp() {
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl space-y-4">
             <h3 className="text-base font-bold text-white">Notifiche Disattivate</h3>
-            <p className="text-xs text-zinc-400">Hai bloccato i permessi nel browser. Riabilitali dalle impostazioni del sito.</p>
+            <p className="text-xs text-zinc-300">Hai bloccato i permessi nel browser. Riabilitali dalle impostazioni del sito.</p>
             <button type="button" onClick={() => setShowDeniedModal(false)} className="w-full bg-[#E50914] text-white font-bold text-xs py-3 rounded-xl">Ho capito, chiudi</button>
           </div>
         </div>
