@@ -45,7 +45,7 @@ export function detectAthleteGender(displayName?: string): AthleteGender {
 // 1. TEMPLATE MASCHILI (7 SPLIT)
 // ============================================================================
 
-// --- 1.1 UOMO B1: BASE 4 GIORNI (Petto-Spalle-Bic / Gambe-Dorso-Tric) ---
+// --- 1.1 UOMO B1: BASE 4 GIORNI (Petto-Spalle-Bic / Quad-Dorso-Tric) ---
 const M_B1_SPLIT_BASE: EngineWorkoutDay[] = [
   {
     id: 'b1_base_d1',
@@ -64,8 +64,8 @@ const M_B1_SPLIT_BASE: EngineWorkoutDay[] = [
     dayNumber: 2,
     title: 'G2: Gambe · Dorso · Tricipiti (Focus Neurale Squat)',
     exercises: [
-      { id: 'b1_d2_ex1', name: 'Squat con Bilanciere', muscleGroup: 'Gambe', stimulusType: 'NEURAL', sets: 5, reps: '6', targetWeight: '90', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', notes: 'Profondità sotto il parallelo, stabilità del piede a tripode, buffer costante.' },
-      { id: 'b1_d2_ex2', name: 'Leg Press 45°', muscleGroup: 'Gambe', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '160', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Scendi profondo senza retroversione del bacino.' },
+      { id: 'b1_d2_ex1', name: 'Squat con Bilanciere', muscleGroup: 'Quadricipiti', stimulusType: 'NEURAL', sets: 5, reps: '6', targetWeight: '90', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', notes: 'Profondità sotto il parallelo, stabilità del piede a tripode, buffer costante.' },
+      { id: 'b1_d2_ex2', name: 'Leg Press 45°', muscleGroup: 'Quadricipiti', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '160', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Scendi profondo senza retroversione del bacino.' },
       { id: 'b1_d2_ex3', name: 'Trazioni alla Sbarra / Lat Machine Presa Larga', muscleGroup: 'Dorso', stimulusType: 'NEURAL', sets: 4, reps: '6-8', targetWeight: '0', rpeTarget: 8.0, restSeconds: 150, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Depressione scapolare prima del tiraggio, petto verso la sbarra.' },
       { id: 'b1_d2_ex4', name: 'Pulley Basso Presa Stretta', muscleGroup: 'Dorso', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '10-12', targetWeight: '55', rpeTarget: 8.5, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Allungamento controllato ed adduzione scapolare in chiusura.' },
       { id: 'b1_d2_ex5', name: 'French Press su Panca con Bilanciere EZ', muscleGroup: 'Tricipiti', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '32', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Flessione del gomito controllata dietro la testa per prestirare il capo lungo.' }
@@ -88,8 +88,8 @@ const M_B1_SPLIT_BASE: EngineWorkoutDay[] = [
     dayNumber: 4,
     title: 'G4: Gambe · Dorso · Tricipiti (Focus Stacco / Catena Posteriore)',
     exercises: [
-      { id: 'b1_d4_ex1', name: 'Stacco da Terra con Bilanciere (o Rumeno)', muscleGroup: 'Gambe', stimulusType: 'NEURAL', sets: 5, reps: '5-6', targetWeight: '110', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', notes: 'Spinta con le gambe, catena posteriore attiva, schiena perfettamente neutra.' },
-      { id: 'b1_d4_ex2', name: 'Leg Curl Seduto / Sdraiato', muscleGroup: 'Gambe', stimulusType: 'METABOLIC', sets: 4, reps: '10-12', targetWeight: '45', rpeTarget: 8.0, restSeconds: 75, executionType: 'REGULAR', tut: '3-0-1-1', notes: 'Flessione del ginocchio decisa con 1" di contrazione di picco.' },
+      { id: 'b1_d4_ex1', name: 'Stacco da Terra con Bilanciere (o Rumeno)', muscleGroup: 'Femorali', stimulusType: 'NEURAL', sets: 5, reps: '5-6', targetWeight: '110', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', notes: 'Spinta con le gambe, catena posteriore attiva, schiena perfettamente neutra.' },
+      { id: 'b1_d4_ex2', name: 'Leg Curl Seduto / Sdraiato', muscleGroup: 'Femorali', stimulusType: 'METABOLIC', sets: 4, reps: '10-12', targetWeight: '45', rpeTarget: 8.0, restSeconds: 75, executionType: 'REGULAR', tut: '3-0-1-1', notes: 'Flessione del ginocchio decisa con 1" di contrazione di picco.' },
       { id: 'b1_d4_ex3', name: 'Rematore con Bilanciere Presa Prona (Yates o 45°)', muscleGroup: 'Dorso', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8', targetWeight: '60', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Trazione verso l\'ombelico con gomiti aderenti.' },
       { id: 'b1_d4_ex4', name: 'Lat Machine Presa Neutra / Triangolo', muscleGroup: 'Dorso', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '10-12', targetWeight: '60', rpeTarget: 8.5, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Range di movimento profondo, allungamento dorsale in risalita.' },
       { id: 'b1_d4_ex5', name: 'Pushdown ai Cavi con Corda', muscleGroup: 'Tricipiti', stimulusType: 'METABOLIC', sets: 4, reps: '12', targetWeight: '22', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Apertura finale della corda in blocco articolare per reclutare il capo laterale.' }
@@ -109,7 +109,7 @@ const M_B1_SPLIT_UPPER_LOWER: EngineWorkoutDay[] = [
       { id: 'b1_ul_3', name: 'Spinte con Manubri Panca 30°', muscleGroup: 'Petto', sets: 4, reps: '8-10', targetWeight: '26', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_4', name: 'Pulley al Cavo', muscleGroup: 'Dorso', sets: 4, reps: '8-10', targetWeight: '55', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_5', name: 'Alzate Laterali Manubri', muscleGroup: 'Spalle', sets: 3, reps: '12', targetWeight: '10', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'b1_ul_6', name: 'Super-set Braccia (Curl EZ + Pushdown)', muscleGroup: 'Braccia', sets: 3, reps: '10+10', targetWeight: '25', rpeTarget: 8.0, restSeconds: 90, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
+      { id: 'b1_ul_6', name: 'Super-set Braccia (Curl EZ + Pushdown)', muscleGroup: 'Bicipiti', sets: 3, reps: '10+10', targetWeight: '25', rpeTarget: 8.0, restSeconds: 90, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
     ]
   },
   {
@@ -119,7 +119,7 @@ const M_B1_SPLIT_UPPER_LOWER: EngineWorkoutDay[] = [
     exercises: [
       { id: 'b1_ul_7', name: 'Squat Bilanciere', muscleGroup: 'Quadricipiti', sets: 5, reps: '6', targetWeight: '90', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', stimulusType: 'NEURAL' },
       { id: 'b1_ul_8', name: 'Leg Press 45°', muscleGroup: 'Quadricipiti', sets: 4, reps: '8-10', targetWeight: '160', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'b1_ul_9', name: 'Affondi con Manubri in Avanzamento', muscleGroup: 'Gambe', sets: 3, reps: '10 per gamba', targetWeight: '16', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
+      { id: 'b1_ul_9', name: 'Affondi con Manubri in Avanzamento', muscleGroup: 'Quadricipiti', sets: 3, reps: '10 per gamba', targetWeight: '16', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_10', name: 'Leg Extension', muscleGroup: 'Quadricipiti', sets: 3, reps: '12-15', targetWeight: '40', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'b1_ul_11', name: 'Calf Raise Seduto / In Piedi', muscleGroup: 'Polpacci', sets: 4, reps: '15', targetWeight: '50', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-1-1-1', stimulusType: 'METABOLIC' }
     ]
@@ -134,7 +134,7 @@ const M_B1_SPLIT_UPPER_LOWER: EngineWorkoutDay[] = [
       { id: 'b1_ul_14', name: 'Dip alle Parallele con Sovraccarico', muscleGroup: 'Petto', sets: 4, reps: '8', targetWeight: '10', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_15', name: 'Lat Machine Presa a Triangolo', muscleGroup: 'Dorso', sets: 4, reps: '10', targetWeight: '60', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_16', name: 'Face Pull ai Cavi', muscleGroup: 'Spalle', sets: 4, reps: '12-15', targetWeight: '20', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'b1_ul_17', name: 'Curl Martello + French Press Manubri', muscleGroup: 'Braccia', sets: 3, reps: '10+10', targetWeight: '14', rpeTarget: 8.0, restSeconds: 90, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
+      { id: 'b1_ul_17', name: 'Curl Martello + French Press Manubri', muscleGroup: 'Bicipiti', sets: 3, reps: '10+10', targetWeight: '14', rpeTarget: 8.0, restSeconds: 90, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
     ]
   },
   {
@@ -145,7 +145,7 @@ const M_B1_SPLIT_UPPER_LOWER: EngineWorkoutDay[] = [
       { id: 'b1_ul_18', name: 'Stacco da Terra Bilanciere', muscleGroup: 'Femorali', sets: 5, reps: '5', targetWeight: '110', rpeTarget: 7.5, restSeconds: 180, executionType: 'REGULAR', tut: '2-0-X-0', stimulusType: 'NEURAL' },
       { id: 'b1_ul_19', name: 'Stacco Rumeno con Manubri', muscleGroup: 'Femorali', sets: 4, reps: '8-10', targetWeight: '28', rpeTarget: 8.0, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_20', name: 'Leg Curl Sdraiato', muscleGroup: 'Femorali', sets: 4, reps: '10-12', targetWeight: '40', rpeTarget: 8.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'b1_ul_21', name: 'Pressa Piedi Alti (Enfasi Glutei/Femorali)', muscleGroup: 'Glutei', sets: 3, reps: '12', targetWeight: '140', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
+      { id: 'b1_ul_21', name: 'Leg Press Piedi Alti (Enfasi Glutei/Femorali)', muscleGroup: 'Glutei', sets: 3, reps: '12', targetWeight: '140', rpeTarget: 8.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b1_ul_22', name: 'Calf alla Pressa', muscleGroup: 'Polpacci', sets: 4, reps: '12-15', targetWeight: '120', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-1-1-1', stimulusType: 'METABOLIC' }
     ]
   }
@@ -214,9 +214,9 @@ const M_B2_SPLIT_ANTAGONISTI: EngineWorkoutDay[] = [
     dayNumber: 2,
     title: 'G2: Gambe · Spalle · Bicipiti (Catena Anteriore & Spalle)',
     exercises: [
-      { id: 'b2_d2_1', name: 'Squat con Bilanciere o Hack Squat', muscleGroup: 'Gambe', stimulusType: 'NEURAL', sets: 4, reps: '6-8', targetWeight: '95', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Alzata pesante di stimolo neurale e tensione meccanica.' },
-      { id: 'b2_d2_2', name: 'Leg Press a 45°', muscleGroup: 'Gambe', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10-12', targetWeight: '180', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Profondità massima, piedi a centro pedana.' },
-      { id: 'b2_d2_3', name: 'Leg Extension', muscleGroup: 'Gambe', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: 'Saturazione quadricipiti: 10 reps a cedimento + scarico 40% a max reps.' },
+      { id: 'b2_d2_1', name: 'Squat con Bilanciere o Hack Squat', muscleGroup: 'Quadricipiti', stimulusType: 'NEURAL', sets: 4, reps: '6-8', targetWeight: '95', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Alzata pesante di stimolo neurale e tensione meccanica.' },
+      { id: 'b2_d2_2', name: 'Leg Press a 45°', muscleGroup: 'Quadricipiti', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10-12', targetWeight: '180', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Profondità massima, piedi a centro pedana.' },
+      { id: 'b2_d2_3', name: 'Leg Extension', muscleGroup: 'Quadricipiti', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: 'Saturazione quadricipiti: 10 reps a cedimento + scarico 40% a max reps.' },
       { id: 'b2_d2_4', name: 'Shoulder Press con Manubri / Machine', muscleGroup: 'Spalle', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '22', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Spinta fluida senza serrare i gomiti.' },
       { id: 'b2_d2_5', name: 'Alzate Laterali con Manubri o ai Cavi', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 3, reps: '12', targetWeight: '10', rpeTarget: 10, restSeconds: 45, executionType: 'STRIPPING', tut: '2-0-1-1', notes: 'Stripping a 1-2 scarichi sull\'ultima serie.' },
       { id: 'b2_d2_6', name: 'Curl su Panca Inclinata a 45° con Manubri', muscleGroup: 'Bicipiti', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10', targetWeight: '12', rpeTarget: 9.0, restSeconds: 75, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Massimo prestiramento del capo lungo del bicipite.' }
@@ -240,8 +240,8 @@ const M_B2_SPLIT_ANTAGONISTI: EngineWorkoutDay[] = [
     dayNumber: 4,
     title: 'G4: Gambe · Spalle · Bicipiti (Catena Posteriore & Spalle)',
     exercises: [
-      { id: 'b2_d4_1', name: 'Stacco Rumeno con Bilanciere o Manubri', muscleGroup: 'Gambe', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '80', rpeTarget: 8.5, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Enfasi totale sui femorali e glutei in fase di allungamento.' },
-      { id: 'b2_d4_2', name: 'Leg Curl Sdraiato o in Piedi', muscleGroup: 'Gambe', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10', targetWeight: '40', rpeTarget: 9.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Contrazione di picco marcata a ginocchio flesso.' },
+      { id: 'b2_d4_1', name: 'Stacco Rumeno con Bilanciere o Manubri', muscleGroup: 'Femorali', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '80', rpeTarget: 8.5, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Enfasi totale sui femorali e glutei in fase di allungamento.' },
+      { id: 'b2_d4_2', name: 'Leg Curl Sdraiato o in Piedi', muscleGroup: 'Femorali', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10', targetWeight: '40', rpeTarget: 9.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Contrazione di picco marcata a ginocchio flesso.' },
       { id: 'b2_d4_3', name: 'Alzate Laterali ai Cavi Incrociati o Macchina', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 4, reps: '12-15', targetWeight: '7.5', rpeTarget: 10, restSeconds: 45, executionType: 'STRIPPING', tut: '2-0-1-1', notes: 'Bruciore e congestione del deltoide laterale con scarico finale.' },
       { id: 'b2_d4_4', name: 'Deltoidi Posteriori al Cavo / Pec Deck inverso', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 3, reps: '15', targetWeight: '35', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Gomiti leggermente flessi, zero intervento dei trapezi superiori.' },
       { id: 'b2_d4_5', name: 'Spider Curl su Panca Inclinata con Bilanciere EZ', muscleGroup: 'Bicipiti', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '20', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: 'Braccia a perpendicolo verso il basso, isolamento puro senza compensi.' }
@@ -354,7 +354,7 @@ const M_B2_SPLIT_PPL_UPPER: EngineWorkoutDay[] = [
       { id: 'b2_pu_21', name: 'Croci ai Cavi dall\'Alto', muscleGroup: 'Petto', sets: 3, reps: '12-15', targetWeight: '12.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-2', stimulusType: 'METABOLIC' },
       { id: 'b2_pu_22', name: 'Pulley al Basso con Corda', muscleGroup: 'Dorso', sets: 3, reps: '10-12', targetWeight: '50', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'b2_pu_23', name: 'Alzate Laterali Manubri a Sedere', muscleGroup: 'Spalle', sets: 4, reps: '15', targetWeight: '8', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'b2_pu_24', name: 'Super-set Braccia (Curl EZ + Pushdown)', muscleGroup: 'Braccia', sets: 4, reps: '10+10', targetWeight: '25', rpeTarget: 9.5, restSeconds: 75, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
+      { id: 'b2_pu_24', name: 'Super-set Braccia (Curl EZ + Pushdown)', muscleGroup: 'Bicipiti', sets: 4, reps: '10+10', targetWeight: '25', rpeTarget: 9.5, restSeconds: 75, executionType: 'SUPERSET', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
     ]
   }
 ];
@@ -392,7 +392,7 @@ const M_B2_SPLIT_5D_PRO: EngineWorkoutDay[] = [
     exercises: [
       { id: 'b2_5d_11', name: 'Squat con Bilanciere', muscleGroup: 'Quadricipiti', sets: 4, reps: '6-8', targetWeight: '95', rpeTarget: 8.5, restSeconds: 150, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'NEURAL' },
       { id: 'b2_5d_12', name: 'Leg Press 45°', muscleGroup: 'Quadricipiti', sets: 4, reps: '10-12', targetWeight: '190', rpeTarget: 9.0, restSeconds: 90, executionType: 'REST_PAUSE', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'b2_5d_13', name: 'Affondi con Manubri in Avanzamento', muscleGroup: 'Gambe', sets: 3, reps: '10 per gamba', targetWeight: '18', rpeTarget: 8.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
+      { id: 'b2_5d_13', name: 'Affondi con Manubri in Avanzamento', muscleGroup: 'Quadricipiti', sets: 3, reps: '10 per gamba', targetWeight: '18', rpeTarget: 8.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b2_5d_14', name: 'Leg Extension', muscleGroup: 'Quadricipiti', sets: 3, reps: '10 + MAX', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'b2_5d_15', name: 'Calf Raise alla Macchina o Seduto', muscleGroup: 'Polpacci', sets: 4, reps: '15', targetWeight: '50', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-1-1-1', stimulusType: 'METABOLIC' }
     ]
@@ -406,7 +406,7 @@ const M_B2_SPLIT_5D_PRO: EngineWorkoutDay[] = [
       { id: 'b2_5d_17', name: 'Alzate Laterali Manubri', muscleGroup: 'Spalle', sets: 4, reps: '12', targetWeight: '10', rpeTarget: 10, restSeconds: 45, executionType: 'STRIPPING', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'b2_5d_18', name: 'Curl con Bilanciere EZ in Piedi', muscleGroup: 'Bicipiti', sets: 4, reps: '8-10', targetWeight: '32', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'b2_5d_19', name: 'French Press con Manubri su Panca', muscleGroup: 'Tricipiti', sets: 4, reps: '10', targetWeight: '12', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'b2_5d_20', name: 'Super-set Martello Cavi + Pushdown Corda', muscleGroup: 'Braccia', sets: 3, reps: '10+10', targetWeight: '20', rpeTarget: 10, restSeconds: 60, executionType: 'SUPERSET', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
+      { id: 'b2_5d_20', name: 'Super-set Martello Cavi + Pushdown Corda', muscleGroup: 'Bicipiti', sets: 3, reps: '10+10', targetWeight: '20', rpeTarget: 10, restSeconds: 60, executionType: 'SUPERSET', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   },
   {
@@ -422,7 +422,6 @@ const M_B2_SPLIT_5D_PRO: EngineWorkoutDay[] = [
     ]
   }
 ];
-
 
 // ============================================================================
 // 2. TEMPLATE FEMMINILI (7 SPLIT)
@@ -582,8 +581,7 @@ const F_B2_SPLIT_QUALITA: EngineWorkoutDay[] = [
       { id: 'f_b2_1', name: 'Barbell Hip Thrust', muscleGroup: 'Glutei', stimulusType: 'NEURAL', sets: 4, reps: '6-8', targetWeight: '90', rpeTarget: 8.5, restSeconds: 120, executionType: 'BACK_OFF', tut: '2-1-1-1', notes: 'Serie pesante seguita da back-off a -25% portato a cedimento concentrico.' },
       { id: 'f_b2_2', name: 'Affondi Bulgari con Manubri', muscleGroup: 'Glutei', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '14', rpeTarget: 9.5, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Cedimento concentrico reale sull\'ultima serie.' },
       { id: 'f_b2_3', name: 'Shoulder Press Machine / Manubri', muscleGroup: 'Spalle', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '10-12', targetWeight: '18', rpeTarget: 9.0, restSeconds: 75, executionType: 'REST_PAUSE', tut: '2-0-1-0', notes: 'REST-PAUSE: 12 reps a cedimento -> 15" pausa -> max reps -> 15" pausa -> max reps.' },
-      { id: 'f_b2_4', name: 'Abductor Machine con Busto Inclinato', muscleGroup: 'Glutei', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: '10 reps a cedimento + scarico immediato del 40% a max reps con parziali pulsate finali.' },
-      { id: 'f_b2_5', name: 'Cardio LISS Defaticante (Tapis roulant pendenza)', muscleGroup: 'Addome', stimulusType: 'METABOLIC', sets: 1, reps: '10-12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', notes: 'Camminata in salita a ritmo costante per stimolare il microcircolo degli arti inferiori.' }
+      { id: 'f_b2_4', name: 'Abductor Machine con Busto Inclinato', muscleGroup: 'Glutei', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: '10 reps a cedimento + scarico immediato del 40% a max reps con parziali pulsate finali.' }
     ]
   },
   {
@@ -594,8 +592,7 @@ const F_B2_SPLIT_QUALITA: EngineWorkoutDay[] = [
       { id: 'f_b2_6', name: 'Stacco Rumeno con Bilanciere (RDL)', muscleGroup: 'Femorali', stimulusType: 'NEURAL', sets: 4, reps: '6-8', targetWeight: '60', rpeTarget: 8.5, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', notes: 'Carico pesante controllato in discesa a schiena serrata.' },
       { id: 'f_b2_7', name: 'Lat Machine Presa Inversa / Neutra', muscleGroup: 'Dorso', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '8-10', targetWeight: '40', rpeTarget: 9.0, restSeconds: 90, executionType: 'REST_PAUSE', tut: '2-0-1-1', notes: 'REST-PAUSE sull\'ultima serie: cedimento -> 15" pausa -> max reps.' },
       { id: 'f_b2_8', name: 'Leg Curl Seduto', muscleGroup: 'Femorali', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '10-12', targetWeight: '35', rpeTarget: 9.5, restSeconds: 60, executionType: 'STRIPPING', tut: '2-0-1-1', notes: 'Stripping a 1 scarico (-35%) al sopraggiungere del cedimento.' },
-      { id: 'f_b2_9', name: 'Glute Kickback al Cavo Basso con Isometria', muscleGroup: 'Glutei', stimulusType: 'METABOLIC', sets: 3, reps: '12 + Iso', targetWeight: '12.5', rpeTarget: 10, restSeconds: 60, executionType: 'ISOMETRIE', tut: '2-0-1-2', notes: 'Al termine dell\'ultima rep a cedimento, mantieni 10-15s di contrazione isometrica statica di picco.' },
-      { id: 'f_b2_10', name: 'Cardio LISS Defaticante (Stair Master / Cyclette)', muscleGroup: 'Addome', stimulusType: 'METABOLIC', sets: 1, reps: '10 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', notes: 'Bassa intensità costante per favorire il recupero senza infiammazione.' }
+      { id: 'f_b2_9', name: 'Glute Kickback al Cavo Basso con Isometria', muscleGroup: 'Glutei', stimulusType: 'METABOLIC', sets: 3, reps: '12 + Iso', targetWeight: '12.5', rpeTarget: 10, restSeconds: 60, executionType: 'ISOMETRIE', tut: '2-0-1-2', notes: 'Al termine dell\'ultima rep a cedimento, mantieni 10-15s di contrazione isometrica statica di picco.' }
     ]
   },
   {
@@ -606,8 +603,7 @@ const F_B2_SPLIT_QUALITA: EngineWorkoutDay[] = [
       { id: 'f_b2_11', name: 'Leg Press 45° a ROM Completo', muscleGroup: 'Quadricipiti', stimulusType: 'NEURAL', sets: 4, reps: '8-10', targetWeight: '140', rpeTarget: 9.0, restSeconds: 120, executionType: 'REST_PAUSE', tut: '3-0-1-0', notes: 'REST-PAUSE su macchina guidata: cedimento a 10 reps -> 15" pausa -> max reps.' },
       { id: 'f_b2_12', name: 'Leg Extension', muscleGroup: 'Quadricipiti', stimulusType: 'METABOLIC', sets: 3, reps: '10 + MAX', targetWeight: '35', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', notes: '10 reps piene + scarico rapido del 40% a cedimento concentrico.' },
       { id: 'f_b2_13', name: 'Alzate Laterali ai Cavi con Parziali', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 3, reps: '12 + Parziali', targetWeight: '6', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', notes: 'Al cedimento a ROM completo, continua con 6-10 mezze ripetizioni pulsate veloci.' },
-      { id: 'f_b2_14', name: 'Dip tra due Panche per Tricipiti', muscleGroup: 'Tricipiti', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '12', targetWeight: '0', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Focus sul tono e definizione del retro-braccio.' },
-      { id: 'f_b2_15', name: 'Cardio LISS Camminata in Salita', muscleGroup: 'Addome', stimulusType: 'METABOLIC', sets: 1, reps: '10-12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', notes: 'Tapis roulant pendenza 6-8%, velocità 4.5-5.0 km/h.' }
+      { id: 'f_b2_14', name: 'Dip tra due Panche per Tricipiti', muscleGroup: 'Tricipiti', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '12', targetWeight: '0', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', notes: 'Focus sul tono e definizione del retro-braccio.' }
     ]
   },
   {
@@ -618,8 +614,7 @@ const F_B2_SPLIT_QUALITA: EngineWorkoutDay[] = [
       { id: 'f_b2_16', name: 'Hip Thrust al Multipower con Isometria Finale', muscleGroup: 'Glutei', stimulusType: 'HYPERTROPHIC', sets: 4, reps: '10-12 + Iso', targetWeight: '80', rpeTarget: 10, restSeconds: 90, executionType: 'ISOMETRIE', tut: '2-1-1-1', notes: 'All\'ultima serie a cedimento, mantieni 15 secondi di contrazione statica isometrica di picco.' },
       { id: 'f_b2_17', name: 'Rematore al Pulley Basso con Corda', muscleGroup: 'Dorso', stimulusType: 'HYPERTROPHIC', sets: 3, reps: '10-12', targetWeight: '35', rpeTarget: 9.0, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Apertura corda all\'addome con contrazione dorsale pura.' },
       { id: 'f_b2_18', name: 'Abductor Machine Stripping + Parziali', muscleGroup: 'Glutei', stimulusType: 'METABOLIC', sets: 3, reps: '15 + Parziali', targetWeight: '45', rpeTarget: 10, restSeconds: 60, executionType: 'PARZIALI', tut: '2-0-1-1', notes: 'Stripping a 1 scarico seguito da 8 parziali pulsate in massima apertura.' },
-      { id: 'f_b2_19', name: 'Deltoidi Posteriori al Cavo Alto / Reverse Fly', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 3, reps: '15', targetWeight: '7.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Postura scapolare aperta per aprire il cingolo scapolare.' },
-      { id: 'f_b2_20', name: 'Cardio LISS Finale su Tapis Roulant', muscleGroup: 'Addome', stimulusType: 'METABOLIC', sets: 1, reps: '12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', notes: 'Smaltimento metabolico senza impatto infiammatorio.' }
+      { id: 'f_b2_19', name: 'Deltoidi Posteriori al Cavo Alto / Reverse Fly', muscleGroup: 'Spalle', stimulusType: 'METABOLIC', sets: 3, reps: '15', targetWeight: '7.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', notes: 'Postura scapolare aperta per aprire il cingolo scapolare.' }
     ]
   }
 ];
@@ -646,8 +641,7 @@ const F_B2_SPLIT_GLUTE_DELTS: EngineWorkoutDay[] = [
       { id: 'f_gd_6', name: 'Stacco Rumeno con Bilanciere', muscleGroup: 'Femorali', sets: 4, reps: '8-10', targetWeight: '60', rpeTarget: 8.5, restSeconds: 120, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_gd_7', name: 'Lat Machine Presa Neutra', muscleGroup: 'Dorso', sets: 4, reps: '8-10', targetWeight: '40', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_gd_8', name: 'Pulley al Basso con Corda', muscleGroup: 'Dorso', sets: 3, reps: '10 + MAX', targetWeight: '35', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_9', name: 'Face Pull con Corda', muscleGroup: 'Spalle', sets: 4, reps: '15', targetWeight: '17.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_10', name: 'Cardio LISS Tapis Roulant Salita', muscleGroup: 'Addome', sets: 1, reps: '12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_gd_9', name: 'Face Pull con Corda', muscleGroup: 'Spalle', sets: 4, reps: '15', targetWeight: '17.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   },
   {
@@ -658,8 +652,7 @@ const F_B2_SPLIT_GLUTE_DELTS: EngineWorkoutDay[] = [
       { id: 'f_gd_11', name: 'Leg Press 45° Piedi Alti', muscleGroup: 'Glutei', sets: 4, reps: '10-12', targetWeight: '140', rpeTarget: 9.0, restSeconds: 90, executionType: 'REST_PAUSE', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_gd_12', name: 'Leg Extension', muscleGroup: 'Quadricipiti', sets: 3, reps: '10 + MAX', targetWeight: '35', rpeTarget: 10, restSeconds: 60, executionType: '10_PIU_MAX', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'f_gd_13', name: 'Alzate Laterali con Manubri a Sedere', muscleGroup: 'Spalle', sets: 4, reps: '12 + Parziali', targetWeight: '6', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_14', name: 'Abductor Machine con Busto Inclinato', muscleGroup: 'Glutei', sets: 4, reps: '15 + Parziali', targetWeight: '45', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_15', name: 'Cardio LISS Camminata Veloce', muscleGroup: 'Addome', sets: 1, reps: '10 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_gd_14', name: 'Abductor Machine con Busto Inclinato', muscleGroup: 'Glutei', sets: 4, reps: '15 + Parziali', targetWeight: '45', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   },
   {
@@ -670,8 +663,7 @@ const F_B2_SPLIT_GLUTE_DELTS: EngineWorkoutDay[] = [
       { id: 'f_gd_16', name: 'Hip Thrust Multipower con Isometria Finale', muscleGroup: 'Glutei', sets: 4, reps: '10-12 + Iso', targetWeight: '85', rpeTarget: 10, restSeconds: 90, executionType: 'ISOMETRIE', tut: '2-1-1-1', stimulusType: 'HYPERTROPHIC', notes: 'Fermo 15s alla fine dell\'ultima serie.' },
       { id: 'f_gd_17', name: 'Leg Curl Seduto', muscleGroup: 'Femorali', sets: 3, reps: '10', targetWeight: '35', rpeTarget: 9.5, restSeconds: 60, executionType: 'STRIPPING', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'f_gd_18', name: 'Deltoidi Posteriori al Cavo Alto', muscleGroup: 'Spalle', sets: 3, reps: '15', targetWeight: '7.5', rpeTarget: 9.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_19', name: 'Pushdown con Corda ai Cavi', muscleGroup: 'Tricipiti', sets: 3, reps: '12', targetWeight: '15', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_gd_20', name: 'Cardio LISS Cyclette Finale', muscleGroup: 'Addome', sets: 1, reps: '12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_gd_19', name: 'Pushdown con Corda ai Cavi', muscleGroup: 'Tricipiti', sets: 3, reps: '12', targetWeight: '15', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   }
 ];
@@ -686,8 +678,7 @@ const F_B2_SPLIT_GLUTE_3D: EngineWorkoutDay[] = [
       { id: 'f_g3_1', name: 'Barbell Hip Thrust', muscleGroup: 'Glutei', sets: 4, reps: '8-10', targetWeight: '90', rpeTarget: 9.5, restSeconds: 120, executionType: '10_PIU_MAX', tut: '2-1-1-1', stimulusType: 'HYPERTROPHIC', notes: '10 reps a cedimento + scarico 40% a max reps.' },
       { id: 'f_g3_2', name: 'Affondi Bulgari con Manubri', muscleGroup: 'Glutei', sets: 3, reps: '10 per gamba', targetWeight: '12', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_g3_3', name: 'Stacco Rumeno con Manubri', muscleGroup: 'Femorali', sets: 4, reps: '10', targetWeight: '22', rpeTarget: 8.5, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_g3_4', name: 'Abductor Machine', muscleGroup: 'Glutei', sets: 4, reps: '15 + Parziali', targetWeight: '45', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_g3_5', name: 'Cardio LISS Tapis Roulant Salita', muscleGroup: 'Addome', sets: 1, reps: '10 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_g3_4', name: 'Abductor Machine', muscleGroup: 'Glutei', sets: 4, reps: '15 + Parziali', targetWeight: '45', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   },
   {
@@ -705,13 +696,12 @@ const F_B2_SPLIT_GLUTE_3D: EngineWorkoutDay[] = [
   {
     id: 'f_b2_g3_d3',
     dayNumber: 3,
-    title: 'G3: Full Body Density (Glutei & Circolo LISS)',
+    title: 'G3: Full Body Density (Glutei & Tono)',
     exercises: [
       { id: 'f_g3_11', name: 'Leg Press 45° Piedi Alti', muscleGroup: 'Glutei', sets: 4, reps: '10', targetWeight: '130', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_g3_12', name: 'Glute Kickback al Cavo Basso', muscleGroup: 'Glutei', sets: 3, reps: '12 + Iso', targetWeight: '12.5', rpeTarget: 10, restSeconds: 60, executionType: 'ISOMETRIE', tut: '2-0-1-2', stimulusType: 'METABOLIC' },
       { id: 'f_g3_13', name: 'Rematore con Manubrio Singolo', muscleGroup: 'Dorso', sets: 3, reps: '10 per lato', targetWeight: '14', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_g3_14', name: 'Deltoidi Posteriori Cavo Alto', muscleGroup: 'Spalle', sets: 3, reps: '15', targetWeight: '7.5', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_g3_15', name: 'Cardio LISS Tapis Roulant Finale', muscleGroup: 'Addome', sets: 1, reps: '15 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_g3_14', name: 'Deltoidi Posteriori Cavo Alto', muscleGroup: 'Spalle', sets: 3, reps: '15', targetWeight: '7.5', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' }
     ]
   }
 ];
@@ -726,8 +716,7 @@ const F_B2_SPLIT_METABOLIC_LISS: EngineWorkoutDay[] = [
       { id: 'f_ml_1', name: 'Barbell Hip Thrust', muscleGroup: 'Glutei', sets: 4, reps: '10', targetWeight: '85', rpeTarget: 8.5, restSeconds: 90, executionType: 'REGULAR', tut: '2-1-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_ml_2', name: 'Lat Machine Presa Neutra', muscleGroup: 'Dorso', sets: 4, reps: '10', targetWeight: '35', rpeTarget: 8.5, restSeconds: 75, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_ml_3', name: 'Stacco Rumeno con Manubri', muscleGroup: 'Femorali', sets: 3, reps: '10', targetWeight: '20', rpeTarget: 8.5, restSeconds: 75, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_ml_4', name: 'Spinte con Manubri su Panca', muscleGroup: 'Petto', sets: 3, reps: '12', targetWeight: '12', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_ml_5', name: 'Cardio LISS Tapis Roulant Salita', muscleGroup: 'Addome', sets: 1, reps: '12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_ml_4', name: 'Spinte con Manubri su Panca', muscleGroup: 'Petto', sets: 3, reps: '12', targetWeight: '12', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
     ]
   },
   {
@@ -738,8 +727,7 @@ const F_B2_SPLIT_METABOLIC_LISS: EngineWorkoutDay[] = [
       { id: 'f_ml_6', name: 'Abductor Machine con Busto Inclinato', muscleGroup: 'Glutei', sets: 4, reps: '15', targetWeight: '45', rpeTarget: 10, restSeconds: 45, executionType: '10_PIU_MAX', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'f_ml_7', name: 'Leg Curl Seduto o Sdraiato', muscleGroup: 'Femorali', sets: 4, reps: '12', targetWeight: '30', rpeTarget: 9.0, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'f_ml_8', name: 'Alzate Laterali al Cavo Singolo', muscleGroup: 'Spalle', sets: 4, reps: '12', targetWeight: '5', rpeTarget: 10, restSeconds: 45, executionType: 'STRIPPING', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_ml_9', name: 'Glute Kickback al Cavo Basso', muscleGroup: 'Glutei', sets: 3, reps: '15 + Iso', targetWeight: '10', rpeTarget: 10, restSeconds: 45, executionType: 'ISOMETRIE', tut: '2-0-1-2', stimulusType: 'METABOLIC' },
-      { id: 'f_ml_10', name: 'Cyclette LISS Defaticante', muscleGroup: 'Addome', sets: 1, reps: '12 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_ml_9', name: 'Glute Kickback al Cavo Basso', muscleGroup: 'Glutei', sets: 3, reps: '15 + Iso', targetWeight: '10', rpeTarget: 10, restSeconds: 45, executionType: 'ISOMETRIE', tut: '2-0-1-2', stimulusType: 'METABOLIC' }
     ]
   },
   {
@@ -750,8 +738,7 @@ const F_B2_SPLIT_METABOLIC_LISS: EngineWorkoutDay[] = [
       { id: 'f_ml_11', name: 'Leg Press Piedi Alti e Larghi', muscleGroup: 'Glutei', sets: 4, reps: '10-12', targetWeight: '130', rpeTarget: 9.0, restSeconds: 90, executionType: 'REGULAR', tut: '3-0-1-0', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_ml_12', name: 'Pulley al Basso Presa Stretta', muscleGroup: 'Dorso', sets: 4, reps: '10', targetWeight: '35', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_ml_13', name: 'Affondi con Manubri in Avanzamento', muscleGroup: 'Glutei', sets: 3, reps: '12 per gamba', targetWeight: '10', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_ml_14', name: 'Shoulder Press con Manubri', muscleGroup: 'Spalle', sets: 3, reps: '10', targetWeight: '10', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' },
-      { id: 'f_ml_15', name: 'Stairmaster LISS o Camminata Salita', muscleGroup: 'Addome', sets: 1, reps: '10 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_ml_14', name: 'Shoulder Press con Manubri', muscleGroup: 'Spalle', sets: 3, reps: '10', targetWeight: '10', rpeTarget: 8.5, restSeconds: 60, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'HYPERTROPHIC' }
     ]
   },
   {
@@ -762,12 +749,10 @@ const F_B2_SPLIT_METABOLIC_LISS: EngineWorkoutDay[] = [
       { id: 'f_ml_16', name: 'Hip Thrust Multipower con Isometria Finale', muscleGroup: 'Glutei', sets: 4, reps: '12 + Iso', targetWeight: '80', rpeTarget: 10, restSeconds: 90, executionType: 'ISOMETRIE', tut: '2-1-1-1', stimulusType: 'HYPERTROPHIC' },
       { id: 'f_ml_17', name: 'Leg Extension', muscleGroup: 'Quadricipiti', sets: 3, reps: '12 + Parziali', targetWeight: '30', rpeTarget: 10, restSeconds: 45, executionType: 'PARZIALI', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
       { id: 'f_ml_18', name: 'Face Pull con Corda', muscleGroup: 'Spalle', sets: 3, reps: '15', targetWeight: '17.5', rpeTarget: 9.0, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-1', stimulusType: 'METABOLIC' },
-      { id: 'f_ml_19', name: 'Dip tra due Panche (Tricipiti)', muscleGroup: 'Tricipiti', sets: 3, reps: '12', targetWeight: '0', rpeTarget: 8.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'METABOLIC' },
-      { id: 'f_ml_20', name: 'Tapis Roulant LISS Defaticante Finale', muscleGroup: 'Addome', sets: 1, reps: '15 min', targetWeight: '0', rpeTarget: 6.0, restSeconds: 0, executionType: 'REGULAR', tut: 'Costante', stimulusType: 'METABOLIC' }
+      { id: 'f_ml_19', name: 'Dip tra due Panche (Tricipiti)', muscleGroup: 'Tricipiti', sets: 3, reps: '12', targetWeight: '0', rpeTarget: 8.5, restSeconds: 45, executionType: 'REGULAR', tut: '2-0-1-0', stimulusType: 'METABOLIC' }
     ]
   }
 ];
-
 
 // ============================================================================
 // 3. REGISTRO TOTALE (14 TEMPLATE COMPLETI: 7 UOMO · 7 DONNA)
@@ -894,7 +879,7 @@ export const TOP_GYM_SPLIT_TEMPLATES: TopGymSplitTemplate[] = [
     gender: 'FEMALE',
     daysCount: 4,
     type: 'BASE',
-    description: 'Massimo stimolo estetico: Rest-Pause, 10+MAX, Parziali pulsate, Isometrie a fine serie e 10-12m di cardio LISS.',
+    description: 'Massimo stimolo estetico: Rest-Pause, 10+MAX, Parziali pulsate, Isometrie a fine serie e defaticamento post-seduta.',
     focus: 'Ipertrofia Glutei, Modellamento Upper & Circolo LISS',
     days: F_B2_SPLIT_QUALITA
   },
@@ -905,7 +890,7 @@ export const TOP_GYM_SPLIT_TEMPLATES: TopGymSplitTemplate[] = [
     gender: 'FEMALE',
     daysCount: 4,
     type: 'ALTERNATIVE_1',
-    description: 'Specializzazione ad altissimo impatto visivo focalizzata su glutei, deltoidi laterali e punto vita, arricchita da defaticamento LISS.',
+    description: 'Specializzazione ad altissimo impatto visivo focalizzata su glutei, deltoidi laterali e punto vita.',
     focus: 'Silhouette a Clessidra, Deltoidi 3D & Glutei Pieni',
     days: F_B2_SPLIT_GLUTE_DELTS
   },
@@ -927,7 +912,7 @@ export const TOP_GYM_SPLIT_TEMPLATES: TopGymSplitTemplate[] = [
     gender: 'FEMALE',
     daysCount: 4,
     type: 'ALTERNATIVE_1',
-    description: 'Programma a circuito periferico PHA per evitare ritenzione idrica e infiammazione agli arti inferiori, combinato con LISS post-seduta.',
+    description: 'Programma a circuito periferico PHA per evitare ritenzione idrica e infiammazione agli arti inferiori.',
     focus: 'Circolazione, Densità Senza Infiammazione & Glutei',
     days: F_B2_SPLIT_METABOLIC_LISS
   }

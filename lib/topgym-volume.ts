@@ -56,43 +56,172 @@ const VOLUME_THRESHOLDS: Record<AthleteGender, Record<MuscleTarget, { mev: numbe
   }
 };
 
-export function getExerciseMuscleDistribution(exName: string, declaredMuscle?: string): { direct: MuscleTarget; secondary?: MuscleTarget } {
-  const name = (exName || '').toLowerCase();
+export function getExerciseMuscleDistribution(
+  exName: string, 
+  declaredMuscle?: string
+): { direct: MuscleTarget; secondary?: MuscleTarget } {
+  const name = (exName || '').toLowerCase().trim();
 
-  if (name.includes('hip thrust') || name.includes('glute') || name.includes('abductor') || name.includes('ponte glutei')) {
+  // 1. GLUTEI (priorità assoluta per evitare conflitti con 'panca', 'spinte', 'press')
+  if (
+    name.includes('hip thrust') ||
+    name.includes('glute') ||
+    name.includes('kickback') ||
+    name.includes('kick back') ||
+    name.includes('slanci') ||
+    name.includes('abductor') ||
+    name.includes('abduzion') ||
+    name.includes('bridge') ||
+    name.includes('ponte') ||
+    name.includes('frog pump') ||
+    name.includes('clamshell') ||
+    name.includes('step up') ||
+    name.includes('step-up') ||
+    name.includes('bulgar') ||
+    name.includes('affondi') ||
+    name.includes('hyperextension') ||
+    name.includes('iperestension') ||
+    name.includes('reverse hyper')
+  ) {
+    if (name.includes('affondi') || name.includes('bulgar') || name.includes('step')) {
+      return { direct: 'Glutei', secondary: 'Quadricipiti' };
+    }
     return { direct: 'Glutei', secondary: 'Femorali' };
   }
-  if (name.includes('stacco rumeno') || name.includes('rdl') || name.includes('leg curl') || name.includes('femorali')) {
+
+  // 2. FEMORALI (prima di Dorso e Bicipiti per anticipare 'stacco' e 'curl')
+  if (
+    name.includes('stacco rumeno') ||
+    name.includes('rdl') ||
+    name.includes('leg curl') ||
+    name.includes('femoral') ||
+    name.includes('hamstring') ||
+    name.includes('lying curl') ||
+    name.includes('seated curl') ||
+    name.includes('standing curl') ||
+    name.includes('nordic') ||
+    name.includes('ghr') ||
+    name.includes('good morning') ||
+    name.includes('gambe tese')
+  ) {
     return { direct: 'Femorali', secondary: 'Glutei' };
   }
-  if (name.includes('stacco da terra') || name.includes('semi-sumo') || name.includes('deadlift')) {
-    return { direct: 'Dorso', secondary: 'Glutei' };
-  }
-  if (name.includes('squat') || (name.includes('press') && !name.includes('bench') && !name.includes('shoulder'))) {
+
+  // 3. QUADRICIPITI (identificazione pulita della pressa senza intaccare chest press o shoulder press)
+  if (
+    name.includes('squat') ||
+    name.includes('leg press') ||
+    name.includes('pressa') ||
+    name.includes('hack') ||
+    name.includes('leg ext') ||
+    name.includes('quadricipit')
+  ) {
+    if (name.includes('leg ext')) {
+      return { direct: 'Quadricipiti' };
+    }
     return { direct: 'Quadricipiti', secondary: 'Glutei' };
   }
-  if (name.includes('affondi') || name.includes('bulgari') || name.includes('step up')) {
-    return { direct: 'Glutei', secondary: 'Quadricipiti' };
+
+  // 4. DORSO
+  if (
+    name.includes('stacco da terra') ||
+    name.includes('deadlift') ||
+    name.includes('semi-sumo')
+  ) {
+    return { direct: 'Dorso', secondary: 'Glutei' };
   }
-  if (name.includes('leg extension')) {
-    return { direct: 'Quadricipiti' };
-  }
-  if (name.includes('panca') || name.includes('chest') || name.includes('croci') || name.includes('dip') || name.includes('push up')) {
-    return { direct: 'Petto', secondary: 'Tricipiti' };
-  }
-  if (name.includes('military') || name.includes('shoulder') || name.includes('lento') || name.includes('alzate laterali') || name.includes('deltoid')) {
-    return { direct: 'Spalle', secondary: 'Tricipiti' };
-  }
-  if (name.includes('trazioni') || name.includes('lat machine') || name.includes('rematore') || name.includes('pulley') || name.includes('pulldown')) {
+  if (
+    name.includes('trazioni') ||
+    name.includes('lat') ||
+    name.includes('rematore') ||
+    name.includes('pulley') ||
+    name.includes('pull down') ||
+    name.includes('pulldown') ||
+    name.includes('chin up') ||
+    name.includes('row')
+  ) {
     return { direct: 'Dorso', secondary: 'Bicipiti' };
   }
-  if (name.includes('curl') || name.includes('bicipit')) return { direct: 'Bicipiti' };
-  if (name.includes('french') || name.includes('pushdown') || name.includes('tricipit')) return { direct: 'Tricipiti' };
-  if (name.includes('calf') || name.includes('polpacci')) return { direct: 'Polpacci' };
-  if (name.includes('crunch') || name.includes('plank') || name.includes('addom')) return { direct: 'Addome' };
 
-  const normalized = (declaredMuscle || 'Petto') as MuscleTarget;
-  return { direct: normalized };
+  // 5. PETTO
+  if (
+    name.includes('panca') ||
+    name.includes('chest') ||
+    name.includes('croci') ||
+    name.includes('dip') ||
+    name.includes('push up') ||
+    name.includes('piegament') ||
+    name.includes('pectoral') ||
+    name.includes('spinte') ||
+    name.includes('fly')
+  ) {
+    return { direct: 'Petto', secondary: 'Tricipiti' };
+  }
+
+  // 6. SPALLE
+  if (
+    name.includes('military') ||
+    name.includes('shoulder') ||
+    name.includes('lento') ||
+    name.includes('alzate') ||
+    name.includes('deltoid') ||
+    name.includes('arnold') ||
+    name.includes('press spalle') ||
+    name.includes('shrug')
+  ) {
+    return { direct: 'Spalle', secondary: 'Tricipiti' };
+  }
+
+  // 7. TRICIPITI
+  if (
+    name.includes('pushdown') ||
+    name.includes('french') ||
+    name.includes('tricipit') ||
+    name.includes('triceps') ||
+    name.includes('skull crusher')
+  ) {
+    return { direct: 'Tricipiti' };
+  }
+
+  // 8. BICIPITI
+  if (
+    name.includes('curl') ||
+    name.includes('bicipit') ||
+    name.includes('biceps') ||
+    name.includes('hammer') ||
+    name.includes('scott')
+  ) {
+    return { direct: 'Bicipiti' };
+  }
+
+  // 9. POLPACCI
+  if (name.includes('calf') || name.includes('polpacc')) {
+    return { direct: 'Polpacci' };
+  }
+
+  // 10. ADDOME
+  if (
+    name.includes('crunch') ||
+    name.includes('plank') ||
+    name.includes('addom') ||
+    name.includes('core') ||
+    name.includes('leg raise') ||
+    name.includes('sit up')
+  ) {
+    return { direct: 'Addome' };
+  }
+
+  // Se non c'è match sul nome, ma il Coach ha selezionato un distretto valido, usa quello
+  const validTargets: MuscleTarget[] = [
+    'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
+    'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
+  ];
+  if (declaredMuscle && validTargets.includes(declaredMuscle as MuscleTarget)) {
+    return { direct: declaredMuscle as MuscleTarget };
+  }
+
+  // Default neutro: Addome invece di sporcare il Petto
+  return { direct: 'Addome' };
 }
 
 // 1. Calcolo del Volume Pianificato dalla Scheda (tutti i giorni della split)

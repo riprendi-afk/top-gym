@@ -62,17 +62,131 @@ export type TopGymStimulus = 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC';
 
 export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   const name = exerciseName.toLowerCase().trim();
-  if (name.includes('panca') || name.includes('chest') || name.includes('croci') || name.includes('dip') || name.includes('push up') || name.includes('piegament') || name.includes('pectoral') || name.includes('spinte') || name.includes('fly')) return 'Petto';
-  if (name.includes('trazioni') || name.includes('lat') || name.includes('rematore') || name.includes('pulley') || name.includes('stacco') || name.includes('pull down') || name.includes('chin up') || name.includes('row')) return 'Dorso';
-  if (name.includes('shoulder') || name.includes('military') || name.includes('lento') || name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') || name.includes('press spalle') || name.includes('shrug')) return 'Spalle';
-  if (name.includes('squat') || name.includes('pressa') || name.includes('leg ext') || name.includes('affondi') || name.includes('lunge') || name.includes('hack') || name.includes('quadricipit')) return 'Quadricipiti';
-  if (name.includes('leg curl') || name.includes('stacco rumeno') || name.includes('rdl') || name.includes('femorale') || name.includes('hamstring')) return 'Femorali';
-  if (name.includes('hip thrust') || name.includes('glute') || name.includes('abductor') || name.includes('bridge')) return 'Glutei';
-  if (name.includes('curl') || name.includes('bicipit') || name.includes('biceps') || name.includes('hammer') || name.includes('scott')) return 'Bicipiti';
-  if (name.includes('pushdown') || name.includes('french') || name.includes('tricipit') || name.includes('triceps') || name.includes('skull crusher')) return 'Tricipiti';
-  if (name.includes('polpacc') || name.includes('calf') || name.includes('calves')) return 'Polpacci';
-  if (name.includes('crunch') || name.includes('plank') || name.includes('addominal') || name.includes('core') || name.includes('leg raise') || name.includes('sit up')) return 'Addome';
-  return 'Petto';
+
+  // 1. FEMORALI (da controllare PRIMA di Dorso e Bicipiti per evitare conflitti con 'stacco' e 'curl')
+  if (
+    name.includes('stacco rumeno') ||
+    name.includes('rdl') ||
+    name.includes('leg curl') ||
+    name.includes('femoral') ||
+    name.includes('hamstring') ||
+    name.includes('lying curl') ||
+    name.includes('seated curl') ||
+    name.includes('standing curl') ||
+    name.includes('nordic') ||
+    name.includes('ghr') ||
+    name.includes('good morning') ||
+    name.includes('gambe tese')
+  ) return 'Femorali';
+
+  // 2. GLUTEI (da controllare PRIMA di Petto/Quadricipiti per evitare conflitti con 'panca', 'spinte', 'squat')
+  if (
+    name.includes('hip thrust') ||
+    name.includes('glute') ||
+    name.includes('kickback') ||
+    name.includes('kick back') ||
+    name.includes('slanci') ||
+    name.includes('abductor') ||
+    name.includes('abduzion') ||
+    name.includes('bridge') ||
+    name.includes('ponte') ||
+    name.includes('frog pump') ||
+    name.includes('clamshell') ||
+    name.includes('step up') ||
+    name.includes('step-up') ||
+    name.includes('bulgar') ||
+    name.includes('hyperextension') ||
+    name.includes('iperestension')
+  ) return 'Glutei';
+
+  // 3. DORSO (dopo Femorali, così 'stacco' prende solo lo stacco regolare/sumo da terra)
+  if (
+    name.includes('trazioni') ||
+    name.includes('lat') ||
+    name.includes('rematore') ||
+    name.includes('pulley') ||
+    name.includes('stacco') ||
+    name.includes('pull down') ||
+    name.includes('pulldown') ||
+    name.includes('chin up') ||
+    name.includes('row')
+  ) return 'Dorso';
+
+  // 4. QUADRICIPITI
+  if (
+    name.includes('squat') ||
+    name.includes('pressa') ||
+    name.includes('leg ext') ||
+    name.includes('affondi') ||
+    name.includes('lunge') ||
+    name.includes('hack') ||
+    name.includes('quadricipit')
+  ) return 'Quadricipiti';
+
+  // 5. SPALLE
+  if (
+    name.includes('shoulder') ||
+    name.includes('military') ||
+    name.includes('lento') ||
+    name.includes('alzate') ||
+    name.includes('deltoid') ||
+    name.includes('arnold') ||
+    name.includes('press spalle') ||
+    name.includes('shrug')
+  ) return 'Spalle';
+
+  // 6. PETTO
+  if (
+    name.includes('panca') ||
+    name.includes('chest') ||
+    name.includes('croci') ||
+    name.includes('dip') ||
+    name.includes('push up') ||
+    name.includes('piegament') ||
+    name.includes('pectoral') ||
+    name.includes('spinte') ||
+    name.includes('fly')
+  ) return 'Petto';
+
+  // 7. TRICIPITI (da controllare prima di bicipiti per 'pushdown')
+  if (
+    name.includes('pushdown') ||
+    name.includes('french') ||
+    name.includes('tricipit') ||
+    name.includes('triceps') ||
+    name.includes('skull crusher') ||
+    name.includes('estensioni manubrio')
+  ) return 'Tricipiti';
+
+  // 8. BICIPITI (dopo Femorali e Tricipiti)
+  if (
+    name.includes('curl') ||
+    name.includes('bicipit') ||
+    name.includes('biceps') ||
+    name.includes('hammer') ||
+    name.includes('scott')
+  ) return 'Bicipiti';
+
+  // 9. POLPACCI
+  if (
+    name.includes('polpacc') ||
+    name.includes('calf') ||
+    name.includes('calves')
+  ) return 'Polpacci';
+
+  // 10. ADDOME
+  if (
+    name.includes('crunch') ||
+    name.includes('plank') ||
+    name.includes('addominal') ||
+    name.includes('core') ||
+    name.includes('leg raise') ||
+    name.includes('sit up')
+  ) return 'Addome';
+
+  // Se non riconosciuto, NON ritornare 'Petto' alla cieca!
+  // Restituiamo un default intelligente o lasciamolo come Glutei/Addome/Altro se non specificato
+  return 'Glutei'; // Oppure gestito come distretto jolly/Addome invece di intasare il Petto
 };
 
 export interface Exercise {
@@ -1083,10 +1197,14 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
     const calc1RMWeight = effectiveCalc.effectiveLoad !== null ? effectiveCalc.effectiveLoad : numWeight;
     const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
+    // Cast esplicito a MuscleGroup così TypeScript non segnala errori di tipo
+    const determinedMuscleGroup = (currentExercise?.muscleGroup || autoDetectMuscleGroup(exName)) as MuscleGroup;
+
     const newLog: SetLog = {
       id: makeId(),
       exerciseId: currentExercise?.id || currentExId,
       exerciseName: exName,
+      muscleGroup: determinedMuscleGroup, // <--- ORA NON SARÀ PIÙ ROSSO
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
