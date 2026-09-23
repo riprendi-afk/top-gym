@@ -26,6 +26,7 @@ import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
 import { processDynamicWorkout, applyPhaseToProgram } from '@/lib/topgym-engine';
 import { getRecommendedTemplatesForBlock, getTemplateById } from '@/lib/topgym-templates';
+import TemplatePickerModal from '@/components/TemplatePickerModal';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -182,6 +183,7 @@ export default function TopGymApp() {
   const [pushLoading, setPushLoading] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -2046,6 +2048,13 @@ export default function TopGymApp() {
   >
     <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
   </button>
+  <button
+  type="button"
+  onClick={() => setIsTemplateModalOpen(true)}
+  className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition"
+>
+  <Layers className="w-3.5 h-3.5 text-[#E50914]" /> Carica Template Split
+</button>
 </div>
                 </div>
 
