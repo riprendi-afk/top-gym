@@ -200,6 +200,7 @@ export default function TopGymApp() {
   const [showCoachPinModal, setShowCoachPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [isMasterCoach, setIsMasterCoach] = useState<boolean>(false);
 
   const [activeTab, setActiveTab] = useState<
     'workout' | 'readiness' | 'analytics' | 'builder' | 'coachDashboard' | 'leaderboard' | 'records' | 'goals' | 'settings'
@@ -648,21 +649,39 @@ export default function TopGymApp() {
       setShowCoachPinModal(true);
     } else {
       setUserRole('ATHLETE');
+      setIsMasterCoach(false); // <-- Reset di sicurezza quando si torna ad Atleta
       if (activeTab === 'builder' || activeTab === 'coachDashboard') setActiveTab('workout');
     }
   };
 
   const verifyCoachPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (pinInput.trim() === '1234' || pinInput.trim() === 'admin') {
+    const enteredPin = pinInput.trim();
+
+    // 1. ACCESSO MASTER COACH (Tu: tutto sbloccato)
+    if (enteredPin === '1234' || enteredPin === 'admin') {
       setUserRole('COACH');
+      setIsMasterCoach(true);
       setShowCoachPinModal(false);
       setPinInput('');
       setPinError(false);
       if (activeTab === 'workout') setActiveTab('builder');
-    } else {
-      setPinError(true);
+      return;
     }
+
+    // 2. ACCESSO COACH STANDARD (Il tuo socio: solo gestione base)
+    if (enteredPin === '5678') {
+      setUserRole('COACH');
+      setIsMasterCoach(false);
+      setShowCoachPinModal(false);
+      setPinInput('');
+      setPinError(false);
+      if (activeTab === 'workout') setActiveTab('builder');
+      return;
+    }
+
+    // PIN errato
+    setPinError(true);
   };
 
   const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
@@ -1981,103 +2000,122 @@ export default function TopGymApp() {
           />
         )}
 
-        {/* TAB 6: BUILDER COACH METODO TOPGYM */}
-        {activeTab === 'builder' && userRole === 'COACH' && (
+{/* TAB 6: BUILDER COACH METODO TOPGYM */}
+{activeTab === 'builder' && userRole === 'COACH' && (
           <div className="space-y-6">
-            {/* CABINA DI REGIA PERIODIZZAZIONE */}
-            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-5">
-              <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <Calendar className="text-[#E50914] w-5 h-5"/> Cabina di Regia Periodizzazione · Metodo TOPGYM
-                </h3>
-                <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
-              </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                  1. Imposta Blocco / Mesociclo Attivo:
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
-                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
-                  >
-                    <b className="text-white text-xs block font-black">Blocco 1: Forza Ipertrofica</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Consolida gli schemi motori, costruisce efficienza neurale e alza i carichi base. Lavoro a Buffer.</span>
-                  </button>
+            {/* CABINA DI REGIA PERIODIZZAZIONE · VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
+            {isMasterCoach && (
+              <>
+                <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-5">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <Calendar className="text-[#E50914] w-5 h-5"/> Cabina di Regia Periodizzazione · Metodo TOPGYM
+                    </h3>
+                    <span className="text-xs text-zinc-400 font-mono">Atleta: <b className="text-white">{activeAthlete.displayName}</b></span>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
-                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
-                  >
-                    <b className="text-white text-xs block font-black">Blocco 2: Trasformazione</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Lavoro ibrido pesante + back-off. Si spinge l'effort fino al cedimento nei complementari.</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
-                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
-                  >
-                    <b className="text-white text-xs block font-black">Blocco 3: Qualità Muscolare</b>
-                    <span className="text-[10px] text-zinc-400 block mt-0.5">Massimo sforzo e qualità. Tecniche di intensità massicce (Stripping, Rest-Pause, Back-off).</span>
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                    2. Fasi del Microciclo (Fase Attuale Auto = <b className="text-yellow-400">Fase {calculatedCurrentPhase}</b>):
-                  </label>
-                  
-                  <div className="flex items-center gap-2 flex-wrap">
-  <button
-    type="button"
-    onClick={handleApplyEngineToCurrentProgram}
-    className="text-xs bg-[#E50914] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg font-black flex items-center gap-1.5 shadow-md cursor-pointer transition"
-  >
-    ⚡ Applica Progressione Motore alla Scheda
-  </button>
-  <button
-    type="button"
-    onClick={handleApplyDeloadWeekToProgram}
-    className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
-  >
-    <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
-  </button>
-  <button
-  type="button"
-  onClick={() => setIsTemplateModalOpen(true)}
-  className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition"
->
-  <Layers className="w-3.5 h-3.5 text-[#E50914]" /> Carica Template Split
-</button>
-</div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {[1, 2, 3, 4].map(w => {
-                    const desc = getPhaseDescription(currentBlock, w as MicroWeek);
-                    const isSelected = calculatedCurrentPhase === w;
-                    return (
+                  <div>
+                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                      1. Imposta Blocco / Mesociclo Attivo:
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                       <button
-                        key={w}
                         type="button"
-                        onClick={() => setManualWeek(w as MicroWeek)}
-                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+                        onClick={() => setCurrentBlock('BLOCCO_1_FORZA')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_1_FORZA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
                       >
-                        <b className={`text-xs block ${isSelected ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
-                        <span className={`text-[10px] block mt-1 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
+                        <b className="text-white text-xs block font-black">Blocco 1: Forza Ipertrofica</b>
+                        <span className="text-[10px] text-zinc-400 block mt-0.5">Consolida gli schemi motori, costruisce efficienza neurale e alza i carichi base. Lavoro a Buffer.</span>
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
 
+                      <button
+                        type="button"
+                        onClick={() => setCurrentBlock('BLOCCO_2_TRASFORMAZIONE')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+                      >
+                        <b className="text-white text-xs block font-black">Blocco 2: Trasformazione</b>
+                        <span className="text-[10px] text-zinc-400 block mt-0.5">Lavoro ibrido pesante + back-off. Si spinge l'effort fino al cedimento nei complementari.</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCurrentBlock('BLOCCO_3_QUALITA')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${currentBlock === 'BLOCCO_3_QUALITA' ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' : 'bg-zinc-900/40 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+                      >
+                        <b className="text-white text-xs block font-black">Blocco 3: Qualità Muscolare</b>
+                        <span className="text-[10px] text-zinc-400 block mt-0.5">Massimo sforzo e qualità. Tecniche di intensità massicce (Stripping, Rest-Pause, Back-off).</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+                        2. Fasi del Microciclo (Fase Attuale Auto = <b className="text-yellow-400">Fase {calculatedCurrentPhase}</b>):
+                      </label>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={handleApplyEngineToCurrentProgram}
+                          className="text-xs bg-[#E50914] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg font-black flex items-center gap-1.5 shadow-md cursor-pointer transition"
+                        >
+                          ⚡ Applica Progressione Motore alla Scheda
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleApplyDeloadWeekToProgram}
+                          className="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 hover:bg-amber-500/20 cursor-pointer"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" /> Forza Settimana di Scarico
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsTemplateModalOpen(true)}
+                          className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-md cursor-pointer transition"
+                        >
+                          <Layers className="w-3.5 h-3.5 text-[#E50914]" /> Carica Template Split
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {[1, 2, 3, 4].map(w => {
+                        const desc = getPhaseDescription(currentBlock, w as MicroWeek);
+                        const isSelected = calculatedCurrentPhase === w;
+                        return (
+                          <button
+                            key={w}
+                            type="button"
+                            onClick={() => setManualWeek(w as MicroWeek)}
+                            className={`p-3 rounded-xl border text-left transition cursor-pointer ${isSelected ? 'bg-[#E50914] border-[#E50914] text-white shadow-md' : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:bg-zinc-900'}`}
+                          >
+                            <b className={`text-xs block ${isSelected ? 'text-white' : 'text-zinc-200'}`}>{desc.title}</b>
+                            <span className={`text-[10px] block mt-1 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>{desc.desc}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* MODALE SELETTORE TEMPLATE (SOLO MASTER COACH) */}
+                <TemplatePickerModal
+                  isOpen={isTemplateModalOpen}
+                  onClose={() => setIsTemplateModalOpen(false)}
+                  currentBlock={currentBlock}
+                  athleteName={activeAthlete?.displayName || ''}
+                  onSelectTemplate={(days, templateName) => {
+                    setProgramDays(days as any);
+                    setBuilderSuccessMessage(`⚡ Template "${templateName}" caricato con successo!`);
+                    setTimeout(() => setBuilderSuccessMessage(null), 5000);
+                  }}
+                />
+              </>
+            )}
+
+            {/* SEZIONE GESTIONE SCHEDA · VISIBILE A ENTRAMBI I COACH */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
                 <div className="space-y-2 flex-1 max-w-md">
@@ -2116,9 +2154,9 @@ export default function TopGymApp() {
                       <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
                       <input 
                         type="text" 
-                        value={day.title}
-                        onChange={(e) => handleRenameDay(day.id, e.target.value)}
-                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
+                        value={day.title} 
+                        onChange={(e) => handleRenameDay(day.id, e.target.value)} 
+                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full" 
                       />
                     </div>
                     <span className="text-xs text-zinc-400 font-mono">{day.exercises.length} esercizi</span>
