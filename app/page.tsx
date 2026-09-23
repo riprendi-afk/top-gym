@@ -810,6 +810,8 @@ export default function TopGymApp() {
     return processDynamicWorkout(activeDay as any, calculatedCurrentRealWeek, calculatedCurrentPhase as any, currentBlock as any);
   }, [activeDay, userRole, activeTab, calculatedCurrentRealWeek, calculatedCurrentPhase, currentBlock]);
   
+  // Riconosce se la scheda appartiene al Metodo TOPGYM (salvata da te) o a Paolo
+const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || d.assignedByCoach === 'riprendi@gmail.com');
   const activeRoutine = dynamicActiveDay?.exercises ?? [];
   const currentExercise = activeRoutine.find((e: any) => e.id === currentExId) || activeRoutine[0];
 
@@ -994,11 +996,26 @@ export default function TopGymApp() {
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
     let result: { success?: boolean; error?: string } = {};
+
+    // 1. Definiamo la firma in base al Coach connesso
+    const coachEmail = isMasterCoach ? 'riprendi@gmail.com' : 'maggiopaolo34@gmail.com';
+
+    // 2. Firmiamo ogni giornata della scheda con i metadati del Metodo TOPGYM
+    // Questi dati viaggiano dentro il JSON di Supabase senza toccare le tabelle del DB
+    const programDaysToSave = programDays.map(day => ({
+      ...day,
+      isPeriodized: isMasterCoach,
+      assignedByCoach: coachEmail,
+      block: isMasterCoach ? currentBlock : null,
+      phase: isMasterCoach ? calculatedCurrentPhase : null,
+    }));
+
     try {
-      result = await saveProgramToSupabase(targetId, programName, programDays);
+      result = await saveProgramToSupabase(targetId, programName, programDaysToSave);
     } catch (e: any) {
       result = { success: false, error: e?.message };
     }
+
     if (result?.success) {
       setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`);
       
@@ -1006,8 +1023,10 @@ export default function TopGymApp() {
         try {
           await supabase.from('notifications').insert([{
             user_id: targetId,
-            title: 'Nuova Scheda Metodo TOPGYM!',
-            message: `Il coach ha assegnato o aggiornato il programma "${programName}".`,
+            title: isMasterCoach ? 'Nuova Scheda Metodo TOPGYM!' : 'Nuova Scheda di Allenamento',
+            message: isMasterCoach 
+              ? `Il Coach ha assegnato o aggiornato il programma "${programName}".`
+              : `Il Coach ha aggiornato la tua scheda "${programName}".`,
             type: 'program_assigned'
           }]);
         } catch {}
@@ -1017,8 +1036,10 @@ export default function TopGymApp() {
         try {
           await sendPushNotification(
             targetId,
-            'Nuova Scheda Assegnata! 🏋️',
-            `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || 'Nuova scheda'}).`,
+            isMasterCoach ? 'Nuova Scheda Metodo TOPGYM! 🏋️' : 'Nuova Scheda Assegnata! 🏋️',
+            isMasterCoach 
+              ? `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || 'Nuova scheda'}).`
+              : `Il Coach ha aggiornato la tua scheda di allenamento (${programName || 'Nuova scheda'}).`,
             '/'
           );
         } catch {}
@@ -1616,8 +1637,8 @@ export default function TopGymApp() {
           </div>
         )}
 
-        {/* TAB 1: WORKOUT */}
-        {activeTab === 'workout' && userRole === 'ATHLETE' && (
+{/* TAB 1: WORKOUT */}
+{activeTab === 'workout' && userRole === 'ATHLETE' && (
           <div className="space-y-6">
             {highFatigueDetected && (
               <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-2xl flex items-start gap-3 text-amber-300 backdrop-blur-md">
@@ -1629,24 +1650,26 @@ export default function TopGymApp() {
               </div>
             )}
 
-            {/* Banner Metodo TOPGYM */}
-            <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl">
-              <div>
-                <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
-                  Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità Muscolare'}
-                </span>
-                <h4 className="text-sm font-bold text-white mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).title}</h4>
-                <p className="text-xs text-zinc-400 mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).desc}</p>
+            {/* BANNER METODO TOPGYM · VISIBILE ESCLUSIVAMENTE SULLE TUE SCHEDE */}
+            {isMasterProgram && (
+              <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl animate-in fade-in duration-200">
+                <div>
+                  <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
+                    Metodo TOPGYM · {currentBlock === 'BLOCCO_1_FORZA' ? 'Blocco 1: Forza Ipertrofica' : currentBlock === 'BLOCCO_2_TRASFORMAZIONE' ? 'Blocco 2: Trasformazione' : 'Blocco 3: Qualità Muscolare'}
+                  </span>
+                  <h4 className="text-sm font-bold text-white mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).title}</h4>
+                  <p className="text-xs text-zinc-400 mt-0.5">{getPhaseDescription(currentBlock, calculatedCurrentPhase).desc}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-yellow-400 block">
+                    Settimana Reale: {calculatedCurrentRealWeek} (Fase Automatica {calculatedCurrentPhase})
+                  </span>
+                  <span className="text-[10px] text-zinc-500 mt-1 block">
+                    {workoutHistory.length} allenamenti completati nello storico
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-yellow-400 block">
-                  Settimana Reale: {calculatedCurrentRealWeek} (Fase Automatica {calculatedCurrentPhase})
-                </span>
-                <span className="text-[10px] text-zinc-500 mt-1 block">
-                  {workoutHistory.length} allenamenti completati nello storico
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
@@ -1683,19 +1706,28 @@ export default function TopGymApp() {
                         <div>
                           <span className="font-bold text-base text-white block">{ex.name}</span>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-zinc-400 font-mono">
-                              {ex.stimulusType === 'NEURAL' ? '⚡ Neurale' : ex.stimulusType === 'METABOLIC' ? '🔥 Metabolico' : '💪 Ipertrofico'}
-                            </span>
+                            {/* Stimolo visibile solo se è una tua scheda periodizzata */}
+                            {isMasterProgram && (
+                              <span className="text-[10px] text-zinc-400 font-mono">
+                                {ex.stimulusType === 'NEURAL' ? '⚡ Neurale' : ex.stimulusType === 'METABOLIC' ? '🔥 Metabolico' : '💪 Ipertrofico'}
+                              </span>
+                            )}
                             {isBw && <span className="text-[9px] text-purple-400 font-bold uppercase bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">Corpo Libero</span>}
                             {hasLoggedToday && <span className="text-[9px] text-green-400 font-bold uppercase bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20 flex items-center gap-1"><CheckCircle className="w-2.5 h-2.5"/> Completato oggi</span>}
                           </div>
                         </div>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                        {/* Mostra il badge della tecnica solo per le schede Master o se la tecnica non è semplicemente REGULAR */}
+                        {(isMasterProgram || ex.executionType !== 'REGULAR') && (
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>{ex.executionType}</span>
+                        )}
                       </div>
                       <div className="grid grid-cols-3 gap-2 text-xs bg-black/30 p-2.5 rounded-lg border border-white/5 mt-3">
                         <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Serie/Reps</span><b className="text-white">{ex.sets} × {ex.reps}</b></div>
                         <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">Target</span><b className="text-white">{ex.targetWeight} Kg</b></div>
-                        <div><span className="text-[9px] text-zinc-400 uppercase font-bold block">TUT</span><b className="text-yellow-500 font-mono">{ex.tut}</b></div>
+                        <div>
+                          <span className="text-[9px] text-zinc-400 uppercase font-bold block">{isMasterProgram ? 'TUT' : 'Recupero'}</span>
+                          <b className="text-yellow-500 font-mono">{isMasterProgram ? (ex.tut || '2-0-1-0') : `${ex.restSeconds || 90}s`}</b>
+                        </div>
                       </div>
                       {ex.notes && <div className="text-[11px] text-zinc-400 italic mt-2.5 pt-2 border-t border-white/5">Note: {ex.notes}</div>}
                     </div>
@@ -1714,7 +1746,10 @@ export default function TopGymApp() {
                     <h3 className="text-2xl font-black text-white flex items-center gap-2 mt-1.5">
                       {currentExercise.name}
                     </h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg (RPE {currentExercise.rpeTarget})</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Target: {currentExercise.sets} Serie × {currentExercise.reps} Reps @ {currentExercise.targetWeight} Kg 
+                      {isMasterProgram && currentExercise.rpeTarget ? ` (RPE ${currentExercise.rpeTarget})` : ''}
+                    </p>
                   </div>
                   {estimated1RMPreview !== null && (
                     <div className="bg-black/40 border border-white/10 px-3.5 py-2 rounded-xl text-right">
