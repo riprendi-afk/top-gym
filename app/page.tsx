@@ -27,6 +27,8 @@ import CoachDashboard from '@/components/CoachDashboard';
 import { processDynamicWorkout, applyPhaseToProgram } from '@/lib/topgym-engine';
 import { getRecommendedTemplatesForBlock, getTemplateById } from '@/lib/topgym-templates';
 import TemplatePickerModal from '@/components/TemplatePickerModal';
+import WeeklyVolumeRadar from '@/components/WeeklyVolumeRadar';
+import { detectAthleteGender } from '@/lib/topgym-templates';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -2346,18 +2348,26 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
-        {activeTab === 'analytics' && (
+{/* TAB 7: ANALYTICS & STORICO COMPLETO */}
+{activeTab === 'analytics' && (
           <div className="space-y-6">
+            
+            {/* 1. HEADER ANALISI PROGRESSI */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md flex justify-between items-center flex-wrap gap-4">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <BarChart3 className="text-[#E50914]" /> 
-                  Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete.displayName})` : ''}
+                  Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete?.displayName || 'Atleta'})` : ''}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-1">Monitoraggio serie settimanali reali dal lunedì alla domenica per singolo gruppo muscolare.</p>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Monitoraggio scientifico del volume settimanale (MEV · MAV · MRV) e andamento storico dei carichi.
+                </p>
               </div>
               <div className="flex items-center gap-3">
+                <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Mensili</span>
+                  <span className="text-lg font-black text-blue-400">{monthlySetsCount}</span>
+                </div>
                 <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
                   <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete (Sempre)</span>
                   <span className="text-lg font-black text-white">{totalSetsEver}</span>
@@ -2365,71 +2375,18 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
               </div>
             </div>
 
+            {/* 2. NUOVO RADAR DEL VOLUME SETTIMANALE METODO TOPGYM (MEV / MAV / MRV) */}
+            <WeeklyVolumeRadar 
+              days={programDays as any} 
+              athleteName={activeAthlete?.displayName || 'Atleta'} 
+              athleteGender={detectAthleteGender(activeAthlete?.displayName)} 
+            />
+
+            {/* 3. STORICO ALLENAMENTI & GRAFICO INTENSITÀ (INALTERATO) */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
-              <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-white/10 pb-3 gap-4">
-                <div>
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Dumbbell className="w-4 h-4 text-[#E50914]" /> Volume Settimanale per Singolo Gruppo Muscolare
-                  </h3>
-                  <span className="text-xs text-zinc-400">Target ipertrofico: 15 - 25 serie per distretto (18-22 in cut)</span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase mb-1">Seleziona Giorno (Filtra Settimana)</label>
-                    <input 
-                      type="date" 
-                      value={analyticsDate}
-                      onChange={e => setAnalyticsDate(e.target.value)}
-                      className="bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914]"
-                    />
-                  </div>
-                  <div className="bg-black/40 px-3.5 py-1.5 rounded-xl border border-white/5 text-center min-w-[80px]">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Mensili</span>
-                    <span className="text-sm font-black text-blue-400">{monthlySetsCount}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-[11px] text-zinc-400 font-bold bg-black/30 p-2.5 rounded-xl text-center border border-white/5">
-                Mostrando i dati per la settimana da Lunedì a Domenica: <span className="text-white">{startOfWeek.toLocaleDateString('it-IT')} - {endOfWeek.toLocaleDateString('it-IT')}</span> 
-                <br/>Mese in corso: <span className="text-white capitalize">{startOfMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' })}</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => {
-                  const count = weeklyMuscleSetsMap[mg] || 0;
-                  const maxTarget = 22;
-                  const percentage = Math.min(100, Math.round((count / maxTarget) * 100));
-                  
-                  let statusColor = 'bg-zinc-700';
-                  let textColor = 'text-zinc-400';
-                  if (count >= 15 && count <= 25) { statusColor = 'bg-emerald-500'; textColor = 'text-emerald-400'; } 
-                  else if (count > 25) { statusColor = 'bg-rose-500'; textColor = 'text-rose-400'; } 
-                  else if (count >= 10) { statusColor = 'bg-blue-500'; textColor = 'text-blue-400'; }
-
-                  return (
-                    <div key={mg} className="bg-zinc-900/60 p-3.5 rounded-xl border border-white/5 space-y-2">
-                      <div className="flex justify-between items-center text-xs font-bold">
-                        <span className="text-zinc-200">{mg}</span>
-                        <span className={textColor}>{count} Serie / sett</span>
-                      </div>
-                      <div className="w-full bg-zinc-800 h-2.5 rounded-full overflow-hidden">
-                        <div className={`h-full ${statusColor} transition-all duration-500`} style={{ width: `${percentage}%` }} />
-                      </div>
-                      <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
-                        <span>0 serie</span>
-                        <span>10 (MEV)</span>
-                        <span>20+ (MRV)</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
-              <h3 className="font-bold text-base text-white flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità</h3>
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità
+              </h3>
               {workoutHistory.length === 0 ? (
                 <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato.</p>
               ) : (
@@ -2514,9 +2471,9 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {workoutHistory.map((item, idx) => {
-                           const rowKey = item.id || item._id || `row-${idx}`;
-                           const isExpanded = expandedHistoryId === rowKey;
-                           return (
+                          const rowKey = item.id || item._id || `row-${idx}`;
+                          const isExpanded = expandedHistoryId === rowKey;
+                          return (
                             <React.Fragment key={rowKey}>
                               <tr className="hover:bg-zinc-800/30 transition">
                                 <td className="py-2.5 px-3 font-mono text-zinc-400">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</td>
@@ -2559,7 +2516,7 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
                                 </tr>
                               )}
                             </React.Fragment>
-                           );
+                          );
                         })}
                       </tbody>
                     </table>
