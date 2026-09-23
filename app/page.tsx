@@ -376,8 +376,22 @@ export default function TopGymApp() {
           xp: p.xp || 0
         }));
         setAthletes(formatted);
-        if (formatted.length > 0 && !activeAthleteId) {
-          setActiveAthleteId(formatted[0].id);
+
+        // --- SELEZIONE INTELLIGENTE DELL'UTENTE CONNESSO ---
+        if (formatted.length > 0) {
+          const { data: authData } = await supabase.auth.getUser();
+          const myId = authData?.user?.id;
+          const myEmail = (authData?.user?.email || '').toLowerCase().trim();
+
+          const myProfile = formatted.find(
+            (a: any) => a.id === myId || (a.email && a.email.toLowerCase().trim() === myEmail)
+          );
+
+          if (userRole === 'ATHLETE' && myProfile) {
+            setActiveAthleteId(myProfile.id);
+          } else if (!activeAthleteId) {
+            setActiveAthleteId(myProfile ? myProfile.id : formatted[0].id);
+          }
         }
       }
     };
