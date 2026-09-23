@@ -25,6 +25,7 @@ import PersonalRecords from '@/components/PersonalRecords';
 import AthleteGoals from '@/components/AthleteGoals';
 import CoachDashboard from '@/components/CoachDashboard';
 import { processDynamicWorkout, applyPhaseToProgram } from '@/lib/topgym-engine';
+import { getRecommendedTemplatesForBlock, getTemplateById } from '@/lib/topgym-templates';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
