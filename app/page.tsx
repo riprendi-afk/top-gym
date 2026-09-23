@@ -2376,10 +2376,14 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
             </div>
 
             {/* 2. NUOVO RADAR DEL VOLUME SETTIMANALE METODO TOPGYM (MEV / MAV / MRV) */}
-            <WeeklyVolumeRadar 
+<WeeklyVolumeRadar 
               days={programDays as any} 
               athleteName={activeAthlete?.displayName || 'Atleta'} 
-              athleteGender={detectAthleteGender(activeAthlete?.displayName)} 
+              athleteGender={detectAthleteGender(activeAthlete?.displayName)}
+              weeklyMuscleSetsMap={weeklyMuscleSetsMap}
+              weekRangeText={`${startOfWeek.toLocaleDateString('it-IT')} - ${endOfWeek.toLocaleDateString('it-IT')}`}
+              analyticsDate={analyticsDate}
+              onDateChange={setAnalyticsDate}
             />
 
             {/* 3. STORICO ALLENAMENTI & GRAFICO INTENSITÀ (INALTERATO) */}

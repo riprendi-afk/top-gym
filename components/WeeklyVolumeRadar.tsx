@@ -1,68 +1,134 @@
 'use client';
 
-import React from 'react';
-import { Activity, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, ShieldAlert, CheckCircle2, Calendar, Layers } from 'lucide-react';
 import { EngineWorkoutDay } from '@/lib/topgym-engine';
 import { AthleteGender } from '@/lib/topgym-templates';
-import { calculateWeeklyVolumeRadar, MuscleVolumeStatus } from '@/lib/topgym-volume';
+import { 
+  calculateWeeklyVolumeRadar, 
+  calculateFromMuscleMap, 
+  MuscleVolumeStatus 
+} from '@/lib/topgym-volume';
 
 interface WeeklyVolumeRadarProps {
   days: EngineWorkoutDay[];
   athleteName?: string;
   athleteGender?: AthleteGender;
+  weeklyMuscleSetsMap?: Record<string, number>;
+  weekRangeText?: string;
+  analyticsDate?: string;
+  onDateChange?: (date: string) => void;
 }
 
 export default function WeeklyVolumeRadar({
   days,
   athleteName = 'Atleta',
-  athleteGender = 'MALE'
+  athleteGender = 'MALE',
+  weeklyMuscleSetsMap = {},
+  weekRangeText = 'Settimana Selezionata',
+  analyticsDate,
+  onDateChange
 }: WeeklyVolumeRadarProps) {
-  const volumeData = calculateWeeklyVolumeRadar(days, athleteGender);
+  // Modalità di default: 'LOGGED' (serie realmente svolte dall'atleta)
+  const [viewMode, setViewMode] = useState<'LOGGED' | 'PLANNED'>('LOGGED');
+  const [includeIndirect, setIncludeIndirect] = useState<boolean>(false);
 
-  const totalWeeklySets = volumeData.reduce((acc, curr) => acc + curr.directSets, 0);
+  const volumeData: MuscleVolumeStatus[] = viewMode === 'LOGGED'
+    ? calculateFromMuscleMap(weeklyMuscleSetsMap, athleteGender)
+    : calculateWeeklyVolumeRadar(days, athleteGender, includeIndirect);
+
+  const totalDirectSets = volumeData.reduce((acc, curr) => acc + curr.directSets, 0);
 
   return (
     <div className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-6">
       
       {/* HEADER RADAR */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/10 pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-4">
         <div>
           <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-5 h-5 text-[#E50914]" />
             Radar del Volume Settimanale (MEV · MAV · MRV)
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Analisi volumetrica per <b className="text-white">{athleteName}</b> · Profilo{' '}
+            Analisi per <b className="text-white">{athleteName}</b> · Profilo{' '}
             <span className="text-[#E50914] font-bold">
-              {athleteGender === 'FEMALE' ? 'Donna (Priorità Catena Posteriore)' : 'Uomo'}
+              {athleteGender === 'FEMALE' ? 'Donna (Priorità Glutei)' : 'Uomo'}
             </span>
+            {viewMode === 'LOGGED' && (
+              <span className="text-zinc-400 font-mono ml-2">({weekRangeText})</span>
+            )}
           </p>
         </div>
 
-        <div className="bg-black/40 border border-white/5 px-3 py-1.5 rounded-xl text-right">
-          <span className="text-[10px] text-zinc-500 uppercase font-mono block">Serie Dirette Totali</span>
-          <b className="text-sm text-white font-mono">{totalWeeklySets} set/settimana</b>
+        {/* CONTROLLI E SELETTORI */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* SELETTORE VISTA */}
+          <div className="bg-black/50 p-1 rounded-xl border border-white/10 flex">
+            <button
+              type="button"
+              onClick={() => setViewMode('LOGGED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'LOGGED'
+                  ? 'bg-[#E50914] text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" /> Svolto sul Campo
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('PLANNED')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'PLANNED'
+                  ? 'bg-[#E50914] text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Scheda Completa (Preventivo)
+            </button>
+          </div>
+
+          {/* CALENDARIO FILTRO SETTIMANA (SE IN MODALITÀ SVOlTO SUL CAMPO) */}
+          {viewMode === 'LOGGED' && analyticsDate && onDateChange && (
+            <input 
+              type="date" 
+              value={analyticsDate} 
+              onChange={e => onDateChange(e.target.value)} 
+              className="bg-zinc-900 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914] cursor-pointer"
+              title="Filtra settimana di riferimento"
+            />
+          )}
+
+          {/* PULSANTE VOLUME INDIRETTO (SE IN MODALITÀ PREVENTIVO) */}
+          {viewMode === 'PLANNED' && (
+            <button
+              type="button"
+              onClick={() => setIncludeIndirect(!includeIndirect)}
+              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
+                includeIndirect 
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+                  : 'bg-black/40 border-white/5 text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {includeIndirect ? '✓ Volume Indiretto' : '+ Indiretto'}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* LEGENDA SCIENTIFICA RAPIDA */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
-        <div className="bg-zinc-900/60 p-2.5 rounded-lg border border-white/5">
-          <span className="text-zinc-400 font-bold block">Sotto MEV (&lt; MEV)</span>
-          <span className="text-[10px] text-zinc-500">Mantenimento o sotto-stimolo.</span>
-        </div>
-        <div className="bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
-          <span className="text-emerald-400 font-bold block">MAV Ottimale (MEV-MAV)</span>
-          <span className="text-[10px] text-emerald-300/70">Massima crescita e recupero.</span>
-        </div>
-        <div className="bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
-          <span className="text-amber-400 font-bold block">Overreaching (MAV-MRV)</span>
-          <span className="text-[10px] text-amber-300/70">Fase intensiva, scarico vicino.</span>
-        </div>
-        <div className="bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
-          <span className="text-rose-400 font-bold block">Eccessivo (&gt; MRV)</span>
-          <span className="text-[10px] text-rose-300/70">Rischio catabolismo e stallo.</span>
-        </div>
+      {/* STATISTICHE COMPATTE */}
+      <div className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5 text-xs">
+        <span className="text-zinc-400">
+          Modalità attiva:{' '}
+          <b className="text-white">
+            {viewMode === 'LOGGED' 
+              ? 'Serie effettivamente eseguite e registrate nella settimana selezionata' 
+              : 'Totale delle serie previste dalla split settimanale (tutte le sedute)'}
+          </b>
+        </span>
+        <span className="text-white font-mono font-bold bg-zinc-900 px-3 py-1 rounded-lg border border-white/5">
+          {totalDirectSets} Serie Totali
+        </span>
       </div>
 
       {/* GRIGLIA BARRE MUSCOLARI */}
