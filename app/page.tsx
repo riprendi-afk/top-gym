@@ -487,6 +487,38 @@ const [programmingModel, setProgrammingModel] = useState<'TOPGYM_BLOCKS' | 'HARD
     [athletes, targetUserId]
   );
 
+  // 1. Ripristina le serie memorizzate sul telefono quando apri l'app o cambi atleta
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const storageKey = `topgym_session_logs_${targetUserId || 'athlete'}`;
+      const cached = localStorage.getItem(storageKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLogs(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Errore nel recupero della sessione salvata:', e);
+    }
+  }, [targetUserId]);
+
+  // 2. Salva in tempo reale su memoria locale ogni serie registrata o rimossa
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const storageKey = `topgym_session_logs_${targetUserId || 'athlete'}`;
+      if (logs.length > 0) {
+        localStorage.setItem(storageKey, JSON.stringify(logs));
+      } else {
+        localStorage.removeItem(storageKey);
+      }
+    } catch (e) {
+      console.error('Errore nel salvataggio locale della sessione:', e);
+    }
+  }, [logs, targetUserId]);
+
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
@@ -1110,6 +1142,12 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
     if (result?.success) {
       await addXp(50);
       setLogs([]);
+      // Pulisce la memoria locale del telefono
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem(`topgym_session_logs_${targetUserId || 'athlete'}`);
+        } catch {}
+      }
 
       // ======================================================================
       // AVANZAMENTO AUTOMATICO HARDTOPGYM A CHIUSURA MICROCICLO
