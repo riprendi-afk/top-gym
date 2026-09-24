@@ -1120,19 +1120,7 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
     }
   };
 
-  const handleDeleteWorkoutHistory = async (workoutId?: string) => {
-    if (!workoutId) return;
-    if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
-    try {
-      await deleteWorkoutHistoryFromSupabase(workoutId);
-      setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
-    } catch {
-      setWorkoutSuccessMessage('⚠️ Errore durante l\'eliminazione dell\'allenamento.');
-      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
-    }
-  };
-
-  // ======================================================================
+    // ======================================================================
       // AVANZAMENTO AUTOMATICO HARDTOPGYM A CHIUSURA MICROCICLO
       // ======================================================================
       if (programmingModel === 'HARDTOPGYM' && programDays && programDays.length >= 3) {
@@ -1159,6 +1147,18 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
         }
       }
       // ======================================================================
+      
+  const handleDeleteWorkoutHistory = async (workoutId?: string) => {
+    if (!workoutId) return;
+    if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
+    try {
+      await deleteWorkoutHistoryFromSupabase(workoutId);
+      setWorkoutHistory(prev => prev.filter(item => (item.id || item._id) !== workoutId));
+    } catch {
+      setWorkoutSuccessMessage('⚠️ Errore durante l\'eliminazione dell\'allenamento.');
+      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
+    }
+  };
 
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';
