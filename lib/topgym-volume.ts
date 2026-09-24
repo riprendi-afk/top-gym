@@ -1,5 +1,5 @@
 // lib/topgym-volume.ts
-// MOTORE ANALISI VOLUME SETTIMANALE · MEV / MAV / MRV · METODO TOP GYM
+// MOTORE ANALISI VOLUME SETTIMANALE & METRICHE · METODO TOP GYM
 
 import { EngineWorkoutDay } from './topgym-engine';
 import { AthleteGender } from './topgym-templates';
@@ -15,6 +15,11 @@ export type MuscleTarget =
   | 'Tricipiti' 
   | 'Polpacci' 
   | 'Addome';
+
+export const ALL_MUSCLE_TARGETS: MuscleTarget[] = [
+  'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
+  'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
+];
 
 export interface MuscleVolumeStatus {
   muscle: MuscleTarget;
@@ -56,207 +61,220 @@ const VOLUME_THRESHOLDS: Record<AthleteGender, Record<MuscleTarget, { mev: numbe
   }
 };
 
-export function getExerciseMuscleDistribution(
-  exName: string, 
-  declaredMuscle?: string
-): { direct: MuscleTarget; secondary?: MuscleTarget } {
-  const name = (exName || '').toLowerCase().trim();
-
-  // 1. GLUTEI (priorità assoluta per evitare conflitti con 'panca', 'spinte', 'press')
-  if (
-    name.includes('hip thrust') ||
-    name.includes('glute') ||
-    name.includes('kickback') ||
-    name.includes('kick back') ||
-    name.includes('slanci') ||
-    name.includes('abductor') ||
-    name.includes('abduzion') ||
-    name.includes('bridge') ||
-    name.includes('ponte') ||
-    name.includes('frog pump') ||
-    name.includes('clamshell') ||
-    name.includes('step up') ||
-    name.includes('step-up') ||
-    name.includes('bulgar') ||
-    name.includes('affondi') ||
-    name.includes('hyperextension') ||
-    name.includes('iperestension') ||
-    name.includes('reverse hyper')
-  ) {
-    if (name.includes('affondi') || name.includes('bulgar') || name.includes('step')) {
-      return { direct: 'Glutei', secondary: 'Quadricipiti' };
-    }
-    return { direct: 'Glutei', secondary: 'Femorali' };
+/**
+ * Risolutore automatico infallibile:
+ * 1. Se il log o l'esercizio ha già un gruppo muscolare valido, usa quello.
+ * 2. Se manca, fa pattern-matching su un dizionario esaustivo.
+ * 3. Se non trova nulla, restituisce null (NON sporca Petto o Glutei).
+ */
+export function resolveMuscleTarget(
+  exerciseName?: string, 
+  declaredGroup?: string,
+  programDictionary?: Map<string, MuscleTarget>
+): MuscleTarget | null {
+  if (declaredGroup && ALL_MUSCLE_TARGETS.includes(declaredGroup as MuscleTarget)) {
+    return declaredGroup as MuscleTarget;
   }
 
-  // 2. FEMORALI (prima di Dorso e Bicipiti per anticipare 'stacco' e 'curl')
-  if (
-    name.includes('stacco rumeno') ||
-    name.includes('rdl') ||
-    name.includes('leg curl') ||
-    name.includes('femoral') ||
-    name.includes('hamstring') ||
-    name.includes('lying curl') ||
-    name.includes('seated curl') ||
-    name.includes('standing curl') ||
-    name.includes('nordic') ||
-    name.includes('ghr') ||
-    name.includes('good morning') ||
-    name.includes('gambe tese')
-  ) {
-    return { direct: 'Femorali', secondary: 'Glutei' };
+  const name = (exerciseName || '').toLowerCase().trim();
+  if (!name) return null;
+
+  if (programDictionary && programDictionary.has(name)) {
+    return programDictionary.get(name)!;
   }
 
-  // 3. QUADRICIPITI (identificazione pulita della pressa senza intaccare chest press o shoulder press)
+  // 1. FEMORALI (prima di Dorso e Bicipiti)
   if (
-    name.includes('squat') ||
-    name.includes('leg press') ||
-    name.includes('pressa') ||
-    name.includes('hack') ||
-    name.includes('leg ext') ||
-    name.includes('quadricipit')
-  ) {
-    if (name.includes('leg ext')) {
-      return { direct: 'Quadricipiti' };
-    }
-    return { direct: 'Quadricipiti', secondary: 'Glutei' };
-  }
+    name.includes('stacco rumeno') || name.includes('rdl') || name.includes('leg curl') ||
+    name.includes('femoral') || name.includes('hamstring') || name.includes('lying curl') ||
+    name.includes('seated curl') || name.includes('good morning') || name.includes('gambe tese') ||
+    name.includes('nordic') || name.includes('ghr')
+  ) return 'Femorali';
 
-  // 4. DORSO
+  // 2. GLUTEI (prima di Petto e Quadricipiti)
   if (
-    name.includes('stacco da terra') ||
-    name.includes('deadlift') ||
-    name.includes('semi-sumo')
-  ) {
-    return { direct: 'Dorso', secondary: 'Glutei' };
-  }
-  if (
-    name.includes('trazioni') ||
-    name.includes('lat') ||
-    name.includes('rematore') ||
-    name.includes('pulley') ||
-    name.includes('pull down') ||
-    name.includes('pulldown') ||
-    name.includes('chin up') ||
-    name.includes('row')
-  ) {
-    return { direct: 'Dorso', secondary: 'Bicipiti' };
-  }
+    name.includes('hip thrust') || name.includes('glute') || name.includes('kickback') ||
+    name.includes('kick back') || name.includes('slanci') || name.includes('abductor') ||
+    name.includes('abduzion') || name.includes('bridge') || name.includes('ponte') ||
+    name.includes('frog pump') || name.includes('clamshell') || name.includes('step up') ||
+    name.includes('step-up') || name.includes('bulgar') || name.includes('hyperextension') ||
+    name.includes('iperestension') || name.includes('reverse hyper')
+  ) return 'Glutei';
 
-  // 5. PETTO
+  // 3. DORSO (include Pull up, Chin up, T-Bar, Lat, Stacchi tradizionali)
   if (
-    name.includes('panca') ||
-    name.includes('chest') ||
-    name.includes('croci') ||
-    name.includes('dip') ||
-    name.includes('push up') ||
-    name.includes('piegament') ||
-    name.includes('pectoral') ||
-    name.includes('spinte') ||
+    name.includes('pull up') || name.includes('pull-up') || name.includes('pullup') ||
+    name.includes('chin up') || name.includes('chin-up') || name.includes('chinup') ||
+    name.includes('trazioni') || name.includes('lat machine') || name.includes('lat ') ||
+    name.includes('rematore') || name.includes('pulley') || name.includes('row') ||
+    name.includes('pulldown') || name.includes('pull down') || name.includes('t-bar') ||
+    name.includes('tbar') || name.includes('stacco da terra') || name.includes('deadlift')
+  ) return 'Dorso';
+
+  // 4. QUADRICIPITI
+  if (
+    name.includes('squat') || name.includes('leg press') || name.includes('pressa') ||
+    name.includes('leg ext') || name.includes('affondi') || name.includes('lunge') ||
+    name.includes('hack') || name.includes('quadricipit')
+  ) return 'Quadricipiti';
+
+  // 5. SPALLE
+  if (
+    name.includes('face pull') || name.includes('face-pull') || name.includes('facepull') ||
+    name.includes('military') || name.includes('shoulder') || name.includes('lento') ||
+    name.includes('alzate') || name.includes('deltoid') || name.includes('arnold') ||
+    name.includes('press spalle') || name.includes('shrug')
+  ) return 'Spalle';
+
+  // 6. PETTO
+  if (
+    name.includes('panca') || name.includes('chest') || name.includes('croci') ||
+    name.includes('dip') || name.includes('push up') || name.includes('push-up') ||
+    name.includes('piegament') || name.includes('pectoral') || name.includes('spinte') ||
     name.includes('fly')
-  ) {
-    return { direct: 'Petto', secondary: 'Tricipiti' };
-  }
-
-  // 6. SPALLE
-  if (
-    name.includes('military') ||
-    name.includes('shoulder') ||
-    name.includes('lento') ||
-    name.includes('alzate') ||
-    name.includes('deltoid') ||
-    name.includes('arnold') ||
-    name.includes('press spalle') ||
-    name.includes('shrug')
-  ) {
-    return { direct: 'Spalle', secondary: 'Tricipiti' };
-  }
+  ) return 'Petto';
 
   // 7. TRICIPITI
   if (
-    name.includes('pushdown') ||
-    name.includes('french') ||
-    name.includes('tricipit') ||
-    name.includes('triceps') ||
-    name.includes('skull crusher')
-  ) {
-    return { direct: 'Tricipiti' };
-  }
+    name.includes('pushdown') || name.includes('french') || name.includes('tricipit') ||
+    name.includes('triceps') || name.includes('skull crusher')
+  ) return 'Tricipiti';
 
   // 8. BICIPITI
   if (
-    name.includes('curl') ||
-    name.includes('bicipit') ||
-    name.includes('biceps') ||
-    name.includes('hammer') ||
-    name.includes('scott')
-  ) {
-    return { direct: 'Bicipiti' };
-  }
+    name.includes('curl') || name.includes('bicipit') || name.includes('biceps') ||
+    name.includes('hammer') || name.includes('scott')
+  ) return 'Bicipiti';
 
   // 9. POLPACCI
-  if (name.includes('calf') || name.includes('polpacc')) {
-    return { direct: 'Polpacci' };
-  }
+  if (name.includes('polpacc') || name.includes('calf') || name.includes('calves')) return 'Polpacci';
 
   // 10. ADDOME
   if (
-    name.includes('crunch') ||
-    name.includes('plank') ||
-    name.includes('addom') ||
-    name.includes('core') ||
-    name.includes('leg raise') ||
-    name.includes('sit up')
-  ) {
-    return { direct: 'Addome' };
-  }
+    name.includes('crunch') || name.includes('plank') || name.includes('addom') ||
+    name.includes('core') || name.includes('leg raise') || name.includes('sit up')
+  ) return 'Addome';
 
-  // Se non c'è match sul nome, ma il Coach ha selezionato un distretto valido, usa quello
-  const validTargets: MuscleTarget[] = [
-    'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
-    'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
-  ];
-  if (declaredMuscle && validTargets.includes(declaredMuscle as MuscleTarget)) {
-    return { direct: declaredMuscle as MuscleTarget };
-  }
-
-  // Default neutro: Addome invece di sporcare il Petto
-  return { direct: 'Addome' };
+  return null;
 }
 
-// 1. Calcolo del Volume Pianificato dalla Scheda (tutti i giorni della split)
-export function calculateWeeklyVolumeRadar(
-  days: EngineWorkoutDay[],
-  gender: AthleteGender = 'MALE',
-  includeIndirect: boolean = false
-): MuscleVolumeStatus[] {
-  const directCounts: Record<MuscleTarget, number> = {
-    Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0, Femorali: 0,
-    Glutei: 0, Bicipiti: 0, Tricipiti: 0, Polpacci: 0, Addome: 0
+export function parseLocalDate(value: any): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+  const d = new Date(value);
+  if (!isNaN(d.getTime())) return d;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return null;
+}
+
+export function getWeekDateRange(dateString?: string) {
+  const targetDate = parseLocalDate(dateString) || new Date();
+  const dayOfWeek = targetDate.getDay();
+  const diffToMonday = targetDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  const startW = new Date(targetDate);
+  startW.setDate(diffToMonday);
+  startW.setHours(0, 0, 0, 0);
+
+  const endW = new Date(startW);
+  endW.setDate(startW.getDate() + 6);
+  endW.setHours(23, 59, 59, 999);
+
+  const startM = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+  const endM = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
+}
+
+/**
+ * Calcola il volume reale svolto sul campo aggregando logs live e storico senza duplicazioni
+ */
+export function calculateLoggedWeeklySets(
+  logs: any[],
+  workoutHistory: any[],
+  programDays: any[],
+  analyticsDate?: string
+): Record<MuscleTarget, number> {
+  const map: Record<MuscleTarget, number> = {
+    Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0,
+    Femorali: 0, Glutei: 0, Bicipiti: 0, Tricipiti: 0,
+    Polpacci: 0, Addome: 0
   };
-  const indirectCounts: Record<MuscleTarget, number> = { ...directCounts };
 
-  days.forEach(day => {
-    (day.exercises || []).forEach(ex => {
-      const setsCount = Number(ex.sets) || 0;
-      if (setsCount <= 0) return;
-
-      const mapping = getExerciseMuscleDistribution(ex.name, ex.muscleGroup);
-      directCounts[mapping.direct] += setsCount;
-      if (mapping.secondary) {
-        indirectCounts[mapping.secondary] += setsCount * 0.5;
+  const programDict = new Map<string, MuscleTarget>();
+  (programDays || []).forEach(day => {
+    (day.exercises || []).forEach((ex: any) => {
+      if (ex.name && ex.muscleGroup) {
+        programDict.set(ex.name.toLowerCase().trim(), ex.muscleGroup as MuscleTarget);
       }
     });
   });
 
-  const muscleList: MuscleTarget[] = [
-    'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
-    'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
-  ];
+  const { startOfWeek, endOfWeek } = getWeekDateRange(analyticsDate);
+  const startMs = startOfWeek.getTime();
+  const endMs = endOfWeek.getTime();
+  const countedSetIds = new Set<string>();
 
-  return muscleList.map(muscle => {
-    const direct = directCounts[muscle];
-    const total = includeIndirect ? direct + (indirectCounts[muscle] || 0) : direct;
+  (logs || []).forEach(l => {
+    const d = parseLocalDate(l.date);
+    if (d && d.getTime() >= startMs && d.getTime() <= endMs) {
+      countedSetIds.add(l.id);
+      const target = resolveMuscleTarget(l.exerciseName, l.muscleGroup, programDict);
+      if (target) map[target] += 1;
+    }
+  });
+
+  (workoutHistory || []).forEach(w => {
+    const wDate = parseLocalDate(w.created_at || w.date);
+    if (wDate && wDate.getTime() >= startMs && wDate.getTime() <= endMs && Array.isArray(w.logs)) {
+      w.logs.forEach((log: any, index: number) => {
+        const uniqueKey = log.id || `${w.id || w._id}-${log.exerciseName}-${index}`;
+        if (!countedSetIds.has(uniqueKey)) {
+          countedSetIds.add(uniqueKey);
+          const target = resolveMuscleTarget(log.exerciseName, log.muscleGroup, programDict);
+          if (target) map[target] += 1;
+        }
+      });
+    }
+  });
+
+  return map;
+}
+
+/**
+ * Calcola il radar del volume preventivo dalla scheda
+ */
+export function calculatePlannedWeeklySets(
+  days: EngineWorkoutDay[],
+  programDict?: Map<string, MuscleTarget>
+): Record<MuscleTarget, number> {
+  const map: Record<MuscleTarget, number> = {
+    Petto: 0, Dorso: 0, Spalle: 0, Quadricipiti: 0,
+    Femorali: 0, Glutei: 0, Bicipiti: 0, Tricipiti: 0,
+    Polpacci: 0, Addome: 0
+  };
+
+  (days || []).forEach(day => {
+    (day.exercises || []).forEach(ex => {
+      const setsCount = Number(ex.sets) || 0;
+      if (setsCount <= 0) return;
+      const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
+      if (target) map[target] += setsCount;
+    });
+  });
+
+  return map;
+}
+
+/**
+ * Formatta le barre del radar in base alle soglie MEV / MAV / MRV
+ */
+export function buildMuscleVolumeStatuses(
+  setsMap: Record<MuscleTarget, number>,
+  gender: AthleteGender = 'MALE'
+): MuscleVolumeStatus[] {
+  return ALL_MUSCLE_TARGETS.map(muscle => {
+    const total = setsMap[muscle] || 0;
     const { mev, mav, mrv } = VOLUME_THRESHOLDS[gender][muscle];
 
     let status: MuscleVolumeStatus['status'] = 'OPTIMAL';
@@ -281,7 +299,7 @@ export function calculateWeeklyVolumeRadar(
 
     return {
       muscle,
-      directSets: direct,
+      directSets: total,
       totalSets: total,
       mev,
       mav,
@@ -293,52 +311,20 @@ export function calculateWeeklyVolumeRadar(
     };
   });
 }
+// --- FUNZIONI DI COMPATIBILITÀ PER WEEKLYVOLUMERADAR ---
 
-// 2. Calcolo del Volume Svolto sul Campo (legge la mappa reale dei set eseguiti)
+export function calculateWeeklyVolumeRadar(
+  days: EngineWorkoutDay[],
+  gender: AthleteGender = 'MALE',
+  includeIndirect: boolean = false
+): MuscleVolumeStatus[] {
+  const plannedMap = calculatePlannedWeeklySets(days);
+  return buildMuscleVolumeStatuses(plannedMap, gender);
+}
+
 export function calculateFromMuscleMap(
   muscleMap: Record<string, number> = {},
   gender: AthleteGender = 'MALE'
 ): MuscleVolumeStatus[] {
-  const muscleList: MuscleTarget[] = [
-    'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
-    'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'
-  ];
-
-  return muscleList.map(muscle => {
-    const direct = Number(muscleMap[muscle]) || 0;
-    const { mev, mav, mrv } = VOLUME_THRESHOLDS[gender][muscle];
-
-    let status: MuscleVolumeStatus['status'] = 'OPTIMAL';
-    let statusLabel = 'Finestra Ottimale (MAV)';
-    let colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-
-    if (direct < mev) {
-      status = 'SUB_MEV';
-      statusLabel = 'Sotto MEV (Minimo Stimolo)';
-      colorClass = 'text-zinc-400 bg-zinc-800 border-zinc-700';
-    } else if (direct > mrv) {
-      status = 'EXCESSIVE';
-      statusLabel = 'Sopra MRV (Rischio Sovrallenamento)';
-      colorClass = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
-    } else if (direct > mav) {
-      status = 'OVERREACHING';
-      statusLabel = 'Overreaching Controllato';
-      colorClass = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
-    }
-
-    const percentage = Math.min(100, Math.round((direct / mrv) * 100));
-
-    return {
-      muscle,
-      directSets: direct,
-      totalSets: direct,
-      mev,
-      mav,
-      mrv,
-      status,
-      statusLabel,
-      colorClass,
-      percentage
-    };
-  });
+  return buildMuscleVolumeStatuses(muscleMap as any, gender);
 }

@@ -29,6 +29,8 @@ import { getRecommendedTemplatesForBlock, getTemplateById } from '@/lib/topgym-t
 import TemplatePickerModal from '@/components/TemplatePickerModal';
 import WeeklyVolumeRadar from '@/components/WeeklyVolumeRadar';
 import { detectAthleteGender } from '@/lib/topgym-templates';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import { resolveMuscleTarget } from '@/lib/topgym-volume';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -1198,13 +1200,13 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
     const estimated1RM = calculateEstimated1RM(calc1RMWeight, numReps, numRpe) || calculate1RM(calc1RMWeight, numReps);
 
     // Cast esplicito a MuscleGroup così TypeScript non segnala errori di tipo
-    const determinedMuscleGroup = (currentExercise?.muscleGroup || autoDetectMuscleGroup(exName)) as MuscleGroup;
+   const targetGroup = currentExercise?.muscleGroup || resolveMuscleTarget(exName);
 
     const newLog: SetLog = {
       id: makeId(),
       exerciseId: currentExercise?.id || currentExId,
       exerciseName: exName,
-      muscleGroup: determinedMuscleGroup, // <--- ORA NON SARÀ PIÙ ROSSO
+      muscleGroup: targetGroup as MuscleGroup || undefined, // Salvato in modo permanente
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
@@ -2482,187 +2484,17 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
 
 {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
 {activeTab === 'analytics' && (
-          <div className="space-y-6">
-            
-            {/* 1. HEADER ANALISI PROGRESSI */}
-            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md flex justify-between items-center flex-wrap gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="text-[#E50914]" /> 
-                  Analisi Progressi & Volume {userRole === 'COACH' ? `(${activeAthlete?.displayName || 'Atleta'})` : ''}
-                </h2>
-                <p className="text-xs text-zinc-400 mt-1">
-                  Monitoraggio scientifico del volume settimanale (MEV · MAV · MRV) e andamento storico dei carichi.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Mensili</span>
-                  <span className="text-lg font-black text-blue-400">{monthlySetsCount}</span>
-                </div>
-                <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/5 text-center">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase block">Serie Complete (Sempre)</span>
-                  <span className="text-lg font-black text-white">{totalSetsEver}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. NUOVO RADAR DEL VOLUME SETTIMANALE METODO TOPGYM (MEV / MAV / MRV) */}
-<WeeklyVolumeRadar 
-              days={programDays as any} 
-              athleteName={activeAthlete?.displayName || 'Atleta'} 
-              athleteGender={detectAthleteGender(activeAthlete?.displayName)}
-              weeklyMuscleSetsMap={weeklyMuscleSetsMap}
-              weekRangeText={`${startOfWeek.toLocaleDateString('it-IT')} - ${endOfWeek.toLocaleDateString('it-IT')}`}
-              analyticsDate={analyticsDate}
-              onDateChange={setAnalyticsDate}
-            />
-
-            {/* 3. STORICO ALLENAMENTI & GRAFICO INTENSITÀ (INALTERATO) */}
-            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
-              <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#E50914]" /> Storico Allenamenti & Analisi Intensità
-              </h3>
-              {workoutHistory.length === 0 ? (
-                <p className="text-xs text-zinc-400 italic">Nessun allenamento registrato.</p>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                    {volumeIntensitySeries.length === 0 ? (
-                      <p className="text-xs text-zinc-400 italic text-center py-8">Nessun dato sufficiente per il grafico.</p>
-                    ) : (
-                      <>
-                        {(() => {
-                          const chartW = 600;
-                          const chartH = 160;
-                          const padX = 24;
-                          const n = volumeIntensitySeries.length;
-                          const stepX = n > 1 ? (chartW - padX * 2) / (n - 1) : 0;
-                          const xAt = (i: number) => padX + stepX * i;
-                          const yVolAt = (v: number) => chartH - (Math.min(1, v / maxHistoryVolume) * (chartH - 20)) - 10;
-                          const yIntAt = (pct: number) => chartH - (Math.min(1, pct / 100) * (chartH - 20)) - 10;
-
-                          const volPoints = volumeIntensitySeries.map((s, i) => `${xAt(i)},${yVolAt(s.volume)}`).join(' ');
-                          const intensityPointsWithData = volumeIntensitySeries
-                            .map((s, i) => (s.avgIntensity !== null ? { x: xAt(i), y: yIntAt(s.avgIntensity) } : null))
-                            .filter((p): p is { x: number; y: number } => p !== null);
-                          const intPolyline = intensityPointsWithData.map(p => `${p.x},${p.y}`).join(' ');
-
-                          return (
-                            <svg viewBox={`0 0 ${chartW} ${chartH + 24}`} className="w-full h-52" preserveAspectRatio="none">
-                              {[0, 0.25, 0.5, 0.75, 1].map(f => (
-                                <line key={f} x1={padX} x2={chartW - padX} y1={10 + f * (chartH - 20)} y2={10 + f * (chartH - 20)} stroke="#27272a" strokeWidth="1" />
-                              ))}
-
-                              <polyline points={volPoints} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                              {volumeIntensitySeries.map((s, i) => (
-                                <circle key={`vol-${s.key}`} cx={xAt(i)} cy={yVolAt(s.volume)} r="3.5" fill="#3b82f6">
-                                  <title>{`${s.dateStr} · Volume: ${s.volume.toLocaleString('it-IT')} kg`}</title>
-                                </circle>
-                              ))}
-
-                              {intensityPointsWithData.length >= 2 && (
-                                <polyline points={intPolyline} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 3" />
-                              )}
-                              {volumeIntensitySeries.map((s, i) =>
-                                s.avgIntensity !== null ? (
-                                  <g key={`int-${s.key}`}>
-                                    <circle cx={xAt(i)} cy={yIntAt(s.avgIntensity)} r="3.5" fill="#f59e0b">
-                                      <title>{`${s.dateStr} · Intensità media: ${s.avgIntensity}% 1RM`}</title>
-                                    </circle>
-                                    {intensityPointsWithData.length < 2 && (
-                                      <text x={xAt(i)} y={yIntAt(s.avgIntensity) - 8} fontSize="9" fill="#f59e0b" textAnchor="middle" fontWeight="bold">
-                                        {s.avgIntensity}%
-                                      </text>
-                                    )}
-                                  </g>
-                                ) : null
-                              )}
-
-                              {volumeIntensitySeries.map((s, i) => (
-                                <text key={`label-${s.key}`} x={xAt(i)} y={chartH + 16} fontSize="9" fill="#a1a1aa" textAnchor="middle" fontFamily="monospace">
-                                  {s.dateStr}
-                                </text>
-                              ))}
-                            </svg>
-                          );
-                        })()}
-                        <div className="text-center text-[11px] flex items-center justify-center gap-5 mt-2 font-medium">
-                          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-3 h-0.5 rounded-full bg-blue-500 inline-block" /> Volume (kg)</span>
-                          <span className="flex items-center gap-1.5 text-amber-400"><span className="w-3 h-0.5 rounded-full bg-amber-500 inline-block" /> Intensità Media (% 1RM)</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="overflow-x-auto pt-2 space-y-2">
-                    <table className="w-full text-xs text-left text-zinc-300">
-                      <thead className="bg-black/40 text-zinc-400 uppercase text-[10px] border-b border-white/5">
-                        <tr>
-                          <th className="py-2.5 px-3">Data</th>
-                          <th className="py-2.5 px-3">Scheda</th>
-                          <th className="py-2.5 px-3 text-right">Volume</th>
-                          <th className="py-2.5 px-3 text-center">Azioni</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {workoutHistory.map((item, idx) => {
-                          const rowKey = item.id || item._id || `row-${idx}`;
-                          const isExpanded = expandedHistoryId === rowKey;
-                          return (
-                            <React.Fragment key={rowKey}>
-                              <tr className="hover:bg-zinc-800/30 transition">
-                                <td className="py-2.5 px-3 font-mono text-zinc-400">{item.created_at ? new Date(item.created_at).toLocaleDateString('it-IT') : (item.date || todayIso())}</td>
-                                <td className="py-2.5 px-3 font-bold text-white">{item.day_name || item.dayName || 'Allenamento'}</td>
-                                <td className="py-2.5 px-3 text-right font-bold text-emerald-400">{(item.total_volume || item.totalVolume || 0).toLocaleString('it-IT')} kg</td>
-                                <td className="py-2.5 px-3">
-                                  <div className="flex justify-center gap-2">
-                                    <button type="button" onClick={() => setExpandedHistoryId(isExpanded ? null : rowKey)} className="bg-zinc-800 hover:bg-zinc-700 text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
-                                      {isExpanded ? <ChevronUp className="w-3 h-3"/> : <ChevronDown className="w-3 h-3"/>} Dettagli
-                                    </button>
-                                    {userRole === 'COACH' && (
-                                      <button type="button" onClick={() => handleDeleteWorkoutHistory(item.id || item._id)} className="text-zinc-500 hover:text-rose-400 p-1"><Trash2 className="w-4 h-4"/></button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                              {isExpanded && (
-                                <tr className="bg-black/30">
-                                  <td colSpan={4} className="p-3">
-                                    {item.logs && Array.isArray(item.logs) && item.logs.length > 0 ? (
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                        {item.logs.map((log: any, lIdx: number) => (
-                                          <div key={lIdx} className="bg-zinc-900 border border-white/5 p-2.5 rounded-xl text-[11px]">
-                                            <div className="font-bold text-white mb-1">{log.exerciseName}</div>
-                                            <div className="text-zinc-400 flex justify-between flex-wrap">
-                                              {log.isBodyweight && log.effectiveLoad !== null ? (
-                                                <span>BW: +{log.weight} kg (Effettivo: {log.effectiveLoad} kg) × {log.reps}</span>
-                                              ) : (
-                                                <span>{log.weight} kg × {log.reps}</span>
-                                              )}
-                                              <span className="text-red-400 font-semibold">RPE: {log.rpe}</span>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="text-[11px] text-zinc-500 italic text-center">Nessun dettaglio delle serie salvato per questo allenamento.</div>
-                                    )}
-                                  </td>
-                                </tr>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <AnalyticsDashboard
+            logs={logs}
+            workoutHistory={workoutHistory}
+            programDays={programDays}
+            athleteName={activeAthlete?.displayName}
+            athleteGender={detectAthleteGender(activeAthlete?.displayName)}
+            userRole={userRole}
+            onDeleteWorkout={handleDeleteWorkoutHistory}
+          />
         )}
-
+        
         {/* TAB 8: CLASSIFICA & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
