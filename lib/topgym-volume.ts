@@ -1,7 +1,6 @@
 // lib/topgym-volume.ts
 // MOTORE ANALISI VOLUME SETTIMANALE & METRICHE · METODO TOP GYM
 
-import { EngineWorkoutDay } from './topgym-engine';
 import { AthleteGender } from './topgym-templates';
 
 export type MuscleTarget = 
@@ -15,6 +14,8 @@ export type MuscleTarget =
   | 'Tricipiti' 
   | 'Polpacci' 
   | 'Addome';
+
+export type MuscleGroup = MuscleTarget;
 
 export const ALL_MUSCLE_TARGETS: MuscleTarget[] = [
   'Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 
@@ -62,10 +63,11 @@ const VOLUME_THRESHOLDS: Record<AthleteGender, Record<MuscleTarget, { mev: numbe
 };
 
 /**
- * Risolutore automatico infallibile:
- * 1. Se il log o l'esercizio ha già un gruppo muscolare valido, usa quello.
- * 2. Se manca, fa pattern-matching su un dizionario esaustivo.
- * 3. Se non trova nulla, restituisce null (NON sporca Petto o Glutei).
+ * Risoluzione automatica del gruppo muscolare:
+ * 1. Usa il gruppo esplicitamente dichiarato se valido
+ * 2. Cerca nel dizionario degli esercizi della scheda
+ * 3. Applica pattern matching con priorità anatomiche corrette
+ * 4. Ritorna null se non riconosciuto (nessun falso fallback su Petto)
  */
 export function resolveMuscleTarget(
   exerciseName?: string, 
@@ -83,7 +85,7 @@ export function resolveMuscleTarget(
     return programDictionary.get(name)!;
   }
 
-  // 1. FEMORALI (prima di Dorso e Bicipiti)
+  // 1. FEMORALI (prima di Dorso e Bicipiti per anticipare 'stacco' e 'curl')
   if (
     name.includes('stacco rumeno') || name.includes('rdl') || name.includes('leg curl') ||
     name.includes('femoral') || name.includes('hamstring') || name.includes('lying curl') ||
@@ -91,7 +93,7 @@ export function resolveMuscleTarget(
     name.includes('nordic') || name.includes('ghr')
   ) return 'Femorali';
 
-  // 2. GLUTEI (prima di Petto e Quadricipiti)
+  // 2. GLUTEI (prima di Quadricipiti e Petto per isolare Kickback, Hip Thrust, Bulgari)
   if (
     name.includes('hip thrust') || name.includes('glute') || name.includes('kickback') ||
     name.includes('kick back') || name.includes('slanci') || name.includes('abductor') ||
@@ -101,7 +103,7 @@ export function resolveMuscleTarget(
     name.includes('iperestension') || name.includes('reverse hyper')
   ) return 'Glutei';
 
-  // 3. DORSO (include Pull up, Chin up, T-Bar, Lat, Stacchi tradizionali)
+  // 3. DORSO (include Pull up, Chin up, T-Bar, Lat, Stacchi da terra)
   if (
     name.includes('pull up') || name.includes('pull-up') || name.includes('pullup') ||
     name.includes('chin up') || name.includes('chin-up') || name.includes('chinup') ||
@@ -186,9 +188,6 @@ export function getWeekDateRange(dateString?: string) {
   return { startOfWeek: startW, endOfWeek: endW, startOfMonth: startM, endOfMonth: endM };
 }
 
-/**
- * Calcola il volume reale svolto sul campo aggregando logs live e storico senza duplicazioni
- */
 export function calculateLoggedWeeklySets(
   logs: any[],
   workoutHistory: any[],
@@ -241,11 +240,8 @@ export function calculateLoggedWeeklySets(
   return map;
 }
 
-/**
- * Calcola il radar del volume preventivo dalla scheda
- */
 export function calculatePlannedWeeklySets(
-  days: EngineWorkoutDay[],
+  days: any[],
   programDict?: Map<string, MuscleTarget>
 ): Record<MuscleTarget, number> {
   const map: Record<MuscleTarget, number> = {
@@ -255,7 +251,7 @@ export function calculatePlannedWeeklySets(
   };
 
   (days || []).forEach(day => {
-    (day.exercises || []).forEach(ex => {
+    (day.exercises || []).forEach((ex: any) => {
       const setsCount = Number(ex.sets) || 0;
       if (setsCount <= 0) return;
       const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
@@ -266,9 +262,6 @@ export function calculatePlannedWeeklySets(
   return map;
 }
 
-/**
- * Formatta le barre del radar in base alle soglie MEV / MAV / MRV
- */
 export function buildMuscleVolumeStatuses(
   setsMap: Record<MuscleTarget, number>,
   gender: AthleteGender = 'MALE'
@@ -311,12 +304,12 @@ export function buildMuscleVolumeStatuses(
     };
   });
 }
-// --- FUNZIONI DI COMPATIBILITÀ PER WEEKLYVOLUMERADAR ---
 
+// --- FUNZIONI DI COMPATIBILITÀ CON ALTRI COMPONENTI ESISTENTI ---
 export function calculateWeeklyVolumeRadar(
-  days: EngineWorkoutDay[],
+  days: any[],
   gender: AthleteGender = 'MALE',
-  includeIndirect: boolean = false
+  _includeIndirect: boolean = false
 ): MuscleVolumeStatus[] {
   const plannedMap = calculatePlannedWeeklySets(days);
   return buildMuscleVolumeStatuses(plannedMap, gender);
