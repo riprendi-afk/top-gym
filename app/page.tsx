@@ -1188,6 +1188,31 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
     }
   };
 
+  // --- FUNZIONI RAPIDE WORKOUT ERGONOMICO (THUMB-ZONE) ---
+  const handleQuickWeightAdjust = (delta: number) => {
+    const current = parseFloat(weight) || 0;
+    const next = Math.max(0, current + delta);
+    // Arrotonda pulito a massimo 2 decimali (es. 12.5 o 12.25)
+    setWeight(next % 1 === 0 ? next.toString() : parseFloat(next.toFixed(2)).toString());
+  };
+
+  const handleQuickRepsAdjust = (delta: number) => {
+    const current = parseInt(reps, 10) || 0;
+    const next = Math.max(1, current + delta);
+    setReps(next.toString());
+  };
+
+  const handleCopyLastSet = () => {
+    const exName = currentExercise?.name;
+    if (!exName) return;
+    const lastLog = logs.find(l => l.exerciseName === exName);
+    if (lastLog) {
+      setWeight(String(lastLog.weight));
+      setReps(String(lastLog.reps));
+      if (lastLog.rpe) setRpe(String(lastLog.rpe));
+    }
+  };
+
   const handleLogSet = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const numWeight = parseFloat(weight);
@@ -1946,54 +1971,170 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
                   </div>
                 )}
 
-                <form onSubmit={handleLogSet} className="space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-[10px] uppercase font-bold text-zinc-400">
-                          {currentBodyweightConfig ? 'Zavorra (Kg)' : 'Carico (Kg)'}
-                        </label>
-                        <div className="flex gap-1">
-                          <button type="button" onClick={() => adjustWeight(-2.5)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold rounded text-zinc-300">-2.5</button>
-                          <button type="button" onClick={() => adjustWeight(2.5)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold rounded text-zinc-300">+2.5</button>
-                        </div>
-                      </div>
+              {/* WORKOUT LOGGER ERGONOMICO METODO TOP GYM (THUMB-ZONE) */}
+              <form onSubmit={handleLogSet} className="space-y-4">
+                  
+                  {/* TASTO RAPIDO: COPIA ULTIMA SERIE (SE PRESENTE NELLA SESSIONE) */}
+                  {(() => {
+                    const lastLog = logs.find(l => l.exerciseName === currentExercise?.name);
+                    if (!lastLog) return null;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWeight(String(lastLog.weight));
+                          setReps(String(lastLog.reps));
+                          if (lastLog.rpe) setRpe(String(lastLog.rpe));
+                        }}
+                        className="w-full py-2 px-3 bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 rounded-xl text-xs font-bold text-zinc-300 flex items-center justify-between transition cursor-pointer active:scale-[0.99]"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Ultima serie: <b className="text-white">{lastLog.weight} kg × {lastLog.reps}</b> {lastLog.rpe ? `(@${lastLog.rpe})` : ''}
+                        </span>
+                        <span className="text-[10px] text-amber-400 uppercase font-black tracking-wider bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          Copia Carico
+                        </span>
+                      </button>
+                    );
+                  })()}
+
+                  {/* SEZIONE 1: CARICO / ZAVORRA (KG) - DISPLAY GRANDE & PULSANTI RAPIDI */}
+                  <div className="bg-black/30 p-3.5 rounded-2xl border border-white/5 space-y-2.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs uppercase font-black tracking-wider text-zinc-400">
+                        {currentBodyweightConfig ? 'Zavorra Aggiuntiva (Kg)' : 'Carico Effettivo (Kg)'}
+                      </label>
+                      {currentBodyweightConfig && (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          Corpo Libero
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-center gap-3 py-1">
                       <input 
                         type="number" 
                         step="0.5" 
                         min="0"
+                        inputMode="decimal"
                         required 
                         value={weight} 
                         onChange={e => setWeight(e.target.value)} 
                         placeholder={currentBodyweightConfig ? '0' : '80'} 
-                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
+                        className="w-44 text-center text-4xl sm:text-5xl font-black text-white bg-zinc-900/80 border border-white/10 rounded-2xl py-2.5 outline-none focus:border-[#E50914] shadow-inner transition" 
                       />
+                      <span className="text-xl font-bold text-zinc-500">kg</span>
                     </div>
-                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">Reps</label>
+
+                    {/* Tasti Micro-Loading Rapidi (+ / -) con altezza comoda da 44px */}
+                    <div className="grid grid-cols-6 gap-1.5 pt-1">
+                      <button type="button" onClick={() => adjustWeight(-5)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-300 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">-5</button>
+                      <button type="button" onClick={() => adjustWeight(-2.5)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-300 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">-2.5</button>
+                      <button type="button" onClick={() => adjustWeight(-1.25)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-300 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">-1.25</button>
+                      <button type="button" onClick={() => adjustWeight(1.25)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-emerald-400 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">+1.25</button>
+                      <button type="button" onClick={() => adjustWeight(2.5)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-emerald-400 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">+2.5</button>
+                      <button type="button" onClick={() => adjustWeight(5)} className="h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-emerald-400 rounded-xl border border-white/5 transition flex items-center justify-center cursor-pointer">+5</button>
+                    </div>
+                  </div>
+
+                  {/* SEZIONE 2: RIPETIZIONI (CON STEPPER TOUCH GRANDI - E +) */}
+                  <div className="bg-black/30 p-3.5 rounded-2xl border border-white/5 flex items-center justify-between gap-4">
+                    <div>
+                      <label className="block text-xs uppercase font-black tracking-wider text-zinc-400">Ripetizioni</label>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        Target: {currentExercise?.reps || '8-10'} reps
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReps(prev => Math.max(1, (parseInt(prev, 10) || 0) - 1).toString())}
+                        className="w-12 h-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-2xl font-black text-white border border-white/5 flex items-center justify-center transition cursor-pointer"
+                      >
+                        -
+                      </button>
                       <input 
                         type="number" 
                         min="1"
+                        inputMode="numeric"
                         required 
                         value={reps} 
                         onChange={e => setReps(e.target.value)} 
                         placeholder="8" 
-                        className="w-full bg-transparent text-xl font-black text-white outline-none" 
+                        className="w-20 h-12 text-center text-2xl font-black text-white bg-zinc-900/80 border border-white/10 rounded-xl outline-none focus:border-[#E50914]" 
                       />
-                    </div>
-                    <div className="bg-black/30 p-2.5 rounded-xl border border-white/5">
-                      <label className="block text-[10px] uppercase font-bold text-zinc-400 mb-1">RPE</label>
-                      <select value={rpe} onChange={e => setRpe(e.target.value)} className="w-full bg-transparent text-lg font-black text-white outline-none cursor-pointer">
-                        {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(val => (<option key={val} value={val} className="bg-zinc-900 text-white">RPE {val}</option>))}
-                      </select>
-                      {rpeTablePreviewPct !== null && (
-                        <p className="text-[9px] text-zinc-500 mt-1 font-semibold truncate">≈ {rpeTablePreviewPct}% 1RM</p>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setReps(prev => ((parseInt(prev, 10) || 0) + 1).toString())}
+                        className="w-12 h-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-2xl font-black text-emerald-400 border border-white/5 flex items-center justify-center transition cursor-pointer"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
-                  <button type="submit" className="w-full bg-[#E50914] hover:brightness-110 text-white font-bold py-3.5 rounded-xl uppercase text-sm tracking-wider transition-transform active:scale-95 cursor-pointer shadow-lg">
-                    <Plus className="w-5 h-5 inline mr-1"/> Registra Serie (+10 XP)
-                  </button>
+
+                  {/* SEZIONE 3: SELETTORE RPE TOUCH RAPIDO (PILL) & STIMA 1RM */}
+                  <div className="bg-black/30 p-3.5 rounded-2xl border border-white/5 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs uppercase font-black tracking-wider text-zinc-400">
+                        Sforzo RPE
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {rpeTablePreviewPct !== null && (
+                          <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">
+                            ≈ {rpeTablePreviewPct}% 1RM
+                          </span>
+                        )}
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">
+                          {parseFloat(rpe) === 10 ? 'Cedimento' : `${Math.max(0, 10 - parseFloat(rpe || '8'))} RIR`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1.5 pt-1">
+                      {[
+                        { val: '7', rir: '3' },
+                        { val: '7.5', rir: '2.5' },
+                        { val: '8', rir: '2' },
+                        { val: '8.5', rir: '1.5' },
+                        { val: '9', rir: '1' },
+                        { val: '9.5', rir: '0.5' },
+                        { val: '10', rir: 'MAX' },
+                      ].map(item => {
+                        const isSelected = String(rpe) === item.val;
+                        return (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setRpe(item.val)}
+                            className={`py-2 rounded-xl border text-center transition flex flex-col items-center justify-center cursor-pointer active:scale-95 ${
+                              isSelected
+                                ? 'bg-[#E50914] border-[#E50914] text-white shadow-lg shadow-red-900/40'
+                                : 'bg-zinc-800/60 border-white/5 text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            <span className="text-xs font-black">{item.val}</span>
+                            <span className={`text-[8px] font-bold ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>
+                              {item.rir === 'MAX' ? 'MAX' : `${item.rir}R`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* SEZIONE 4: PULSANTE GIGANTE PER IL POLLICE (THUMB-ZONE) */}
+                  <div className="pt-2">
+                    <button 
+                      type="submit" 
+                      className="w-full h-16 bg-[#E50914] hover:brightness-110 text-white font-black text-base sm:text-lg rounded-2xl uppercase tracking-wider transition-all active:scale-[0.98] cursor-pointer shadow-[0_10px_25px_rgba(229,9,20,0.35)] flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-6 h-6 stroke-[3] inline"/> Registra Serie (+10 XP)
+                    </button>
+                  </div>
+
                 </form>
 
                 <div className="mt-6">
