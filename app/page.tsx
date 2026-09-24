@@ -32,6 +32,7 @@ import { detectAthleteGender } from '@/lib/topgym-templates';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import { resolveMuscleTarget } from '@/lib/topgym-volume';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import ProgramBuilderAccordion from '@/components/ProgramBuilderAccordion';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -388,6 +389,7 @@ export default function TopGymApp() {
   const [builderNotes, setBuilderNotes] = useState('');
   const [editingDayId, setEditingDayId] = useState<string | null>(null);
   const [editingExId, setEditingExId] = useState<string | null>(null);
+  const [openDayId, setOpenDayId] = useState<string | null>(null);
 
   const handleApplyTopGymPreset = (stimulus: TopGymStimulus) => {
     setBuilderStimulus(stimulus);
@@ -2319,159 +2321,190 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
                 </div>
               </div>
 
-              {programDays.map((day) => (
-                <div key={day.id} className="bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-white/5 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 w-full max-w-sm">
-                      <h3 className="font-bold text-white whitespace-nowrap text-sm">Giorno {day.dayNumber}:</h3>
-                      <input 
-                        type="text" 
-                        value={day.title} 
-                        onChange={(e) => handleRenameDay(day.id, e.target.value)} 
-                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full" 
-                      />
-                    </div>
-                    <span className="text-xs text-zinc-400 font-mono">{day.exercises.length} esercizi</span>
-                  </div>
+{/* ELENCO GIORNI DEL BUILDER A FISARMONICA (ACCORDION) */}
+{programDays.map((day) => {
+                const isOpen = openDayId === day.id;
 
-                  <div className="space-y-2">
-                    {day.exercises.map((ex) => (
-                      <div 
-                        key={ex.id} 
-                        className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${
-                          editingExId === ex.id ? 'bg-red-950/30 border-[#E50914]' : 'bg-[#12151B] border-white/5'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white">{ex.name}</span>
-                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
-                              {ex.executionType}
+                return (
+                  <div key={day.id} className="bg-zinc-900/60 rounded-2xl border border-white/5 overflow-hidden transition-all shadow-lg">
+                    {/* INTESTAZIONE GIORNO (CLICCABILE PER APRIRE/CHIUDERE) */}
+                    <div 
+                      onClick={() => setOpenDayId(isOpen ? null : day.id)}
+                      className="p-4 sm:p-5 flex justify-between items-center cursor-pointer hover:bg-white/[0.02] transition select-none"
+                    >
+                      <div className="flex items-center gap-3 w-full max-w-md">
+                        <span className="font-black text-white whitespace-nowrap text-sm bg-black/40 px-2.5 py-1 rounded-lg border border-white/5">
+                          Giorno {day.dayNumber}
+                        </span>
+                        <input 
+                          type="text" 
+                          value={day.title} 
+                          onClick={(e) => e.stopPropagation()} 
+                          onChange={(e) => handleRenameDay(day.id, e.target.value)} 
+                          className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full" 
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-zinc-400 font-mono bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
+                          {day.exercises.length} esercizi
+                        </span>
+                        <div className="text-zinc-400 p-1">
+                          {isOpen ? <ChevronUp className="w-5 h-5 text-white" /> : <ChevronDown className="w-5 h-5" />}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CONTENUTO VISIBILE SOLO SE IL GIORNO È APERTO */}
+                    {isOpen && (
+                      <div className="p-4 sm:p-5 border-t border-white/5 space-y-4 bg-black/20">
+                        {/* LISTA ESERCIZI DEL GIORNO */}
+                        <div className="space-y-2">
+                          {day.exercises.length === 0 ? (
+                            <p className="text-xs text-zinc-500 italic py-2 text-center">Nessun esercizio inserito in questa giornata.</p>
+                          ) : (
+                            day.exercises.map((ex) => (
+                              <div 
+                                key={ex.id} 
+                                className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${
+                                  editingExId === ex.id ? 'bg-red-950/30 border-[#E50914]' : 'bg-[#12151B] border-white/5'
+                                }`}
+                              >
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white">{ex.name}</span>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                                      {ex.executionType}
+                                    </span>
+                                  </div>
+                                  <div className="text-zinc-400 mt-0.5">
+                                    {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
+                                  </div>
+                                  {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditExercise(day.id, ex)}
+                                    className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
+                                    title="Modifica esercizio"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => {
+                                      if (editingExId === ex.id) handleCancelEdit();
+                                      handleRemoveExerciseFromDay(day.id, ex.id);
+                                    }} 
+                                    className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
+                                    title="Elimina esercizio"
+                                  >
+                                    <Trash2 className="w-4 h-4"/>
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* FORM AGGIUNTA / MODIFICA ESERCIZIO */}
+                        <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-3 border-t border-white/5">
+                          <div>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                              Preset Stimolo Metodo TOPGYM:
                             </span>
+                            <div className="flex gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => handleApplyTopGymPreset('NEURAL')}
+                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                              >
+                                ⚡ Neurale (2-6 reps · Buffer)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
+                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                              >
+                                💪 Meccanico (6-12 reps · Cedimento/Buffer)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleApplyTopGymPreset('METABOLIC')}
+                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                              >
+                                🔥 Metabolico (12-20 reps · Isolamento)
+                              </button>
+                            </div>
                           </div>
-                          <div className="text-zinc-400 mt-0.5">
-                            {ex.sets} × {ex.reps} @ {ex.targetWeight} kg | RPE: {ex.rpeTarget} | Rec: {ex.restSeconds}s | TUT: {ex.tut}
-                          </div>
-                          {ex.notes && <div className="text-[10px] text-zinc-500 italic mt-0.5">Note: {ex.notes}</div>}
-                        </div>
 
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleStartEditExercise(day.id, ex)}
-                            className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                            title="Modifica esercizio"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button 
-                            type="button" 
-                            onClick={() => {
-                              if (editingExId === ex.id) handleCancelEdit();
-                              handleRemoveExerciseFromDay(day.id, ex.id);
-                            }} 
-                            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                            title="Elimina esercizio"
-                          >
-                            <Trash2 className="w-4 h-4"/>
-                          </button>
-                        </div>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            <input 
+                              type="text" 
+                              placeholder="Nome Esercizio" 
+                              value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
+                              onChange={e => {
+                                setBuilderExName(e.target.value);
+                                setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                              }} 
+                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                            />
+                            <select 
+                              value={builderMuscleGroup} 
+                              onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
+                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
+                            >
+                              {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
+                                <option key={mg} value={mg}>{mg}</option>
+                              ))}
+                            </select>
+                            <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                            <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                            <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                              <option value="REGULAR">Tecnica: REGULAR</option>
+                              <option value="SUPERSET">Tecnica: SUPERSET</option>
+                              <option value="STRIPPING">Tecnica: STRIPPING (Drop Set)</option>
+                              <option value="10_PIU_MAX">Tecnica: 10 + MAX</option>
+                              <option value="REST_PAUSE">Tecnica: REST-PAUSE</option>
+                              <option value="BACK_OFF">Tecnica: BACK-OFF a Cedimento</option>
+                              <option value="PARZIALI">Tecnica: RIPETIZIONI PARZIALI</option>
+                              <option value="ISOMETRIE">Tecnica: ISOMETRIE FINALI</option>
+                              <option value="CLUSTER">Tecnica: CLUSTER</option>
+                            </select>
+                            <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                            <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                            <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
+                          </div>
+
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              placeholder="Note del Coach (Metodo TOPGYM)" 
+                              value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
+                              onChange={e => setBuilderNotes(e.target.value)} 
+                              className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
+                            />
+                            {editingExId && editingDayId === day.id ? (
+                              <>
+                                <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer">Annulla</button>
+                                <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer">Aggiorna</button>
+                              </>
+                            ) : (
+                              <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer">Aggiungi</button>
+                            )}
+                          </div>
+                        </form>
                       </div>
-                    ))}
+                    )}
                   </div>
-
-                  <form onSubmit={e => handleAddOrUpdateExercise(e, day.id)} className="space-y-3 pt-3 border-t border-white/5">
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                        Preset Stimolo Metodo TOPGYM:
-                      </span>
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyTopGymPreset('NEURAL')}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                        >
-                          ⚡ Neurale (2-6 reps · Buffer)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyTopGymPreset('HYPERTROPHIC')}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                        >
-                          💪 Meccanico (6-12 reps · Cedimento/Buffer)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyTopGymPreset('METABOLIC')}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                        >
-                          🔥 Metabolico (12-20 reps · Isolamento)
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="Nome Esercizio" 
-                        value={editingDayId === day.id ? builderExName : (editingDayId ? '' : builderExName)} 
-                        onChange={e => {
-                          setBuilderExName(e.target.value);
-                          setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                        }} 
-                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
-                      />
-                      <select 
-                        value={builderMuscleGroup} 
-                        onChange={e => setBuilderMuscleGroup(e.target.value as MuscleGroup)} 
-                        className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                      >
-                        {(['Petto', 'Dorso', 'Spalle', 'Quadricipiti', 'Femorali', 'Glutei', 'Bicipiti', 'Tricipiti', 'Polpacci', 'Addome'] as MuscleGroup[]).map(mg => (
-                          <option key={mg} value={mg}>{mg}</option>
-                        ))}
-                      </select>
-                      <input type="number" placeholder="Serie" value={builderSets} onChange={e => setBuilderSets(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                      <input type="text" placeholder="Reps" value={builderReps} onChange={e => setBuilderReps(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                      <input type="text" placeholder="Carico Target" value={builderWeight} onChange={e => setBuilderWeight(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <select value={builderType} onChange={e => setBuilderType(e.target.value as ExecutionType)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
-                        <option value="REGULAR">Tecnica: REGULAR</option>
-                        <option value="SUPERSET">Tecnica: SUPERSET</option>
-                        <option value="STRIPPING">Tecnica: STRIPPING (Drop Set)</option>
-                        <option value="10_PIU_MAX">Tecnica: 10 + MAX</option>
-                        <option value="REST_PAUSE">Tecnica: REST-PAUSE</option>
-                        <option value="BACK_OFF">Tecnica: BACK-OFF a Cedimento</option>
-                        <option value="PARZIALI">Tecnica: RIPETIZIONI PARZIALI</option>
-                        <option value="ISOMETRIE">Tecnica: ISOMETRIE FINALI</option>
-                        <option value="CLUSTER">Tecnica: CLUSTER</option>
-                      </select>
-                      <input type="text" placeholder="TUT" value={builderTut} onChange={e => setBuilderTut(e.target.value)} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                      <input type="number" placeholder="Recupero (sec)" value={builderRest} onChange={e => setBuilderRest(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                      <input type="number" step="0.5" placeholder="RPE Target" value={builderRpe} onChange={e => setBuilderRpe(Number(e.target.value))} className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="Note del Coach (Metodo TOPGYM)" 
-                        value={editingDayId === day.id ? builderNotes : (editingDayId ? '' : builderNotes)} 
-                        onChange={e => setBuilderNotes(e.target.value)} 
-                        className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white" 
-                      />
-                      {editingExId && editingDayId === day.id ? (
-                        <>
-                          <button type="button" onClick={handleCancelEdit} className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer">Annulla</button>
-                          <button type="submit" className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer">Aggiorna</button>
-                        </>
-                      ) : (
-                        <button type="submit" className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer">Aggiungi</button>
-                      )}
-                    </div>
-                  </form>
-                </div>
-              ))}
+                );
+              })}
 
               <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
                 {builderSuccessMessage && <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">{builderSuccessMessage}</div>}
