@@ -1,6 +1,6 @@
 // lib/hardtopgym-engine.ts
 // MOTORE METODOLOGICO HARDTOPGYM (Emilio They + Bosco & Colli)
-// Architettura Autonoma Unificata (Uomo & Donna)
+// Architettura Integrale Unificata (Uomo & Donna)
 
 export type HardTopGymPhase = 
   | 'PHASE_1_BASE'         // Costruzione di Base (4-6 sett.)
@@ -63,10 +63,10 @@ export interface HardTopGymWorkoutDay {
   exercises: HardTopGymExercise[];
 }
 
-const makeId = (prefix: string = 'hard') => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+const makeId = (p: string = 'hard') => `${p}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
 // ============================================================================
-// ARCHIVIO 1: PROGRAMMAZIONE HARD BODYBUILDING MASCHILE
+// ARCHIVIO 1: PROGRAMMAZIONE HARD BODYBUILDING MASCHILE (INTEGRALE EMILIO THEY)
 // ============================================================================
 function getMenProgram(
   phase: HardTopGymPhase,
@@ -77,20 +77,20 @@ function getMenProgram(
   const isBase = phase === 'PHASE_1_BASE';
   const isShock = phase === 'PHASE_3_DEEP_SHOCK';
 
-  // Configurazione esecutiva in base alla Fase attiva
+  // Configurazione dei parametri esecutivi in base alla Fase attiva
   const getConfig = (type: 'NEURAL' | 'MECH' | 'METAB') => {
     if (isBase) {
-      if (type === 'NEURAL') return { sets: 5, reps: '4-6', rpeTarget: 8, restSeconds: 180, tut: 'CAT', effortBuffer: 'RIR 2-3', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Fase 1 Bosco: Massima accelerazione concentrica. Testosterone.', executionType: 'REGULAR' };
+      if (type === 'NEURAL') return { sets: 5, reps: '4-6', rpeTarget: 8, restSeconds: 180, tut: 'CAT', effortBuffer: 'RIR 2-3 (Buffer)', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Fase 1 Bosco: Massima accelerazione concentrica volontaria. Picco di Testosterone.', executionType: 'REGULAR' };
       if (type === 'MECH') return { sets: 4, reps: '6-8', rpeTarget: 8, restSeconds: 150, tut: 'CAT', effortBuffer: 'RIR 2', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Tensione meccanica pesante in CAT. Zero cedimento.', executionType: 'REGULAR' };
       return { sets: 3, reps: '8-10', rpeTarget: 8.5, restSeconds: 90, tut: '2-0-1-0', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Complementare strutturale pesante.', executionType: 'REGULAR' };
     }
     if (isShock) {
       if (type === 'NEURAL') return { sets: 4, reps: '6', rpeTarget: 8.5, restSeconds: 150, tut: 'CAT', effortBuffer: 'RIR 1.5', specialTechnique: 'POF_MESOTONIA' as SpecialTechnique, notes: 'P.O.F. Mesotonia They: Carico submassimale in CAT.', executionType: 'REGULAR' };
-      if (type === 'MECH') return { sets: 3, reps: '8-10', rpeTarget: 9, restSeconds: 90, tut: '3-0-1-0', effortBuffer: 'RIR 1', specialTechnique: 'POF_STRETCH' as SpecialTechnique, notes: 'P.O.F. Stiramento fasciale profondo.', executionType: 'REGULAR' };
-      return { sets: 3, reps: '8+8+8 STRIPPING', rpeTarget: 10, restSeconds: 90, tut: 'PEAK_CONTRACTION', effortBuffer: 'RIR 0 (Cedimento)', specialTechnique: 'STRIPPING_3_DROP' as SpecialTechnique, notes: 'Stripping They: Cedimento e 2 scarichi consecutivi del 25%.', executionType: 'STRIPPING' };
+      if (type === 'MECH') return { sets: 3, reps: '8-10', rpeTarget: 9, restSeconds: 90, tut: '3-0-1-0', effortBuffer: 'RIR 1', specialTechnique: 'POF_STRETCH' as SpecialTechnique, notes: 'P.O.F. Stiramento: Massimo allungamento fasciale.', executionType: 'REGULAR' };
+      return { sets: 3, reps: '8+8+8 STRIPPING', rpeTarget: 10, restSeconds: 90, tut: 'PEAK_CONTRACTION', effortBuffer: 'RIR 0 (Cedimento)', specialTechnique: 'STRIPPING_3_DROP' as SpecialTechnique, notes: 'Stripping They: Cedimento a 8 reps e 2 scarichi consecutivi del 25%.', executionType: 'STRIPPING' };
     }
     // Fase 2: Avanzata
-    if (type === 'NEURAL') return { sets: 4, reps: '5-6', rpeTarget: 8.5, restSeconds: 150, tut: 'CAT', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Neurale Bosco: Preservazione Testosterone.', executionType: 'REGULAR' };
+    if (type === 'NEURAL') return { sets: 4, reps: '5-6', rpeTarget: 8.5, restSeconds: 150, tut: 'CAT', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Neurale Bosco: Preservazione del Testosterone.', executionType: 'REGULAR' };
     if (type === 'MECH') return { sets: 4, reps: '6-8', rpeTarget: 8.5, restSeconds: 120, tut: '2-0-1-0', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Tensione meccanica continua.', executionType: 'REGULAR' };
     return { sets: 3, reps: '10-12', rpeTarget: 9.5, restSeconds: 60, tut: 'ISOTENSIVE_SLOW', effortBuffer: 'RIR 0.5', specialTechnique: 'NONE' as SpecialTechnique, notes: 'Metabolico Bosco: Accumulo lattacido e picco di GH.', executionType: 'REGULAR' };
   };
@@ -125,7 +125,7 @@ function getMenProgram(
     ];
   }
 
-  // FASE 4: PRE-GARA MASCHILE
+  // FASE 4: PRE-GARA MASCHILE (-30 a -1 gg)
   if (phase === 'PHASE_4_PRE_CONTEST') {
     if (contestDaysLeft <= 5) {
       return [
@@ -159,7 +159,7 @@ function getMenProgram(
     }
   }
 
-  // SPLIT 3 GIORNI UOMO
+  // --- SPLIT 3 GIORNI UOMO ---
   if (split === '3_DAYS') {
     return [
       {
@@ -192,7 +192,7 @@ function getMenProgram(
     ];
   }
 
-  // SPLIT 4 GIORNI UOMO (Antagonisti Emilio They)
+  // --- SPLIT 4 GIORNI UOMO (Antagonisti Emilio They) ---
   if (split === '4_DAYS') {
     return [
       {
@@ -238,53 +238,74 @@ function getMenProgram(
     ];
   }
 
-  // SPLIT 5 GIORNI UOMO (Specializzazione PMC Punti Carenti)
+  // --- SPLIT 5 GIORNI UOMO (Specializzazione PMC Punti Carenti Integrale) ---
   if (split === '5_DAYS_PMC') {
+    const isPettorali = weakPoint.includes('Pettorali');
+    const isDorso = weakPoint.includes('Dorso');
+    const isDeltoidi = weakPoint.includes('Deltoidi');
+    const isBraccia = weakPoint.includes('Braccia');
+    const isPolpacci = weakPoint.includes('Polpacci');
+
     return [
       {
-        id: makeId('m-5d1'), dayNumber: 1, title: `Giorno 1: PMC 1 · ${weakPoint} (Lavoro Neurale Pesante)`,
+        id: makeId('m-5d1'),
+        dayNumber: 1,
+        title: `Giorno 1: PMC Specializzazione 1 · ${weakPoint} (Lavoro Neurale & Meccanico Pesante)`,
         exercises: [
-          { id: makeId(), order: 1, name: weakPoint.includes('Cosce') ? 'Squat con Bilanciere' : 'Panca Piana Bilanciere', muscleGroup: weakPoint, category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
-          { id: makeId(), order: 2, name: weakPoint.includes('Cosce') ? 'Leg Press 45°' : 'Spinte con Manubri', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
-          { id: makeId(), order: 3, name: weakPoint.includes('Cosce') ? 'Leg Extension con Peak 2"' : 'Croci ai Cavi con Peak 2"', muscleGroup: weakPoint, category: 'METABOLIC_GH', ...getConfig('METAB') }
+          { id: makeId(), order: 1, name: isPettorali ? 'Panca Piana Bilanciere' : isDorso ? 'Stacco da Terra' : isDeltoidi ? 'Lento Avanti Bilanciere' : isBraccia ? 'Panca Stretta Bilanciere' : isPolpacci ? 'Stacco Gambe Tese Bilanciere' : 'Squat con Bilanciere', muscleGroup: weakPoint, category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
+          { id: makeId(), order: 2, name: isPettorali ? 'Panca Inclinata Manubri' : isDorso ? 'Rematore Bilanciere 45°' : isDeltoidi ? 'Lento con Manubri' : isBraccia ? 'Curl Bilanciere Sagomato EZ' : isPolpacci ? 'Leg Curl Sdraiato' : 'Leg Press 45°', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
+          { id: makeId(), order: 3, name: isPettorali ? 'Croci Panca 30° Manubri' : isDorso ? 'Trazioni Presa Neutra' : isDeltoidi ? 'Alzate Laterali Manubri' : isBraccia ? 'French Press Bilanciere EZ' : isPolpacci ? 'Calf in Piedi su Macchina' : 'Hack Squat / Sissy Squat', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
+          { id: makeId(), order: 4, name: isPettorali ? 'Pectoral Machine con Peak 2"' : isDorso ? 'Pulley al Cavo Basso' : isDeltoidi ? 'Face Pull Cavo Alto' : isBraccia ? 'Pushdown al Cavo con Corda' : isPolpacci ? 'Calf Seduto (Soleo)' : 'Leg Extension con Peak 2"', muscleGroup: weakPoint, category: 'METABOLIC_GH', ...getConfig('METAB') }
         ]
       },
       {
-        id: makeId('m-5d2'), dayNumber: 2, title: 'Giorno 2: Torso Spinta Mantenimento (Petto & Spalle)',
+        id: makeId('m-5d2'),
+        dayNumber: 2,
+        title: 'Giorno 2: Torso Spinta Mantenimento (Petto, Spalle & Tricipiti)',
         exercises: [
-          { id: makeId(), order: 1, name: 'Panca Inclinata Manubri', muscleGroup: 'Petto', category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
-          { id: makeId(), order: 2, name: 'Lento Avanti Bilanciere', muscleGroup: 'Spalle', category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
-          { id: makeId(), order: 3, name: 'Alzate Laterali al Cavo', muscleGroup: 'Spalle', category: 'METABOLIC_GH', ...getConfig('METAB') }
+          { id: makeId(), order: 1, name: 'Panca Inclinata Manubri', muscleGroup: 'Petto', category: 'MECHANICAL_TENSION', sets: 3, reps: '6-8', rpeTarget: 8, restSeconds: 120, tut: '2-0-1-0', effortBuffer: 'RIR 2', specialTechnique: 'NONE', notes: 'Volume di mantenimento controllato.', executionType: 'REGULAR' },
+          { id: makeId(), order: 2, name: 'Lento Avanti Bilanciere', muscleGroup: 'Spalle', category: 'NEURAL_TESTO', sets: 3, reps: '6-8', rpeTarget: 8, restSeconds: 120, tut: 'CAT', effortBuffer: 'RIR 2', specialTechnique: 'NONE', notes: 'CAT rapido.', executionType: 'REGULAR' },
+          { id: makeId(), order: 3, name: 'Dip alle Parallele', muscleGroup: 'Petto', category: 'MECHANICAL_TENSION', sets: 3, reps: '8-10', rpeTarget: 8.5, restSeconds: 90, tut: '2-0-1-0', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE', notes: 'Tensione meccanica.', executionType: 'REGULAR' },
+          { id: makeId(), order: 4, name: 'Alzate Laterali al Cavo', muscleGroup: 'Spalle', category: 'METABOLIC_GH', sets: 3, reps: '12-15', rpeTarget: 9, restSeconds: 60, tut: 'PEAK_CONTRACTION', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Isolamento deltoide laterale.', executionType: 'REGULAR' },
+          { id: makeId(), order: 5, name: 'Pushdown Cavo con Corda', muscleGroup: 'Tricipiti', category: 'METABOLIC_GH', sets: 3, reps: '12-15', rpeTarget: 9, restSeconds: 60, tut: 'ISOTENSIVE_SLOW', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Tricipiti in tenuta.', executionType: 'REGULAR' }
         ]
       },
       {
-        id: makeId('m-5d3'), dayNumber: 3, title: 'Giorno 3: Torso Trazione Mantenimento (Dorso & Braccia)',
+        id: makeId('m-5d3'),
+        dayNumber: 3,
+        title: 'Giorno 3: Torso Trazione Mantenimento (Dorso & Braccia)',
         exercises: [
-          { id: makeId(), order: 1, name: 'Rematore Bilanciere 45°', muscleGroup: 'Dorso', category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
-          { id: makeId(), order: 2, name: 'Lat Machine Presa Larga', muscleGroup: 'Dorso', category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
-          { id: makeId(), order: 3, name: 'Curl Alternato Manubri', muscleGroup: 'Bicipiti', category: 'METABOLIC_GH', ...getConfig('METAB') }
+          { id: makeId(), order: 1, name: 'Rematore Bilanciere 45°', muscleGroup: 'Dorso', category: 'NEURAL_TESTO', sets: 3, reps: '6-8', rpeTarget: 8, restSeconds: 150, tut: 'CAT', effortBuffer: 'RIR 2', specialTechnique: 'NONE', notes: 'Schiena bloccata, tirata fluida.', executionType: 'REGULAR' },
+          { id: makeId(), order: 2, name: 'Lat Machine Presa Larga', muscleGroup: 'Dorso', category: 'MECHANICAL_TENSION', sets: 3, reps: '8-10', rpeTarget: 8.5, restSeconds: 90, tut: '2-1-1-0', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE', notes: 'Allungamento completo del gran dorsale.', executionType: 'REGULAR' },
+          { id: makeId(), order: 3, name: 'Pulley al Cavo Basso', muscleGroup: 'Dorso', category: 'MECHANICAL_TENSION', sets: 3, reps: '10-12', rpeTarget: 8.5, restSeconds: 75, tut: '2-1-1-0', effortBuffer: 'RIR 1.5', specialTechnique: 'NONE', notes: 'Spessore schiena.', executionType: 'REGULAR' },
+          { id: makeId(), order: 4, name: 'Curl Alternato con Manubri', muscleGroup: 'Bicipiti', category: 'METABOLIC_GH', sets: 3, reps: '10-12', rpeTarget: 9, restSeconds: 60, tut: 'ISOTENSIVE_SLOW', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Bicipiti in mantenimento.', executionType: 'REGULAR' }
         ]
       },
       {
-        id: makeId('m-5d4'), dayNumber: 4, title: `Giorno 4: PMC 2 · ${weakPoint} (Allungamento & Densità)`,
+        id: makeId('m-5d4'),
+        dayNumber: 4,
+        title: `Giorno 4: PMC Specializzazione 2 · ${weakPoint} (P.O.F. Stiramento & Densità)`,
         exercises: [
-          { id: makeId(), order: 1, name: weakPoint.includes('Cosce') ? 'Stacco Rumeno Bilanciere' : 'Dip alle Parallele zavorrate', muscleGroup: weakPoint, category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
-          { id: makeId(), order: 2, name: weakPoint.includes('Cosce') ? 'Leg Curl Seduto' : 'Panca Stretta Bilanciere', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
-          { id: makeId(), order: 3, name: weakPoint.includes('Cosce') ? 'Calf su Macchina' : 'Pushdown al Cavo', muscleGroup: weakPoint, category: 'METABOLIC_GH', ...getConfig('METAB') }
+          { id: makeId(), order: 1, name: isPettorali ? 'Spinte Manubri su Panca Inclinata' : isDorso ? 'Trazioni alla Sbarra zavorrate' : isDeltoidi ? 'Lento con Manubri da Seduto' : isBraccia ? 'Curl Manubri Panca Inclinata' : isPolpacci ? 'Stacco Rumeno con Manubri' : 'Stacco Rumeno Bilanciere', muscleGroup: weakPoint, category: 'NEURAL_TESTO', ...getConfig('NEURAL') },
+          { id: makeId(), order: 2, name: isPettorali ? 'Dip alle Parallele zavorrate' : isDorso ? 'Pullover Manubrio Trasversale' : isDeltoidi ? 'Alzate Laterali su Panca Inclinata' : isBraccia ? 'French Press Bilanciere EZ' : isPolpacci ? 'Leg Curl Seduto con Peak 2"' : 'Leg Press 45° Piedi Alti', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
+          { id: makeId(), order: 3, name: isPettorali ? 'Croci ai Cavi dall\'Alto' : isDorso ? 'Lat Machine Presa Inversa' : isDeltoidi ? 'Tirate al Mento ai Cavi' : isBraccia ? 'Curl Panca Scott Bilanciere EZ' : isPolpacci ? 'Calf in Piedi su Gradino' : 'Leg Curl Sdraiato', muscleGroup: weakPoint, category: 'METABOLIC_GH', ...getConfig('METAB') },
+          { id: makeId(), order: 4, name: 'Calf su Macchina / Addome', muscleGroup: 'Polpacci', category: 'METABOLIC_GH', sets: 4, reps: '15-20', rpeTarget: 8.5, restSeconds: 45, tut: 'ISOTENSIVE_SLOW', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Saturazione muscolare.', executionType: 'REGULAR' }
         ]
       },
       {
-        id: makeId('m-5d5'), dayNumber: 5, title: `Giorno 5: PMC 3 · ${weakPoint} (Super-Pump & Stripping)`,
+        id: makeId('m-5d5'),
+        dayNumber: 5,
+        title: `Giorno 5: PMC Specializzazione 3 · ${weakPoint} (Saturazione Super-Pump & Stripping They)`,
         exercises: [
-          { id: makeId(), order: 1, name: weakPoint.includes('Cosce') ? 'Hack Squat / Sissy Squat' : 'Croci Cavi Incrociati', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
-          { id: makeId(), order: 2, name: weakPoint.includes('Cosce') ? 'Leg Extension Stripping' : 'Pectoral Machine Stripping', muscleGroup: weakPoint, category: 'METABOLIC_GH', ...getConfig('METAB') },
-          { id: makeId(), order: 3, name: 'Crunch Addominali su Panca Inclinata', muscleGroup: 'Addome', category: 'METABOLIC_GH', sets: 4, reps: '20', rpeTarget: 9, restSeconds: 45, tut: '2-1-1-0', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Chiusura sessione.', executionType: 'REGULAR' }
+          { id: makeId(), order: 1, name: isPettorali ? 'Croci Cavi Panca Piana' : isDorso ? 'Pulley Presa Stretta' : isDeltoidi ? 'Alzate Frontali con Disco' : isBraccia ? 'Curl Cavi Alti Push-Pull' : isPolpacci ? 'Leg Extension Leggero' : 'Hack Squat / Sissy Squat', muscleGroup: weakPoint, category: 'MECHANICAL_TENSION', ...getConfig('MECH') },
+          { id: makeId(), order: 2, name: isPettorali ? 'Pectoral Machine Stripping' : isDorso ? 'Lat Machine Stripping' : isDeltoidi ? 'Alzate Laterali Stripping' : isBraccia ? 'Pushdown Corda Stripping' : isPolpacci ? 'Calf Seduto Stripping' : 'Leg Extension Stripping', muscleGroup: weakPoint, category: 'METABOLIC_GH', sets: 3, reps: '8+8+8 STRIPPING', rpeTarget: 10, restSeconds: 90, tut: 'PEAK_CONTRACTION', effortBuffer: 'RIR 0 (Cedimento)', specialTechnique: 'STRIPPING_3_DROP', notes: 'Stripping They: Cedimento a 8 reps e 2 scarichi consecutivi senza sosta.', executionType: 'STRIPPING' },
+          { id: makeId(), order: 3, name: 'Crunch Addominali su Panca Inclinata', muscleGroup: 'Addome', category: 'METABOLIC_GH', sets: 4, reps: '20', rpeTarget: 9, restSeconds: 45, tut: '2-1-1-0', effortBuffer: 'RIR 1', specialTechnique: 'NONE', notes: 'Chiusura ciclo settimanale.', executionType: 'REGULAR' }
         ]
       }
     ];
   }
 
-  // SPLIT 6 GIORNI UOMO (Monomuscolare They da 5-6 esercizi)
+  // --- SPLIT 6 GIORNI UOMO (Monomuscolare They Integrale: 5-6 Esercizi a Seduta) ---
   return [
     {
       id: makeId('m-6d1'), dayNumber: 1, title: 'Giorno 1: Spalle Complete & Trapezi (Monomuscolare They)',
@@ -361,7 +382,7 @@ function getWomenProgram(
   const isBase = phase === 'PHASE_1_BASE';
   const isShock = phase === 'PHASE_3_DEEP_SHOCK';
 
-  // SPLIT 3 GIORNI DONNA
+  // --- SPLIT 3 GIORNI DONNA ---
   if (split === '3_DAYS') {
     return [
       {
@@ -394,7 +415,7 @@ function getWomenProgram(
     ];
   }
 
-  // SPLIT 4 GIORNI DONNA
+  // --- SPLIT 4 GIORNI DONNA ---
   if (split === '4_DAYS') {
     return [
       {
@@ -436,7 +457,7 @@ function getWomenProgram(
     ];
   }
 
-  // SPLIT 5 GIORNI DONNA (PMC Glutei 3x Settimana)
+  // --- SPLIT 5 GIORNI DONNA (PMC Glutei 3x Settimana) ---
   if (split === '5_DAYS_PMC') {
     return [
       {
@@ -482,7 +503,7 @@ function getWomenProgram(
     ];
   }
 
-  // SPLIT 6 GIORNI DONNA (Bikini / Contest Emilio They)
+  // --- SPLIT 6 GIORNI DONNA (Bikini / Contest Emilio They) ---
   return [
     {
       id: makeId('w-6d1'), dayNumber: 1, title: 'Giorno 1: Glutei Mesotonia & CAT (Hip Thrust)',
@@ -535,7 +556,7 @@ function getWomenProgram(
 export function generateHardTopGymProgram(
   phase: HardTopGymPhase,
   split: HardSplit,
-  weakPoint: string = 'Cosce/Femorali',
+  weakPoint: string = 'Cosce (Quadricipiti & Catena Posteriore)',
   contestDaysLeft: number = 30,
   gender: HardGender = 'MALE'
 ): HardTopGymWorkoutDay[] {
