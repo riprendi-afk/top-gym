@@ -8,6 +8,7 @@ import {
 import { 
   HardTopGymPhase, 
   HardSplit, 
+  HardGender,
   generateHardTopGymProgram,
   calculateHardTopGymProgress,
   applyHardTopGymWeekProgression
@@ -28,10 +29,10 @@ export default function HardTopGymCabina({
 }: HardTopGymCabinaProps) {
   const [phase, setPhase] = useState<HardTopGymPhase>('PHASE_2_ADVANCED');
   const [split, setSplit] = useState<HardSplit>('4_DAYS');
-  const [weakPoint, setWeakPoint] = useState('Cosce/Femorali');
+  const [gender, setGender] = useState<HardGender>('MALE');
+  const [weakPoint, setWeakPoint] = useState('Glutei/Catena Posteriore');
   const [contestDaysLeft, setContestDaysLeft] = useState(30);
 
-  // Rileva automaticamente i giorni della split dalla scheda attiva (default dalla select)
   const detectedSplitDays = useMemo(() => {
     if (programDays && programDays.length >= 3 && programDays.length <= 6) {
       return programDays.length;
@@ -43,7 +44,6 @@ export default function HardTopGymCabina({
     return 4;
   }, [programDays, split]);
 
-  // Calcolo avanzamento in base allo storico reale dell'atleta
   const progress = useMemo(() => {
     return calculateHardTopGymProgress(
       workoutHistory,
@@ -52,16 +52,13 @@ export default function HardTopGymCabina({
     );
   }, [workoutHistory, activeAthlete, detectedSplitDays]);
 
-  // Settimana selezionata (default: quella calcolata in automatico)
   const [selectedWeek, setSelectedWeek] = useState<number>(progress.currentWeek);
 
-  // Genera architettura ex-novo
   const handleGenerateAndApply = () => {
-    const generated = generateHardTopGymProgram(phase, split, weakPoint, contestDaysLeft);
+    const generated = generateHardTopGymProgram(phase, split, weakPoint, contestDaysLeft, gender);
     onApplyProgram(generated);
   };
 
-  // Applica avanzamento alla scheda attiva
   const handleApplyProgression = () => {
     if (!programDays || programDays.length === 0) {
       handleGenerateAndApply();
@@ -81,7 +78,7 @@ export default function HardTopGymCabina({
             <Zap className="w-5 h-5 text-amber-400" /> Cabina di Regia · Metodo HARDTOPGYM
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Sintesi Metodologica: <b>Emilio They</b> & <b>Bosco-Colli</b> · Avanzamento Dinamico Split.
+            Sintesi Metodologica: <b>Emilio They</b> & <b>Bosco-Colli</b> · Modulazione Fisiologica Polarizzata.
           </p>
         </div>
 
@@ -92,6 +89,56 @@ export default function HardTopGymCabina({
           <span className="text-xs font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" /> Split Attiva: {detectedSplitDays} Giorni
           </span>
+        </div>
+      </div>
+
+      {/* SELETTORE PROFILO MORFOLOGICO: UOMO / DONNA */}
+      <div className="space-y-2">
+        <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+          Profilo Target Fisiologico:
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setGender('MALE');
+              setWeakPoint('Cosce/Femorali');
+            }}
+            className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+              gender === 'MALE'
+                ? 'bg-amber-500/20 border-amber-500 text-white ring-1 ring-amber-500 shadow-lg'
+                : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:bg-zinc-800'
+            }`}
+          >
+            <div>
+              <b className={`text-xs block ${gender === 'MALE' ? 'text-amber-400' : 'text-zinc-200'}`}>
+                👨 Profilo Uomo (Hard Bodybuilding They)
+              </b>
+              <span className="text-[10px] text-zinc-500">Massa densa, cascata Testosterone/GH, V-Taper dorsale pieno.</span>
+            </div>
+            {gender === 'MALE' && <CheckCircle2 className="w-4 h-4 text-amber-400" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setGender('FEMALE');
+              setWeakPoint('Glutei/Catena Posteriore');
+            }}
+            className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+              gender === 'FEMALE'
+                ? 'bg-pink-500/20 border-pink-500 text-white ring-1 ring-pink-500 shadow-lg shadow-pink-950/30'
+                : 'bg-zinc-900/60 border-white/5 text-zinc-400 hover:bg-zinc-800'
+            }`}
+          >
+            <div>
+              <b className={`text-xs block ${gender === 'FEMALE' ? 'text-pink-400' : 'text-zinc-200'}`}>
+                👩 Profilo Donna (Hard Bodybuilding Donna / Glutei & PHA)
+              </b>
+              <span className="text-[10px] text-zinc-500">P.O.F. Glutei, drenaggio PHA anti-ritenzione, V-Shape clessidra.</span>
+            </div>
+            {gender === 'FEMALE' && <CheckCircle2 className="w-4 h-4 text-pink-400" />}
+          </button>
         </div>
       </div>
 
@@ -168,8 +215,8 @@ export default function HardTopGymCabina({
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
           {[
-            { id: 'PHASE_1_BASE', title: 'Fase 1: Base', subtitle: '4-6 sett · Bulk & CAT Neurale' },
-            { id: 'PHASE_2_ADVANCED', title: 'Fase 2: Avanzata', subtitle: '6-8 sett · Antagonisti & Ibrido' },
+            { id: 'PHASE_1_BASE', title: 'Fase 1: Base', subtitle: '4-6 sett · CAT Neurale & Struttura' },
+            { id: 'PHASE_2_ADVANCED', title: 'Fase 2: Avanzata', subtitle: '6-8 sett · Cascata Bosco & PHA' },
             { id: 'PHASE_3_DEEP_SHOCK', title: 'Fase 3: Urto/Sblocco', subtitle: '8-10 sett · P.O.F. & Stripping' },
             { id: 'PHASE_4_PRE_CONTEST', title: 'Fase 4: Pre-Gara', subtitle: 'Ultimi 30 gg · Carbing Down/Up' },
             { id: 'PHASE_5_RECOVERY', title: 'Fase 5: Post-Gara', subtitle: '2-4 sett · Metodo PUMP' },
@@ -209,10 +256,10 @@ export default function HardTopGymCabina({
             onChange={e => setSplit(e.target.value as HardSplit)}
             className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold outline-none focus:border-amber-400"
           >
-            <option value="3_DAYS">3 Giorni (Costruzione Base / Spinta-Trazione-Gambe)</option>
-            <option value="4_DAYS">4 Giorni (Split Antagonisti They / Upper-Lower)</option>
-            <option value="5_DAYS_PMC">5 Giorni (Specializzazione PMC Punti Carenti)</option>
-            <option value="6_DAYS_MONO">6 Giorni (Monomuscolare Off-Season / Pre-Gara)</option>
+            <option value="3_DAYS">3 Giorni (Glutei & Catena Post / PHA Torso / Glutei & V-Taper)</option>
+            <option value="4_DAYS">4 Giorni (Lower Glutei A / Upper V-Taper / Lower B / Upper PHA)</option>
+            <option value="5_DAYS_PMC">5 Giorni (Specializzazione PMC Glutei 3x Settimana)</option>
+            <option value="6_DAYS_MONO">6 Giorni (Monomuscolare / Bikini Contest They)</option>
           </select>
         </div>
 
@@ -225,11 +272,10 @@ export default function HardTopGymCabina({
             onChange={e => setWeakPoint(e.target.value)}
             className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold outline-none focus:border-amber-400"
           >
-            <option value="Cosce/Femorali">Cosce & Catena Posteriore</option>
-            <option value="Braccia">Braccia (Bicipiti / Tricipiti)</option>
-            <option value="Deltoidi">Spalle & Deltoidi Posteriori</option>
-            <option value="Dorso">Dorso & Spessore Schiena</option>
-            <option value="Petto">Petto & Cassa Toracica</option>
+            <option value="Glutei/Catena Posteriore">Glutei & Catena Posteriore</option>
+            <option value="Deltoidi">Deltoidi & V-Shape Armonico</option>
+            <option value="Dorso">Dorso & Postura</option>
+            <option value="Femorali">Ischiocrurali & Separazione</option>
           </select>
         </div>
 
@@ -250,25 +296,39 @@ export default function HardTopGymCabina({
         ) : (
           <div>
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
-              Cascata Neuro-Endocrina Bosco-Colli
+              {gender === 'FEMALE' ? 'Protocollo Fisiologico Donna' : 'Cascata Neuro-Endocrina Bosco-Colli'}
             </label>
             <div className="text-[11px] text-zinc-400 font-mono py-1.5 flex items-center gap-1.5">
-              <span className="text-blue-400 font-bold">1. Testo (CAT)</span> →
-              <span className="text-emerald-400 font-bold">2. Mecc</span> →
-              <span className="text-amber-400 font-bold">3. GH (Latt.)</span>
+              {gender === 'FEMALE' ? (
+                <>
+                  <span className="text-pink-400 font-bold">1. Glutei CAT</span> →
+                  <span className="text-blue-400 font-bold">2. PHA Dren</span> →
+                  <span className="text-emerald-400 font-bold">3. Pompa Venosa</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-blue-400 font-bold">1. Testo (CAT)</span> →
+                  <span className="text-emerald-400 font-bold">2. Mecc</span> →
+                  <span className="text-amber-400 font-bold">3. GH (Latt.)</span>
+                </>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* 3. TASTO GENERAZIONE SCHEDA EX NOVO */}
+      {/* 3. TASTO GENERAZIONE SCHEDA */}
       <button
         type="button"
         onClick={handleGenerateAndApply}
-        className="w-full py-4 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wider rounded-xl transition shadow-xl shadow-amber-900/30 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+        className={`w-full py-4 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-xl flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] ${
+          gender === 'FEMALE'
+            ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 hover:brightness-110 text-white shadow-pink-950/40'
+            : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:brightness-110 text-black shadow-amber-900/30'
+        }`}
       >
-        <Zap className="w-4 h-4 fill-black" />
-        Genera & Carica Architettura HARDTOPGYM ({activeAthlete?.displayName || 'Atleta'})
+        <Zap className="w-4 h-4 fill-current" />
+        Genera & Carica Scheda HARDTOPGYM {gender === 'FEMALE' ? 'Donna (Glutei & PHA)' : 'Uomo'} ({activeAthlete?.displayName || 'Atleta'})
       </button>
 
     </div>
