@@ -31,6 +31,7 @@ import WeeklyVolumeRadar from '@/components/WeeklyVolumeRadar';
 import { detectAthleteGender } from '@/lib/topgym-templates';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import { resolveMuscleTarget } from '@/lib/topgym-volume';
+import MobileBottomNav from '@/components/MobileBottomNav';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -1685,7 +1686,7 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
       )}
 
       {/* NAVBAR A SCORRIMENTO MODERNA */}
-      <nav className="max-w-5xl mx-auto mb-6">
+      <nav className="hidden md:block max-w-5xl mx-auto mb-6">
         <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-[#12151B] backdrop-blur-md border border-white/10 rounded-2xl scrollbar-none shadow-lg">
           {userRole === 'ATHLETE' && (
             <button onClick={() => setActiveTab('workout')} className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeTab === 'workout' ? 'bg-[#E50914] text-white shadow' : 'text-zinc-400 hover:text-white'}`}>
@@ -2030,7 +2031,7 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
             )}
 
             {/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
-            <div className="fixed bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
+      <div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 {restTimer !== null ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
@@ -2494,7 +2495,7 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
             onDeleteWorkout={handleDeleteWorkoutHistory}
           />
         )}
-        
+
         {/* TAB 8: CLASSIFICA & BADGE */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
@@ -2621,6 +2622,12 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
           </div>
         )}
       </main>
+
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        userRole={userRole}
+      />
 
       {/* MODALE GUIDA PERMESSI BLOCCATI (DENIED) */}
       {showDeniedModal && (
