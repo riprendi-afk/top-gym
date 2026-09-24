@@ -481,7 +481,7 @@ const [programmingModel, setProgrammingModel] = useState<'TOPGYM_BLOCKS' | 'HARD
   };
 
   const displayUserName = user?.user_metadata?.username || (user?.email ? user.email.split('@')[0] : 'Atleta');
-  const targetUserId = userRole === 'COACH' ? (activeAthleteId || user?.id || 'default-user') : (user?.id || 'default-user');
+  const targetUserId = userRole === 'COACH' ? (activeAthleteId || user?.id || '') : (user?.id || '');
   const targetAthleteName = useMemo(
     () => athletes.find(a => a.id === targetUserId)?.displayName ?? 'Atleta',
     [athletes, targetUserId]
@@ -1109,18 +1109,9 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
 
     if (result?.success) {
       await addXp(50);
-      setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
       setLogs([]);
-      await loadHistory(targetUserId);
-      setTimeout(() => setWorkoutSuccessMessage(null), 4000);
-    } else {
-      const detail = result?.error ? ` (${result.error})` : '';
-      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`);
-      setTimeout(() => setWorkoutSuccessMessage(null), 8000);
-    }
-  };
 
-    // ======================================================================
+      // ======================================================================
       // AVANZAMENTO AUTOMATICO HARDTOPGYM A CHIUSURA MICROCICLO
       // ======================================================================
       if (programmingModel === 'HARDTOPGYM' && programDays && programDays.length >= 3) {
@@ -1137,17 +1128,37 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
           const progressedDays = applyHardTopGymWeekProgression(programDays, nextWeek);
           setProgramDays(progressedDays as any);
 
-          // Messaggio discreto di notifica
-          if (nextWeek === 4) {
-            setBuilderSuccessMessage('⚡ Microciclo completato! La scheda è passata automaticamente in Settimana 4 (Scarico Deload).');
-          } else {
-            setBuilderSuccessMessage(`⚡ Microciclo completato! Scheda avanzata automaticamente a Settimana ${nextWeek}.`);
+          // Salva la nuova progressione su Supabase per renderla persistente
+          if (targetUserId) {
+            saveProgramToSupabase(targetUserId, programName, progressedDays).catch(console.error);
           }
-          setTimeout(() => setBuilderSuccessMessage(null), 6000);
+
+          // Messaggio di completamento e avanzamento
+          if (nextWeek === 4) {
+            setWorkoutSuccessMessage('🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).');
+          } else {
+            setWorkoutSuccessMessage(`🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`);
+          }
+        } else {
+          // Se non ha chiuso la settimana, mostra il tuo messaggio classico
+          setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
         }
+      } else {
+        // Se non è HARDTOPGYM, mostra il tuo messaggio classico originale
+        setWorkoutSuccessMessage('🎉 Allenamento completato e salvato! +50 XP');
       }
       // ======================================================================
-      
+
+      await loadHistory(targetUserId);
+      setTimeout(() => setWorkoutSuccessMessage(null), 5000);
+    } else {
+      const detail = result?.error ? ` (${result.error})` : '';
+      setWorkoutSuccessMessage(`⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`);
+      setTimeout(() => setWorkoutSuccessMessage(null), 8000);
+    }
+  };
+
+
   const handleDeleteWorkoutHistory = async (workoutId?: string) => {
     if (!workoutId) return;
     if (!window.confirm('Vuoi davvero eliminare questo allenamento dallo storico?')) return;
