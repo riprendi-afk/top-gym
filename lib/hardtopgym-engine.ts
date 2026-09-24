@@ -488,3 +488,92 @@ export function generateHardTopGymProgram(
     }
   ];
 }
+/**
+ * Calcola l'avanzamento automatico in base a workoutHistory e alla dimensione della split (3, 4, 5 o 6 giorni)
+ */
+export function calculateHardTopGymProgress(
+    workoutHistory: any[],
+    athleteId: string | undefined,
+    splitDaysCount: number
+  ) {
+    // 1. Assicura che la split sia compresa tra 3 e 6
+    const splitSize = Math.max(3, Math.min(6, splitDaysCount || 4));
+  
+    // 2. Filtra gli allenamenti completati dall'atleta attivo
+    const completedWorkouts = Array.isArray(workoutHistory)
+      ? workoutHistory.filter(w => {
+          if (!w) return false;
+          if (!athleteId) return true;
+          return (
+            w.athleteId === athleteId ||
+            w.userId === athleteId ||
+            w.athlete_id === athleteId ||
+            w.user_id === athleteId
+          );
+        })
+      : [];
+  
+    const totalCompleted = completedWorkouts.length;
+  
+    // 3. Calcolo settimana corrente (ciclo base a 4 settimane: 1, 2, 3, 4 Deload)
+    const completedWeeks = Math.floor(totalCompleted / splitSize);
+    const currentWeek = (completedWeeks % 4) + 1; // Ruota da 1 a 4
+    const workoutInCurrentWeek = (totalCompleted % splitSize) + 1;
+    const isDeloadWeek = currentWeek === 4;
+    const isCycleCompleted = completedWeeks > 0 && completedWeeks % 4 === 0 && (totalCompleted % splitSize === 0);
+  
+    return {
+      splitSize,
+      totalCompleted,
+      currentWeek,
+      workoutInCurrentWeek,
+      isDeloadWeek,
+      isCycleCompleted
+    };
+  }
+  
+  /**
+   * Modula la scheda attiva in base alla settimana calcolata
+   */
+  export function applyHardTopGymWeekProgression(
+    days: any[],
+    targetWeek: number
+  ): any[] {
+    return days.map(day => ({
+      ...day,
+      exercises: (day.exercises || []).map((ex: any) => {
+        // SETTIMANA 4: SCARICO ATTIVO (DELOAD)
+        if (targetWeek === 4) {
+          return {
+            ...ex,
+            sets: Math.max(2, (ex.sets || 3) - 1),
+            rpeTarget: Math.max(6, (ex.rpeTarget || 8) - 1.5),
+            notes: `[SETTIMANA 4 · SCARICO ATTIVO] Volume -30%, esecuzione tecnica a buffer controllato (RIR 3-4).`
+          };
+        }
+  
+        // SETTIMANA 3: INTENSIFICAZIONE MASSIMA & TECNICHE D'URTO
+        if (targetWeek === 3) {
+          return {
+            ...ex,
+            rpeTarget: Math.min(10, (ex.rpeTarget || 8) + 0.5),
+            notes: `[SETTIMANA 3 · INTENSIFICAZIONE] Massimo reclutamento UM. Spingere al limite del buffer (RIR 1-0.5).`
+          };
+        }
+  
+        // SETTIMANA 2: ACCUMULO E MICRO-INCREMENTO
+        if (targetWeek === 2) {
+          return {
+            ...ex,
+            notes: `[SETTIMANA 2 · ACCUMULO] Cerca un micro-incremento (+1.25/+2.5 kg) mantenendo la massima accelerazione CAT.`
+          };
+        }
+  
+        // SETTIMANA 1: FASE BASE
+        return {
+          ...ex,
+          notes: `[SETTIMANA 1 · SETUP NEURALE] Focus assoluto su velocità concentrica (CAT) e controllo eccentrico.`
+        };
+      })
+    }));
+  }

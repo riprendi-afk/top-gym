@@ -2414,7 +2414,9 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
         {programmingModel === 'HARDTOPGYM' && (
           <HardTopGymCabina
             activeAthlete={activeAthlete}
-            onApplyProgram={(newDays) => {
+            workoutHistory={workoutHistory}
+            programDays={programDays}
+            onApplyProgram={(newDays: any[]) => {
               setProgramDays(newDays as any);
               setBuilderSuccessMessage('⚡ Scheda Metodo HARDTOPGYM applicata con successo!');
               setTimeout(() => setBuilderSuccessMessage(null), 5000);
