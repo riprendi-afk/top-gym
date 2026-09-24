@@ -35,6 +35,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import ProgramBuilderAccordion from '@/components/ProgramBuilderAccordion';
 import HardTopGymCabina from '@/components/HardTopGymCabina';
 import TopGymClassicCabina from '@/components/TopGymClassicCabina';
+import { applyHardTopGymWeekProgression } from '@/lib/hardtopgym-engine';
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = 'ATHLETE' | 'COACH';
@@ -1130,6 +1131,34 @@ const isMasterProgram = programDays.some((d: any) => d.isPeriodized === true || 
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     }
   };
+
+  // ======================================================================
+      // AVANZAMENTO AUTOMATICO HARDTOPGYM A CHIUSURA MICROCICLO
+      // ======================================================================
+      if (programmingModel === 'HARDTOPGYM' && programDays && programDays.length >= 3) {
+        const splitSize = programDays.length;
+        // Calcoliamo quanti allenamenti ha completato adesso l'atleta (compreso quello appena salvato)
+        const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+
+        // Se questo allenamento ha chiuso la settimana (es. 3° su 3, o 4° su 4)
+        if (updatedHistoryCount % splitSize === 0) {
+          const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
+          const nextWeek = (completedWeeks % 4) + 1; // Calcola la nuova settimana (1, 2, 3 o 4 Deload)
+          
+          // Applica la progressione esecutiva alla scheda attiva
+          const progressedDays = applyHardTopGymWeekProgression(programDays, nextWeek);
+          setProgramDays(progressedDays as any);
+
+          // Messaggio discreto di notifica
+          if (nextWeek === 4) {
+            setBuilderSuccessMessage('⚡ Microciclo completato! La scheda è passata automaticamente in Settimana 4 (Scarico Deload).');
+          } else {
+            setBuilderSuccessMessage(`⚡ Microciclo completato! Scheda avanzata automaticamente a Settimana ${nextWeek}.`);
+          }
+          setTimeout(() => setBuilderSuccessMessage(null), 6000);
+        }
+      }
+      // ======================================================================
 
   const handleSaveProgramByCoach = async () => {
     const targetId = activeAthleteId || 'default-user';

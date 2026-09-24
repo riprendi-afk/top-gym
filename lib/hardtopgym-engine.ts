@@ -607,7 +607,7 @@ export function calculateHardTopGymProgress(
 }
 
 // ============================================================================
-// APPLICAZIONE MODULAZIONE SETTIMANALE SULLA SCHEDA ATTIVA
+// APPLICAZIONE MODULAZIONE SETTIMANALE SULLA SCHEDA ATTIVA (ANCHE SU ESERCIZI CUSTOM)
 // ============================================================================
 export function applyHardTopGymWeekProgression(
   days: any[],
@@ -615,31 +615,65 @@ export function applyHardTopGymWeekProgression(
 ): any[] {
   return days.map(day => ({
     ...day,
-    exercises: (day.exercises || []).map((ex: any) => {
+    exercises: (day.exercises || []).map((ex: any, idx: number) => {
+      // 1. Preserviamo eventuali note personalizzate scritte a mano dal Coach
+      const cleanCustomNotes = (ex.notes || '')
+        .replace(/\[SETTIMANA \d.*?\]\s*/g, '')
+        .trim();
+
+      // 2. Inquadriamo l'esercizio nella sequenza ormonale Bosco-Colli
+      // Se l'hai aggiunto tu e non ha categoria, la deduce dalla posizione
+      const category: IntraSessionCategory = ex.category || (
+        idx === 0 ? 'NEURAL_TESTO' : 
+        idx === (day.exercises.length - 1) ? 'METABOLIC_GH' : 
+        'MECHANICAL_TENSION'
+      );
+
+      // SETTIMANA 4: SCARICO ATTIVO (DELOAD)
       if (targetWeek === 4) {
+        const deloadNote = `[SETTIMANA 4 · SCARICO ATTIVO] Volume -30%, esecuzione tecnica a buffer controllato (RIR 3-4).`;
         return {
           ...ex,
-          sets: Math.max(2, (ex.sets || 3) - 1),
+          category,
+          sets: Math.max(2, (ex.sets || 3) - 1), // Taglio volume automatico
           rpeTarget: Math.max(6, (ex.rpeTarget || 8) - 1.5),
-          notes: `[SETTIMANA 4 · SCARICO ATTIVO] Volume -30%, esecuzione tecnica a buffer controllato (RIR 3-4).`
+          effortBuffer: 'RIR 3-4 (Scarico Attivo)',
+          notes: cleanCustomNotes ? `${deloadNote} Note: ${cleanCustomNotes}` : deloadNote
         };
       }
+
+      // SETTIMANA 3: INTENSIFICAZIONE MASSIMA & URTO THEY
       if (targetWeek === 3) {
+        const shockNote = category === 'METABOLIC_GH' 
+          ? `[SETTIMANA 3 · INTENSIFICAZIONE] Cedimento concentrico (RIR 0) e massima saturazione metabolica.`
+          : `[SETTIMANA 3 · INTENSIFICAZIONE] Spingere al limite del buffer (RIR 1-0.5). Reclutamento UM massimo.`;
         return {
           ...ex,
+          category,
           rpeTarget: Math.min(10, (ex.rpeTarget || 8) + 0.5),
-          notes: `[SETTIMANA 3 · INTENSIFICAZIONE] Reclutamento UM massimo. Spingere al limite del buffer (RIR 1-0.5).`
+          effortBuffer: category === 'METABOLIC_GH' ? 'RIR 0 (Cedimento)' : 'RIR 1-0.5',
+          notes: cleanCustomNotes ? `${shockNote} Note: ${cleanCustomNotes}` : shockNote
         };
       }
+
+      // SETTIMANA 2: ACCUMULO E MICRO-INCREMENTO
       if (targetWeek === 2) {
+        const accumNote = `[SETTIMANA 2 · ACCUMULO] Micro-incremento carichi (+1.25/+2.5 kg) mantenendo la massima accelerazione CAT.`;
         return {
           ...ex,
-          notes: `[SETTIMANA 2 · ACCUMULO] Micro-incremento (+1.25/+2.5 kg) mantenendo massima accelerazione CAT.`
+          category,
+          effortBuffer: 'RIR 1.5-2',
+          notes: cleanCustomNotes ? `${accumNote} Note: ${cleanCustomNotes}` : accumNote
         };
       }
+
+      // SETTIMANA 1: SETUP NEURALE BASE
+      const baseNote = `[SETTIMANA 1 · SETUP NEURALE] Focus assoluto su velocità concentrica (CAT) ed efficienza neurale.`;
       return {
         ...ex,
-        notes: `[SETTIMANA 1 · SETUP NEURALE] Focus assoluto su velocità concentrica (CAT) e controllo eccentrico.`
+        category,
+        effortBuffer: 'RIR 2-3 (Buffer)',
+        notes: cleanCustomNotes ? `${baseNote} Note: ${cleanCustomNotes}` : baseNote
       };
     })
   }));
