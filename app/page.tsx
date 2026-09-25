@@ -503,7 +503,7 @@ export default function TopGymApp() {
       setBuilderType("STRIPPING"); // Tecnica base per il metabolico
       setBuilderTut("2-0-1-1");
       setBuilderNotes(
-        "Metodo TOPGYM: Isolamento. Ricerca del cedimento concentrico reale e tecniche di intensitÃ .",
+        "Metodo TOPGYM: Isolamento. Ricerca del cedimento concentrico reale e tecniche di intensità .",
       );
     }
   };
@@ -541,7 +541,7 @@ export default function TopGymApp() {
   const handleApplyDeloadWeekToProgram = () => {
     if (
       !window.confirm(
-        "Vuoi convertire la scheda in SETTIMANA DI SCARICO (-40% volume, carichi submassimali, nessuna tecnica d'intensitÃ )?",
+        "Vuoi convertire la scheda in SETTIMANA DI SCARICO (-40% volume, carichi submassimali, nessuna tecnica d'intensità )?",
       )
     )
       return;
@@ -888,7 +888,7 @@ export default function TopGymApp() {
       .eq("id", user.id);
 
     if (error) {
-      setSettingsMessage(`âš ï¸ Errore salvataggio: ${error.message}`);
+      setSettingsMessage(`⚠️ Errore salvataggio: ${error.message}`);
     } else {
       setSettingsMessage("✅ Profilo aggiornato con successo!");
       setTimeout(() => setSettingsMessage(null), 3000);
@@ -902,8 +902,8 @@ export default function TopGymApp() {
     });
     setSettingsMessage(
       error
-        ? `âš ï¸ Errore: ${error.message}`
-        : "ðŸ“© Email per il recupero password inviata con successo!",
+        ? `⚠️ Errore: ${error.message}`
+        : "📩 Email per il recupero password inviata con successo!",
     );
   };
 
@@ -943,7 +943,7 @@ export default function TopGymApp() {
       const { error } = await supabase.rpc("delete_user");
       if (error)
         setSettingsMessage(
-          `âš ï¸ Impossibile eliminare l'account: ${error.message}`,
+          `⚠️ Impossibile eliminare l'account: ${error.message}`,
         );
       else {
         alert("Account eliminato con successo.");
@@ -1207,11 +1207,26 @@ export default function TopGymApp() {
     return Math.floor(completedCount / daysInRoutine) + 1;
   }, [programDays.length, workoutHistory.length]);
 
-// 1. Riconosce se la scheda appartiene al Metodo HARDTOPGYM o Classico
-const isMasterProgram = programDays.some(
-  (d: any) =>
-    d.isPeriodized === true || d.assignedByCoach === "riprendi@gmail.com",
-);
+// 1. Identificazione esplicita del Metodo attivo sulla scheda (Zero Errori TypeScript)
+const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" = useMemo(() => {
+  const day = activeDay as any;
+  const list = (programDays || []) as any[];
+  const found = list.find((d: any) => d?.method || d?.programType);
+  const methodFound =
+    day?.method ||
+    day?.programType ||
+    found?.method ||
+    found?.programType;
+
+  if (methodFound === "HARDTOPGYM" || day?.isPeriodized === true) {
+    return "HARDTOPGYM";
+  }
+
+  return "TOPGYM_CLASSICO";
+}, [activeDay, programDays]);
+
+// Flag di retrocompatibilità
+const isMasterProgram = trainingMethod === "HARDTOPGYM";
 
 // 2. Calcolo Automatico del Macro-Blocco Annuale (47 Settimane Totali)
 const activeBlock: MacroBlock = useMemo(() => {
@@ -1391,7 +1406,7 @@ const currentIntensityPreview = useMemo(() => {
           prev.filter((r) => r.id !== newReadiness.id),
         );
         setReadinessSuccessMessage(
-          "âš ï¸ Errore nel salvataggio del check readiness.",
+          "⚠️ Errore nel salvataggio del check readiness.",
         );
         setTimeout(() => setReadinessSuccessMessage(null), 4000);
         return;
@@ -1399,7 +1414,7 @@ const currentIntensityPreview = useMemo(() => {
     }
     await addXp(20);
     setReadinessSuccessMessage(
-      "ðŸŽ‰ Check Readiness salvato nello storico dell'atleta! (+20 XP)",
+      "🎉 Check Readiness salvato nello storico dell'atleta! (+20 XP)",
     );
     setSleepHours("0");
     setSleepQuality(0);
@@ -1531,23 +1546,23 @@ if (supabase && user) {
           // Messaggio di completamento e avanzamento
           if (nextWeek === 4) {
             setWorkoutSuccessMessage(
-              "ðŸŽ‰ Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).",
+              "🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).",
             );
           } else {
             setWorkoutSuccessMessage(
-              `ðŸŽ‰ Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`,
+              `🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`,
             );
           }
         } else {
           // Se non ha chiuso la settimana, mostra il tuo messaggio classico
           setWorkoutSuccessMessage(
-            "ðŸŽ‰ Allenamento completato e salvato! +50 XP",
+            "🎉 Allenamento completato e salvato! +50 XP",
           );
         }
       } else {
         // Se non è HARDTOPGYM, mostra il tuo messaggio classico originale
         setWorkoutSuccessMessage(
-          "ðŸŽ‰ Allenamento completato e salvato! +50 XP",
+          "🎉 Allenamento completato e salvato! +50 XP",
         );
       }
       // ======================================================================
@@ -1557,7 +1572,7 @@ if (supabase && user) {
     } else {
       const detail = result?.error ? ` (${result.error})` : "";
       setWorkoutSuccessMessage(
-        `âš ï¸ Errore nel salvataggio dell'allenamento${detail}. Riprova.`,
+        `⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`,
       );
       setTimeout(() => setWorkoutSuccessMessage(null), 8000);
     }
@@ -1578,7 +1593,7 @@ if (supabase && user) {
       );
     } catch {
       setWorkoutSuccessMessage(
-        "âš ï¸ Errore durante l'eliminazione dell'allenamento.",
+        "⚠️ Errore durante l'eliminazione dell'allenamento.",
       );
       setTimeout(() => setWorkoutSuccessMessage(null), 4000);
     }
@@ -1640,8 +1655,8 @@ if (supabase && user) {
           await sendPushNotification(
             targetId,
             isMasterCoach
-              ? "Nuova Scheda Metodo TOPGYM! ðŸ‹ï¸"
-              : "Nuova Scheda Assegnata! ðŸ‹ï¸",
+              ? "Nuova Scheda Metodo TOPGYM! ???"
+              : "Nuova Scheda Assegnata! ???",
             isMasterCoach
               ? `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || "Nuova scheda"}).`
               : `Il Coach ha aggiornato la tua scheda di allenamento (${programName || "Nuova scheda"}).`,
@@ -1654,7 +1669,7 @@ if (supabase && user) {
     } else {
       const detail = result?.error ? ` (${result.error})` : "";
       setBuilderSuccessMessage(
-        `âš ï¸ Errore durante il salvataggio della scheda${detail}.`,
+        `⚠️ Errore durante il salvataggio della scheda${detail}.`,
       );
       setTimeout(() => setBuilderSuccessMessage(null), 8000);
     }
@@ -1928,28 +1943,28 @@ if (isFinished) {
       id: "1",
       title: "Club dei 100kg",
       description: "Solleva 100kg o più in un esercizio",
-      icon: "ðŸ‹ï¸",
+      icon: "???",
       unlocked: logs.some((l) => l.weight >= 100),
     },
     {
       id: "2",
       title: "PR Breaker",
       description: "Supera il tuo massimale stimato",
-      icon: "🔥",
+      icon: "???",
       unlocked: logs.length >= 3,
     },
     {
       id: "3",
       title: "Atleta Consapevole",
       description: "Registra Check di Readiness",
-      icon: "ðŸ§ ",
+      icon: "???",
       unlocked: readinessHistory.length >= 1,
     },
     {
       id: "4",
       title: "Costanza d'Acciaio",
       description: "Accumula oltre 500 XP",
-      icon: "⚡",
+      icon: "???",
       unlocked: userXp >= 500,
     },
   ];
@@ -2000,7 +2015,7 @@ if (isFinished) {
         case 4:
           return {
             title: "Fase IV: Trasformazione",
-            desc: "Aumento intensitÃ . Stripping e saturazione massima.",
+            desc: "Aumento intensità . Stripping e saturazione massima.",
           };
       }
     }
@@ -2013,13 +2028,13 @@ if (isFinished) {
           };
         case 2:
           return {
-            title: "Fase II: DensitÃ ",
+            title: "Fase II: Densità ",
             desc: "Aggiunta Rest-Pause su macchine guidate e parziali finali.",
           };
         case 3:
           return {
             title: "Fase III: Scarico (Deload)",
-            desc: "-40% Volume, zero tecniche d'intensitÃ . Dissipazione fatica.",
+            desc: "-40% Volume, zero tecniche d'intensità . Dissipazione fatica.",
           };
         case 4:
           return {
@@ -2108,7 +2123,7 @@ if (isFinished) {
               className="font-semibold text-[#E50914] hover:underline"
             >
               {isSignUp
-                ? "Hai giÃ  un account? Accedi"
+                ? "Hai già  un account? Accedi"
                 : "Non hai un account? Registrati"}
             </button>
           </div>
@@ -2426,7 +2441,7 @@ if (isFinished) {
                       ? "Blocco 1: Forza Ipertrofica"
                       : currentBlock === "BLOCCO_2_TRASFORMAZIONE"
                         ? "Blocco 2: Trasformazione"
-                        : "Blocco 3: QualitÃ  Muscolare"}
+                        : "Blocco 3: Qualità  Muscolare"}
                   </span>
                   <h4 className="text-sm font-bold text-white mt-0.5">
                     {
@@ -3000,7 +3015,7 @@ if (isFinished) {
                   <p className="text-xs text-zinc-400 mt-1">
                     Valuta le tue variabili biologiche per calcolare il
                     punteggio di recupero e ricevere indicazioni sul volume o
-                    intensitÃ .
+                    intensità .
                   </p>
                 </div>
               )}
@@ -3047,7 +3062,7 @@ if (isFinished) {
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span className="text-zinc-400 flex items-center gap-1.5">
                           <Sparkles className="w-4 h-4 text-yellow-400" />{" "}
-                          QualitÃ del Sonno
+                          Qualità del Sonno
                         </span>
                         <span className="text-yellow-400 font-mono">
                           {sleepQuality} / 10
@@ -3157,7 +3172,7 @@ if (isFinished) {
               </h3>
               {readinessLoadError && (
                 <div className="mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 p-3 rounded-xl text-xs">
-                  âš ï¸ Impossibile caricare lo storico da Supabase:{" "}
+                  ⚠️ Impossibile caricare lo storico da Supabase:{" "}
                   {readinessLoadError}
                 </div>
               )}
