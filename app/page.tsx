@@ -630,9 +630,12 @@ export default function TopGymApp() {
   useEffect(() => {
     if (!supabase) return;
     const fetchAthletes = async () => {
-      const { data: profiles } = await supabase
+      const { data: profiles, error } = await supabase
         .from("profiles")
         .select("id, username, email, xp");
+    
+      console.log("DEBUG PROFILI SUPABASE:", { profiles, error });
+    
       if (profiles) {
         const formatted: Athlete[] = profiles.map((p: any) => ({
           id: p.id,
