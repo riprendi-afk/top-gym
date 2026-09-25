@@ -1207,57 +1207,74 @@ export default function TopGymApp() {
     return Math.floor(completedCount / daysInRoutine) + 1;
   }, [programDays.length, workoutHistory.length]);
 
-  // 2. Calcolo Fase del Blocco
-  const calculatedCurrentPhase: MicroWeek = useMemo(() => {
-    if (manualWeek !== null) return manualWeek;
-    const w = calculatedCurrentRealWeek;
-    if (currentBlock === "BLOCCO_1_FORZA") {
-      if (w <= 6) return 1;
-      if (w <= 9) return 2;
-      if (w === 10) return 3; // Scarico
-      return 4;
-    } else {
-      if (w <= 5) return 1;
-      if (w <= 9) return 2;
-      if (w === 10) return 3; // Scarico
-      return 4;
-    }
-  }, [manualWeek, calculatedCurrentRealWeek, currentBlock]);
+// 1. Riconosce se la scheda appartiene al Metodo HARDTOPGYM o Classico
+const isMasterProgram = programDays.some(
+  (d: any) =>
+    d.isPeriodized === true || d.assignedByCoach === "riprendi@gmail.com",
+);
 
-  // 3. Il Motore che elabora la scheda in base alla fase
-  const dynamicActiveDay = useMemo(() => {
-    if (!activeDay) return null;
-    if (userRole === "COACH" && activeTab === "builder") return activeDay;
-    return processDynamicWorkout(
-      activeDay as any,
-      calculatedCurrentRealWeek,
-      calculatedCurrentPhase as any,
-      currentBlock as any,
-    );
-  }, [
-    activeDay,
-    userRole,
-    activeTab,
+// 2. Calcolo Automatico del Macro-Blocco Annuale (47 Settimane Totali)
+const activeBlock: MacroBlock = useMemo(() => {
+  const w = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
+  if (w <= 16) return "BLOCCO_1_FORZA";
+  if (w <= 32) return "BLOCCO_2_TRASFORMAZIONE";
+  return "BLOCCO_3_QUALITA";
+}, [manualWeek, calculatedCurrentRealWeek]);
+
+// 3. Calcolo Automatico della Fase Operativa (47 Settimane Classico vs 4 Settimane HardTopGym)
+const calculatedCurrentPhase: MicroWeek = useMemo(() => {
+  const w = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
+
+  // SE È HARDTOPGYM: Microciclo mensile ormonale da 4 settimane (Bosco-Colli)
+  if (isMasterProgram) {
+    return (((Math.max(1, w) - 1) % 4) + 1) as MicroWeek;
+  }
+
+  // SE È METODO CLASSICO: Timeline Reale delle 47 Settimane
+  const weekInBlock = ((w - 1) % 16) + 1;
+
+  if (weekInBlock <= 6) return 1;  // W1-W6: Accumulo & Volume Base
+  if (weekInBlock <= 9) return 2;  // W7-W9: Sovraccarico & Intensificazione
+  if (weekInBlock === 10) return 3; // W10: Deload / Scarico Attivo del SNC
+  return 4;                        // W11-W16: Picco Neurale / Consolidamento
+}, [manualWeek, calculatedCurrentRealWeek, isMasterProgram]);
+
+// 4. Motore Esecutivo: delega al rispettivo engine in lib/
+const dynamicActiveDay = useMemo(() => {
+  if (!activeDay) return null;
+  if (userRole === "COACH" && activeTab === "builder") return activeDay;
+
+  if (isMasterProgram) {
+    const progressed = applyHardTopGymWeekProgression([activeDay], calculatedCurrentPhase);
+    return progressed?.[0] || activeDay;
+  }
+
+  return processDynamicWorkout(
+    activeDay as any,
     calculatedCurrentRealWeek,
-    calculatedCurrentPhase,
-    currentBlock,
-  ]);
-
-  // Riconosce se la scheda appartiene al Metodo TOPGYM (salvata da te) o a Paolo
-  const isMasterProgram = programDays.some(
-    (d: any) =>
-      d.isPeriodized === true || d.assignedByCoach === "riprendi@gmail.com",
+    calculatedCurrentPhase as any,
+    activeBlock,
   );
-  const activeRoutine = dynamicActiveDay?.exercises ?? [];
-  const currentExercise =
-    activeRoutine.find((e: any) => e.id === currentExId) || activeRoutine[0];
+}, [
+  activeDay,
+  userRole,
+  activeTab,
+  isMasterProgram,
+  calculatedCurrentRealWeek,
+  calculatedCurrentPhase,
+  activeBlock,
+]);
 
-  const currentIntensityPreview = useMemo(() => {
-    if (!currentExercise) return null;
-    const w = parseFloat(weight);
-    if (!Number.isFinite(w) || w <= 0) return null;
-    return getIntensityInfo(currentExercise.name, w);
-  }, [currentExercise, weight, getIntensityInfo]);
+const activeRoutine = dynamicActiveDay?.exercises ?? [];
+const currentExercise =
+  activeRoutine.find((e: any) => e.id === currentExId) || activeRoutine[0];
+
+const currentIntensityPreview = useMemo(() => {
+  if (!currentExercise) return null;
+  const w = parseFloat(weight);
+  if (!Number.isFinite(w) || w <= 0) return null;
+  return getIntensityInfo(currentExercise.name, w);
+}, [currentExercise, weight, getIntensityInfo]);
 
   // Recupera il peso piÃ¹ recente della Readiness
   const sessionBodyWeight = useMemo(() => {
@@ -1413,6 +1430,7 @@ export default function TopGymApp() {
     setSelectedDayIndex((prev) => Math.min(prev, count - 1));
   };
 
+
   const todayLogs = useMemo(() => {
     const today = todayIso();
     return logs.filter((l) => l.date === today);
@@ -1422,6 +1440,27 @@ export default function TopGymApp() {
     if (isSavingWorkout) return;
     setIsSavingWorkout(true);
 
+// SALVATAGGIO CLOUD SU SUPABASE
+if (supabase && user) {
+  try {
+    await (supabase as any).from("workouts").insert([
+      {
+        user_id: user.id,
+        program_name: activeDay?.title || (isMasterProgram ? "HARDTOPGYM" : "TOPGYM Classico"),
+        day_number: activeDay?.dayNumber || (activeDay ? 1 : 1),
+        logs: todayLogs,
+        total_volume: todayLogs.reduce(
+          (acc: number, l: any) =>
+            acc + (Number(l.effectiveVolume) || Number(l.volume) || (Number(l.weight || 0) * Number(l.reps || 0))),
+          0
+        ),
+        created_at: new Date().toISOString(),
+      },
+    ]);
+  } catch (cloudErr) {
+    console.error("Errore salvataggio sessione cloud:", cloudErr);
+  }
+}
     const dayName = activeDay ? activeDay.title : "Giornata di Allenamento";
     const totalVol =
       todayLogs.reduce(
@@ -2444,7 +2483,7 @@ if (isFinished) {
 
               {/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
               <div className="grid gap-3 md:grid-cols-2">
-                {activeRoutine.map((ex) => {
+                {activeRoutine.map((ex: any) => {
                   const isSelected = currentExId === ex.id;
                   const isBw = !!findBodyweightConfig(ex.name);
                   const exerciseLogs = todayLogs.filter(l => l.exerciseName === ex.name);
