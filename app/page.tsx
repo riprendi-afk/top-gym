@@ -3430,7 +3430,7 @@ if (isFinished) {
                                     </span>
                                   </div>
                                   <div className="text-zinc-400 mt-0.5">
-                                    {ex.sets} Ã— {ex.reps} @ {ex.targetWeight}{" "}
+                                    {ex.sets} × {ex.reps} @ {ex.targetWeight}{" "}
                                     kg | RPE: {ex.rpeTarget} | Rec:{" "}
                                     {ex.restSeconds}s | TUT: {ex.tut}
                                   </div>
