@@ -77,23 +77,29 @@ export async function deleteWorkoutHistoryFromSupabase(workoutId: string) {
 }
 
 export async function saveProgramToSupabase(userId: string, programName: string, days: any[]) {
-  const { data: existing } = await supabase
+  if (!userId) return { success: false, error: 'User ID mancante' };
+
+  // Recupera l'id dell'ultima scheda esistente evitando il blocco di maybeSingle()
+  const { data: existingRows } = await supabase
     .from('programs')
     .select('id')
     .eq('user_id', userId)
-    .maybeSingle();
+    .order('updated_at', { ascending: false })
+    .limit(1);
+
+  const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
   let error;
 
-  if (existing) {
+  if (existing?.id) {
     const res = await supabase
       .from('programs')
       .update({
         program_name: programName,
         days_data: days,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('user_id', userId);
+      .eq('id', existing.id);
     error = res.error;
   } else {
     const res = await supabase
@@ -102,7 +108,7 @@ export async function saveProgramToSupabase(userId: string, programName: string,
         user_id: userId,
         program_name: programName,
         days_data: days,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       });
     error = res.error;
   }
@@ -117,12 +123,20 @@ export async function saveProgramToSupabase(userId: string, programName: string,
 
 export async function getProgramFromSupabase(userId: string) {
   if (!userId) return null;
+
+  // Ordina per updated_at decrescente e prende sempre la versione più recente
   const { data, error } = await supabase
     .from('programs')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .order('updated_at', { ascending: false })
+    .limit(1);
 
-  if (error || !data) return null;
-  return data;
+  if (error) {
+    console.error('Errore caricamento programma:', error.message);
+    return null;
+  }
+
+  if (!data || data.length === 0) return null;
+  return data[0];
 }
