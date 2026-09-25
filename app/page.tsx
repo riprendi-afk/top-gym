@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, {
   useState,
@@ -148,7 +148,7 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
   )
     return "Glutei";
 
-  // 3. DORSO (dopo Femorali, cosÃ¬ 'stacco' prende solo lo stacco regolare/sumo da terra)
+  // 3. DORSO (dopo Femorali, così 'stacco' prende solo lo stacco regolare/sumo da terra)
   if (
     name.includes("trazioni") ||
     name.includes("lat") ||
@@ -554,14 +554,14 @@ export default function TopGymApp() {
           rpeTarget: 6.5,
           executionType: "REGULAR",
           notes:
-            (ex.notes ? ex.notes + " Â· " : "") +
+            (ex.notes ? ex.notes + " - " : "") +
             "DELOAD: Volume ridotto, carichi submassimali, nessun cedimento.",
         })),
       })),
     );
-    setManualWeek(3); // La fase 3 Ã¨ sempre lo Scarico/Deload nel nuovo sistema
+    setManualWeek(3); // La fase 3 è sempre lo Scarico/Deload nel nuovo sistema
     setBuilderSuccessMessage(
-      "âœ… Scheda convertita in Settimana di Scarico (Fase III)!",
+      "✅ Scheda convertita in Settimana di Scarico (Fase III)!",
     );
     setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
@@ -569,7 +569,7 @@ export default function TopGymApp() {
   const handleApplyEngineToCurrentProgram = () => {
     if (
       !window.confirm(
-        `Vuoi aggiornare tutti gli esercizi della scheda con le regole del ${currentBlock} Â· Fase ${calculatedCurrentPhase}?`,
+        `Vuoi aggiornare tutti gli esercizi della scheda con le regole del ${currentBlock} - Fase ${calculatedCurrentPhase}?`,
       )
     )
       return;
@@ -580,7 +580,7 @@ export default function TopGymApp() {
     );
     setProgramDays(updated as any);
     setBuilderSuccessMessage(
-      `âš¡ Scheda aggiornata con successo alle regole del ${currentBlock} Â· Fase ${calculatedCurrentPhase}! Ora puoi visionarla o modificarla.`,
+      `⚡ Scheda aggiornata con successo alle regole del ${currentBlock} - Fase ${calculatedCurrentPhase}! Ora puoi visionarla o modificarla.`,
     );
     setTimeout(() => setBuilderSuccessMessage(null), 5000);
   };
@@ -890,7 +890,7 @@ export default function TopGymApp() {
     if (error) {
       setSettingsMessage(`âš ï¸ Errore salvataggio: ${error.message}`);
     } else {
-      setSettingsMessage("âœ… Profilo aggiornato con successo!");
+      setSettingsMessage("✅ Profilo aggiornato con successo!");
       setTimeout(() => setSettingsMessage(null), 3000);
     }
   };
@@ -934,7 +934,7 @@ export default function TopGymApp() {
   const handleDeleteAccount = async () => {
     if (
       !window.confirm(
-        "Sei sicuro di voler eliminare il tuo account? Questa azione non puÃ² essere annullata.",
+        "Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.",
       ) ||
       !supabase
     )
@@ -1276,7 +1276,7 @@ const currentIntensityPreview = useMemo(() => {
   return getIntensityInfo(currentExercise.name, w);
 }, [currentExercise, weight, getIntensityInfo]);
 
-  // Recupera il peso piÃ¹ recente della Readiness
+  // Recupera il peso più recente della Readiness
   const sessionBodyWeight = useMemo(() => {
     const todayLog = readinessHistory.find(
       (r) => r.date === todayIso() && r.bodyWeight && r.bodyWeight > 0,
@@ -1339,7 +1339,7 @@ const currentIntensityPreview = useMemo(() => {
     let rec = "";
     if (totalScore >= 80)
       rec =
-        "Pronto per la massima intensitÃ ! Segui i carichi target e spingi al 100%.";
+        "Pronto per la massima intensità ! Segui i carichi target e spingi al 100%.";
     else if (totalScore >= 60)
       rec =
         "Stato discreto. Allenamento regolare, ma mantieni 1 rep di margine.";
@@ -1507,7 +1507,7 @@ if (supabase && user) {
         // Calcoliamo quanti allenamenti ha completato adesso l'atleta (compreso quello appena salvato)
         const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
 
-        // Se questo allenamento ha chiuso la settimana (es. 3Â° su 3, o 4Â° su 4)
+        // Se questo allenamento ha chiuso la settimana (es. 3° su 3, o 4° su 4)
         if (updatedHistoryCount % splitSize === 0) {
           const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
           const nextWeek = (completedWeeks % 4) + 1; // Calcola la nuova settimana (1, 2, 3 o 4 Deload)
@@ -1531,11 +1531,11 @@ if (supabase && user) {
           // Messaggio di completamento e avanzamento
           if (nextWeek === 4) {
             setWorkoutSuccessMessage(
-              "ðŸŽ‰ Allenamento salvato! (+50 XP) âš¡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).",
+              "ðŸŽ‰ Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).",
             );
           } else {
             setWorkoutSuccessMessage(
-              `ðŸŽ‰ Allenamento salvato! (+50 XP) âš¡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`,
+              `ðŸŽ‰ Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`,
             );
           }
         } else {
@@ -1545,7 +1545,7 @@ if (supabase && user) {
           );
         }
       } else {
-        // Se non Ã¨ HARDTOPGYM, mostra il tuo messaggio classico originale
+        // Se non è HARDTOPGYM, mostra il tuo messaggio classico originale
         setWorkoutSuccessMessage(
           "ðŸŽ‰ Allenamento completato e salvato! +50 XP",
         );
@@ -1615,7 +1615,7 @@ if (supabase && user) {
 
     if (result?.success) {
       setBuilderSuccessMessage(
-        `âœ… Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`,
+        `✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`,
       );
 
       if (supabase && targetId) {
@@ -1712,7 +1712,7 @@ if (supabase && user) {
       calculate1RM(calc1RMWeight, numReps);
 
 
-    // Cast esplicito a MuscleGroup cosÃ¬ TypeScript non segnala errori di tipo
+    // Cast esplicito a MuscleGroup così TypeScript non segnala errori di tipo
     const targetGroup =
       currentExercise?.muscleGroup || resolveMuscleTarget(exName);
 
@@ -1927,7 +1927,7 @@ if (isFinished) {
     {
       id: "1",
       title: "Club dei 100kg",
-      description: "Solleva 100kg o piÃ¹ in un esercizio",
+      description: "Solleva 100kg o più in un esercizio",
       icon: "ðŸ‹ï¸",
       unlocked: logs.some((l) => l.weight >= 100),
     },
@@ -1935,7 +1935,7 @@ if (isFinished) {
       id: "2",
       title: "PR Breaker",
       description: "Supera il tuo massimale stimato",
-      icon: "ðŸ”¥",
+      icon: "🔥",
       unlocked: logs.length >= 3,
     },
     {
@@ -1949,7 +1949,7 @@ if (isFinished) {
       id: "4",
       title: "Costanza d'Acciaio",
       description: "Accumula oltre 500 XP",
-      icon: "âš¡",
+      icon: "⚡",
       unlocked: userXp >= 500,
     },
   ];
@@ -2384,7 +2384,7 @@ if (isFinished) {
                 onClick={() => setShowPushBanner(false)}
                 className="px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white"
               >
-                PiÃ¹ tardi
+                Più tardi
               </button>
               <button
                 type="button"
@@ -2416,12 +2416,12 @@ if (isFinished) {
               </div>
             )}
 
-            {/* BANNER METODO TOPGYM Â· VISIBILE ESCLUSIVAMENTE SULLE TUE SCHEDE */}
+            {/* BANNER METODO TOPGYM - VISIBILE ESCLUSIVAMENTE SULLE TUE SCHEDE */}
             {isMasterProgram && (
               <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl animate-in fade-in duration-200">
                 <div>
                   <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
-                    Metodo TOPGYM Â·{" "}
+                    Metodo TOPGYM -{" "}
                     {currentBlock === "BLOCCO_1_FORZA"
                       ? "Blocco 1: Forza Ipertrofica"
                       : currentBlock === "BLOCCO_2_TRASFORMAZIONE"
@@ -2954,7 +2954,7 @@ if (isFinished) {
                   </div>
                 ) : (
                   <span className="text-xs text-zinc-400 font-medium">
-                    Sessione in corso Â· {todayLogs.length} set registrati
+                    Sessione in corso - {todayLogs.length} set registrati
                   </span>
                 )}
               </div>
@@ -3231,7 +3231,7 @@ if (isFinished) {
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && userRole === "COACH" && (
           <div className="space-y-6">
-            {/* CABINA DI REGIA PERIODIZZAZIONE Â· VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
+            {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
             {isMasterCoach && (
               <div className="space-y-5">
                 {/* ============================================================== */}
@@ -3259,7 +3259,7 @@ if (isFinished) {
                         : "text-zinc-400 hover:text-white bg-zinc-900/40"
                     }`}
                   >
-                    âš¡ Metodo HARDTOPGYM (They & Bosco-Colli)
+                    ⚡ Metodo HARDTOPGYM (They & Bosco-Colli)
                   </button>
                 </div>
 
@@ -3289,7 +3289,7 @@ if (isFinished) {
                       onSelectTemplate={(days, templateName) => {
                         setProgramDays(days as any);
                         setBuilderSuccessMessage(
-                          `âš¡ Template "${templateName}" caricato con successo!`,
+                          `⚡ Template "${templateName}" caricato con successo!`,
                         );
                         setTimeout(() => setBuilderSuccessMessage(null), 5000);
                       }}
@@ -3308,7 +3308,7 @@ if (isFinished) {
                     onApplyProgram={(newDays: any[]) => {
                       setProgramDays(newDays as any);
                       setBuilderSuccessMessage(
-                        "âš¡ Scheda Metodo HARDTOPGYM applicata con successo!",
+                        "⚡ Scheda Metodo HARDTOPGYM applicata con successo!",
                       );
                       setTimeout(() => setBuilderSuccessMessage(null), 5000);
                     }}
@@ -3317,12 +3317,12 @@ if (isFinished) {
               </div>
             )}
 
-            {/* SEZIONE GESTIONE SCHEDA Â· VISIBILE A ENTRAMBI I COACH */}
+            {/* SEZIONE GESTIONE SCHEDA - VISIBILE A ENTRAMBI I COACH */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
                 <div className="space-y-2 flex-1 max-w-md">
                   <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                    <UserCheck className="text-[#E50914]" /> Gestione Scheda Â·{" "}
+                    <UserCheck className="text-[#E50914]" /> Gestione Scheda -{" "}
                     {activeAthlete.displayName}
                   </h2>
                   <div>
@@ -3399,7 +3399,7 @@ if (isFinished) {
                       </div>
                     </div>
 
-                    {/* CONTENUTO VISIBILE SOLO SE IL GIORNO Ãˆ APERTO */}
+                    {/* CONTENUTO VISIBILE SOLO SE IL GIORNO È APERTO */}
                     {isOpen && (
                       <div className="p-4 sm:p-5 border-t border-white/5 space-y-4 bg-black/20">
                         {/* LISTA ESERCIZI DEL GIORNO */}
@@ -3490,7 +3490,7 @@ if (isFinished) {
                                 }
                                 className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                               >
-                                âš¡ Neurale (2-6 reps Â· Buffer)
+                                ⚡ Neurale (2-6 reps - Buffer)
                               </button>
                               <button
                                 type="button"
@@ -3499,7 +3499,7 @@ if (isFinished) {
                                 }
                                 className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                               >
-                                ðŸ’ª Meccanico (6-12 reps Â· Cedimento/Buffer)
+                                💪 Meccanico (6-12 reps - Cedimento/Buffer)
                               </button>
                               <button
                                 type="button"
@@ -3508,7 +3508,7 @@ if (isFinished) {
                                 }
                                 className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
                               >
-                                ðŸ”¥ Metabolico (12-20 reps Â· Isolamento)
+                                🔥 Metabolico (12-20 reps - Isolamento)
                               </button>
                             </div>
                           </div>
