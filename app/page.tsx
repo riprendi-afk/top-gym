@@ -1672,6 +1672,7 @@ export default function TopGymApp() {
       calculateEstimated1RM(calc1RMWeight, numReps, numRpe) ||
       calculate1RM(calc1RMWeight, numReps);
 
+
     // Cast esplicito a MuscleGroup cosÃ¬ TypeScript non segnala errori di tipo
     const targetGroup =
       currentExercise?.muscleGroup || resolveMuscleTarget(exName);
@@ -1704,9 +1705,25 @@ export default function TopGymApp() {
     void addXp(10);
     if (currentExercise?.restSeconds)
       startRestTimer(currentExercise.restSeconds);
-    setWeight("");
-    setReps("");
+// ✅ SOSTITUISCI SOLO setWeight('') E setReps('') CON QUESTO:
+const setsDone = logs.filter(l => l.exerciseName === exName && l.date === todayIso()).length + 1;
+const isFinished = currentExercise ? setsDone >= currentExercise.sets : false;
+
+if (isFinished) {
+  const curIdx = activeRoutine.findIndex((item: any) => item.id === currentExId);
+  if (curIdx !== -1 && curIdx < activeRoutine.length - 1) {
+    const nextEx = activeRoutine[curIdx + 1];
+    setCurrentExId(nextEx.id);
+    setWeight(nextEx.targetWeight && nextEx.targetWeight !== '0' ? String(nextEx.targetWeight) : '');
+    setReps(nextEx.reps?.includes('-') ? nextEx.reps.split('-')[0] : (nextEx.reps || '8'));
+  } else {
+    setWeight('');
+    setReps('');
+  }
+}
+// Se non è finito, NON azzeriamo: peso e reps restano pre-compilati per la serie successiva
   };
+  
 
   const handleDeleteLog = (logId: string) => {
     setLogs((prev) => prev.filter((l) => l.id !== logId));
@@ -1823,6 +1840,7 @@ export default function TopGymApp() {
         return "bg-zinc-800 text-zinc-300 border-zinc-700";
     }
   };
+
 
   const getRankTitle = (level: number) => {
     if (level < 10) return "Novizio della Ghisa";
@@ -2516,6 +2534,76 @@ export default function TopGymApp() {
                           className="mt-5 pt-5 border-t border-white/10 space-y-4 cursor-default animate-in fade-in duration-200"
                         >
                           {/* 1RM & INTENSITÀ STIMATA */}
+                          {/* BADGE PROGRESSIONE SERIE TARGET */}
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                              <span>Progressione Serie</span>
+                              <span className="text-white font-mono">{exerciseLogs.length} di {ex.sets} completate</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {(() => {
+                                const chronologicalLogs = [...exerciseLogs].reverse();
+                                return Array.from({ length: Math.max(ex.sets, exerciseLogs.length) }).map((_, idx) => {
+                                  const setNum = idx + 1;
+                                  const logged = chronologicalLogs[idx];
+                                  const isCurrent = idx === exerciseLogs.length;
+
+                                  if (logged) {
+                                    return (
+                                      <div 
+                                        key={idx}
+                                        className="bg-emerald-950/30 border border-emerald-500/40 p-2.5 rounded-xl flex items-center justify-between"
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] text-emerald-400 font-bold uppercase">
+                                            Serie {setNum}
+                                          </span>
+                                          <span className="text-xs font-black text-white">
+                                            {logged.weight} kg × {logged.reps}
+                                          </span>
+                                        </div>
+                                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                      </div>
+                                    );
+                                  }
+
+                                  if (isCurrent) {
+                                    return (
+                                      <div 
+                                        key={idx}
+                                        className="bg-[#E50914]/10 border border-[#E50914]/60 p-2.5 rounded-xl flex items-center justify-between animate-pulse"
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] text-red-400 font-bold uppercase">
+                                            Serie {setNum}
+                                          </span>
+                                          <span className="text-xs font-black text-white">
+                                            In corso...
+                                          </span>
+                                        </div>
+                                        <span className="w-2 h-2 rounded-full bg-[#E50914]" />
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div 
+                                      key={idx}
+                                      className="bg-zinc-900/40 border border-white/5 p-2.5 rounded-xl flex flex-col justify-center opacity-60"
+                                    >
+                                      <span className="text-[10px] text-zinc-500 font-bold uppercase">
+                                        Serie {setNum}
+                                      </span>
+                                      <span className="text-xs font-medium text-zinc-400">
+                                        Target: {ex.reps}
+                                      </span>
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                          
                           {estimated1RMPreview !== null && (
                             <div className="bg-black/40 border border-white/10 p-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
                               <div>
@@ -2787,7 +2875,7 @@ export default function TopGymApp() {
                 })}
               </div>
             </div>
-            
+
             {/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
             <div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
