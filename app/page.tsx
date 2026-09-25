@@ -2480,6 +2480,47 @@ if (isFinished) {
                   </button>
                 ))}
               </div>
+{/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA */}
+<div className="mb-4 p-3 sm:p-4 rounded-2xl bg-[#12151B] border border-white/10 shadow-xl">
+  <div className="flex items-center justify-between gap-2 flex-wrap">
+    <div className="flex items-center gap-2">
+      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+      <span className="text-xs font-black uppercase tracking-wider text-white">
+        {isMasterProgram ? "HARDTOPGYM (Bosco-Colli)" : "TOPGYM Classico"}
+      </span>
+    </div>
+    <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-yellow-400">
+      {isMasterProgram
+        ? `Settimana ${calculatedCurrentPhase} di 4`
+        : `Settimana ${calculatedCurrentRealWeek} / 47 • Blocco ${activeBlock === 'BLOCCO_1_FORZA' ? '1: Forza' : activeBlock === 'BLOCCO_2_TRASFORMAZIONE' ? '2: Trasformazione' : '3: Qualità'}`}
+    </span>
+  </div>
+
+  <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between gap-2 flex-wrap">
+    <div>
+      <p className="text-xs font-bold text-white">
+        {isMasterProgram
+          ? calculatedCurrentPhase === 1 ? "Fase 1: Setup Neurale & CAT"
+          : calculatedCurrentPhase === 2 ? "Fase 2: Micro-Overload (+2.5% Carichi)"
+          : calculatedCurrentPhase === 3 ? "Fase 3: Intensificazione / Urto (+5%)"
+          : "Fase 4: Scarico Attivo (Deload SNC)"
+          : calculatedCurrentPhase === 1 ? "Fase I: Accumulo Volume (Buffer RIR 2-4)"
+          : calculatedCurrentPhase === 2 ? "Fase II: Conversione & Aumento Carichi"
+          : calculatedCurrentPhase === 3 ? "Fase III: Scarico (Deload -40% Volume)"
+          : "Fase IV: Intensificazione & Picco"}
+      </p>
+      <p className="text-[10px] text-zinc-400">
+        {workoutHistory.length} allenamenti registrati nello storico
+      </p>
+    </div>
+
+    {calculatedCurrentPhase === (isMasterProgram ? 4 : 3) && (
+      <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        Settimana di Scarico (Deload)
+      </span>
+    )}
+  </div>
+</div>
 
               {/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
               <div className="grid gap-3 md:grid-cols-2">
@@ -2643,7 +2684,8 @@ if (isFinished) {
                             </div>
                           </div>
 
-                          {estimated1RMPreview !== null && (
+                         {/* 1RM & INTENSITÀ STIMATA */}
+                         {estimated1RMPreview !== null && (
                             <div className="bg-black/40 border border-white/10 p-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
                               <div>
                                 <span className="text-[9px] text-zinc-400 uppercase font-bold tracking-wider block">1RM Stimato</span>
@@ -2661,7 +2703,7 @@ if (isFinished) {
                           {lastLoggedSet && (
                             <div className="bg-zinc-900/60 p-3 rounded-xl border border-white/5 flex items-center justify-between flex-wrap gap-2 text-xs">
                               <div className="text-zinc-400 flex items-center gap-2">
-                                <History className="w-4 h-4 text-zinc-400" />
+                                <History className="w-4 h-4 text-zinc-400 shrink-0" />
                                 <span>
                                   Ultima volta:{' '}
                                   {lastLoggedSet.isBodyweight && lastLoggedSet.bodyWeightUsed ? (
@@ -2679,7 +2721,7 @@ if (isFinished) {
                               <button 
                                 type="button" 
                                 onClick={handleAutoFillLastLog} 
-                                className="text-xs text-[#E50914] font-bold flex items-center gap-1.5 hover:underline cursor-pointer"
+                                className="text-xs text-[#E50914] font-bold flex items-center gap-1.5 hover:underline cursor-pointer shrink-0"
                               >
                                 <Copy className="w-3.5 h-3.5"/> Copia Ultimo Carico
                               </button>
@@ -2702,22 +2744,21 @@ if (isFinished) {
                             </div>
                           )}
 
-                          {/* FORM INTERATTIVO */}
-{/* FORM INTERATTIVO COMPATTO */}
-<form onSubmit={handleLogSet} className="space-y-3">
-                            {/* RIGA 1: CARICO E RIPETIZIONI AFFIANCATI */}
-                            <div className="grid grid-cols-2 gap-2.5">
+                          {/* FORM INTERATTIVO (ZERO OVERFLOW MOBILE + SUGGERIMENTI KG E REPS) */}
+                          <form onSubmit={handleLogSet} className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2 w-full">
+                              
                               {/* BOX CARICO */}
-                              <div className="bg-black/40 p-2.5 rounded-xl border border-white/5 flex flex-col justify-between">
+                              <div className="min-w-0 bg-black/40 p-2 sm:p-2.5 rounded-xl border border-white/5 flex flex-col justify-between">
                                 <div className="flex justify-between items-center mb-1">
-                                  <label className="text-[10px] uppercase font-black tracking-wider text-zinc-400">
+                                  <label className="text-[10px] uppercase font-black tracking-wider text-zinc-400 truncate">
                                     {currentBodyweightConfig ? 'Zavorra' : 'Carico (Kg)'}
                                   </label>
                                   {currentBodyweightConfig && (
-                                    <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded">BW</span>
+                                    <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded shrink-0">BW</span>
                                   )}
                                 </div>
-                                <div className="flex items-center justify-center gap-1 my-0.5">
+                                <div className="flex items-center justify-center my-0.5 w-full min-w-0">
                                   <input 
                                     type="number" 
                                     step="0.5" 
@@ -2726,29 +2767,29 @@ if (isFinished) {
                                     required 
                                     value={weight} 
                                     onChange={e => setWeight(e.target.value)} 
-                                    placeholder={currentBodyweightConfig ? '0' : '80'} 
-                                    className="w-full text-center text-2xl font-black text-white bg-zinc-900/90 border border-white/10 rounded-lg py-1.5 outline-none focus:border-[#E50914] transition" 
+                                    placeholder={currentBodyweightConfig ? '0' : (ex.targetWeight || '80')} 
+                                    className="w-full min-w-0 text-center text-xl sm:text-2xl font-black text-white bg-zinc-900/90 border border-white/10 rounded-lg py-1 sm:py-1.5 outline-none focus:border-[#E50914] transition" 
                                   />
                                 </div>
-                                <div className="grid grid-cols-4 gap-1 pt-1">
-                                  <button type="button" onClick={() => adjustWeight(-5)} className="h-7 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] font-bold text-zinc-400 rounded-md transition">-5</button>
-                                  <button type="button" onClick={() => adjustWeight(-2.5)} className="h-7 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] font-bold text-zinc-400 rounded-md transition">-2.5</button>
-                                  <button type="button" onClick={() => adjustWeight(2.5)} className="h-7 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] font-bold text-emerald-400 rounded-md transition">+2.5</button>
-                                  <button type="button" onClick={() => adjustWeight(5)} className="h-7 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] font-bold text-emerald-400 rounded-md transition">+5</button>
+                                <div className="grid grid-cols-4 gap-1 pt-1 w-full">
+                                  <button type="button" onClick={() => adjustWeight(-5)} className="h-7 min-w-0 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[9px] sm:text-[10px] font-bold text-zinc-400 rounded-md transition text-center">-5</button>
+                                  <button type="button" onClick={() => adjustWeight(-2.5)} className="h-7 min-w-0 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[9px] sm:text-[10px] font-bold text-zinc-400 rounded-md transition text-center">-2.5</button>
+                                  <button type="button" onClick={() => adjustWeight(2.5)} className="h-7 min-w-0 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[9px] sm:text-[10px] font-bold text-emerald-400 rounded-md transition text-center">+2.5</button>
+                                  <button type="button" onClick={() => adjustWeight(5)} className="h-7 min-w-0 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[9px] sm:text-[10px] font-bold text-emerald-400 rounded-md transition text-center">+5</button>
                                 </div>
                               </div>
 
-                              {/* BOX RIPETIZIONI */}
-                              <div className="bg-black/40 p-2.5 rounded-xl border border-white/5 flex flex-col justify-between">
+                              {/* BOX RIPETIZIONI (ANTI-OVERFLOW MOBILE + CHIP SUGGERIMENTI DINAMICI) */}
+                              <div className="min-w-0 bg-black/40 p-2 sm:p-2.5 rounded-xl border border-white/5 flex flex-col justify-between">
                                 <div className="flex justify-between items-center mb-1">
-                                  <label className="text-[10px] uppercase font-black tracking-wider text-zinc-400">Reps</label>
-                                  <span className="text-[9px] text-zinc-500 font-mono">Target: {ex.reps}</span>
+                                  <label className="text-[10px] uppercase font-black tracking-wider text-zinc-400 truncate">Reps</label>
+                                  <span className="text-[9px] text-zinc-500 font-mono shrink-0">Target: {ex.reps}</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 my-0.5">
+                                <div className="flex items-center gap-1 my-0.5 w-full min-w-0">
                                   <button
                                     type="button"
                                     onClick={() => setReps(prev => Math.max(1, (parseInt(prev, 10) || 0) - 1).toString())}
-                                    className="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-lg font-black text-white border border-white/5 flex items-center justify-center transition cursor-pointer"
+                                    className="w-7 h-8 sm:w-8 sm:h-9 shrink-0 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-base sm:text-lg font-black text-white border border-white/5 flex items-center justify-center transition cursor-pointer"
                                   >
                                     -
                                   </button>
@@ -2759,30 +2800,46 @@ if (isFinished) {
                                     required 
                                     value={reps} 
                                     onChange={e => setReps(e.target.value)} 
-                                    placeholder="8" 
-                                    className="flex-1 h-9 text-center text-xl font-black text-white bg-zinc-900/90 border border-white/10 rounded-lg outline-none focus:border-[#E50914]" 
+                                    placeholder={typeof ex.reps === "number" ? ex.reps.toString() : (parseInt(ex.reps) || 8).toString()} 
+                                    className="w-full min-w-0 flex-1 h-8 sm:h-9 text-center text-lg sm:text-xl font-black text-white bg-zinc-900/90 border border-white/10 rounded-lg outline-none focus:border-[#E50914] px-1" 
                                   />
                                   <button
                                     type="button"
                                     onClick={() => setReps(prev => ((parseInt(prev, 10) || 0) + 1).toString())}
-                                    className="w-9 h-9 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-lg font-black text-emerald-400 border border-white/5 flex items-center justify-center transition cursor-pointer"
+                                    className="w-7 h-8 sm:w-8 sm:h-9 shrink-0 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:scale-90 text-base sm:text-lg font-black text-emerald-400 border border-white/5 flex items-center justify-center transition cursor-pointer"
                                   >
                                     +
                                   </button>
                                 </div>
-                                <div className="grid grid-cols-3 gap-1 pt-1">
-                                  {['6', '8', '10'].map(rVal => (
-                                    <button
-                                      key={rVal}
-                                      type="button"
-                                      onClick={() => setReps(rVal)}
-                                      className="h-7 bg-zinc-800/80 hover:bg-zinc-700 active:scale-95 text-[10px] font-bold text-zinc-300 rounded-md transition"
-                                    >
-                                      {rVal}
-                                    </button>
-                                  ))}
+                                
+                                {/* CHIP SUGGERIMENTI REPS (CALCOLATI SUL TARGET DELLA SCHEDA) */}
+                                <div className="grid grid-cols-4 gap-1 pt-1 w-full">
+                                  {(() => {
+                                    const targetR = parseInt(ex.reps, 10) || 8;
+                                    const suggestions = [
+                                      Math.max(1, targetR - 1),
+                                      targetR,
+                                      targetR + 1,
+                                      targetR + 2,
+                                    ];
+                                    return suggestions.map((rVal, idx) => (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => setReps(rVal.toString())}
+                                        className={`h-7 min-w-0 active:scale-95 text-[9px] sm:text-[10px] font-bold rounded-md transition text-center border ${
+                                          rVal === targetR
+                                            ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/40"
+                                            : "bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-white/5"
+                                        }`}
+                                      >
+                                        {rVal}
+                                      </button>
+                                    ));
+                                  })()}
                                 </div>
                               </div>
+
                             </div>
 
                             {/* RIGA 2: SELETTORE RPE / RIR SLIM */}
