@@ -395,6 +395,7 @@ export default function TopGymApp() {
     | "goals"
     | "settings"
     | "chat"
+
   >("workout");
 
   const [userXp, setUserXp] = useState(0);
@@ -3751,8 +3752,8 @@ if (isFinished) {
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
-        {activeTab === "analytics" && (
+{/* TAB 7: ANALYTICS & STORICO COMPLETO */}
+{activeTab === "analytics" && (
           <AnalyticsDashboard
             logs={logs}
             workoutHistory={workoutHistory}
@@ -3762,6 +3763,17 @@ if (isFinished) {
             userRole={userRole}
             onDeleteWorkout={handleDeleteWorkoutHistory}
           />
+        )}
+
+        {/* TAB CHAT & ASSISTENZA */}
+        {activeTab === "chat" && (
+          <div className="p-4 max-w-4xl mx-auto w-full animate-in fade-in duration-200">
+            <ChatBox 
+              roomId={targetUserId || "sala-generale"} 
+              userId={targetUserId || "atleta-test"} 
+              userName="Top Gym User" 
+            />
+          </div>
         )}
 
         {/* TAB 8: CLASSIFICA & BADGE */}
