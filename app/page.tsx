@@ -3765,13 +3765,13 @@ if (isFinished) {
           />
         )}
 
-        {/* TAB CHAT & ASSISTENZA */}
-        {activeTab === "chat" && (
+{/* TAB CHAT & ASSISTENZA */}
+{activeTab === "chat" && (
           <div className="p-4 max-w-4xl mx-auto w-full animate-in fade-in duration-200">
             <ChatBox 
-              roomId={targetUserId || "sala-generale"} 
-              userId={targetUserId || "atleta-test"} 
-              userName="Top Gym User" 
+              roomId={userRole === "COACH" ? (activeAthlete?.id || "sala-generale") : (targetUserId || "atleta-room")} 
+              userId={userRole === "COACH" ? "coach-admin" : (targetUserId || "atleta-id")} 
+              userName={userRole === "COACH" ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")} 
             />
           </div>
         )}
