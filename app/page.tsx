@@ -52,8 +52,10 @@ import {
   Target,
   Users,
   Bell,
+  MessageSquare,
 } from "lucide-react";
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
+import ChatBox from "@/components/ChatBox";
 
 import {
   computeEffectiveLoad,
@@ -392,6 +394,7 @@ export default function TopGymApp() {
     | "records"
     | "goals"
     | "settings"
+    | "chat"
   >("workout");
 
   const [userXp, setUserXp] = useState(0);
@@ -2351,6 +2354,16 @@ if (isFinished) {
           >
             <TrendingUp className="w-4 h-4 text-blue-400" /> Progressi
           </button>
+
+          <button
+  type="button"
+  onClick={() => setActiveTab("chat")}
+  className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${
+    activeTab === "chat" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"
+  }`}
+>
+  <MessageSquare className="w-4 h-4" /> Chat & Assistenza
+</button>
 
           {userRole === "COACH" && (
             <>

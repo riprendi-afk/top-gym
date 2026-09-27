@@ -4,8 +4,9 @@
 import React, { useState } from 'react';
 import { 
   Dumbbell, Gauge, TrendingUp, MoreHorizontal, Trophy, 
-  Target, Medal, Settings, Users, UserCheck, X, ChevronRight, Lock
+  Target, Medal, Settings, Users, UserCheck, X, ChevronRight, Lock, MessageSquare
 } from 'lucide-react';
+
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -36,13 +37,13 @@ export default function MobileBottomNav({
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#12151B]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 pb-safe shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
         <div className="flex items-center justify-around">
           
-          {/* VISTA ATLETA */}
-          {userRole === 'ATHLETE' && (
+         {/* VISTA ATLETA */}
+         {userRole === 'ATHLETE' && (
             <>
               <button
                 type="button"
                 onClick={() => handleSelectTab('workout')}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'workout' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -53,7 +54,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => handleSelectTab('readiness')}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'readiness' ? 'text-green-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -61,10 +62,22 @@ export default function MobileBottomNav({
                 <span className="text-[10px] font-bold mt-1 tracking-tight">Readiness</span>
               </button>
 
+              {/* NUOVO TAB CHAT PER L'ATLETA */}
+              <button
+                type="button"
+                onClick={() => handleSelectTab('chat')}
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                  activeTab === 'chat' ? 'text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <MessageSquare className={`w-5 h-5 ${activeTab === 'chat' ? 'stroke-[2.5]' : ''}`} />
+                <span className="text-[10px] font-bold mt-1 tracking-tight">Chat</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => handleSelectTab('analytics')}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'analytics' ? 'text-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -75,7 +88,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => setIsMoreOpen(true)}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   isMoreActive ? 'text-yellow-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
