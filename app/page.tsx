@@ -246,7 +246,7 @@ export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
 
   // Se non riconosciuto, NON ritornare 'Petto' alla cieca!
   // Restituiamo un default intelligente o lasciamolo come Glutei/Addome/Altro se non specificato
-  return "Glutei"; // Oppure gestito come distretto jolly/Addome invece di intasare il Petto
+  return "Addome"; // Oppure gestito come distretto jolly/Addome invece di intasare il Petto
 };
 
 export interface Exercise {
@@ -366,6 +366,7 @@ export default function TopGymApp() {
   const [programmingModel, setProgrammingModel] = useState<
     "TOPGYM_BLOCKS" | "HARDTOPGYM"
   >("TOPGYM_BLOCKS");
+  
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -431,6 +432,7 @@ useEffect(() => {
   }, [userXp]);
 
   const [soundEnabled, setSoundEnabled] = useState(true);
+  
 
   // Timer resiliente
   const [restTimer, setRestTimer] = useState<number | null>(null);
@@ -791,6 +793,48 @@ useEffect(() => {
       );
     }
   }, []);
+
+  // Ascoltatore globale per le notifiche chat in tempo reale (funziona da qualsiasi tab)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Richiedi il permesso per le notifiche all'avvio
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const myCurrentId = userRole === 'COACH' ? 'coach-admin' : (targetUserId || 'atleta-id');
+
+    // Canale globale supabase per intercettare i messaggi in arrivo
+    const globalChannel = supabase
+      .channel('global-chat-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          // Se il messaggio NON è stato inviato da me
+          if (msg && msg.sender_id !== myCurrentId) {
+            // Se sono il coach, o se sono l'atleta destinatario della stanza
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(`Top Gym - Messaggio da ${msg.sender_name || 'Utente'}`, {
+                body: msg.message,
+                icon: '/favicon.ico',
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChannel);
+    };
+  }, [userRole, targetUserId]);
 
   // Sincronizzazione in tempo reale del programma (Supabase Realtime)
   useProgramRealtime(targetUserId, (updatedProgram) => {
