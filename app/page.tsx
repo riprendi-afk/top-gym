@@ -75,6 +75,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import HardTopGymCabina from "@/components/HardTopGymCabina";
 import TopGymClassicCabina from "@/components/TopGymClassicCabina";
 import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
+import { useProgramRealtime } from "@/lib/useProgramRealtime";
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
@@ -760,6 +761,15 @@ export default function TopGymApp() {
       );
     }
   }, []);
+
+  // Sincronizzazione in tempo reale del programma (Supabase Realtime)
+  useProgramRealtime(targetUserId, (updatedProgram) => {
+    if (updatedProgram && updatedProgram.days_data && updatedProgram.days_data.length > 0) {
+      setProgramDays(updatedProgram.days_data);
+      setSelectedDayCount(clampDayCount(updatedProgram.days_data.length));
+      if (updatedProgram.program_name) setProgramName(updatedProgram.program_name);
+    }
+  });
 
   useEffect(() => {
     if (!supabase || !targetUserId) return;

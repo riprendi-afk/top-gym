@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { subscribeToTable } from './realtime';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
@@ -139,4 +140,21 @@ export async function getProgramFromSupabase(userId: string) {
 
   if (!data || data.length === 0) return null;
   return data[0];
+}
+/**
+ * Inizializza l'ascolto in tempo reale per i programmi dell'utente
+ */
+export function initProgramsRealtime(userId: string, onProgramUpdated: (updatedProgram: any) => void) {
+  if (!userId) return () => {};
+
+  return subscribeToTable({
+    table: 'programs',
+    onSync: (payload) => {
+      const newData = payload.new;
+      // Aggiorna solo se il programma appartiene all'utente corrente
+      if (newData && newData.user_id === userId) {
+        onProgramUpdated(newData);
+      }
+    },
+  });
 }
