@@ -807,22 +807,15 @@ export default function AnalyticsDashboard({
                               Dettagli
                             </button>
                             {onDeleteWorkout && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const confirmDelete = window.confirm(
-                                    "Sei sicuro di voler eliminare questo allenamento dallo storico?",
-                                  );
-                                  if (confirmDelete) {
-                                    onDeleteWorkout(item.id || item._id);
-                                  }
-                                }}
-                                className="text-zinc-500 hover:text-rose-400 p-1 transition cursor-pointer"
-                                title="Elimina allenamento"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
+  <button
+    type="button"
+    onClick={() => onDeleteWorkout(item.id || item._id)}
+    className="text-zinc-500 hover:text-rose-400 p-1 transition cursor-pointer"
+    title="Elimina allenamento"
+  >
+    <Trash2 className="w-4 h-4"/>
+  </button>
+)}
                           </div>
                         </td>
                       </tr>

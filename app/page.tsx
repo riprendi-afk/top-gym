@@ -1287,6 +1287,13 @@ useEffect(() => {
       : { id: "default", displayName: "Atleta", email: "", xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
 
+  const handleSafeFinish = () => {
+    const confirmed = window.confirm("Sei sicuro di voler terminare e salvare l'allenamento?");
+    if (confirmed) {
+      handleFinishAndSaveWorkout();
+    }
+  };
+
   // 1. Calcolo Settimana Reale
   const calculatedCurrentRealWeek = useMemo(() => {
     const daysInRoutine = Math.max(1, programDays.length || 4);
@@ -1539,6 +1546,9 @@ const currentIntensityPreview = useMemo(() => {
   }, [logs]);
 
   const handleFinishAndSaveWorkout = async () => {
+    if (!window.confirm("Sei sicuro di voler terminare e salvare l'allenamento?")) {
+      return;
+    }
     if (isSavingWorkout) return;
     setIsSavingWorkout(true);
 
@@ -3053,33 +3063,33 @@ if (isFinished) {
               </div>
             </div>
 
-            {/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
-            <div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                {restTimer !== null ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
-                    <Timer className="w-4 h-4 animate-pulse" />
-                    <span>
-                      Recupero: {Math.floor(restTimer / 60)}:
-                      {(restTimer % 60).toString().padStart(2, "0")}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-zinc-400 font-medium">
-                    Sessione in corso - {todayLogs.length} set registrati
+{/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
+<div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {restTimer !== null ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
+                  <Timer className="w-4 h-4 animate-pulse" />
+                  <span>
+                    Recupero: {Math.floor(restTimer / 60)}:
+                    {(restTimer % 60).toString().padStart(2, "0")}
                   </span>
-                )}
-              </div>
-              <button
-                onClick={handleFinishAndSaveWorkout}
-                disabled={isSavingWorkout}
-                className="bg-emerald-600 hover:brightness-110 text-white font-black px-6 py-3 rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all disabled:opacity-50"
-              >
-                {isSavingWorkout ? "Salvataggio..." : "Termina e Salva"}
-              </button>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-400 font-medium">
+                  Sessione in corso - {todayLogs.length} set registrati
+                </span>
+              )}
             </div>
+            <button
+              onClick={handleSafeFinish}
+              disabled={isSavingWorkout}
+              className="bg-emerald-600 hover:brightness-110 text-white font-black px-6 py-3 rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all disabled:opacity-50"
+            >
+              {isSavingWorkout ? "Salvataggio..." : "Termina e Salva"}
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
         {/* TAB 2: RECORD PERSONALI */}
         {activeTab === "records" && (
