@@ -3771,7 +3771,8 @@ if (isFinished) {
             <ChatBox 
               roomId={userRole === "COACH" ? (activeAthlete?.id || "sala-generale") : (targetUserId || "atleta-room")} 
               userId={userRole === "COACH" ? "coach-admin" : (targetUserId || "atleta-id")} 
-              userName={userRole === "COACH" ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")} 
+              userName={userRole === "COACH" ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")}
+              chatTitle={userRole === "COACH" ? `Chat con: ${activeAthlete?.displayName || "Seleziona un atleta"}` : "Chat Privata con il Coach"}
             />
           </div>
         )}

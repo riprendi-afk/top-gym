@@ -6,12 +6,10 @@ export interface ChatMessage {
   sender_id: string;
   receiver_id: string;
   message: string;
+  sender_name?: string;
   created_at?: string;
 }
 
-/**
- * 1. Recupera lo storico dei messaggi dal database per una determinata stanza
- */
 export async function fetchChatHistory(roomId: string): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('messages')
@@ -27,9 +25,6 @@ export async function fetchChatHistory(roomId: string): Promise<ChatMessage[]> {
   return data || [];
 }
 
-/**
- * 2. Salva un nuovo messaggio nel database (il Realtime lo distribuirà a tutti)
- */
 export async function sendPersistentMessage(msg: ChatMessage) {
   const { error } = await supabase
     .from('messages')
@@ -40,9 +35,6 @@ export async function sendPersistentMessage(msg: ChatMessage) {
   }
 }
 
-/**
- * 3. Inizializza Realtime (Ascolto Database Changes + Presence)
- */
 export function initChatWithHistory({
   roomId,
   userId,
@@ -64,7 +56,6 @@ export function initChatWithHistory({
     },
   });
 
-  // Ascolta i nuovi inserimenti nella tabella messages in tempo reale
   channel.on(
     'postgres_changes',
     {
@@ -80,7 +71,6 @@ export function initChatWithHistory({
     }
   );
 
-  // Gestione Presence (utenti online)
   channel
     .on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
