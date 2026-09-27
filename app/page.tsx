@@ -378,25 +378,51 @@ export default function TopGymApp() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [activeAthleteId, setActiveAthleteId] = useState<string>("");
 
-  const [userRole, setUserRole] = useState<UserRole>("ATHLETE");
-  const [showCoachPinModal, setShowCoachPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState(false);
-  const [isMasterCoach, setIsMasterCoach] = useState<boolean>(false);
+// Ruolo utente persistente (Evita il reset al refresh F5)
+const [userRole, setUserRole] = useState<UserRole>(() => {
+  if (typeof window !== 'undefined') {
+    const savedRole = localStorage.getItem('topgym_user_role');
+    return (savedRole === 'COACH' || savedRole === 'ATHLETE') ? savedRole : 'ATHLETE';
+  }
+  return 'ATHLETE';
+});
 
-  const [activeTab, setActiveTab] = useState<
-    | "workout"
-    | "readiness"
-    | "analytics"
-    | "builder"
-    | "coachDashboard"
-    | "leaderboard"
-    | "records"
-    | "goals"
-    | "settings"
-    | "chat"
+const [showCoachPinModal, setShowCoachPinModal] = useState(false);
+const [pinInput, setPinInput] = useState("");
+const [pinError, setPinError] = useState(false);
+const [isMasterCoach, setIsMasterCoach] = useState<boolean>(false);
 
-  >("workout");
+// Tab attivo persistente (Mantiene tutti i tipi originali intatti)
+const [activeTab, setActiveTab] = useState<
+  | "workout"
+  | "readiness"
+  | "analytics"
+  | "builder"
+  | "coachDashboard"
+  | "leaderboard"
+  | "records"
+  | "goals"
+  | "settings"
+  | "chat"
+>(() => {
+  if (typeof window !== 'undefined') {
+    return (localStorage.getItem('topgym_active_tab') as any) || 'workout';
+  }
+  return 'workout';
+});
+
+// Salvataggio automatico su localStorage al cambio di stato
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('topgym_user_role', userRole);
+  }
+}, [userRole]);
+
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('topgym_active_tab', activeTab);
+  }
+}, [activeTab]);
 
   const [userXp, setUserXp] = useState(0);
   const userXpRef = useRef(0);
