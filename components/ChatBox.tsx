@@ -5,7 +5,7 @@ interface ChatBoxProps {
   roomId: string;
   userId: string;
   userName: string;
-  chatTitle?: string; // Titolo dinamico (es. Nome Atleta o "Chat con il Coach")
+  chatTitle?: string;
 }
 
 export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBoxProps) {
@@ -13,6 +13,15 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
   const [inputText, setInputText] = useState('');
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Richiesta permessi notifiche al primo caricamento
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -31,9 +40,23 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
       userName,
       onNewMessage: (msg) => {
         setMessages((prev) => {
+          // Evita duplicati se il messaggio è già presente
           if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg];
+          
+          // Rimuove eventuali messaggi temporanei dell'optimistic UI e aggiunge quello reale
+          const filtered = prev.filter((m) => !(m.sender_id === msg.sender_id && m.message === msg.message && m.id?.startsWith('temp-')));
+          return [...filtered, msg];
         });
+
+        // Trigger notifica se il messaggio arriva da un altro utente
+        if (msg.sender_id !== userId) {
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(`Top Gym - ${msg.sender_name || 'Nuovo messaggio'}`, {
+              body: msg.message,
+              icon: '/favicon.ico',
+            });
+          }
+        }
       },
       onPresenceSync: (state) => {
         const users = Object.values(state).flat();
@@ -55,15 +78,31 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
     e.preventDefault();
     if (!inputText.trim()) return;
 
+    const textToSend = inputText.trim();
+    setInputText('');
+
+    // 1. AGGIORNAMENTO OTTIMISTICO: Mostra il messaggio SUBITO a schermo per chi scrive
+    const tempMessage: ChatMessage = {
+      id: 'temp-' + Date.now(),
+      room_id: roomId,
+      sender_id: userId,
+      receiver_id: roomId,
+      message: textToSend,
+      sender_name: userName,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+
+    // 2. Invio effettivo al database Supabase in background
     const messageData: ChatMessage = {
       room_id: roomId,
       sender_id: userId,
       receiver_id: roomId,
-      message: inputText.trim(),
-      sender_name: userName, // Salviamo il nome di chi invia!
+      message: textToSend,
+      sender_name: userName,
     };
 
-    setInputText('');
     await sendPersistentMessage(messageData);
   };
 
@@ -75,7 +114,7 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
           <h3 className="font-extrabold text-sm text-white">
             {chatTitle || 'Chat & Assistenza Top Gym'}
           </h3>
-          <p className="text-[10px] text-zinc-400">Canale sicronizzato in tempo reale</p>
+          <p className="text-[10px] text-zinc-400">Sincronizzato in tempo reale</p>
         </div>
         <div className="flex items-center gap-2 text-xs bg-zinc-800/80 px-2.5 py-1 rounded-full border border-zinc-700/50">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -92,7 +131,6 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
             const isMe = msg.sender_id === userId;
             return (
               <div key={msg.id || index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                {/* Nome del mittente visibile se non sei tu */}
                 {!isMe && (
                   <span className="text-[10px] font-bold text-zinc-400 mb-0.5 px-1">
                     {msg.sender_name || 'Utente'}
