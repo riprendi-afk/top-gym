@@ -1115,7 +1115,7 @@ useEffect(() => {
     const enteredPin = pinInput.trim();
 
     // 1. ACCESSO MASTER COACH (Tu: tutto sbloccato)
-    if (enteredPin === "1234" || enteredPin === "admin") {
+    if (enteredPin === "2222" || enteredPin === "admin") {
       setUserRole("COACH");
       setIsMasterCoach(true);
       setShowCoachPinModal(false);
