@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchChatHistory, sendPersistentMessage, initChatWithHistory, ChatMessage } from '@/lib/chatPresence';
+import { supabase } from '@/lib/store';
 
 interface ChatBoxProps {
   roomId: string;
@@ -104,6 +105,27 @@ export default function ChatBox({ roomId, userId, userName, chatTitle }: ChatBox
     };
 
     await sendPersistentMessage(messageData);
+
+    // 3. AGGIUNTA: Creiamo una notifica nel database per il destinatario
+    // (Se la stanza è l'ID di un atleta, roomId corrisponde all'utente; se il mittente è l'atleta, il destinatario è il coach e viceversa)
+    if (supabase) {
+      try {
+        // Determiniamo chi deve ricevere la notifica (se chi scrive è l'atleta, la notifica va al coach/stanza, altrimenti viceversa)
+        // Per sicurezza, inseriamo una notifica associata alla stanza o al destinatario
+        await supabase.from('notifications').insert([
+          {
+            user_id: roomId === userId ? 'COACH_ID_O_STANZA' : roomId, // Se roomId è l'atleta, notifichiamo l'atleta o viceversa
+            title: `Nuovo messaggio da ${userName}`,
+            message: textToSend.length > 50 ? textToSend.substring(0, 50) + '...' : textToSend,
+            type: 'chat_message',
+            read: false,
+          }
+        ]);
+      } catch (err) {
+        // Gestione silenziosa se la tabella notifiche richiede campi specifici
+        console.error("Errore invio notifica chat:", err);
+      }
+    }
   };
 
   return (
