@@ -1,6 +1,8 @@
 import { supabase } from './store';
 
-interface ChatMessage {
+export interface ChatMessage {
+  id?: string;
+  room_id: string;
   sender_id: string;
   receiver_id: string;
   message: string;
@@ -8,9 +10,40 @@ interface ChatMessage {
 }
 
 /**
- * 1. Inizializza un canale di chat e presenza in tempo reale per un utente/stanza
+ * 1. Recupera lo storico dei messaggi dal database per una determinata stanza
  */
-export function initChatAndPresence({
+export async function fetchChatHistory(roomId: string): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('created_at', { ascending: true })
+    .limit(100);
+
+  if (error) {
+    console.error('Errore caricamento storico chat:', error);
+    return [];
+  }
+  return data || [];
+}
+
+/**
+ * 2. Salva un nuovo messaggio nel database (il Realtime lo distribuirà a tutti)
+ */
+export async function sendPersistentMessage(msg: ChatMessage) {
+  const { error } = await supabase
+    .from('messages')
+    .insert([msg]);
+
+  if (error) {
+    console.error('Errore salvataggio messaggio:', error);
+  }
+}
+
+/**
+ * 3. Inizializza Realtime (Ascolto Database Changes + Presence)
+ */
+export function initChatWithHistory({
   roomId,
   userId,
   userName,
@@ -25,23 +58,29 @@ export function initChatAndPresence({
 }) {
   if (!userId || !roomId) return () => {};
 
-  // Crea un canale unico per la stanza di chat
-  const channel = supabase.channel(`room-${roomId}`, {
+  const channel = supabase.channel(`room-db-${roomId}`, {
     config: {
-      presence: {
-        key: userId,
-      },
+      presence: { key: userId },
     },
   });
 
-  // Ascolta i nuovi messaggi inviati tramite Broadcast
-  channel.on('broadcast', { event: 'new-message' }, (payload) => {
-    if (payload.payload) {
-      onNewMessage(payload.payload);
+  // Ascolta i nuovi inserimenti nella tabella messages in tempo reale
+  channel.on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `room_id=eq.${roomId}`,
+    },
+    (payload) => {
+      if (payload.new) {
+        onNewMessage(payload.new as ChatMessage);
+      }
     }
-  });
+  );
 
-  // Gestisce lo stato "Presence" (chi è online nella stanza)
+  // Gestione Presence (utenti online)
   channel
     .on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
@@ -49,7 +88,6 @@ export function initChatAndPresence({
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        // Traccia l'utente corrente come ONLINE
         await channel.track({
           user_id: userId,
           user_name: userName,
@@ -58,21 +96,7 @@ export function initChatAndPresence({
       }
     });
 
-  // Funzione di pulizia (quando l'utente esce dalla chat)
   return () => {
     supabase.removeChannel(channel);
   };
-}
-
-/**
- * 2. Funzione per inviare un messaggio istantaneo nella chat
- */
-export async function sendChatMessage(roomId: string, messageData: ChatMessage) {
-  const channel = supabase.channel(`room-${roomId}`);
-  
-  await channel.send({
-    type: 'broadcast',
-    event: 'new-message',
-    payload: messageData,
-  });
 }
