@@ -1302,7 +1302,7 @@ useEffect(() => {
   }, [programDays.length, workoutHistory.length]);
 
 // 1. Identificazione esplicita del Metodo attivo sulla scheda (Zero Errori TypeScript)
-const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" = useMemo(() => {
+const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" | null = useMemo(() => {
   const day = activeDay as any;
   const list = (programDays || []) as any[];
   const found = list.find((d: any) => d?.method || d?.programType);
@@ -1315,8 +1315,12 @@ const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" = useMemo(() => {
   if (methodFound === "HARDTOPGYM" || day?.isPeriodized === true) {
     return "HARDTOPGYM";
   }
+  if (methodFound === "TOPGYM_CLASSICO" || methodFound === "TOPGYM_BLOCKS") {
+    return "TOPGYM_CLASSICO";
+  }
 
-  return "TOPGYM_CLASSICO";
+  // Scheda standard/neutra: nessun metodo speciale
+  return null;
 }, [activeDay, programDays]);
 
 // Flag di retrocompatibilità
@@ -2539,7 +2543,7 @@ if (isFinished) {
             )}
 
 {/* BANNER METODO TOPGYM - VISIBILE SOLO SE ATTIVO IL BLOCCO CLASSICO */}
-{isMasterProgram && programmingModel === "TOPGYM_BLOCKS" && (
+{trainingMethod === "TOPGYM_CLASSICO" && (
               <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl animate-in fade-in duration-200">
                 <div>
                   <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
@@ -2628,7 +2632,8 @@ if (isFinished) {
               </div>
 
 {/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA */}
-<div className="mb-4 p-3 sm:p-4 rounded-2xl bg-[#12151B] border border-white/10 shadow-xl">
+{trainingMethod === "HARDTOPGYM" && (
+  <div className="mb-4 p-3 sm:p-4 rounded-2xl bg-[#12151B] border border-white/10 shadow-xl">
   <div className="flex items-center justify-between gap-2 flex-wrap">
     <div className="flex items-center gap-2">
       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -2659,15 +2664,16 @@ if (isFinished) {
       <p className="text-[10px] text-zinc-400">
         {workoutHistory.length} allenamenti registrati nello storico
       </p>
-    </div>
+      </div>
 
     {calculatedCurrentPhase === (isMasterProgram ? 4 : 3) && (
       <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
         Settimana di Scarico (Deload)
       </span>
-    )}
-  </div>
+)}
 </div>
+</div>
+)}
 
               {/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
               <div className="grid gap-3 md:grid-cols-2">
