@@ -2538,8 +2538,8 @@ if (isFinished) {
               </div>
             )}
 
-            {/* BANNER METODO TOPGYM - VISIBILE ESCLUSIVAMENTE SULLE TUE SCHEDE */}
-            {isMasterProgram && (
+{/* BANNER METODO TOPGYM - VISIBILE SOLO SE ATTIVO IL BLOCCO CLASSICO */}
+{isMasterProgram && programmingModel === "TOPGYM_BLOCKS" && (
               <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl animate-in fade-in duration-200">
                 <div>
                   <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
@@ -2582,26 +2582,51 @@ if (isFinished) {
                 </h2>
               </div>
 
-              {/* SELETTORE GIORNI */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {programDays.map((day, index) => (
-                  <button
-                    key={day.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedDayIndex(index);
-                      if (day.exercises[0]) setCurrentExId(day.exercises[0].id);
-                    }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      selectedDayIndex === index 
-                        ? 'bg-[#E50914] border-[#E50914] text-white shadow' 
-                        : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    Giorno {day.dayNumber} · {day.title}
-                  </button>
-                ))}
+{/* SELETTORE GIORNI COMPATTO & MODERNO */}
+<div className="flex flex-wrap gap-2 mb-4">
+                {programDays.map((day, index) => {
+                  // Rimuove eventuali diciture "Giorno 1:", "Giorno 1 -", ecc. già presenti nel titolo
+                  const rawTitle = day.title || (day as Record<string, any>).dayName || '';
+                  const cleanTitle = rawTitle
+                    .replace(/^Giorno\s*\d+\s*[:\-\.]?\s*/i, '')
+                    .trim();
+
+                  const isSelected = selectedDayIndex === index;
+
+                  return (
+                    <button
+                      key={day.id || index}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDayIndex(index);
+                        if (day.exercises?.[0]) setCurrentExId(day.exercises[0].id);
+                      }}
+                      className={`group px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer border ${
+                        isSelected
+                          ? 'bg-[#E50914] border-[#E50914] text-white shadow-lg shadow-red-950/40 font-bold'
+                          : 'bg-zinc-900/90 hover:bg-zinc-800/90 border-white/5 text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {/* Badge compatto Giorno */}
+                      <span
+                        className={`px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                          isSelected
+                            ? 'bg-black/30 text-white'
+                            : 'bg-white/5 text-zinc-400 group-hover:text-zinc-300'
+                        }`}
+                      >
+                        G{day.dayNumber || index + 1}
+                      </span>
+
+                      {/* Nome muscolare o focus pulito */}
+                      <span className="truncate max-w-[170px] sm:max-w-xs">
+                        {cleanTitle || `Giorno ${day.dayNumber || index + 1}`}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
+
 {/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA */}
 <div className="mb-4 p-3 sm:p-4 rounded-2xl bg-[#12151B] border border-white/10 shadow-xl">
   <div className="flex items-center justify-between gap-2 flex-wrap">
