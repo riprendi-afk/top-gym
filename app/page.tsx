@@ -44,7 +44,6 @@ import {
   Trash2,
   History,
   Settings,
-  Key,
   UserX,
   ChevronDown,
   ChevronUp,
@@ -352,6 +351,9 @@ export default function TopGymApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+const [resetEmailSent, setResetEmailSent] = useState(false);
+const [resetLoading, setResetLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [profileHeight, setProfileHeight] = useState("");
@@ -957,6 +959,28 @@ const playBeepTone = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    if (!email.trim()) {
+      setErrorMessage("Inserisci la tua email per ricevere il link di recupero.");
+      return;
+    }
+    setResetLoading(true);
+    setErrorMessage("");
+  
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: window.location.origin,
+    });
+  
+    setResetLoading(false);
+    if (error) {
+      setErrorMessage(error.message);
+    } else {
+      setResetEmailSent(true);
+    }
+  };
+
   const handleLogout = async () => {
     if (supabase) await supabase.auth.signOut();
     setUser(null);
@@ -1011,18 +1035,6 @@ const playBeepTone = () => {
       setSettingsMessage("✅ Profilo aggiornato con successo!");
       setTimeout(() => setSettingsMessage(null), 3000);
     }
-  };
-
-  const handlePasswordReset = async () => {
-    if (!user?.email || !supabase) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: window.location.origin,
-    });
-    setSettingsMessage(
-      error
-        ? `⚠️ Errore: ${error.message}`
-        : "📩 Email per il recupero password inviata con successo!",
-    );
   };
 
   const handlePushActivation = async () => {
@@ -2268,70 +2280,139 @@ if (isFinished) {
             </div>
           )}
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                  placeholder="Nome Atleta"
-                />
-              </div>
-            )}
-            <div>
-              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                placeholder="atleta@topgym.it"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider cursor-pointer"
-            >
-              {isSignUp ? "Crea Account" : "Accedi al Dashboard"}
-            </button>
-          </form>
+          {isForgotPassword ? (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <p className="text-xs text-zinc-400">
+                Inserisci l&apos;email del tuo account TopGym. Riceverai un link per reimpostare la tua password.
+              </p>
 
-          <div className="mt-6 text-center text-xs text-zinc-400">
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrorMessage("");
-              }}
-              className="font-semibold text-[#E50914] hover:underline"
-            >
-              {isSignUp
-                ? "Hai già  un account? Accedi"
-                : "Non hai un account? Registrati"}
-            </button>
-          </div>
+              {resetEmailSent ? (
+                <div className="rounded bg-emerald-950/60 p-3 text-xs text-emerald-300 border border-emerald-600/40">
+                  📩 Email inviata! Controlla la casella di posta (e la cartella Spam).
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                      placeholder="atleta@topgym.it"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 disabled:opacity-50 transition tracking-wider cursor-pointer"
+                  >
+                    {resetLoading ? "Invio in corso..." : "Invia Link di Recupero"}
+                  </button>
+                </>
+              )}
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setResetEmailSent(false);
+                    setErrorMessage("");
+                  }}
+                  className="text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer"
+                >
+                  ← Torna al Login
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <form onSubmit={handleAuth} className="space-y-4">
+                {isSignUp && (
+                  <div>
+                    <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                      placeholder="Nome Atleta"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                    placeholder="atleta@topgym.it"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs uppercase font-semibold text-zinc-400">
+                      Password
+                    </label>
+                    {!isSignUp && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsForgotPassword(true);
+                          setResetEmailSent(false);
+                          setErrorMessage("");
+                        }}
+                        className="text-[11px] text-zinc-400 hover:text-[#E50914] transition-colors cursor-pointer"
+                      >
+                        Password dimenticata?
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 transition tracking-wider cursor-pointer"
+                >
+                  {isSignUp ? "Crea Account" : "Accedi al Dashboard"}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center text-xs text-zinc-400">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setErrorMessage("");
+                  }}
+                  className="font-semibold text-[#E50914] hover:underline cursor-pointer"
+                >
+                  {isSignUp
+                    ? "Hai già un account? Accedi"
+                    : "Non hai un account? Registrati"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -4198,22 +4279,6 @@ if (isFinished) {
                 Salva Modifiche Profilo
               </button>
             </form>
-
-            <div className="bg-zinc-900/60 p-4 rounded-xl border border-white/5 space-y-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Key className="w-4 h-4 text-yellow-500" /> Password e Sicurezza
-              </h3>
-              <p className="text-xs text-zinc-400">
-                Invia un link alla tua email per cambiare la tua password.
-              </p>
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/10 transition flex items-center gap-2 cursor-pointer"
-              >
-                Invia Email Recupero Password
-              </button>
-            </div>
 
             <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20 space-y-3">
               <h3 className="text-sm font-bold text-rose-400 flex items-center gap-2">
