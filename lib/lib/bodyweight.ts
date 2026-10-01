@@ -139,7 +139,8 @@ export function computeEffectiveLoad(
     };
   }
 
-  const bw = bodyWeight && bodyWeight > 0 ? bodyWeight : null;
+// Se il peso è anomalo (es. timestamp o ID sporco), viene ignorato
+const bw = bodyWeight && bodyWeight >= 30 && bodyWeight <= 250 ? bodyWeight : null;
 
   if (bw !== null) {
     const bodyweightLoad = Math.round(bw * config.percentage * 10) / 10;

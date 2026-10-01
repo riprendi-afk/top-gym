@@ -783,13 +783,20 @@ export default function AnalyticsDashboard({
                           {item.day_name || item.dayName || "Allenamento"}
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
-                          {(
-                            item.total_volume ||
-                            item.totalVolume ||
-                            0
-                          ).toLocaleString("it-IT")}{" "}
-                          kg
-                        </td>
+  {(() => {
+    const rawVol = Number(item.total_volume || item.totalVolume || 0);
+    // Se il valore salvato è corrotto/astronomico, calcola la somma reale dei carichi
+    if (rawVol > 100000 && Array.isArray(item.logs)) {
+      const realVol = item.logs.reduce(
+        (sum: number, l: any) => sum + (Number(l.weight || 0) * Number(l.reps || 0)),
+        0
+      );
+      return realVol.toLocaleString("it-IT");
+    }
+    return rawVol.toLocaleString("it-IT");
+  })()}{" "}
+  kg
+</td>
                         <td className="py-2.5 px-3">
                           <div className="flex justify-center gap-2">
                             <button

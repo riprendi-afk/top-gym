@@ -438,6 +438,37 @@ useEffect(() => {
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const restEndTimeRef = useRef<number | null>(null);
+  // --- AUDIO SESSION & WAKE LOCK PER REST TIMER IN STANDBY ---
+const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+const wakeLockRef = useRef<any>(null);
+
+// Funzione generatrice Beep hardware (Web Audio API: funziona anche con cuffie Bluetooth)
+const playBeepTone = () => {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    // Suona 2 beep squillanti ravvicinati (880Hz e 1174Hz)
+    const playTone = (freq: number, startDelay: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startDelay);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + startDelay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startDelay);
+      osc.stop(ctx.currentTime + startDelay + dur);
+    };
+
+    playTone(880, 0, 0.25);
+    playTone(1174, 0.3, 0.45);
+  } catch (err) {
+    console.error("Impossibile riprodurre beep:", err);
+  }
+};
 
   // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
@@ -1094,9 +1125,76 @@ useEffect(() => {
 
   const startRestTimer = (seconds: number) => {
     if (seconds <= 0) return;
-    restEndTimeRef.current = Date.now() + seconds * 1000;
+  
+    // 1. SCHERMO ACCESO (Wake Lock)
+    if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
+      navigator.wakeLock.request("screen").then((lock) => {
+        wakeLockRef.current = lock;
+      }).catch(() => {});
+    }
+  
+    // 2. AUDIO KEEP-ALIVE (Micro WAV in loop)
+    try {
+      if (!silentAudioRef.current) {
+        silentAudioRef.current = new Audio(
+          "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"
+        );
+        silentAudioRef.current.loop = true;
+      }
+      silentAudioRef.current.play().catch(() => {});
+  
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: "Recupero in corso",
+          artist: "TOP GYM",
+          album: "Timer Serie",
+        });
+        navigator.mediaSession.playbackState = "playing";
+      }
+    } catch (_) {}
+  
+    // 3. TARGET TIMESTAMP
+    const endTime = Date.now() + seconds * 1000;
     setRestTimer(seconds);
-    setIsTimerRunning(true);
+  
+    if ((window as any).restTimerInterval) {
+      clearInterval((window as any).restTimerInterval);
+    }
+  
+    (window as any).restTimerInterval = setInterval(() => {
+      const diff = Math.ceil((endTime - Date.now()) / 1000);
+  
+      if (diff <= 0) {
+        // --- FINE RECUPERO ---
+        clearInterval((window as any).restTimerInterval);
+        setRestTimer(0);
+  
+        // A. Ferma la traccia di keep-alive
+        if (silentAudioRef.current) {
+          silentAudioRef.current.pause();
+          silentAudioRef.current.currentTime = 0;
+        }
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.playbackState = "none";
+        }
+  
+        // B. Rilascia il Wake Lock
+        if (wakeLockRef.current) {
+          wakeLockRef.current.release().catch(() => {});
+          wakeLockRef.current = null;
+        }
+  
+        // C. Beep hardware immediato
+        playBeepTone();
+  
+        // D. Vibrazione aptica
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          navigator.vibrate([300, 150, 300, 150, 450]);
+        }
+      } else {
+        setRestTimer(diff);
+      }
+    }, 500);
   };
 
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
@@ -1565,11 +1663,13 @@ if (supabase && user) {
         program_name: activeDay?.title || (isMasterProgram ? "HARDTOPGYM" : "TOPGYM Classico"),
         day_number: activeDay?.dayNumber || (activeDay ? 1 : 1),
         logs: todayLogs,
-        total_volume: todayLogs.reduce(
-          (acc: number, l: any) =>
-            acc + (Number(l.effectiveVolume) || Number(l.volume) || (Number(l.weight || 0) * Number(l.reps || 0))),
-          0
-        ),
+        total_volume: todayLogs.reduce((acc: number, l: any) => {
+          const w = Number(l.weight) || 0;
+          const r = Number(l.reps) || 0;
+          const eff = Number(l.effectiveVolume);
+          const validEff = eff && eff > 0 && eff < 100000 ? eff : (Number(l.volume) || (w * r));
+          return acc + validEff;
+        }, 0),
         created_at: new Date().toISOString(),
       },
     ]);
@@ -1579,10 +1679,14 @@ if (supabase && user) {
 }
     const dayName = activeDay ? activeDay.title : "Giornata di Allenamento";
     const totalVol =
-      todayLogs.reduce(
-        (acc, curr) => acc + (curr.effectiveVolume || curr.volume),
-        0,
-      ) || 0;
+    todayLogs.reduce((acc, curr) => {
+      const w = Number(curr.weight) || 0;
+      const r = Number(curr.reps) || 0;
+      // Se c'è un effectiveVolume anomalo (> 100.000 kg), usa il volume reale peso * reps
+      const eff = Number(curr.effectiveVolume);
+      const validEff = eff && eff > 0 && eff < 100000 ? eff : (Number(curr.volume) || (w * r));
+      return acc + validEff;
+    }, 0) || 0;
 
     let result: { success?: boolean; error?: string } = {};
     try {
