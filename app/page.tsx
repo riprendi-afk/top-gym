@@ -55,6 +55,7 @@ import {
 } from "lucide-react";
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
 import ChatBox from "@/components/ChatBox";
+import RestTimerBar from "@/components/RestTimerBar";
 
 import {
   computeEffectiveLoad,
@@ -438,43 +439,6 @@ useEffect(() => {
   }, [userXp]);
 
   const [soundEnabled, setSoundEnabled] = useState(true);
-  
-
-  // Timer resiliente
-  const [restTimer, setRestTimer] = useState<number | null>(null);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const restEndTimeRef = useRef<number | null>(null);
-  // --- AUDIO SESSION & WAKE LOCK PER REST TIMER IN STANDBY ---
-const silentAudioRef = useRef<HTMLAudioElement | null>(null);
-const wakeLockRef = useRef<any>(null);
-
-// Funzione generatrice Beep hardware (Web Audio API: funziona anche con cuffie Bluetooth)
-const playBeepTone = () => {
-  try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    
-    // Suona 2 beep squillanti ravvicinati (880Hz e 1174Hz)
-    const playTone = (freq: number, startDelay: number, dur: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startDelay);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + startDelay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + dur);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + startDelay);
-      osc.stop(ctx.currentTime + startDelay + dur);
-    };
-
-    playTone(880, 0, 0.25);
-    playTone(1174, 0.3, 0.45);
-  } catch (err) {
-    console.error("Impossibile riprodurre beep:", err);
-  }
-};
 
   // Filtro data calendario
   const [analyticsDate, setAnalyticsDate] = useState(todayIso());
@@ -1120,129 +1084,14 @@ const playBeepTone = () => {
     }
   };
 
-  const playTimerSound = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      const AudioCtx =
-        window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const audioCtx = new AudioCtx();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
-      osc.onended = () => {
-        audioCtx.close().catch(() => {});
-      };
-      if (typeof navigator !== "undefined" && navigator.vibrate)
-        navigator.vibrate([200, 100, 200]);
-    } catch {
-      console.log("Audio non abilitato");
-    }
-  }, [soundEnabled]);
-
-  const updateTimerRemaining = useCallback(() => {
-    if (!restEndTimeRef.current) return;
-    const remainingMs = restEndTimeRef.current - Date.now();
-    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
-    setRestTimer(remainingSec);
-    if (remainingSec <= 0) {
-      restEndTimeRef.current = null;
-      setIsTimerRunning(false);
-      playTimerSound();
-    }
-  }, [playTimerSound]);
-
-  useEffect(() => {
-    if (!isTimerRunning) return;
-    const interval = setInterval(updateTimerRemaining, 1000);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") updateTimerRemaining();
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isTimerRunning, updateTimerRemaining]);
-
+  // Trigger leggero del Rest Timer isolato (zero re-render su app/page.tsx)
   const startRestTimer = (seconds: number) => {
     if (seconds <= 0) return;
-  
-    // 1. SCHERMO ACCESO (Wake Lock)
-    if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
-      navigator.wakeLock.request("screen").then((lock) => {
-        wakeLockRef.current = lock;
-      }).catch(() => {});
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("topgym:start-rest", { detail: seconds })
+      );
     }
-  
-    // 2. AUDIO KEEP-ALIVE (Micro WAV in loop)
-    try {
-      if (!silentAudioRef.current) {
-        silentAudioRef.current = new Audio(
-          "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"
-        );
-        silentAudioRef.current.loop = true;
-      }
-      silentAudioRef.current.play().catch(() => {});
-  
-      if ("mediaSession" in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: "Recupero in corso",
-          artist: "TOP GYM",
-          album: "Timer Serie",
-        });
-        navigator.mediaSession.playbackState = "playing";
-      }
-    } catch (_) {}
-  
-    // 3. TARGET TIMESTAMP
-    const endTime = Date.now() + seconds * 1000;
-    setRestTimer(seconds);
-  
-    if ((window as any).restTimerInterval) {
-      clearInterval((window as any).restTimerInterval);
-    }
-  
-    (window as any).restTimerInterval = setInterval(() => {
-      const diff = Math.ceil((endTime - Date.now()) / 1000);
-  
-      if (diff <= 0) {
-        // --- FINE RECUPERO ---
-        clearInterval((window as any).restTimerInterval);
-        setRestTimer(0);
-  
-        // A. Ferma la traccia di keep-alive
-        if (silentAudioRef.current) {
-          silentAudioRef.current.pause();
-          silentAudioRef.current.currentTime = 0;
-        }
-        if ("mediaSession" in navigator) {
-          navigator.mediaSession.playbackState = "none";
-        }
-  
-        // B. Rilascia il Wake Lock
-        if (wakeLockRef.current) {
-          wakeLockRef.current.release().catch(() => {});
-          wakeLockRef.current = null;
-        }
-  
-        // C. Beep hardware immediato
-        playBeepTone();
-  
-        // D. Vibrazione aptica
-        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-          navigator.vibrate([300, 150, 300, 150, 450]);
-        }
-      } else {
-        setRestTimer(diff);
-      }
-    }, 500);
   };
 
   const handleRoleSwitchRequest = (targetRole: UserRole) => {
@@ -3370,31 +3219,12 @@ if (isFinished) {
               </div>
             </div>
 
-{/* BARRA INFERIORE FLUTTUANTE PER AZIONI RAPIDE */}
-<div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {restTimer !== null ? (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
-                  <Timer className="w-4 h-4 animate-pulse" />
-                  <span>
-                    Recupero: {Math.floor(restTimer / 60)}:
-                    {(restTimer % 60).toString().padStart(2, "0")}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-xs text-zinc-400 font-medium">
-                  Sessione in corso - {todayLogs.length} set registrati
-                </span>
-              )}
-            </div>
-            <button
-              onClick={handleSafeFinish}
-              disabled={isSavingWorkout}
-              className="bg-emerald-600 hover:brightness-110 text-white font-black px-6 py-3 rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all disabled:opacity-50"
-            >
-              {isSavingWorkout ? "Salvataggio..." : "Termina e Salva"}
-            </button>
-          </div>
+{/* BARRA INFERIORE FLUTTUANTE CON TIMER ISOLATO */}
+<RestTimerBar
+            todayLogsCount={todayLogs.length}
+            onFinishWorkout={handleSafeFinish}
+            isSavingWorkout={isSavingWorkout}
+          />
         </div>
       )}
 
