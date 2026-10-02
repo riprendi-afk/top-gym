@@ -361,6 +361,10 @@ const [resetLoading, setResetLoading] = useState(false);
   const [profileGoal, setProfileGoal] = useState("Ipertrofia");
   const [profileExperience, setProfileExperience] = useState("Intermedio");
   const [profileNotes, setProfileNotes] = useState("");
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+const [newPassword, setNewPassword] = useState("");
+const [recoveryLoading, setRecoveryLoading] = useState(false);
+const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
@@ -754,7 +758,9 @@ const playBeepTone = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY")
+        setIsRecoveryMode(true);
       setUser(session?.user ?? null);
       if (session?.user) loadXp(session.user.id);
       else setUserXp(0);
@@ -978,6 +984,36 @@ const playBeepTone = () => {
       setErrorMessage(error.message);
     } else {
       setResetEmailSent(true);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    if (newPassword.trim().length < 6) {
+      setErrorMessage("La nuova password deve contenere almeno 6 caratteri.");
+      return;
+    }
+
+    setRecoveryLoading(true);
+    setErrorMessage("");
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.trim(),
+    });
+
+    setRecoveryLoading(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+    } else {
+      setRecoverySuccess(true);
+      setTimeout(() => {
+        setIsRecoveryMode(false);
+        setRecoverySuccess(false);
+        setNewPassword("");
+        setErrorMessage("");
+      }, 2500);
     }
   };
 
@@ -2262,6 +2298,61 @@ if (isFinished) {
     }
     return { title: "", desc: "" };
   };
+
+  if (isRecoveryMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white font-sans">
+        <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+          <h1 className="mb-2 text-center text-2xl font-black uppercase tracking-wider text-[#E50914] flex items-center justify-center gap-2">
+            <Dumbbell className="w-7 h-7" /> TOP GYM
+          </h1>
+          <h2 className="text-sm font-bold text-center text-zinc-200 mb-1">
+            Reimposta Password
+          </h2>
+          <p className="text-xs text-center text-zinc-400 mb-6">
+            Inserisci una nuova password sicura per il tuo account.
+          </p>
+
+          {errorMessage && (
+            <div className="mb-4 rounded bg-red-950/60 p-3 text-xs text-red-200 border border-red-800">
+              {errorMessage}
+            </div>
+          )}
+
+          {recoverySuccess ? (
+            <div className="rounded bg-emerald-950/60 p-3 text-xs text-emerald-300 border border-emerald-600/40 text-center font-semibold">
+              ✅ Password aggiornata con successo! Accesso in corso...
+            </div>
+          ) : (
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-xs uppercase font-semibold text-zinc-400">
+                  Nuova Password (min. 6 caratteri)
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full rounded bg-zinc-800 p-2.5 text-white border border-zinc-700 outline-none focus:border-[#E50914]"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={recoveryLoading}
+                className="w-full rounded bg-[#E50914] py-3 font-bold uppercase text-white hover:bg-red-700 disabled:opacity-50 transition tracking-wider cursor-pointer"
+              >
+                {recoveryLoading ? "Salvataggio in corso..." : "Salva Nuova Password"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
