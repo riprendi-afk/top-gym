@@ -56,6 +56,7 @@ import {
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
 import ChatBox from "@/components/ChatBox";
 import RestTimerBar from "@/components/RestTimerBar";
+import AcetoCabina from "@/components/AcetoCabina";
 
 import {
   computeEffectiveLoad,
@@ -371,8 +372,8 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [programmingModel, setProgrammingModel] = useState<
-    "TOPGYM_BLOCKS" | "HARDTOPGYM"
-  >("TOPGYM_BLOCKS");
+  "TOPGYM_BLOCKS" | "HARDTOPGYM" | "ACETO"
+>("TOPGYM_BLOCKS");
   
 
   useEffect(() => {
@@ -3537,6 +3538,17 @@ if (isFinished) {
                   >
                     ⚡ Metodo HARDTOPGYM (They & Bosco-Colli)
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setProgrammingModel("ACETO")}
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
+                      programmingModel === "ACETO"
+                        ? "bg-red-700 text-white shadow-lg shadow-red-950"
+                        : "text-zinc-400 hover:text-white bg-zinc-900/40"
+                    }`}
+                  >
+                    🏆 Metodo ACETO (Championship Overload)
+                  </button>
                 </div>
 
                 {/* ============================================================== */}
@@ -3593,6 +3605,22 @@ if (isFinished) {
               </div>
             )}
 
+{/* ============================================================== */}
+                {/* CASO C: CABINA CHRIS ACETO (CHAMPIONSHIP BODYBUILDING)         */}
+                {/* ============================================================== */}
+                {programmingModel === "ACETO" && (
+                  <AcetoCabina
+                    activeAthlete={activeAthlete}
+                    onApplyProgram={(newDays: any[]) => {
+                      setProgramDays(newDays as any);
+                      setBuilderSuccessMessage(
+                        "🏆 Scheda Metodo CHRIS ACETO applicata con successo!"
+                      );
+                      setTimeout(() => setBuilderSuccessMessage(null), 5000);
+                    }}
+                  />
+                )}
+                
             {/* SEZIONE GESTIONE SCHEDA - VISIBILE A ENTRAMBI I COACH */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
