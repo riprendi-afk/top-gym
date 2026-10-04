@@ -398,7 +398,12 @@ const [userRole, setUserRole] = useState<UserRole>(() => {
 const [showCoachPinModal, setShowCoachPinModal] = useState(false);
 const [pinInput, setPinInput] = useState("");
 const [pinError, setPinError] = useState(false);
-const [isMasterCoach, setIsMasterCoach] = useState<boolean>(false);
+const [isMasterCoach, setIsMasterCoach] = useState<boolean>(() => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('topgym_is_master_coach') === 'true';
+  }
+  return false;
+});
 
 // Tab attivo persistente (Mantiene tutti i tipi originali intatti)
 const [activeTab, setActiveTab] = useState<
@@ -425,6 +430,18 @@ useEffect(() => {
     localStorage.setItem('topgym_user_role', userRole);
   }
 }, [userRole]);
+
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('topgym_user_role', userRole);
+  }
+}, [userRole]);
+
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('topgym_is_master_coach', String(isMasterCoach));
+  }
+}, [isMasterCoach]);
 
 useEffect(() => {
   if (typeof window !== 'undefined') {
