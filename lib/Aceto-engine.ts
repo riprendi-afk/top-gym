@@ -73,7 +73,7 @@ export const ACETO_EXERCISE_TAXONOMY = {
 };
 
 // 2. GENERATORE DI SCHEDE SETTIMANALI (SPLIT 3, 4, 5, 6 GIORNI)
-export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1): AcetoProgram {
+export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1, history?: any[]): AcetoProgram {
   const isDeload = week === 6;
   const isPeak = week === 5;
   const isOverload = week === 3 || week === 4;
@@ -1120,4 +1120,107 @@ export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1): Acet
     total_weeks: 6,
     workout_days: selectedWorkoutDays,
   };
+}
+
+// FUNZIONE PROGRESSIONE SETTIMANALE CHRIS ACETO (W1 -> W6)
+export function applyAcetoWeekProgression(
+  currentDays: any[],
+  targetWeek: number,
+  history?: any[]
+): any[] {
+  const week = Math.max(1, Math.min(6, targetWeek));
+  const isDeload = week === 6;
+  const isPeak = week === 5;
+  const isOverload = week === 3 || week === 4;
+
+  const findMaxLoad = (exName: string): number | null => {
+    if (!history || !Array.isArray(history)) return null;
+    let max = 0;
+    const target = exName.toLowerCase().trim();
+    for (const session of history) {
+      const logs = session.logs || session.workout_logs || [];
+      if (Array.isArray(logs)) {
+        for (const l of logs) {
+          const name = (l.exercise_name || l.exerciseName || l.name || "").toLowerCase().trim();
+          if (name && (target.includes(name) || name.includes(target))) {
+            const w = Number(l.effectiveLoad || l.weight || 0);
+            if (w > max) max = w;
+          }
+        }
+      }
+    }
+    return max > 0 ? max : null;
+  };
+
+  return currentDays.map((day: any) => {
+    const updatedExercises = (day.exercises || []).map((ex: any) => {
+      const isLower =
+        (day.target_muscles || []).some((m: string) =>
+          /quadricipiti|femorali|gambe/i.test(m)
+        ) || /squat|press|stacco|leg/i.test(ex.name);
+
+      const isCompound =
+        ex.category === "Compound Base" ||
+        /panca|squat|rematore|lento|stacco|press/i.test(ex.name);
+
+      const maxHist = findMaxLoad(ex.name);
+
+      let sets = ex.sets || 3;
+      let reps = ex.reps || "8-10";
+      let rir = 0;
+      let load_guideline = ex.load_guideline || "";
+      let notes = ex.notes || "";
+
+      if (isDeload) {
+        sets = 2; // Taglio volumetrico: 2 serie fisse
+        reps = isCompound ? "10-10" : "12-12";
+        rir = 2;
+        const deloadKg = maxHist ? Math.round(maxHist * 0.8) : null;
+        load_guideline = deloadKg ? `Scarico: ${deloadKg} kg (-20%)` : "Scarico Attivo (-20% carico)";
+        notes = "DELOAD W6: 2 serie a RIR 2 fisso. Zero cedimento, recupero articolare.";
+      } else if (isPeak) {
+        sets = isCompound ? 4 : 3;
+        reps = isCompound ? "10-8-6-6" : "8-10";
+        rir = 0;
+        if (!isCompound) {
+          const dropKg = maxHist ? Math.round(maxHist * 0.65) : null;
+          load_guideline = dropKg
+            ? `${maxHist} kg a cedimento + Drop a ${dropKg} kg`
+            : "Ultima serie Stripping (-35%)";
+          notes = "PICCO W5: Ultima serie con Stripping immediato a cedimento positivo estremo.";
+        } else {
+          load_guideline = maxHist ? `Consolida: ${maxHist} kg` : "Carico picco consolidato";
+          notes = "PICCO W5: Mantieni i carichi massimi consolidati in W3-W4.";
+        }
+      } else if (isOverload) {
+        sets = isCompound ? 4 : 3;
+        reps = isCompound ? "10-8-6-6" : "8-10";
+        rir = 0;
+        const inc = isLower ? 5 : 2.5;
+        const targetKg = maxHist ? maxHist + inc : null;
+        load_guideline = targetKg ? `Target Overload: ${targetKg} kg (+${inc} kg)` : `Forzare +${inc} kg`;
+        notes = `OVERLOAD W${week}: Cedimento concentrico positivo (RIR 0). Reclutamento fibre veloci IIb.`;
+      } else {
+        sets = isCompound ? 4 : 3;
+        reps = isCompound ? "10-8-8-8" : "8-10";
+        rir = 0;
+        load_guideline = maxHist ? `Base: ${maxHist} kg` : "Piramidale ascendente a cedimento";
+        notes = `FASE BASE W${week}: Concentrica esplosiva, eccentrica controllata 2-3s. RIR 0.`;
+      }
+
+      return {
+        ...ex,
+        sets,
+        reps,
+        rir,
+        load_guideline,
+        notes,
+      };
+    });
+
+    return {
+      ...day,
+      exercises: updatedExercises,
+    };
+  });
 }

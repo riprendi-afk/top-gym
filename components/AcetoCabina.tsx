@@ -12,12 +12,14 @@ import {
 
 interface AcetoCabinaProps {
   activeAthlete?: any;
+  workoutHistory?: any[];
   onApplyProgram: (newDays: any[]) => void;
 }
 
 
 export default function AcetoCabina({
   activeAthlete,
+  workoutHistory,
   onApplyProgram,
 }: AcetoCabinaProps) {
   const [selectedSplit, setSelectedSplit] = useState<AcetoSplitDays>(4);
@@ -25,8 +27,8 @@ export default function AcetoCabina({
   const [activeDayTab, setActiveDayTab] = useState<number>(0);
 
   const program: AcetoProgram = useMemo(() => {
-    return generateAcetoSplit(selectedSplit, selectedWeek);
-  }, [selectedSplit, selectedWeek]);
+    return generateAcetoSplit(selectedSplit, selectedWeek, workoutHistory);
+  }, [selectedSplit, selectedWeek, workoutHistory]);
 
   const activeDay: AcetoWorkoutDay = program.workout_days[activeDayTab] ?? program.workout_days[0];
 

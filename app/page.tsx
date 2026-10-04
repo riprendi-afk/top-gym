@@ -79,7 +79,7 @@ import HardTopGymCabina from "@/components/HardTopGymCabina";
 import TopGymClassicCabina from "@/components/TopGymClassicCabina";
 import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
 import { useProgramRealtime } from "@/lib/useProgramRealtime";
-import { generateAcetoSplit, applyAcetoWeekProgression } from "@/lib/Aceto-engine";
+import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
