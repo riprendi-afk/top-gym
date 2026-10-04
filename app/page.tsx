@@ -79,6 +79,7 @@ import HardTopGymCabina from "@/components/HardTopGymCabina";
 import TopGymClassicCabina from "@/components/TopGymClassicCabina";
 import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
 import { useProgramRealtime } from "@/lib/useProgramRealtime";
+import { generateAcetoSplit, applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
@@ -1684,6 +1685,43 @@ if (supabase && user) {
         setWorkoutSuccessMessage(
           "🎉 Allenamento completato e salvato! +50 XP",
         );
+      }
+
+// ======================================================================
+      // AVANZAMENTO AUTOMATICO METODO ACETO A CHIUSURA MICROCICLO (6 SETTIMANE)
+      // ======================================================================
+      if (
+        programmingModel === "ACETO" &&
+        programDays &&
+        programDays.length >= 3
+      ) {
+        const splitSize = programDays.length;
+        const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+
+        // Se l'atleta ha completato tutti i giorni della split (es. 4° su 4)
+        if (updatedHistoryCount % splitSize === 0) {
+          const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
+          const nextWeek = (completedWeeks % 6) + 1; // Progressione a 6 settimane (W1 -> W6)
+
+          // Ricalcola carichi, RIR e serie (taglio a 2 nel Deload W6)
+          const progressedDays = applyAcetoWeekProgression(
+            programDays as any,
+            nextWeek,
+            workoutHistory as any,
+          );
+          setProgramDays(progressedDays as any);
+
+          // Salvataggio persistente su Supabase identico a riga 1660 (HardTopGym)
+          if (targetUserId) {
+            saveProgramToSupabase(
+              targetUserId,
+              programName,
+              progressedDays as any,
+            ).catch((err: unknown) => {
+              console.error("[ACETO ENGINE] Errore salvataggio progressione su Supabase:", err);
+            });
+          }
+        }
       }
       // ======================================================================
 
@@ -3611,6 +3649,7 @@ if (isFinished) {
                 {programmingModel === "ACETO" && (
                   <AcetoCabina
                     activeAthlete={activeAthlete}
+                    workoutHistory={workoutHistory}
                     onApplyProgram={(newDays: any[]) => {
                       setProgramDays(newDays as any);
                       setBuilderSuccessMessage(
