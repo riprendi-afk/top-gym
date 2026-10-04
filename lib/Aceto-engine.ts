@@ -1118,7 +1118,7 @@ export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1, histo
     split_type: `${days}_days`,
     current_week: week,
     total_weeks: 6,
-    workout_days: selectedWorkoutDays,
+    workout_days: modulateAcetoWorkoutDays(selectedWorkoutDays, week),
   };
 }
 
@@ -1244,4 +1244,110 @@ export function calculateAcetoCurrentWeek(
 
   const completedWeeks = Math.floor(safeHistory / safeSplit);
   return (completedWeeks % 6) + 1;
+}
+/**
+ * Modula dinamicamente serie, ripetizioni, carichi, RIR e note
+ * per ciascun esercizio in base alla settimana selezionata (W1..W6).
+ * Preserva intatta tutta la struttura e le schede del database.
+ */
+export function modulateAcetoWorkoutDays(
+  days: AcetoWorkoutDay[],
+  weekNumber: number
+): AcetoWorkoutDay[] {
+  const safeWeek = Math.max(1, Math.min(6, Number(weekNumber) || 1));
+  const isDeload = safeWeek === 6;
+  const isStrippingPeak = safeWeek === 5;
+  const isOverload = safeWeek === 3 || safeWeek === 4;
+
+  return days.map((day) => {
+    const dayLabelLower = (day.day_label || "").toLowerCase();
+
+    const updatedExercises: AcetoExercise[] = day.exercises.map((ex) => {
+      const exNameLower = (ex.name || "").toLowerCase();
+      const exCatLower = (ex.category || "").toLowerCase();
+
+      // Rilevamento composti vs isolamento
+      const isCompound =
+        exCatLower.includes("compound") ||
+        exCatLower.includes("multiarticolare") ||
+        /panca|squat|stacco|press|trazioni|rematore|row|military|dip|lento|chin/i.test(exNameLower);
+
+      // Rilevamento distretto inferiore per incremento carichi
+      const isLowerBody =
+        dayLabelLower.includes("gambe") ||
+        dayLabelLower.includes("leg") ||
+        /squat|leg|press|stacco|affondi|calf|femoral|quad|polpacc/i.test(exNameLower);
+
+      // 1. SETS (SERIE)
+      let sets = ex.sets;
+      if (isDeload) {
+        sets = 2; // Taglio netto a 2 serie fisse su tutti gli esercizi
+      } else if (isStrippingPeak) {
+        sets = isCompound ? 4 : 3;
+      } else if (isOverload) {
+        sets = isCompound ? 4 : 3;
+      } else {
+        // W1-W2 Base
+        sets = isCompound ? 4 : 3;
+      }
+
+      // 2. REPS (RIPETIZIONI)
+      let reps = ex.reps;
+      if (isDeload) {
+        reps = isCompound ? "10-12 (Leggero)" : "12-15 (Pompaggio)";
+      } else if (isStrippingPeak) {
+        reps = isCompound ? "8 + Stripping (-35%)" : "10 + Drop Set 2x";
+      } else if (isOverload) {
+        reps = isCompound ? "6-8 (Heavy Overload)" : "8-10";
+      } else {
+        // W1-W2 Base
+        reps = isCompound ? "8-10" : "10-12";
+      }
+
+      // 3. RIR (BUFFER)
+      let rir = ex.rir;
+      if (isDeload) {
+        rir = 2; // Buffer ampio di recupero
+      } else if (isStrippingPeak) {
+        rir = 0; // Cedimento concentrico positivo assoluto
+      } else if (isOverload) {
+        rir = 1; // Cedimento tecnico controllato
+      } else {
+        rir = safeWeek === 1 ? 2 : 1;
+      }
+
+      // 4. LOAD GUIDELINE & NOTE
+      let load_guideline = ex.load_guideline;
+      let notes = ex.notes;
+      const overloadDelta = isLowerBody ? "+5kg" : "+2.5kg";
+
+      if (isDeload) {
+        load_guideline = "Scarico Attivo (-20% carico): esecuzione fluida, no cedimento";
+        notes = "W6 DELOAD: Volume tagliato a 2 serie fisse per favorire il recupero articolare e neurale.";
+      } else if (isStrippingPeak) {
+        load_guideline = "Picco Stripping: Ultima serie a cedimento, scarico immediato del 35% e max reps";
+        notes = "W5 PEAK: Raggiungi il cedimento a 8 reps, riduci subito il carico del 35% senza pausa e continua.";
+      } else if (isOverload) {
+        load_guideline = `Heavy Overload: Carico aumentato (${overloadDelta} rispetto a W1-W2)`;
+        notes = `W${safeWeek} OVERLOAD: Focus massimale sulle 6-8 reps pesanti con cadenza concentrica esplosiva.`;
+      } else {
+        load_guideline = "Base Volume: Carico target per cedimento tecnico nell'intervallo 8-10 reps";
+        notes = `W${safeWeek} BASE: Consolidamento schema motorio, reclutamento fibre IIb e tensione continua.`;
+      }
+
+      return {
+        ...ex,
+        sets,
+        reps,
+        rir,
+        load_guideline,
+        notes,
+      };
+    });
+
+    return {
+      ...day,
+      exercises: updatedExercises,
+    };
+  });
 }
