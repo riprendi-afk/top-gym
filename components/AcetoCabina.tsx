@@ -1,7 +1,7 @@
 // components/AcetoCabina.tsx
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   generateAcetoSplit,
   AcetoSplitDays,
@@ -16,6 +16,17 @@ interface AcetoCabinaProps {
   onApplyProgram: (newDays: any[]) => void;
 }
 
+/**
+ * Calcola matematicamente la settimana del mesociclo (1-6)
+ * in base al numero di allenamenti completati e alla split scelta (3, 4, 5 o 6 giorni).
+ */
+function getAcetoWeekFromHistory(splitDays: number, history?: any[]): number {
+  const count = history?.length || 0;
+  // Gestione rigorosa dei 4 tipi di split ammessi: 3, 4, 5 o 6 giorni
+  const safeSplit = splitDays === 3 || splitDays === 5 || splitDays === 6 ? splitDays : 4;
+  const completedWeeks = Math.floor(count / safeSplit);
+  return (completedWeeks % 6) + 1;
+}
 
 export default function AcetoCabina({
   activeAthlete,
@@ -23,8 +34,24 @@ export default function AcetoCabina({
   onApplyProgram,
 }: AcetoCabinaProps) {
   const [selectedSplit, setSelectedSplit] = useState<AcetoSplitDays>(4);
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+
+  // 1. Calcolo dinamico della settimana reale in base alla split attiva e allo storico workout
+  const currentCalculatedWeek = useMemo(() => {
+    return getAcetoWeekFromHistory(selectedSplit, workoutHistory);
+  }, [selectedSplit, workoutHistory]);
+
+  // 2. Inizializzazione dello state della settimana con il valore calcolato
+  const [selectedWeek, setSelectedWeek] = useState<number>(() =>
+    getAcetoWeekFromHistory(4, workoutHistory)
+  );
+
   const [activeDayTab, setActiveDayTab] = useState<number>(0);
+
+  // 3. Sincronizzazione: se l'utente cambia split (3, 4, 5, 6 giorni) o arrivano i workout,
+  // la settimana si allinea automaticamente al conteggio reale per quella split
+  useEffect(() => {
+    setSelectedWeek(currentCalculatedWeek);
+  }, [currentCalculatedWeek]);
 
   const program: AcetoProgram = useMemo(() => {
     return generateAcetoSplit(selectedSplit, selectedWeek, workoutHistory);
@@ -86,6 +113,7 @@ export default function AcetoCabina({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* SELETTORE SPLIT 3, 4, 5, 6 GIORNI */}
         <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/60 space-y-2">
           <label className="text-[11px] font-black tracking-wider text-zinc-400 uppercase">
             Frequenza Settimanale (Split)
@@ -111,25 +139,34 @@ export default function AcetoCabina({
           </div>
         </div>
 
+        {/* SELETTORE SETTIMANA W1 - W6 */}
         <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/60 space-y-2">
-          <label className="text-[11px] font-black tracking-wider text-zinc-400 uppercase">
-            Settimana Mesociclo (1–6)
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-black tracking-wider text-zinc-400 uppercase">
+              Settimana Mesociclo (1–6)
+            </label>
+            <span className="text-[10px] text-zinc-500 font-mono">
+              ★ = Settimana Reale
+            </span>
+          </div>
           <div className="grid grid-cols-6 gap-1.5">
-            {([1, 2, 3, 4, 5, 6] as number[]).map((w: number) => (
-              <button
-                key={w}
-                type="button"
-                onClick={() => setSelectedWeek(w)}
-                className={`py-2 text-xs font-bold rounded-lg border transition ${
-                  selectedWeek === w
-                    ? "bg-white text-black border-white shadow-md"
-                    : "bg-zinc-950/60 text-zinc-400 border-zinc-800 hover:text-white"
-                }`}
-              >
-                W{w}
-              </button>
-            ))}
+            {([1, 2, 3, 4, 5, 6] as number[]).map((w: number) => {
+              const isActual = w === currentCalculatedWeek;
+              return (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => setSelectedWeek(w)}
+                  className={`py-2 text-xs font-bold rounded-lg border transition ${
+                    selectedWeek === w
+                      ? "bg-white text-black border-white shadow-md font-black"
+                      : "bg-zinc-950/60 text-zinc-400 border-zinc-800 hover:text-white"
+                  }`}
+                >
+                  W{w} {isActual && "★"}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1122,105 +1122,126 @@ export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1, histo
   };
 }
 
-// FUNZIONE PROGRESSIONE SETTIMANALE CHRIS ACETO (W1 -> W6)
+/**
+ * Ricalcola la progressione a blocchi di 6 settimane secondo il metodo Chris Aceto:
+ * - W1-W2: Base Volume (8-10 composti / 10-12 isolamento, RIR 1-2, serie lineari)
+ * - W3-W4: Heavy Overload (6-8 composti pesanti / 8-10 isolamento, +2.5kg tronco/+5kg gambe, RIR 1)
+ * - W5: Stripping Peak (serie target + Stripping Triple Drop Set -35% a cedimento, RIR 0)
+ * - W6: Deload Attivo (taglio netto a 2 serie fisse, -20% carico, 10-12 reps controllate, RIR 2)
+ */
 export function applyAcetoWeekProgression(
   currentDays: any[],
   targetWeek: number,
-  history?: any[]
+  history: any[] = []
 ): any[] {
-  const week = Math.max(1, Math.min(6, targetWeek));
-  const isDeload = week === 6;
-  const isPeak = week === 5;
-  const isOverload = week === 3 || week === 4;
+  if (!currentDays || !Array.isArray(currentDays)) return [];
 
-  const findMaxLoad = (exName: string): number | null => {
-    if (!history || !Array.isArray(history)) return null;
-    let max = 0;
-    const target = exName.toLowerCase().trim();
-    for (const session of history) {
-      const logs = session.logs || session.workout_logs || [];
-      if (Array.isArray(logs)) {
-        for (const l of logs) {
-          const name = (l.exercise_name || l.exerciseName || l.name || "").toLowerCase().trim();
-          if (name && (target.includes(name) || name.includes(target))) {
-            const w = Number(l.effectiveLoad || l.weight || 0);
-            if (w > max) max = w;
-          }
-        }
-      }
-    }
-    return max > 0 ? max : null;
-  };
+  const isDeload = targetWeek === 6;
+  const isStrippingPeak = targetWeek === 5;
+  const isHeavyOverload = targetWeek === 3 || targetWeek === 4;
 
-  return currentDays.map((day: any) => {
+  return currentDays.map((day) => {
     const updatedExercises = (day.exercises || []).map((ex: any) => {
-      const isLower =
-        (day.target_muscles || []).some((m: string) =>
-          /quadricipiti|femorali|gambe/i.test(m)
-        ) || /squat|press|stacco|leg/i.test(ex.name);
+      const exName = (ex.name || "").toLowerCase();
+      const dayName = (day.name || "").toLowerCase();
 
-      const isCompound =
-        ex.category === "Compound Base" ||
-        /panca|squat|rematore|lento|stacco|press/i.test(ex.name);
+      // Rilevamento tipologia esercizio
+      const isCompound = /panca|squat|stacco|press|trazioni|rematore|row|military|dip|lento/i.test(exName);
+      const isLowerBody = /squat|leg|press|stacco|affondi|calf|femoral|quad/i.test(exName) || /gambe/i.test(dayName);
+      const isIsolation = !isCompound;
 
-      const maxHist = findMaxLoad(ex.name);
+      // 1. CALCOLO SERIE (SETS)
+      let sets = ex.sets ?? 4;
+      if (isDeload) {
+        sets = 2; // W6 Deload: taglio a 2 serie fisse su tutto
+      } else if (isIsolation) {
+        sets = 3;
+      } else {
+        sets = 4;
+      }
 
-      let sets = ex.sets || 3;
-      let reps = ex.reps || "8-10";
-      let rir = 0;
-      let load_guideline = ex.load_guideline || "";
-      let notes = ex.notes || "";
+      // 2. CALCOLO RIPETIZIONI (REPS)
+      let reps = "8-10";
+      if (isDeload) {
+        reps = isCompound ? "10-12 (Leggero)" : "12-15 (Pompaggio)";
+      } else if (isStrippingPeak) {
+        reps = isCompound ? "8 + Stripping (-35%)" : "10 + Stripping 2x";
+      } else if (isHeavyOverload) {
+        reps = isCompound ? "6-8 (Heavy)" : "8-10";
+      } else {
+        // W1-W2 Base
+        reps = isCompound ? "8-10" : "10-12";
+      }
+
+      // 3. CALCOLO CARICO (WEIGHT)
+      let weight = Number(ex.weight) || 0;
+      const increment = isLowerBody ? 5 : 2.5;
 
       if (isDeload) {
-        sets = 2; // Taglio volumetrico: 2 serie fisse
-        reps = isCompound ? "10-10" : "12-12";
-        rir = 2;
-        const deloadKg = maxHist ? Math.round(maxHist * 0.8) : null;
-        load_guideline = deloadKg ? `Scarico: ${deloadKg} kg (-20%)` : "Scarico Attivo (-20% carico)";
-        notes = "DELOAD W6: 2 serie a RIR 2 fisso. Zero cedimento, recupero articolare.";
-      } else if (isPeak) {
-        sets = isCompound ? 4 : 3;
-        reps = isCompound ? "10-8-6-6" : "8-10";
-        rir = 0;
-        if (!isCompound) {
-          const dropKg = maxHist ? Math.round(maxHist * 0.65) : null;
-          load_guideline = dropKg
-            ? `${maxHist} kg a cedimento + Drop a ${dropKg} kg`
-            : "Ultima serie Stripping (-35%)";
-          notes = "PICCO W5: Ultima serie con Stripping immediato a cedimento positivo estremo.";
-        } else {
-          load_guideline = maxHist ? `Consolida: ${maxHist} kg` : "Carico picco consolidato";
-          notes = "PICCO W5: Mantieni i carichi massimi consolidati in W3-W4.";
-        }
-      } else if (isOverload) {
-        sets = isCompound ? 4 : 3;
-        reps = isCompound ? "10-8-6-6" : "8-10";
-        rir = 0;
-        const inc = isLower ? 5 : 2.5;
-        const targetKg = maxHist ? maxHist + inc : null;
-        load_guideline = targetKg ? `Target Overload: ${targetKg} kg (+${inc} kg)` : `Forzare +${inc} kg`;
-        notes = `OVERLOAD W${week}: Cedimento concentrico positivo (RIR 0). Reclutamento fibre veloci IIb.`;
+        // Taglio del 20% sul carico
+        weight = weight > 0 ? Math.round(weight * 0.8 * 2) / 2 : 0;
+      } else if (targetWeek === 3) {
+        // Primo incremento sovraccarico
+        weight = weight > 0 ? weight + increment : 0;
+      } else if (targetWeek === 4) {
+        // Consolidamento o secondo micro-incremento
+        weight = weight > 0 ? weight + increment : 0;
+      }
+
+      // 4. CALCOLO RIR E TECNICA D'INTENSITÀ
+      let targetRir = 1;
+      let intensityTechnique = "Serie Lineare";
+      let notes = "";
+
+      if (isDeload) {
+        targetRir = 2;
+        intensityTechnique = "Scarico Rigenerativo";
+        notes = "W6 DELOAD: 2 serie fisse, -20% carico. Recupero neurale.";
+      } else if (isStrippingPeak) {
+        targetRir = 0;
+        intensityTechnique = "Stripping (Drop Set -35%)";
+        notes = "W5 PEAK: Ultima serie a cedimento con doppio scarico del 35% senza sosta.";
+      } else if (isHeavyOverload) {
+        targetRir = 1;
+        intensityTechnique = targetWeek === 4 ? "Heavy Overload / Top Set" : "Sovraccarico Meccanico";
+        notes = `W${targetWeek} OVERLOAD: Focus carico pesante (+${increment}kg), 6-8 reps composti.`;
       } else {
-        sets = isCompound ? 4 : 3;
-        reps = isCompound ? "10-8-8-8" : "8-10";
-        rir = 0;
-        load_guideline = maxHist ? `Base: ${maxHist} kg` : "Piramidale ascendente a cedimento";
-        notes = `FASE BASE W${week}: Concentrica esplosiva, eccentrica controllata 2-3s. RIR 0.`;
+        targetRir = targetWeek === 1 ? 2 : 1;
+        intensityTechnique = "Volume Base";
+        notes = `W${targetWeek} BASE: Adattamento schema motorio, RIR controllato.`;
       }
 
       return {
         ...ex,
         sets,
+        workingSets: sets,
         reps,
-        rir,
-        load_guideline,
+        weight,
+        targetRir,
+        intensityTechnique,
         notes,
       };
     });
 
     return {
       ...day,
+      week: targetWeek,
       exercises: updatedExercises,
     };
   });
+}
+/**
+ * Calcola la settimana reale del ciclo Aceto (da 1 a 6)
+ * in base al numero di allenamenti completati e alla dimensione della split (3, 4, 5 o 6 giorni).
+ */
+export function calculateAcetoCurrentWeek(
+  historyCount: number,
+  splitSize: number
+): number {
+  // Clamp di sicurezza: la split deve essere tra 3 e 6 giorni (default a 4 se non definita)
+  const safeSplit = Math.max(3, Math.min(6, Number(splitSize) || 4));
+  const safeHistory = Math.max(0, Number(historyCount) || 0);
+
+  const completedWeeks = Math.floor(safeHistory / safeSplit);
+  return (completedWeeks % 6) + 1;
 }
