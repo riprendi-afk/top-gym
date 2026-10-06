@@ -58,6 +58,7 @@ import ChatBox from "@/components/ChatBox";
 import RestTimerBar from "@/components/RestTimerBar";
 import AcetoCabina from "@/components/AcetoCabina";
 import NocerinoCabina from "@/components/NocerinoCabina";
+import { applyNocerinoProgression } from "@/lib/nocerino-engine";
 import {
   computeEffectiveLoad,
   findBodyweightConfig,
@@ -1723,6 +1724,39 @@ if (supabase && user) {
           }
         }
       }
+
+      // ======================================================================
+        // AVANZAMENTO AUTOMATICO METODO NOCERINO A CHIUSURA MICROCICLO (3 GIORNI)
+        // ======================================================================
+        if (
+          programmingModel === "NOCERINO" &&
+          programDays &&
+          programDays.length >= 3
+        ) {
+          const splitSize = programDays.length;
+          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+
+          // Se l'atleta ha completato tutti i giorni del ciclo (multiplo di 3)
+          if (updatedHistoryCount % splitSize === 0) {
+            const progressedDays = applyNocerinoProgression(
+              programDays as any,
+              updatedHistoryCount,
+            );
+            setProgramDays(progressedDays as any);
+
+            // Salvataggio persistente automatico su Supabase
+            if (targetUserId) {
+              saveProgramToSupabase(
+                targetUserId,
+                programName,
+                progressedDays as any,
+              ).catch((err: unknown) => {
+                console.error("[NOCERINO ENGINE] Errore salvataggio progressione su Supabase:", err);
+              });
+            }
+          }
+        }
+        // ======================================================================
       // ======================================================================
 
       await loadHistory(targetUserId);

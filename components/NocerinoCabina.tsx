@@ -77,26 +77,32 @@ interface NocerinoCabinaProps {
       if (onApplyProgram) {
         // Formatta tutti e 3 i giorni del ciclo con i parametri della fase corrente
         const formattedDays = plans.map((plan, idx) => {
-          const exercisesCalculated = applyNocerinoToCustomExercises(plan.exercises, state);
-          return {
-            id: `nocerino_day_${idx + 1}`,
-            title: `${plan.title} (${state.phaseLabel})`,
-            isPeriodized: true,
-            method: 'NOCERINO',
-            exercises: exercisesCalculated.map((ex, exIdx) => ({
-              id: ex.id || `noc_ex_${idx}_${exIdx}`,
-              name: ex.name,
-              sets: ex.sets,
-              reps: ex.reps,
-              rest: ex.restSeconds,
-              restSeconds: ex.restSeconds,
-              tut: ex.tut,
-              notes: `${ex.notes} | ${ex.loadInstruction}`.trim(),
-              targetMuscle: ex.targetMuscle,
-              isWarmup: ex.isWarmup
-            }))
-          };
-        });
+            const exercisesCalculated = applyNocerinoToCustomExercises(plan.exercises, state);
+            return {
+              id: `nocerino_day_${idx + 1}`,
+              title: `${plan.title} (${state.phaseLabel})`,
+              isPeriodized: true,
+              method: 'NOCERINO',
+              exercises: exercisesCalculated.map((ex, exIdx) => {
+                const originalEx = plan.exercises[exIdx];
+                return {
+                  id: ex.id || `noc_ex_${idx}_${exIdx}`,
+                  name: ex.name,
+                  baseSets: originalEx?.baseSets ?? ex.sets,
+                  baseReps: originalEx?.baseReps ?? ex.reps,
+                  baseRestSeconds: originalEx?.baseRestSeconds ?? ex.restSeconds,
+                  sets: ex.sets,
+                  reps: ex.reps,
+                  rest: ex.restSeconds,
+                  restSeconds: ex.restSeconds,
+                  tut: ex.tut,
+                  notes: `${ex.notes} | ${ex.loadInstruction}`.trim(),
+                  targetMuscle: ex.targetMuscle,
+                  isWarmup: ex.isWarmup
+                };
+              })
+            };
+          });
   
         onApplyProgram(formattedDays);
       }

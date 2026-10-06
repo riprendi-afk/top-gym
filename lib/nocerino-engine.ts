@@ -265,3 +265,65 @@ export function applyNocerinoToCustomExercises(
     };
   });
 }
+/**
+ * Ricalcola l'intera scheda (tutti i 3 giorni) per il nuovo microciclo calcolato.
+ * Mantiene stabili i riferimenti base (baseSets, baseReps, baseRestSeconds).
+ */
+export function applyNocerinoProgression(
+    currentDays: any[],
+    completedWorkoutsCount: number
+  ): any[] {
+    const state = calculateNocerinoState(completedWorkoutsCount);
+  
+    return currentDays.map((day, dayIdx) => {
+      // Ripulisce il titolo da etichette di fase precedenti
+      const cleanTitle = (day.title || `Giorno ${dayIdx + 1}`)
+        .split(' (Mese')[0]
+        .split(' (Fase')[0]
+        .split(' (Scarico')[0];
+  
+      const newTitle = `${cleanTitle} (${state.phaseLabel})`;
+  
+      const updatedExercises = (day.exercises || []).map((ex: any) => {
+        const baseSets = ex.baseSets ?? ex.sets ?? 5;
+        const baseReps = ex.baseReps ?? ex.reps ?? 8;
+        const baseRest = ex.baseRestSeconds ?? ex.restSeconds ?? ex.rest ?? 90;
+  
+        const modularInput: ModularExerciseInput = {
+          id: ex.id,
+          name: ex.name,
+          targetMuscle: ex.targetMuscle,
+          baseSets,
+          baseReps,
+          baseRestSeconds: baseRest,
+          notes: ex.notes?.split(' | ')[0] || ex.notes || '',
+          isWarmup: ex.isWarmup
+        };
+  
+        const [calculated] = applyNocerinoToCustomExercises([modularInput], state);
+  
+        return {
+          ...ex,
+          baseSets,
+          baseReps,
+          baseRestSeconds: baseRest,
+          sets: calculated.sets,
+          reps: calculated.reps,
+          rest: calculated.restSeconds,
+          restSeconds: calculated.restSeconds,
+          tut: calculated.tut,
+          notes: `${modularInput.notes ? modularInput.notes + ' | ' : ''}${calculated.loadInstruction}`.trim()
+        };
+      });
+  
+      return {
+        ...day,
+        title: newTitle,
+        isPeriodized: true,
+        method: 'NOCERINO',
+        microcycle: state.microcycle,
+        phaseId: state.phaseId,
+        exercises: updatedExercises
+      };
+    });
+  }
