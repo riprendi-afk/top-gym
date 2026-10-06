@@ -57,7 +57,7 @@ import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
 import ChatBox from "@/components/ChatBox";
 import RestTimerBar from "@/components/RestTimerBar";
 import AcetoCabina from "@/components/AcetoCabina";
-
+import NocerinoCabina from "@/components/NocerinoCabina";
 import {
   computeEffectiveLoad,
   findBodyweightConfig,
@@ -372,10 +372,10 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [programmingModel, setProgrammingModel] = useState<
-  "TOPGYM_BLOCKS" | "HARDTOPGYM" | "ACETO"
+// DOPO (SOSTITUISCI CON):
+const [programmingModel, setProgrammingModel] = useState<
+  "TOPGYM_BLOCKS" | "HARDTOPGYM" | "ACETO" | "NOCERINO"
 >("TOPGYM_BLOCKS");
-  
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -3589,6 +3589,31 @@ if (isFinished) {
                   </button>
                 </div>
 
+                <button
+          type="button"
+          onClick={() => setProgrammingModel("ACETO")}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            programmingModel === "ACETO"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+              : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
+          }`}
+        >
+          🏆 Metodo ACETO (Championship Overload)
+        </button>
+
+        {/* AGGIUNGI QUESTO BLOCCO SUBITO DOPO: */}
+        <button
+          type="button"
+          onClick={() => setProgrammingModel("NOCERINO")}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+            programmingModel === "NOCERINO"
+              ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20"
+              : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
+          }`}
+        >
+          🔬 Metodo NOCERINO (4 Fasi Progressive)
+        </button>
+
                 {/* ============================================================== */}
                 {/* CASO A: CABINA TOPGYM CLASSICA (NUOVO DESIGN ORDINATO)         */}
                 {/* ============================================================== */}
@@ -3659,6 +3684,20 @@ if (isFinished) {
                     }}
                   />
                 )}
+
+{/* CASO D: CABINA PIERO NOCERINO (4 FASI PROGRESSIVE) */}
+{programmingModel === "NOCERINO" && (
+          <NocerinoCabina
+            workoutHistory={workoutHistory}
+            onApplyProgram={(newDays: any[]) => {
+              setProgramDays(newDays as any);
+              setBuilderSuccessMessage(
+                "🔬 Scheda Metodo PIERO NOCERINO applicata con successo!",
+              );
+              setTimeout(() => setBuilderSuccessMessage(null), 5000);
+            }}
+          />
+        )}
                 
             {/* SEZIONE GESTIONE SCHEDA - VISIBILE A ENTRAMBI I COACH */}
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
