@@ -1,18 +1,41 @@
-// lib/aceto-engine.ts
-// CHRIS ACETO CHAMPIONSHIP BODYBUILDING ENGINE - VERSIONE INTEGRALE
+// lib/Aceto-engine.ts
+/**
+ * ============================================================================
+ * CHRIS ACETO CHAMPIONSHIP BODYBUILDING ENGINE - TOP GYM CORE
+ * ============================================================================
+ * Implementazione algoritmica ufficiale basata rigorosamente sui principi,
+ * tabelle e protocolli di periodizzazione di Chris Aceto.
+ */
 
 export type AcetoSplitDays = 3 | 4 | 5 | 6;
+export type AcetoAthleteLevel = "INTERMEDIATE" | "ADVANCED";
+export type AcetoGoal = "MASS_BUILDING" | "CONTEST_PREP";
+
+export type AcetoSpecialTechnique =
+  | "NONE"
+  | "REST_PAUSE"
+  | "STRIP_SETS_TO_10"
+  | "FORCED_REPS"
+  | "PEAK_CONTRACTION_NEGATIVES"
+  | "REVERSE_STRIP_SETS"
+  | "MODIFIED_SUPER_SETS"
+  | "PARTIALS"
+  | "THREE_REP_MAX";
 
 export interface AcetoExercise {
   order: number;
   name: string;
-  category: "Compound Base" | "Angle/Dumbbell" | "Isolation/Machine";
+  category: "COMPOUND" | "ISOLATION";
   sets: number;
   reps: string;
   load_guideline: string;
   rir: number;
   rest_seconds: number;
   notes: string;
+  warmup_protocol?: string;
+  working_protocol?: string;
+  advanced_protocol?: string;
+  technique?: AcetoSpecialTechnique;
 }
 
 export interface AcetoWorkoutDay {
@@ -28,1106 +51,1144 @@ export interface AcetoProgram {
   current_week: number;
   total_weeks: number;
   workout_days: AcetoWorkoutDay[];
+  level: AcetoAthleteLevel;
+  goal: AcetoGoal;
+  phase_name: string;
 }
 
-// 1. TASSONOMIA COMPLETA DEGLI ESERCIZI ACETO
-export const ACETO_EXERCISE_TAXONOMY = {
-  PETTO: {
-    base: ["Panca Piana Bilanciere", "Distensioni su Panca Inclinata con Bilanciere"],
-    angle: ["Distensioni Manubri su Panca Inclinata 30°", "Croci Manubri su Panca Piana"],
-    isolation: ["Pectoral Machine", "Chest Press", "Croci ai Cavi Alti"],
-  },
-  DORSO: {
-    base: ["Rematore con Bilanciere", "Trazioni alla Sbarra zavorrate", "Stacco da Terra"],
-    angle: ["Rematore Manubrio Singolo", "T-Bar Row", "Lat Machine Avanti"],
-    isolation: ["Pulley Basso", "Pullover con Manubrio", "Rowing Machine"],
-  },
-  SPALLE: {
-    base: ["Lento Avanti Bilanciere", "Spinte Manubri da Seduto"],
-    lateral: ["Alzate Laterali con Manubri", "Alzate Laterali al Cavo"],
-    rear_traps: ["Alzate a 90° con Manubri", "Face Pull alla Corda", "Scrollate con Bilanciere"],
-  },
-  QUADRICIPITI: {
-    base: ["Squat con Bilanciere", "Front Squat"],
-    mass: ["Leg Press a 45°", "Hack Squat"],
-    isolation: ["Leg Extension", "Affondi in Camminata"],
-  },
-  FEMORALI: {
-    base: ["Stacco Rumeno con Bilanciere (RDL)", "Stacco a Gambe Tese con Manubri"],
-    isolation: ["Leg Curl Sdraiato (Lying Leg Curl)", "Leg Curl Seduto"],
-  },
-  BICIPITI: {
-    base: ["Curl Bilanciere Diritto in Piedi", "Curl con Bilanciere Sagomato EZ"],
-    angle: ["Curl Alternato Manubri su Panca Inclinata 45°"],
-    isolation: ["Preacher Curl (Panca Scott)", "Hammer Curl con Manubri"],
-  },
-  TRICIPITI: {
-    base: ["Panca Piana Presa Stretta", "Dips alle Parallele zavorrate"],
-    heavy: ["French Press Bilanciere Sagomato EZ"],
-    isolation: ["Pushdown Cavo con Corda", "Pushdown Barra Dritta"],
-  },
-  POLPACCI_ADDOME: {
-    calves: ["Standing Calf Machine", "Seated Calf Raise"],
-    abs: ["Crunch a terra gambe a 90°", "Elevazioni Gambe alle Parallele"],
-  },
-};
+/**
+ * Calcola matematicamente la settimana attiva del ciclo (1-6 o 1-8)
+ * in base al numero di sessioni nello storico e alla frequenza della split.
+ */
+export function calculateAcetoCurrentWeek(
+  historyCount: number,
+  splitSize: number,
+  cycleLength: number = 6
+): number {
+  const safeSplit = Math.max(3, Math.min(6, Number(splitSize) || 4));
+  const safeHistory = Math.max(0, Number(historyCount) || 0);
+  const completedMicrocycles = Math.floor(safeHistory / safeSplit);
+  return (completedMicrocycles % cycleLength) + 1;
+}
 
-// 2. GENERATORE DI SCHEDE SETTIMANALI (SPLIT 3, 4, 5, 6 GIORNI)
-export function generateAcetoSplit(days: AcetoSplitDays, week: number = 1, history?: any[]): AcetoProgram {
-  const isDeload = week === 6;
-  const isPeak = week === 5;
-  const isOverload = week === 3 || week === 4;
+/**
+ * Calcola la durata ottimale della preparazione pre-gara in settimane
+ * in base alla percentuale di grasso corporeo (Body Fat) iniziale.
+ */
+export function calculateContestPrepWeeks(bodyFat: number, gender: "MALE" | "FEMALE" = "MALE"): number {
+  if (gender === "MALE") {
+    if (bodyFat < 8) return 8;
+    if (bodyFat <= 11) return 13;
+    if (bodyFat <= 17) return 16;
+    return 20;
+  } else {
+    if (bodyFat < 13) return 8;
+    if (bodyFat <= 16) return 13;
+    if (bodyFat <= 20) return 16;
+    return 20;
+  }
+}
 
-  const getExerciseNotes = (baseNotes: string, isIsolation: boolean): string => {
-    if (isDeload) return "Deload: RIR 2 fisso, carico ridotto del 20%, focus controllo tecnico.";
-    if (isPeak && isIsolation) return "Picco: Ultima serie con Stripping (-35%) o Back-off (-25%) a cedimento assoluto.";
-    if (isOverload) return "Sovraccarico Assoluto: forzare +2.5kg tronco / +5kg gambe a parità di reps. " + baseNotes;
-    return baseNotes;
-  };
+/**
+ * Generatore dei template base per le schede ufficiali di Chris Aceto.
+ */
+function buildOfficialTemplate(
+  split: AcetoSplitDays,
+  level: AcetoAthleteLevel
+): AcetoWorkoutDay[] {
+  // =========================================================================
+  // SCHEDA INTERMEDIA A & B (4 GIORNI / UPPER-LOWER O 4 ON 1 OFF)
+  // =========================================================================
+  if (level === "INTERMEDIATE") {
+    if (split === 4) {
+      return [
+        {
+          day_number: 1,
+          day_label: "Day 1: Chest & Biceps",
+          target_muscles: ["Petto", "Bicipiti"],
+          exercises: [
+            {
+              order: 1,
+              name: "Panca Piana con Bilanciere (Bench Press)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10 con carico limite) + 1-2 Concentriche Esplosive (10)",
+              rir: 1,
+              rest_seconds: 90,
+              notes: "Fase concentrica esplosiva F = m · a, eccentrica controllata al petto.",
+              warmup_protocol: "1 set × 10 reps (riscaldamento articolare)",
+              working_protocol: "1 set × 10 reps (carico con cui la decima rep è quasi a cedimento)",
+              advanced_protocol: "1-2 sets × 10 reps spinte alla massima accelerazione concentrica",
+              technique: "NONE",
+            },
+            {
+              order: 2,
+              name: "Panca Inclinata con Bilanciere (Incline Bench Press)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 6-10 / 6-10 / 6-10",
+              load_guideline: "1 Warm-up (10) + 1 Working (6-10) + 1-2 Accelerating sets (6-10)",
+              rir: 1,
+              rest_seconds: 90,
+              notes: "Inclinazione panca a 30°. Nessun rimbalzo sul torace.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 6-10 reps (aggiungere carico pesante)",
+              advanced_protocol: "1-2 sets × 6-10 reps a cedimento concentrico",
+              technique: "NONE",
+            },
+            {
+              order: 3,
+              name: "Curl con Bilanciere in Piedi (Standing Barbell Curls)",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 75,
+              notes: "Gomiti bloccati ai fianchi, nessun dondolio lombare.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps esplosive",
+              technique: "NONE",
+            },
+            {
+              order: 4,
+              name: "Panca Scott con Bilanciere (Preacher Curls)",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 0,
+              rest_seconds: 75,
+              notes: "Arresto controllato a 2 cm dalla distensione totale per proteggere il tendine distale.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps portate a cedimento positivo",
+              technique: "NONE",
+            },
+          ],
+        },
+        {
+          day_number: 2,
+          day_label: "Day 2: Back & Abs",
+          target_muscles: ["Dorso", "Addome"],
+          exercises: [
+            {
+              order: 1,
+              name: "Rematore con Bilanciere Busto Flesso (Bent Rows)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 90,
+              notes: "Busto a 45°-60°, trazione verso l'ombelico, schiena in perfetto arco lombare.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps concentriche esplosive",
+              technique: "NONE",
+            },
+            {
+              order: 2,
+              name: "Lat Machine Presa Avanti (Pull Downs)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 6-10 / 6-10 / 6-10",
+              load_guideline: "1 Warm-up (10) + 1 Working (6-10) + 1-2 Accelerating sets (6-10)",
+              rir: 1,
+              rest_seconds: 90,
+              notes: "Trazione allo sterno, adduzione scapolare marcata al picco concentrico.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 6-10 reps con sovraccarico",
+              advanced_protocol: "1-2 sets × 6-10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 3,
+              name: "Crunches a Terra",
+              category: "ISOLATION",
+              sets: 3,
+              reps: "15-20",
+              load_guideline: "3 serie fisse a corpo libero, cadenza controllata",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Focalizzare l'accorciamento gabbia toracica-bacino.",
+              technique: "NONE",
+            },
+            {
+              order: 4,
+              name: "Hanging Leg Raises (Sollevamento Gambe alla Sbarra)",
+              category: "ISOLATION",
+              sets: 3,
+              reps: "15-20",
+              load_guideline: "3 serie fisse, retroversione del bacino",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Evitare l'oscillazione inerziale.",
+              technique: "NONE",
+            },
+          ],
+        },
+        {
+          day_number: 3,
+          day_label: "Day 3: Legs & Calves",
+          target_muscles: ["Quadricipiti", "Femorali", "Polpacci"],
+          exercises: [
+            {
+              order: 1,
+              name: "Leg Press 45° (Presses)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 120,
+              notes: "Profondità completa senza staccare il bacino dal cuscino. Spinta dai talloni.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps pesanti",
+              technique: "NONE",
+            },
+            {
+              order: 2,
+              name: "Leg Extensions",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 6-10 / 6-10 / 6-10",
+              load_guideline: "1 Warm-up (10) + 1 Working (6-10) + 1-2 Accelerating sets (6-10)",
+              rir: 1,
+              rest_seconds: 75,
+              notes: "Estensione completa con blocco di 1 secondo al vertice.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 6-10 reps",
+              advanced_protocol: "1-2 sets × 6-10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 3,
+              name: "Leg Curls Sdraiato",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 0,
+              rest_seconds: 75,
+              notes: "Frenare la fase eccentrica in 3 secondi pieni.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps a cedimento concentrico positivo",
+              technique: "NONE",
+            },
+            {
+              order: 4,
+              name: "Seated Calf Raises (Polpacci Seduto)",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Enfasi sul soleo. Massimo allungamento in basso.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 5,
+              name: "Standing Calf Raises (Polpacci in Piedi)",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Ginocchia tese per colpire il gastrocnemio.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps",
+              technique: "NONE",
+            },
+          ],
+        },
+        {
+          day_number: 4,
+          day_label: "Day 4: Shoulders & Triceps",
+          target_muscles: ["Spalle", "Tricipiti"],
+          exercises: [
+            {
+              order: 1,
+              name: "Lento Avanti con Bilanciere (Front Presses)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 6-10 / 6-10 / 6-10",
+              load_guideline: "1 Warm-up (10) + 1 Working (6-10) + 1-2 Accelerating sets (6-10)",
+              rir: 1,
+              rest_seconds: 90,
+              notes: "Spinta verticale esplosiva, discesa controllata all'altezza clavicolare.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 6-10 reps",
+              advanced_protocol: "1-2 sets × 6-10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 2,
+              name: "Alzate Laterali con Manubri (Side Laterals)",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Mignolo leggermente ruotato verso l'alto, braccia leggermente flesse.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 3,
+              name: "Pushdowns ai Cavi per Tricipiti",
+              category: "ISOLATION",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 1,
+              rest_seconds: 60,
+              notes: "Gomiti incollati alla cassa toracica. Massima estensione concentrica.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps",
+              technique: "NONE",
+            },
+            {
+              order: 4,
+              name: "Panca Presa Stretta (Close Grip Bench Press)",
+              category: "COMPOUND",
+              sets: 4,
+              reps: "10 / 10 / 10 / 10",
+              load_guideline: "1 Warm-up (10) + 1 Working (10) + 1-2 Accelerating sets (10)",
+              rir: 0,
+              rest_seconds: 90,
+              notes: "Mani a larghezza spalle (non più strette per preservare i polsi). Cedimento positivo finale.",
+              warmup_protocol: "1 set × 10 reps",
+              working_protocol: "1 set × 10 reps",
+              advanced_protocol: "1-2 sets × 10 reps a cedimento",
+              technique: "NONE",
+            },
+          ],
+        },
+      ];
+    }
+  }
 
-  // --- SPLIT 3 GIORNI (Recupero / Frequenza Ibrida) ---
-  const split3: AcetoWorkoutDay[] = [
+  // =========================================================================
+  // SCHEDA AVANZATA (ROUTINE 2 ON / 1 OFF E MODIFICATE A 3, 5, 6 GIORNI)
+  // =========================================================================
+  if (split === 6) {
+    // Modified 6 Days a Week Split (1 Gruppo Muscolare al Giorno)
+    return [
+      {
+        day_number: 1,
+        day_label: "Day 1: Chest & Abs",
+        target_muscles: ["Petto", "Addome"],
+        exercises: [
+          {
+            order: 1,
+            name: "Panca Piana con Bilanciere (Bench Presses)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Advanced Sets con Rest-Pause o Forced Reps.",
+            technique: "REST_PAUSE",
+          },
+          {
+            order: 2,
+            name: "Panca Inclinata con Bilanciere (Incline Bench Press)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Ultima serie a cedimento concentrico assoluto con spotter.",
+            technique: "FORCED_REPS",
+          },
+          {
+            order: 3,
+            name: "Pec Dec Machine (Flyes)",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Ultima serie: Strip Sets to 10 (doppio scarico con pesi pesanti).",
+            technique: "STRIP_SETS_TO_10",
+          },
+          {
+            order: 4,
+            name: "Crunches con Sovraccarico",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "20 / 20 / 12-15 / 12-15",
+            load_guideline: "2 sets corpo libero (20) + 2 sets add weight (12-15)",
+            rir: 1,
+            rest_seconds: 60,
+            notes: "Contrazione continua.",
+            technique: "NONE",
+          },
+          {
+            order: 5,
+            name: "Hanging Leg Raises",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12-15",
+            load_guideline: "4 serie a cedimento tecnico",
+            rir: 1,
+            rest_seconds: 60,
+            notes: "Isolamento dell'addome inferiore.",
+            technique: "NONE",
+          },
+        ],
+      },
+      {
+        day_number: 2,
+        day_label: "Day 2: Back",
+        target_muscles: ["Dorso"],
+        exercises: [
+          {
+            order: 1,
+            name: "Lat Pulldowns Presa Larga",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Advanced sets con Rest-Pause (pausa 20 secondi dopo il cedimento a 6 reps).",
+            technique: "REST_PAUSE",
+          },
+          {
+            order: 2,
+            name: "Rematore con Bilanciere (Bent Rows)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Forced reps sulle ultime 2 ripetizioni della serie finale.",
+            technique: "FORCED_REPS",
+          },
+          {
+            order: 3,
+            name: "Pulley Basso (Low Cable Rows)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Strip Sets to 10 sull'ultima serie.",
+            technique: "STRIP_SETS_TO_10",
+          },
+          {
+            order: 4,
+            name: "Scrollate con Manubri (Dumbbell Shrugs)",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Tenere 2 secondi la contrazione di picco in alto.",
+            technique: "PEAK_CONTRACTION_NEGATIVES",
+          },
+        ],
+      },
+      {
+        day_number: 3,
+        day_label: "Day 3: Arms (Biceps & Triceps)",
+        target_muscles: ["Bicipiti", "Tricipiti"],
+        exercises: [
+          {
+            order: 1,
+            name: "Standing Barbell Curls",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "A cedimento completo a 6-8 reps, eseguire 2-3 Partials (mezze reps) dal basso.",
+            technique: "PARTIALS",
+          },
+          {
+            order: 2,
+            name: "Preacher Curls con Bilanciere Sagomato",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Forced Reps con spotter al blocco concentrico.",
+            technique: "FORCED_REPS",
+          },
+          {
+            order: 3,
+            name: "Pushdowns per Tricipiti ai Cavi",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Strip Sets to 10 sull'ultima serie (scarico pesante rapido).",
+            technique: "STRIP_SETS_TO_10",
+          },
+          {
+            order: 4,
+            name: "French Press con Bilanciere (Skull Crushers)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Eccentrica controllata verso la fronte, spinta decisa.",
+            technique: "FORCED_REPS",
+          },
+        ],
+      },
+      {
+        day_number: 4,
+        day_label: "Day 4: Quads",
+        target_muscles: ["Quadricipiti"],
+        exercises: [
+          {
+            order: 1,
+            name: "Leg Extensions (Pre-Exhaust)",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Peak Contraction: 2 secondi di tenuta isometrica + negativa rallentata.",
+            technique: "PEAK_CONTRACTION_NEGATIVES",
+          },
+          {
+            order: 2,
+            name: "Squat al MultiPower (Smith Machine Squats)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Carichi pesanti in sicurezza. Discesa sotto il parallelo.",
+            technique: "FORCED_REPS",
+          },
+          {
+            order: 3,
+            name: "Leg Extensions (Secondo Ingresso)",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Strip Sets to 10 finale a cedimento estremo.",
+            technique: "STRIP_SETS_TO_10",
+          },
+        ],
+      },
+      {
+        day_number: 5,
+        day_label: "Day 5: Hamstrings & Calves",
+        target_muscles: ["Femorali", "Polpacci"],
+        exercises: [
+          {
+            order: 1,
+            name: "Leg Curls Sdraiato",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Peak Contraction e negative accentuate.",
+            technique: "PEAK_CONTRACTION_NEGATIVES",
+          },
+          {
+            order: 2,
+            name: "Stacchi a Gambe Semitese (Stiff Leg Dead Lifts)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 1,
+            rest_seconds: 120,
+            notes: "Focus sullo stiramento eccentrico dei bicipiti femorali. Schiena serrata.",
+            technique: "NONE",
+          },
+          {
+            order: 3,
+            name: "Seated Calf Raises",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 60,
+            notes: "Partials in stiramento dopo il cedimento.",
+            technique: "PARTIALS",
+          },
+          {
+            order: 4,
+            name: "Standing Calf Raises",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 60,
+            notes: "Rest-Pause sull'ultima serie.",
+            technique: "REST_PAUSE",
+          },
+        ],
+      },
+      {
+        day_number: 6,
+        day_label: "Day 6: Shoulders",
+        target_muscles: ["Spalle"],
+        exercises: [
+          {
+            order: 1,
+            name: "Lento Avanti con Bilanciere (Front Presses)",
+            category: "COMPOUND",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 120,
+            notes: "Rest-Pause: cedere a 6 reps, 20 secondi pausa, chiudere a 8.",
+            technique: "REST_PAUSE",
+          },
+          {
+            order: 2,
+            name: "Alzate Laterali con Manubri (Side Laterals)",
+            category: "ISOLATION",
+            sets: 5,
+            reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Strip Sets to 10 pesanti sulla serie conclusiva.",
+            technique: "STRIP_SETS_TO_10",
+          },
+          {
+            order: 3,
+            name: "Alzate Posteriori a 90° (Rear Laterals)",
+            category: "ISOLATION",
+            sets: 4,
+            reps: "12 / 8-10 / 8-10 / 6-8",
+            load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+            rir: 0,
+            rest_seconds: 90,
+            notes: "Picco di contrazione di 2 secondi per i deltoidi posteriori.",
+            technique: "PEAK_CONTRACTION_NEGATIVES",
+          },
+        ],
+      },
+    ];
+  }
+
+  // DEFAULT AVANZATO: SPLIT 2 ON / 1 OFF (CATALOGATA SU 4 SESSIONI CHIAVE)
+  return [
     {
       day_number: 1,
-      day_label: "Giorno 1: Spinta & Quadricipiti",
-      target_muscles: ["Pettorali", "Spalle", "Tricipiti", "Quadricipiti"],
+      day_label: "Day 1: Back & Biceps",
+      target_muscles: ["Dorso", "Bicipiti"],
       exercises: [
         {
           order: 1,
-          name: "Squat con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "12-10-8-6",
-          load_guideline: "Piramidale ascendente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 180,
-          notes: getExerciseNotes("Discesa controllata 3 secondi, concentrica esplosiva.", false),
+          name: "Lat Pulldowns Presa Larga",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 120,
+          notes: "Advanced sets con tecnica Rest-Pause (pausa max 20\").",
+          technique: "REST_PAUSE",
         },
         {
           order: 2,
-          name: "Panca Piana Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale a salire fino a 6RM",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Drive concentrico violento, tocco sterno controllato.", false),
+          name: "Rematore con Bilanciere (Bent Rows)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 120,
+          notes: "Forced Reps: lo spotter assiste sulle ultime 2 reps oltre il cedimento.",
+          technique: "FORCED_REPS",
         },
         {
           order: 3,
-          name: "Lento Avanti Bilanciere",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Spinta dal mento con blocco scapolare.", false),
+          name: "Pulley Basso (Low Cable Rows)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Strip Sets to 10 pesanti: cedimento a 4-5 reps, scarico, altre 2 reps, terzo scarico.",
+          technique: "STRIP_SETS_TO_10",
         },
         {
           order: 4,
-          name: "Panca Piana Presa Stretta",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Carico pesante a cedimento",
-          rir: isDeload ? 2 : 0,
+          name: "Scrollate con Manubri (Dumbbell Shrugs)",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
           rest_seconds: 90,
-          notes: getExerciseNotes("Presa larghezza spalle, gomiti aderenti ai fianchi.", false),
+          notes: "Peak Contraction: blocco isometrico in alto per 2 secondi.",
+          technique: "PEAK_CONTRACTION_NEGATIVES",
         },
         {
           order: 5,
-          name: "Leg Extension",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "TUT continuo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Picco di contrazione 1 sec in estensione completa.", true),
+          name: "Standing Barbell Curls",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Partials finali dopo il cedimento concentrico a Full ROM.",
+          technique: "PARTIALS",
+        },
+        {
+          order: 6,
+          name: "Preacher Curls con Bilanciere",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Forced Reps con lo spotter.",
+          technique: "FORCED_REPS",
         },
       ],
     },
     {
       day_number: 2,
-      day_label: "Giorno 2: Trazione, Catena Posteriore & Addome",
-      target_muscles: ["Dorsali", "Deltoidi Posteriori", "Bicipiti", "Femorali", "Addome"],
+      day_label: "Day 2: Chest & Abs",
+      target_muscles: ["Petto", "Addome"],
       exercises: [
         {
           order: 1,
-          name: "Rematore con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale a salire",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Busto inclinato a 45 gradi, tirata all'ombelico.", false),
+          name: "Panca Piana con Bilanciere (Bench Presses)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 120,
+          notes: "Rest-Pause: cedere a 6 reps, riposare 20 secondi, spingere altre 2 reps per fare 8.",
+          technique: "REST_PAUSE",
         },
         {
           order: 2,
-          name: "Stacco Rumeno con Bilanciere (RDL)",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-8",
-          load_guideline: "Carico medio-pesante",
-          rir: isDeload ? 2 : 0,
+          name: "Panca Inclinata con Bilanciere (Incline Bench Press)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
           rest_seconds: 120,
-          notes: getExerciseNotes("Massimo allungamento ischiocrurali, colonna neutra.", false),
+          notes: "Forced reps sulle ultime 2 ripetizioni a cedimento.",
+          technique: "FORCED_REPS",
         },
         {
           order: 3,
-          name: "Face Pull alla Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "Focus deltoide posteriore",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Extra-rotazione omerale a fine corsa.", true),
+          name: "Pec Dec Machine (Flyes)",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Strip Sets to 10: scarichi pesanti immediati.",
+          technique: "STRIP_SETS_TO_10",
         },
         {
           order: 4,
-          name: "Curl Bilanciere Diritto in Piedi",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Corpo bloccato, nessun cheating lombare.", false),
+          name: "Crunches a Terra",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "20 / 20 / 12-15 / 12-15",
+          load_guideline: "2 sets corpo libero (20) + 2 sets add weight (12-15)",
+          rir: 1,
+          rest_seconds: 60,
+          notes: "Esecuzione lenta.",
+          technique: "NONE",
         },
         {
           order: 5,
-          name: "Elevazioni Gambe alle Parallele",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "15-20",
-          load_guideline: "A corpo libero",
-          rir: 0,
+          name: "Hanging Leg Raises",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12-15",
+          load_guideline: "4 serie × 12-15 reps con bacino in retroversione",
+          rir: 1,
           rest_seconds: 60,
-          notes: getExerciseNotes("Retroversione del bacino al punto massimo.", true),
+          notes: "Nessun dondolio.",
+          technique: "NONE",
         },
       ],
     },
     {
       day_number: 3,
-      day_label: "Giorno 3: Full Body & Mass Overload",
-      target_muscles: ["Gambe", "Petto", "Dorso", "Braccia", "Polpacci"],
-      exercises: [
-        {
-          order: 1,
-          name: "Leg Press a 45°",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-10-8-8",
-          load_guideline: "Massimo carico controllato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Discesa profonda senza staccare il bacino.", false),
-        },
-        {
-          order: 2,
-          name: "Distensioni Manubri su Panca Inclinata 30°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Cedimento concentrico positivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Allungamento profondo in basso.", false),
-        },
-        {
-          order: 3,
-          name: "T-Bar Row",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "10-8-8",
-          load_guideline: "Carico consistente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti stretti a ridosso del busto.", false),
-        },
-        {
-          order: 4,
-          name: "Pushdown Cavo con Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Tensione costante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Apertura completa della corda al blocco.", true),
-        },
-        {
-          order: 5,
-          name: "Curl Alternato Manubri Panca 45°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Supinazione completa",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Isolamento bicipite in allungamento.", false),
-        },
-        {
-          order: 6,
-          name: "Standing Calf Machine",
-          category: "Isolation/Machine",
-          sets: 4,
-          reps: "15-20",
-          load_guideline: "Isometria 2 sec in alto",
-          rir: 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Allungamento completo del tendine d'Achille in basso.", true),
-        },
-      ],
-    },
-  ];
-
-  // --- SPLIT 4 GIORNI (The Golden Pro Split) ---
-  const split4: AcetoWorkoutDay[] = [
-    {
-      day_number: 1,
-      day_label: "Giorno 1: Pettorali, Bicipiti & Addome",
-      target_muscles: ["Pettorali", "Bicipiti", "Addome"],
-      exercises: [
-        {
-          order: 1,
-          name: "Panca Piana Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale ascendente fino a 6RM",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Fase concentrica esplosiva, eccentrica controllata in 2-3 sec.", false),
-        },
-        {
-          order: 2,
-          name: "Distensioni Manubri su Panca Inclinata 30°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico fisso a cedimento positivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Massimo stretch in basso, chiusura fluida senza bloccare i gomiti.", false),
-        },
-        {
-          order: 3,
-          name: "Croci ai Cavi Alti",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Picco di contrazione 1 sec.",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Tensione continua con apertura controllata.", true),
-        },
-        {
-          order: 4,
-          name: "Curl Bilanciere Diritto in Piedi",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale a salire",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Corpo bloccato, nessun dondolio con la schiena.", false),
-        },
-        {
-          order: 5,
-          name: "Curl Alternato Manubri Panca 45°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico costante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Supinazione completa durante la risalita.", false),
-        },
-        {
-          order: 6,
-          name: "Elevazioni Gambe alle Parallele",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "15-20",
-          load_guideline: "A corpo libero",
-          rir: 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Contrazione di picco in alto.", true),
-        },
-      ],
-    },
-    {
-      day_number: 2,
-      day_label: "Giorno 2: Quadricipiti, Femorali & Polpacci",
+      day_label: "Day 3: Quads, Hamstrings & Calves",
       target_muscles: ["Quadricipiti", "Femorali", "Polpacci"],
       exercises: [
         {
           order: 1,
-          name: "Squat con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "12-10-8-8",
-          load_guideline: "Piramidale ascendente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 180,
-          notes: getExerciseNotes("Discesa controllata 3 sec., risalita decisa.", false),
+          name: "Leg Extensions (Pre-Exhaust)",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Peak Contraction e negative lente frenate contro resistenza.",
+          technique: "PEAK_CONTRACTION_NEGATIVES",
         },
         {
           order: 2,
-          name: "Leg Press a 45°",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Carico massimale controllato",
-          rir: isDeload ? 2 : 0,
+          name: "Smith Machine Squats",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
           rest_seconds: 120,
-          notes: getExerciseNotes("Piedi a metà pedana, ginocchia in asse.", false),
+          notes: "Sovraccarico assoluto, 6-8 reps a cedimento concentrico con spotter.",
+          technique: "FORCED_REPS",
         },
         {
           order: 3,
-          name: "Leg Extension",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "TUT elevato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Isolamento continuo sul quadricipite.", true),
+          name: "Leg Extensions (Secondo Ingresso)",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Strip Sets to 10 finale.",
+          technique: "STRIP_SETS_TO_10",
         },
         {
           order: 4,
-          name: "Stacco Rumeno con Bilanciere (RDL)",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-8",
-          load_guideline: "Carico medio-pesante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Schiena neutra, allungamento profondo dei femorali.", false),
+          name: "Leg Curls Sdraiato",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Peak contraction di 2\" al culmine dell'accorciamento.",
+          technique: "PEAK_CONTRACTION_NEGATIVES",
         },
         {
           order: 5,
-          name: "Leg Curl Sdraiato (Lying Leg Curl)",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-8",
-          load_guideline: "Carico a cedimento",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Bacino compresso sul cuscino durante la flessione.", true),
+          name: "Stiff Leg Dead Lifts (Stacchi Gambe Tese)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 1,
+          rest_seconds: 120,
+          notes: "Discesa controllata. Massima tensione eccentrica.",
+          technique: "NONE",
         },
         {
           order: 6,
-          name: "Standing Calf Machine",
-          category: "Isolation/Machine",
+          name: "Seated Calf Raises",
+          category: "ISOLATION",
           sets: 4,
-          reps: "15-20",
-          load_guideline: "Contrazione isometrica 2 sec. al picco",
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
           rir: 0,
           rest_seconds: 60,
-          notes: getExerciseNotes("Massima escursione articolare.", true),
+          notes: "Partials finali dopo il cedimento.",
+          technique: "PARTIALS",
+        },
+        {
+          order: 7,
+          name: "Standing Calf Raises",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 60,
+          notes: "Rest-Pause (15 secondi di pausa a cedimento).",
+          technique: "REST_PAUSE",
         },
       ],
     },
     {
-      day_number: 3,
-      day_label: "Giorno 3: Spalle, Tricipiti & Trapezi",
-      target_muscles: ["Spalle", "Tricipiti", "Trapezi"],
+      day_number: 4,
+      day_label: "Day 4: Shoulders & Triceps",
+      target_muscles: ["Spalle", "Tricipiti"],
       exercises: [
         {
           order: 1,
-          name: "Lento Avanti Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Blocco scapolare solido, spinta rigorosa.", false),
+          name: "Lento Avanti con Bilanciere (Front Presses)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 120,
+          notes: "Rest-Pause a 6 reps, riposo 20\", completare a 8.",
+          technique: "REST_PAUSE",
         },
         {
           order: 2,
-          name: "Alzate Laterali con Manubri",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Carico rigoroso",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Guida il movimento con i gomiti senza slancio di schiena.", false),
+          name: "Alzate Laterali con Manubri (Side Laterals)",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Strip Sets to 10 pesanti: mai usare pesi leggeri.",
+          technique: "STRIP_SETS_TO_10",
         },
         {
           order: 3,
-          name: "Face Pull alla Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "Focus deltoide posteriore",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Extra-rotazione dell'omero a fine trazione.", true),
+          name: "Alzate Posteriori (Rear Laterals)",
+          category: "ISOLATION",
+          sets: 4,
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Peak contraction di 2 secondi al vertice.",
+          technique: "PEAK_CONTRACTION_NEGATIVES",
         },
         {
           order: 4,
-          name: "Panca Piana Presa Stretta",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale a salire",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Presa larghezza spalle, gomiti vicini al corpo.", false),
+          name: "Pushdowns per Tricipiti ai Cavi",
+          category: "ISOLATION",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Strip Sets to 10 sulle ultime serie.",
+          technique: "STRIP_SETS_TO_10",
         },
         {
           order: 5,
-          name: "Pushdown Cavo con Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Apertura della corda in basso",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Gomiti bloccati ai fianchi, nessun movimento della spalla.", true),
+          name: "Skull Crushers (French Press con Bilanciere)",
+          category: "COMPOUND",
+          sets: 5,
+          reps: "12 / 8-10 / 8-10 / 6-8 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 90,
+          notes: "Forced reps con spotter per forzare le ultime 2 ripetizioni.",
+          technique: "FORCED_REPS",
         },
-      ],
-    },
-    {
-      day_number: 4,
-      day_label: "Giorno 4: Dorsali & Bassa Schiena",
-      target_muscles: ["Dorsali", "Bassa Schiena"],
-      exercises: [
         {
-          order: 1,
-          name: "Rematore con Bilanciere",
-          category: "Compound Base",
+          order: 6,
+          name: "Dips alle Parallele con Sovraccarico",
+          category: "COMPOUND",
           sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Sovraccarico progressivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Busto stabile a 45 gradi, trazione decisa all'ombelico.", false),
-        },
-        {
-          order: 2,
-          name: "Lat Machine Avanti",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "10-8-8",
-          load_guideline: "Presa prona larga",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Depressione scapolare solida prima del tiraggio.", false),
-        },
-        {
-          order: 3,
-          name: "T-Bar Row",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico consistente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti stretti per massimo spessore muscolare.", false),
-        },
-        {
-          order: 4,
-          name: "Pullover con Manubrio",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Focus allungamento",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Braccia semidistese, allungamento profondo del grandorsale.", true),
+          reps: "12 / 8-10 / 8-10 / 6-8",
+          load_guideline: "1 Warm-up (12) | 2 Working (8-10) | 1-2 Advanced to Failure (6-8)",
+          rir: 0,
+          rest_seconds: 120,
+          notes: "Partials finali dal punto di massima distensione dopo il cedimento.",
+          technique: "PARTIALS",
         },
       ],
     },
   ];
+}
 
-  // --- SPLIT 5 GIORNI (Separazione Quadricipiti / Femorali) ---
-  const split5: AcetoWorkoutDay[] = [
-    {
-      day_number: 1,
-      day_label: "Giorno 1: Pettorali & Addome",
-      target_muscles: ["Pettorali", "Addome"],
-      exercises: [
-        {
-          order: 1,
-          name: "Panca Piana Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale fino al 6RM",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Fase concentrica esplosiva, eccentrica 2-3 sec.", false),
-        },
-        {
-          order: 2,
-          name: "Distensioni Manubri su Panca Inclinata 30°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico pesante a cedimento",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Stretch completo al petto.", false),
-        },
-        {
-          order: 3,
-          name: "Croci ai Cavi Alti",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Picco contrazione 1s",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Tensione continua senza rilascio.", true),
-        },
-        {
-          order: 4,
-          name: "Elevazioni Gambe alle Parallele",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "15-20",
-          load_guideline: "Corpo libero",
-          rir: 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Retroflessione bacino.", true),
-        },
-      ],
-    },
-    {
-      day_number: 2,
-      day_label: "Giorno 2: Dorsali, Trapezi & Bassa Schiena",
-      target_muscles: ["Dorsali", "Trapezi", "Bassa Schiena"],
-      exercises: [
-        {
-          order: 1,
-          name: "Rematore con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Busto 45 gradi rigoroso.", false),
-        },
-        {
-          order: 2,
-          name: "Lat Machine Avanti",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "10-8-8",
-          load_guideline: "Presa larga",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Depressione scapolare ad inizio trazione.", false),
-        },
-        {
-          order: 3,
-          name: "T-Bar Row",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico elevato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti aderenti.", false),
-        },
-        {
-          order: 4,
-          name: "Scrollate con Bilanciere",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Elevazione scapolare",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Nessuna rotazione delle spalle, trazione solo verso l'alto.", true),
-        },
-      ],
-    },
-    {
-      day_number: 3,
-      day_label: "Giorno 3: Quadricipiti & Polpacci",
-      target_muscles: ["Quadricipiti", "Polpacci"],
-      exercises: [
-        {
-          order: 1,
-          name: "Squat con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "12-10-8-8",
-          load_guideline: "Piramidale ascendente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 180,
-          notes: getExerciseNotes("Discesa controllata 3 secondi.", false),
-        },
-        {
-          order: 2,
-          name: "Leg Press a 45°",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-10-10-10",
-          load_guideline: "Carico massimale controllato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Piedi a metà pedana.", false),
-        },
-        {
-          order: 3,
-          name: "Leg Extension",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "TUT elevato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Isolamento continuo.", true),
-        },
-        {
-          order: 4,
-          name: "Standing Calf Machine",
-          category: "Isolation/Machine",
-          sets: 4,
-          reps: "15-20",
-          load_guideline: "Isometria 2 sec in alto",
-          rir: 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Allungamento profondo al tallone.", true),
-        },
-      ],
-    },
-    {
-      day_number: 4,
-      day_label: "Giorno 4: Spalle & Bicipiti",
-      target_muscles: ["Spalle", "Bicipiti"],
-      exercises: [
-        {
-          order: 1,
-          name: "Lento Avanti Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Spinta dal mento solida.", false),
-        },
-        {
-          order: 2,
-          name: "Alzate Laterali con Manubri",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Carico controllato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Guida con i gomiti.", false),
-        },
-        {
-          order: 3,
-          name: "Face Pull alla Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "12-12-12",
-          load_guideline: "Cavi alti",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Extra-rotazione omero.", true),
-        },
-        {
-          order: 4,
-          name: "Curl Bilanciere Diritto in Piedi",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti fermi contro i fianchi.", false),
-        },
-        {
-          order: 5,
-          name: "Curl Alternato Manubri Panca 45°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Costante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Supinazione in risalita.", false),
-        },
-      ],
-    },
-    {
-      day_number: 5,
-      day_label: "Giorno 5: Femorali & Tricipiti",
-      target_muscles: ["Femorali", "Tricipiti"],
-      exercises: [
-        {
-          order: 1,
-          name: "Stacco Rumeno con Bilanciere (RDL)",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-8-6",
-          load_guideline: "Carico progressivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Focus allungamento posteriore.", false),
-        },
-        {
-          order: 2,
-          name: "Leg Curl Sdraiato (Lying Leg Curl)",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-8",
-          load_guideline: "Cedimento positivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Bacino incollato alla panca.", true),
-        },
-        {
-          order: 3,
-          name: "Panca Piana Presa Stretta",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Presa larghezza spalle.", false),
-        },
-        {
-          order: 4,
-          name: "Pushdown Cavo con Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Isolamento cavo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Apertura corda in basso.", true),
-        },
-      ],
-    },
-  ];
+/**
+ * Modula dinamicamente la progressione periodizzata secondo la dottrina di Aceto:
+ * - W1-W2: Base Volume Acquisition (Cedimento tecnico positivo 8-10 reps)
+ * - W3-W4: Heavy Absolute Overload (+2.5kg tronco / +5kg gambe, composti a 6-8 reps pesanti)
+ * - W5: Peak Intensity / Stripping Peak (Cedimento assoluto con tecniche speciali)
+ * - W6: Deload Attivo / Neural Reset (Taglio a 2 serie fisse, carichi -20%, RIR 2)
+ * - W7-W8 (Opzionale): Mini-Blocco di Forza 3 Rep Maxes (3RM/2RM/1RM sui composti, no cedimento)
+ */
+export function modulateAcetoWorkoutDays(
+  days: AcetoWorkoutDay[],
+  weekNumber: number
+): AcetoWorkoutDay[] {
+  const safeWeek = Math.max(1, Math.min(8, Number(weekNumber) || 1));
+  const is3RMStrengthBlock = safeWeek === 7 || safeWeek === 8;
+  const isDeload = safeWeek === 6;
+  const isStrippingPeak = safeWeek === 5;
+  const isHeavyOverload = safeWeek === 3 || safeWeek === 4;
 
-  // --- SPLIT 6 GIORNI (Monomuscolare Avanzata Aceto - They) ---
-  const split6: AcetoWorkoutDay[] = [
-    {
-      day_number: 1,
-      day_label: "Giorno 1: Deltoidi & Trapezi",
-      target_muscles: ["Spalle", "Trapezi"],
-      exercises: [
-        {
-          order: 1,
-          name: "Lento Avanti Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Spinta dal mento esplosiva.", false),
-        },
-        {
-          order: 2,
-          name: "Alzate Laterali con Manubri",
-          category: "Angle/Dumbbell",
-          sets: 4,
-          reps: "10-10-8-8",
-          load_guideline: "Rigore tecnico",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Guida con i gomiti.", false),
-        },
-        {
-          order: 3,
-          name: "Alzate a 90° con Manubri",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "12-10-10",
-          load_guideline: "Carico controllato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Busto parallelo al pavimento.", false),
-        },
-        {
-          order: 4,
-          name: "Scrollate con Bilanciere",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Carico pesante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Elevazione pura senza rotazione.", true),
-        },
-      ],
-    },
-    {
-      day_number: 2,
-      day_label: "Giorno 2: Dorsali & Bassa Schiena",
-      target_muscles: ["Dorsali", "Bassa Schiena"],
-      exercises: [
-        {
-          order: 1,
-          name: "Rematore con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Busto a 45 gradi.", false),
-        },
-        {
-          order: 2,
-          name: "Trazioni alla Sbarra zavorrate",
-          category: "Compound Base",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Zavorra a cedimento",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Trazione al petto piena.", false),
-        },
-        {
-          order: 3,
-          name: "T-Bar Row",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Carico elevato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti stretti per spessore.", false),
-        },
-        {
-          order: 4,
-          name: "Pullover con Manubrio",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Allungamento dorsale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Respirazione profonda nel punto inferiore.", true),
-        },
-      ],
-    },
-    {
-      day_number: 3,
-      day_label: "Giorno 3: Quadricipiti",
-      target_muscles: ["Quadricipiti"],
-      exercises: [
-        {
-          order: 1,
-          name: "Squat con Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "12-10-8-8",
-          load_guideline: "Piramidale ascendente",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 180,
-          notes: getExerciseNotes("Discesa controllata 3 secondi.", false),
-        },
-        {
-          order: 2,
-          name: "Leg Press a 45°",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-10-10-8",
-          load_guideline: "Carico massimo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Pedana centrale, spinta talloni.", false),
-        },
-        {
-          order: 3,
-          name: "Leg Extension",
-          category: "Isolation/Machine",
-          sets: 4,
-          reps: "12-12-10-10",
-          load_guideline: "TUT elevato",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Isolamento e bruciore continuo.", true),
-        },
-      ],
-    },
-    {
-      day_number: 4,
-      day_label: "Giorno 4: Pettorali",
-      target_muscles: ["Pettorali"],
-      exercises: [
-        {
-          order: 1,
-          name: "Panca Piana Bilanciere",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-6-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 150,
-          notes: getExerciseNotes("Drive concentrico esplosivo.", false),
-        },
-        {
-          order: 2,
-          name: "Distensioni Manubri su Panca Inclinata 30°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Cedimento positivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Apertura ampia, contrazione alta.", false),
-        },
-        {
-          order: 3,
-          name: "Croci ai Cavi Alti",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Tensione continua",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Picco di contrazione 1 secondo.", true),
-        },
-      ],
-    },
-    {
-      day_number: 5,
-      day_label: "Giorno 5: Braccia Complete (Push-Pull)",
-      target_muscles: ["Bicipiti", "Tricipiti"],
-      exercises: [
-        {
-          order: 1,
-          name: "Curl Bilanciere Diritto in Piedi",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Zero cheating con le spalle.", false),
-        },
-        {
-          order: 2,
-          name: "Panca Piana Presa Stretta",
-          category: "Compound Base",
-          sets: 3,
-          reps: "10-8-6",
-          load_guideline: "Piramidale",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 90,
-          notes: getExerciseNotes("Gomiti stretti aderenti al tronco.", false),
-        },
-        {
-          order: 3,
-          name: "Curl Alternato Manubri Panca 45°",
-          category: "Angle/Dumbbell",
-          sets: 3,
-          reps: "8-8-8",
-          load_guideline: "Costante",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Supinazione in risalita.", false),
-        },
-        {
-          order: 4,
-          name: "Pushdown Cavo con Corda",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-10",
-          load_guideline: "Isolamento",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Apertura corda al blocco.", true),
-        },
-      ],
-    },
-    {
-      day_number: 6,
-      day_label: "Giorno 6: Femorali & Polpacci",
-      target_muscles: ["Femorali", "Polpacci"],
-      exercises: [
-        {
-          order: 1,
-          name: "Stacco Rumeno con Bilanciere (RDL)",
-          category: "Compound Base",
-          sets: 4,
-          reps: "10-8-8-6",
-          load_guideline: "Progressivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 120,
-          notes: getExerciseNotes("Allungamento ischiocrurali massimo.", false),
-        },
-        {
-          order: 2,
-          name: "Leg Curl Sdraiato (Lying Leg Curl)",
-          category: "Isolation/Machine",
-          sets: 3,
-          reps: "10-10-8",
-          load_guideline: "Cedimento positivo",
-          rir: isDeload ? 2 : 0,
-          rest_seconds: 75,
-          notes: getExerciseNotes("Flessione completa senza muovere le anche.", true),
-        },
-        {
-          order: 3,
-          name: "Standing Calf Machine",
-          category: "Isolation/Machine",
-          sets: 4,
-          reps: "15-20",
-          load_guideline: "Isometria 2s",
-          rir: 0,
-          rest_seconds: 60,
-          notes: getExerciseNotes("Escursione articolare profonda.", true),
-        },
-      ],
-    },
-  ];
+  return days.map((day) => {
+    const dayLabelLower = (day.day_label || "").toLowerCase();
 
-  let selectedWorkoutDays: AcetoWorkoutDay[];
-  switch (days) {
-    case 3:
-      selectedWorkoutDays = split3;
-      break;
-    case 5:
-      selectedWorkoutDays = split5;
-      break;
-    case 6:
-      selectedWorkoutDays = split6;
-      break;
-    case 4:
-    default:
-      selectedWorkoutDays = split4;
-      break;
+    const updatedExercises: AcetoExercise[] = day.exercises.map((ex) => {
+      const isCompound = ex.category === "COMPOUND";
+      const isLowerBody =
+        dayLabelLower.includes("gambe") ||
+        dayLabelLower.includes("leg") ||
+        dayLabelLower.includes("quad") ||
+        /squat|leg|press|stacco|calf|femoral|quad/i.test(ex.name);
+
+      const overloadDelta = isLowerBody ? "+5kg" : "+2.5kg";
+
+      // 1. MINI-BLOCCO 3RM (SETTIMANE 7-8)
+      if (is3RMStrengthBlock) {
+        if (isCompound) {
+          return {
+            ...ex,
+            sets: 5,
+            reps: "3 / 3 / 2 / 2 / 1 (3RM Protocol)",
+            rir: 1,
+            rest_seconds: 180,
+            load_guideline: "Massimo carico neurale. Nessuna tecnica speciale a cedimento.",
+            notes: `W${safeWeek} FORZA NEURALE: Protocollo 3RM/1RM per elevare la soglia motoria prima del nuovo ciclo massa.`,
+            technique: "THREE_REP_MAX" as AcetoSpecialTechnique,
+          };
+        } else {
+          return {
+            ...ex,
+            sets: 3,
+            reps: "8-10",
+            rir: 2,
+            rest_seconds: 90,
+            load_guideline: "Mantenimento muscolare a buffer 2. Zero cedimento.",
+            notes: "Esercizio accessorio di supporto al recupero neurale.",
+            technique: "NONE" as AcetoSpecialTechnique,
+          };
+        }
+      }
+
+      // 2. DELOAD ATTIVO (SETTIMANA 6)
+      if (isDeload) {
+        return {
+          ...ex,
+          sets: 2,
+          reps: isCompound ? "10-12 (Esecuzione Fluida)" : "12-15 (Pompaggio Controllato)",
+          rir: 2,
+          rest_seconds: 90,
+          load_guideline: "Scarico Attivo (-20% sul carico): volume tagliato a 2 serie fisse.",
+          notes: "W6 DELOAD: Riparazione articolare, sintesi proteica e rigenerazione del sistema nervoso.",
+          technique: "NONE" as AcetoSpecialTechnique,
+        };
+      }
+
+      // 3. STRIPPING PEAK (SETTIMANA 5)
+      if (isStrippingPeak) {
+        return {
+          ...ex,
+          sets: isCompound ? 4 : 3,
+          reps: isCompound ? "6-8 + Strip Set to 10" : "8-10 + Drop Set",
+          rir: 0,
+          rest_seconds: isCompound ? 120 : 90,
+          load_guideline: "Picco Intensità: Ultima serie con scarico immediato del 35% e max reps a cedimento.",
+          notes: "W5 PEAK: Cedere a 6-8 reps, scaricare subito il carico del 35% senza sosta e spingere fino al cedimento positivo.",
+          technique: ex.technique || "STRIP_SETS_TO_10",
+        };
+      }
+
+      // 4. HEAVY ABSOLUTE OVERLOAD (SETTIMANE 3-4)
+      if (isHeavyOverload) {
+        return {
+          ...ex,
+          sets: isCompound ? 4 : 3,
+          reps: isCompound ? "6-8 (Heavy Overload)" : "8-10",
+          rir: 1,
+          rest_seconds: isCompound ? 120 : 90,
+          load_guideline: `Sovraccarico Assoluto: incrementare il carico (${overloadDelta} rispetto a W1-W2).`,
+          notes: `W${safeWeek} OVERLOAD: Focus sul sollevamento di carichi massimali nel range ipertrofico (6-8 reps).`,
+          technique: ex.technique || "NONE",
+        };
+      }
+
+      // 5. BASE VOLUME ACQUISITION (SETTIMANE 1-2)
+      return {
+        ...ex,
+        sets: isCompound ? 4 : 3,
+        reps: isCompound ? "8-10" : "10-12",
+        rir: safeWeek === 1 ? 2 : 1,
+        rest_seconds: isCompound ? 90 : 75,
+        load_guideline: "Base Volume: Carico rigoroso per raggiungere il cedimento positivo nell'intervallo 8-10 reps.",
+        notes: `W${safeWeek} BASE: Reclutamento fibre IIb, cadenza concentrica esplosiva F = m · a ed eccentrica controllata.`,
+        technique: ex.technique || "NONE",
+      };
+    });
+
+    return {
+      ...day,
+      exercises: updatedExercises,
+    };
+  });
+}
+
+/**
+ * Genera il programma completo secondo la metodologia Chris Aceto.
+ */
+export function generateAcetoSplit(
+  splitDays: AcetoSplitDays,
+  week: number = 1,
+  history: any[] = [],
+  options?: {
+    level?: AcetoAthleteLevel;
+    goal?: AcetoGoal;
+    bodyFat?: number;
   }
+): AcetoProgram {
+  const level = options?.level ?? "ADVANCED";
+  const goal = options?.goal ?? "MASS_BUILDING";
+  const rawDays = buildOfficialTemplate(splitDays, level);
+  const modulatedDays = modulateAcetoWorkoutDays(rawDays, week);
+
+  let phaseName = "Base Volume Acquisition";
+  if (week === 3 || week === 4) phaseName = "Heavy Absolute Overload";
+  if (week === 5) phaseName = "Stripping Peak & Failure Techniques";
+  if (week === 6) phaseName = "Active Deload & Neural Recovery";
+  if (week >= 7) phaseName = "3RM Neural Strength Mini-Block";
 
   return {
     program_name: `Chris Aceto Championship Engine (Settimana ${week})`,
-    split_type: `${days}_days`,
+    split_type: `${splitDays}_days_${level.toLowerCase()}`,
     current_week: week,
     total_weeks: 6,
-    workout_days: modulateAcetoWorkoutDays(selectedWorkoutDays, week),
+    workout_days: modulatedDays,
+    level,
+    goal,
+    phase_name: phaseName,
   };
 }
 
 /**
- * Ricalcola la progressione a blocchi di 6 settimane secondo il metodo Chris Aceto:
- * - W1-W2: Base Volume (8-10 composti / 10-12 isolamento, RIR 1-2, serie lineari)
- * - W3-W4: Heavy Overload (6-8 composti pesanti / 8-10 isolamento, +2.5kg tronco/+5kg gambe, RIR 1)
- * - W5: Stripping Peak (serie target + Stripping Triple Drop Set -35% a cedimento, RIR 0)
- * - W6: Deload Attivo (taglio netto a 2 serie fisse, -20% carico, 10-12 reps controllate, RIR 2)
+ * Ricalcola la progressione a fine microciclo preservando i carichi registrati nello storico.
  */
 export function applyAcetoWeekProgression(
   currentDays: any[],
@@ -1135,219 +1196,5 @@ export function applyAcetoWeekProgression(
   history: any[] = []
 ): any[] {
   if (!currentDays || !Array.isArray(currentDays)) return [];
-
-  const isDeload = targetWeek === 6;
-  const isStrippingPeak = targetWeek === 5;
-  const isHeavyOverload = targetWeek === 3 || targetWeek === 4;
-
-  return currentDays.map((day) => {
-    const updatedExercises = (day.exercises || []).map((ex: any) => {
-      const exName = (ex.name || "").toLowerCase();
-      const dayName = (day.name || "").toLowerCase();
-
-      // Rilevamento tipologia esercizio
-      const isCompound = /panca|squat|stacco|press|trazioni|rematore|row|military|dip|lento/i.test(exName);
-      const isLowerBody = /squat|leg|press|stacco|affondi|calf|femoral|quad/i.test(exName) || /gambe/i.test(dayName);
-      const isIsolation = !isCompound;
-
-      // 1. CALCOLO SERIE (SETS)
-      let sets = ex.sets ?? 4;
-      if (isDeload) {
-        sets = 2; // W6 Deload: taglio a 2 serie fisse su tutto
-      } else if (isIsolation) {
-        sets = 3;
-      } else {
-        sets = 4;
-      }
-
-      // 2. CALCOLO RIPETIZIONI (REPS)
-      let reps = "8-10";
-      if (isDeload) {
-        reps = isCompound ? "10-12 (Leggero)" : "12-15 (Pompaggio)";
-      } else if (isStrippingPeak) {
-        reps = isCompound ? "8 + Stripping (-35%)" : "10 + Stripping 2x";
-      } else if (isHeavyOverload) {
-        reps = isCompound ? "6-8 (Heavy)" : "8-10";
-      } else {
-        // W1-W2 Base
-        reps = isCompound ? "8-10" : "10-12";
-      }
-
-      // 3. CALCOLO CARICO (WEIGHT)
-      let weight = Number(ex.weight) || 0;
-      const increment = isLowerBody ? 5 : 2.5;
-
-      if (isDeload) {
-        // Taglio del 20% sul carico
-        weight = weight > 0 ? Math.round(weight * 0.8 * 2) / 2 : 0;
-      } else if (targetWeek === 3) {
-        // Primo incremento sovraccarico
-        weight = weight > 0 ? weight + increment : 0;
-      } else if (targetWeek === 4) {
-        // Consolidamento o secondo micro-incremento
-        weight = weight > 0 ? weight + increment : 0;
-      }
-
-      // 4. CALCOLO RIR E TECNICA D'INTENSITÀ
-      let targetRir = 1;
-      let intensityTechnique = "Serie Lineare";
-      let notes = "";
-
-      if (isDeload) {
-        targetRir = 2;
-        intensityTechnique = "Scarico Rigenerativo";
-        notes = "W6 DELOAD: 2 serie fisse, -20% carico. Recupero neurale.";
-      } else if (isStrippingPeak) {
-        targetRir = 0;
-        intensityTechnique = "Stripping (Drop Set -35%)";
-        notes = "W5 PEAK: Ultima serie a cedimento con doppio scarico del 35% senza sosta.";
-      } else if (isHeavyOverload) {
-        targetRir = 1;
-        intensityTechnique = targetWeek === 4 ? "Heavy Overload / Top Set" : "Sovraccarico Meccanico";
-        notes = `W${targetWeek} OVERLOAD: Focus carico pesante (+${increment}kg), 6-8 reps composti.`;
-      } else {
-        targetRir = targetWeek === 1 ? 2 : 1;
-        intensityTechnique = "Volume Base";
-        notes = `W${targetWeek} BASE: Adattamento schema motorio, RIR controllato.`;
-      }
-
-      return {
-        ...ex,
-        sets,
-        workingSets: sets,
-        reps,
-        weight,
-        targetRir,
-        intensityTechnique,
-        notes,
-      };
-    });
-
-    return {
-      ...day,
-      week: targetWeek,
-      exercises: updatedExercises,
-    };
-  });
-}
-/**
- * Calcola la settimana reale del ciclo Aceto (da 1 a 6)
- * in base al numero di allenamenti completati e alla dimensione della split (3, 4, 5 o 6 giorni).
- */
-export function calculateAcetoCurrentWeek(
-  historyCount: number,
-  splitSize: number
-): number {
-  // Clamp di sicurezza: la split deve essere tra 3 e 6 giorni (default a 4 se non definita)
-  const safeSplit = Math.max(3, Math.min(6, Number(splitSize) || 4));
-  const safeHistory = Math.max(0, Number(historyCount) || 0);
-
-  const completedWeeks = Math.floor(safeHistory / safeSplit);
-  return (completedWeeks % 6) + 1;
-}
-/**
- * Modula dinamicamente serie, ripetizioni, carichi, RIR e note
- * per ciascun esercizio in base alla settimana selezionata (W1..W6).
- * Preserva intatta tutta la struttura e le schede del database.
- */
-export function modulateAcetoWorkoutDays(
-  days: AcetoWorkoutDay[],
-  weekNumber: number
-): AcetoWorkoutDay[] {
-  const safeWeek = Math.max(1, Math.min(6, Number(weekNumber) || 1));
-  const isDeload = safeWeek === 6;
-  const isStrippingPeak = safeWeek === 5;
-  const isOverload = safeWeek === 3 || safeWeek === 4;
-
-  return days.map((day) => {
-    const dayLabelLower = (day.day_label || "").toLowerCase();
-
-    const updatedExercises: AcetoExercise[] = day.exercises.map((ex) => {
-      const exNameLower = (ex.name || "").toLowerCase();
-      const exCatLower = (ex.category || "").toLowerCase();
-
-      // Rilevamento composti vs isolamento
-      const isCompound =
-        exCatLower.includes("compound") ||
-        exCatLower.includes("multiarticolare") ||
-        /panca|squat|stacco|press|trazioni|rematore|row|military|dip|lento|chin/i.test(exNameLower);
-
-      // Rilevamento distretto inferiore per incremento carichi
-      const isLowerBody =
-        dayLabelLower.includes("gambe") ||
-        dayLabelLower.includes("leg") ||
-        /squat|leg|press|stacco|affondi|calf|femoral|quad|polpacc/i.test(exNameLower);
-
-      // 1. SETS (SERIE)
-      let sets = ex.sets;
-      if (isDeload) {
-        sets = 2; // Taglio netto a 2 serie fisse su tutti gli esercizi
-      } else if (isStrippingPeak) {
-        sets = isCompound ? 4 : 3;
-      } else if (isOverload) {
-        sets = isCompound ? 4 : 3;
-      } else {
-        // W1-W2 Base
-        sets = isCompound ? 4 : 3;
-      }
-
-      // 2. REPS (RIPETIZIONI)
-      let reps = ex.reps;
-      if (isDeload) {
-        reps = isCompound ? "10-12 (Leggero)" : "12-15 (Pompaggio)";
-      } else if (isStrippingPeak) {
-        reps = isCompound ? "8 + Stripping (-35%)" : "10 + Drop Set 2x";
-      } else if (isOverload) {
-        reps = isCompound ? "6-8 (Heavy Overload)" : "8-10";
-      } else {
-        // W1-W2 Base
-        reps = isCompound ? "8-10" : "10-12";
-      }
-
-      // 3. RIR (BUFFER)
-      let rir = ex.rir;
-      if (isDeload) {
-        rir = 2; // Buffer ampio di recupero
-      } else if (isStrippingPeak) {
-        rir = 0; // Cedimento concentrico positivo assoluto
-      } else if (isOverload) {
-        rir = 1; // Cedimento tecnico controllato
-      } else {
-        rir = safeWeek === 1 ? 2 : 1;
-      }
-
-      // 4. LOAD GUIDELINE & NOTE
-      let load_guideline = ex.load_guideline;
-      let notes = ex.notes;
-      const overloadDelta = isLowerBody ? "+5kg" : "+2.5kg";
-
-      if (isDeload) {
-        load_guideline = "Scarico Attivo (-20% carico): esecuzione fluida, no cedimento";
-        notes = "W6 DELOAD: Volume tagliato a 2 serie fisse per favorire il recupero articolare e neurale.";
-      } else if (isStrippingPeak) {
-        load_guideline = "Picco Stripping: Ultima serie a cedimento, scarico immediato del 35% e max reps";
-        notes = "W5 PEAK: Raggiungi il cedimento a 8 reps, riduci subito il carico del 35% senza pausa e continua.";
-      } else if (isOverload) {
-        load_guideline = `Heavy Overload: Carico aumentato (${overloadDelta} rispetto a W1-W2)`;
-        notes = `W${safeWeek} OVERLOAD: Focus massimale sulle 6-8 reps pesanti con cadenza concentrica esplosiva.`;
-      } else {
-        load_guideline = "Base Volume: Carico target per cedimento tecnico nell'intervallo 8-10 reps";
-        notes = `W${safeWeek} BASE: Consolidamento schema motorio, reclutamento fibre IIb e tensione continua.`;
-      }
-
-      return {
-        ...ex,
-        sets,
-        reps,
-        rir,
-        load_guideline,
-        notes,
-      };
-    });
-
-    return {
-      ...day,
-      exercises: updatedExercises,
-    };
-  });
+  return modulateAcetoWorkoutDays(currentDays, targetWeek);
 }
