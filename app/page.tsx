@@ -81,6 +81,7 @@ import TopGymClassicCabina from "@/components/TopGymClassicCabina";
 import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
 import { useProgramRealtime } from "@/lib/useProgramRealtime";
 import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
+import WorkoutWizardModal from "@/components/WorkoutWizardModal";
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
@@ -377,6 +378,8 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
 const [programmingModel, setProgrammingModel] = useState<
   "TOPGYM_BLOCKS" | "HARDTOPGYM" | "ACETO" | "NOCERINO"
 >("TOPGYM_BLOCKS");
+
+const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -3576,6 +3579,27 @@ if (isFinished) {
             readinessHistory={readinessHistory}
           />
         )}
+
+<button
+  type="button"
+  onClick={() => setIsWizardOpen(true)}
+  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
+>
+  <span>✨</span> Assegna Scheda tramite Sondaggio
+</button>
+
+{/* MODALE DEL QUESTIONARIO */}
+<WorkoutWizardModal
+  isOpen={isWizardOpen}
+  onClose={() => setIsWizardOpen(false)}
+  onSelectEngine={(recommendedEngine) => {
+    setProgrammingModel(recommendedEngine);
+    setBuilderSuccessMessage(
+      `🎯 Motore ${recommendedEngine} impostato automaticamente in base al profilo dell'atleta!`
+    );
+    setTimeout(() => setBuilderSuccessMessage(null), 5000);
+  }}
+/>
 
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && userRole === "COACH" && (
