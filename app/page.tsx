@@ -3588,15 +3588,16 @@ if (isFinished) {
   <span>✨</span> Assegna Scheda tramite Sondaggio
 </button>
 
-{/* MODALE DEL QUESTIONARIO */}
 <WorkoutWizardModal
   isOpen={isWizardOpen}
   onClose={() => setIsWizardOpen(false)}
-  onSelectEngine={(recommendedEngine) => {
-    setProgrammingModel(recommendedEngine);
-    setBuilderSuccessMessage(
-      `🎯 Motore ${recommendedEngine} impostato automaticamente in base al profilo dell'atleta!`
-    );
+  onApplyProgram={(newDays, recommendedEngine, successMessage) => {
+    // 1. Inietta direttamente le sessioni dei 30 template Top Gym nello state della PWA
+    setProgramDays(newDays as any);
+    // 2. Imposta il motore attivo (TOPGYM_BLOCKS, HARDTOPGYM, ACETO, NOCERINO)
+    setProgrammingModel(recommendedEngine as any);
+    // 3. Mostra il feedback di successo
+    setBuilderSuccessMessage(successMessage);
     setTimeout(() => setBuilderSuccessMessage(null), 5000);
   }}
 />
