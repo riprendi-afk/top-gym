@@ -3580,27 +3580,32 @@ if (isFinished) {
           />
         )}
 
-<button
-  type="button"
-  onClick={() => setIsWizardOpen(true)}
-  className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
->
-  <span>✨</span> Assegna Scheda tramite Sondaggio
-</button>
+{/* ====================================================================== */}
+        {/* ACCESSO AL GENERATORE SONDAGGIO: ESCLUSIVO DELLA ZONA BUILDER          */}
+        {/* ====================================================================== */}
+        {activeTab === "builder" && (
+          <>
+            <button
+              type="button"
+              onClick={() => setIsWizardOpen(true)}
+              className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
+            >
+              <span>✨</span> Assegna Scheda tramite Sondaggio
+            </button>
 
-<WorkoutWizardModal
-  isOpen={isWizardOpen}
-  onClose={() => setIsWizardOpen(false)}
-  onApplyProgram={(newDays, recommendedEngine, successMessage) => {
-    // 1. Inietta direttamente le sessioni dei 30 template Top Gym nello state della PWA
-    setProgramDays(newDays as any);
-    // 2. Imposta il motore attivo (TOPGYM_BLOCKS, HARDTOPGYM, ACETO, NOCERINO)
-    setProgrammingModel(recommendedEngine as any);
-    // 3. Mostra il feedback di successo
-    setBuilderSuccessMessage(successMessage);
-    setTimeout(() => setBuilderSuccessMessage(null), 5000);
-  }}
-/>
+            <WorkoutWizardModal
+              isOpen={isWizardOpen}
+              onClose={() => setIsWizardOpen(false)}
+              onApplyProgram={(newDays, recommendedEngine, successMessage) => {
+                setProgramDays(newDays as any);
+                setProgrammingModel(recommendedEngine as any);
+                setBuilderSuccessMessage(successMessage);
+                setTimeout(() => setBuilderSuccessMessage(null), 5000);
+              }}
+            />
+          </>
+        )}
+        {/* ====================================================================== */}
 
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && userRole === "COACH" && (
