@@ -2776,15 +2776,11 @@ if (isFinished) {
                 </h2>
               </div>
 
-{/* SELETTORE GIORNI COMPATTO & MODERNO */}
-<div className="flex flex-wrap gap-2 mb-4">
+{/* SELETTORE GIORNI ORIZZONTALE (Scrollabile per risparmiare spazio) */}
+<div className="flex gap-2 mb-4 overflow-x-auto scrollbar-none pb-1 snap-x w-full">
                 {programDays.map((day, index) => {
-                  // Rimuove eventuali diciture "Giorno 1:", "Giorno 1 -", ecc. già presenti nel titolo
                   const rawTitle = day.title || (day as Record<string, any>).dayName || '';
-                  const cleanTitle = rawTitle
-                    .replace(/^Giorno\s*\d+\s*[:\-\.]?\s*/i, '')
-                    .trim();
-
+                  const cleanTitle = rawTitle.replace(/^Giorno\s*\d+\s*[:\-\.]?\s*/i, '').trim();
                   const isSelected = selectedDayIndex === index;
 
                   return (
@@ -2793,77 +2789,53 @@ if (isFinished) {
                       type="button"
                       onClick={() => {
                         setSelectedDayIndex(index);
-                        if (day.exercises?.[0]) setCurrentExId(day.exercises[0].id);
+                        if (day.exercises && day.exercises.length > 0) {
+                          setCurrentExId(day.exercises[0].id);
+                        }
                       }}
-                      className={`group px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer border ${
+                      className={`shrink-0 snap-start px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
                         isSelected
-                          ? 'bg-[#E50914] border-[#E50914] text-white shadow-lg shadow-red-950/40 font-bold'
-                          : 'bg-zinc-900/90 hover:bg-zinc-800/90 border-white/5 text-zinc-400 hover:text-zinc-200'
+                          ? 'bg-[#E50914] border-[#E50914] text-white shadow-md'
+                          : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
                       }`}
                     >
-                      {/* Badge compatto Giorno */}
-                      <span
-                        className={`px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                          isSelected
-                            ? 'bg-black/30 text-white'
-                            : 'bg-white/5 text-zinc-400 group-hover:text-zinc-300'
-                        }`}
-                      >
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] ${isSelected ? 'bg-black/30' : 'bg-white/5'}`}>
                         G{day.dayNumber || index + 1}
                       </span>
-
-                      {/* Nome muscolare o focus pulito */}
-                      <span className="truncate max-w-[170px] sm:max-w-xs">
-                        {cleanTitle || `Giorno ${day.dayNumber || index + 1}`}
-                      </span>
+                      <span>{cleanTitle.length > 18 ? cleanTitle.substring(0, 18) + '...' : cleanTitle}</span>
                     </button>
                   );
                 })}
               </div>
 
-{/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA */}
-{trainingMethod === "HARDTOPGYM" && (
-  <div className="mb-4 p-3 sm:p-4 rounded-2xl bg-[#12151B] border border-white/10 shadow-xl">
-  <div className="flex items-center justify-between gap-2 flex-wrap">
-    <div className="flex items-center gap-2">
-      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-      <span className="text-xs font-black uppercase tracking-wider text-white">
-        {isMasterProgram ? "HARDTOPGYM (Bosco-Colli)" : "TOPGYM Classico"}
-      </span>
-    </div>
-    <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-yellow-400">
-      {isMasterProgram
-        ? `Settimana ${calculatedCurrentPhase} di 4`
-        : `Settimana ${calculatedCurrentRealWeek} / 47 • Blocco ${activeBlock === 'BLOCCO_1_FORZA' ? '1: Forza' : activeBlock === 'BLOCCO_2_TRASFORMAZIONE' ? '2: Trasformazione' : '3: Qualità'}`}
-    </span>
-  </div>
-
-  <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between gap-2 flex-wrap">
-    <div>
-      <p className="text-xs font-bold text-white">
-        {isMasterProgram
-          ? calculatedCurrentPhase === 1 ? "Fase 1: Setup Neurale & CAT"
-          : calculatedCurrentPhase === 2 ? "Fase 2: Micro-Overload (+2.5% Carichi)"
-          : calculatedCurrentPhase === 3 ? "Fase 3: Intensificazione / Urto (+5%)"
-          : "Fase 4: Scarico Attivo (Deload SNC)"
-          : calculatedCurrentPhase === 1 ? "Fase I: Accumulo Volume (Buffer RIR 2-4)"
-          : calculatedCurrentPhase === 2 ? "Fase II: Conversione & Aumento Carichi"
-          : calculatedCurrentPhase === 3 ? "Fase III: Scarico (Deload -40% Volume)"
-          : "Fase IV: Intensificazione & Picco"}
-      </p>
-      <p className="text-[10px] text-zinc-400">
-        {workoutHistory.length} allenamenti registrati nello storico
-      </p>
-      </div>
-
-    {calculatedCurrentPhase === (isMasterProgram ? 4 : 3) && (
-      <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-        Settimana di Scarico (Deload)
-      </span>
-)}
-</div>
-</div>
-)}
+              {/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA (ULTRA-COMPATTO) */}
+              {trainingMethod === "HARDTOPGYM" && (
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-[#12151B] border border-white/10 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white">
+                      {isMasterProgram ? "HARDTOPGYM" : "TOPGYM Classico"}
+                    </span>
+                    <span className="text-[10px] font-mono text-yellow-500 bg-black/40 px-1.5 py-0.5 rounded border border-white/5">
+                      Set {isMasterProgram ? String(calculatedCurrentPhase) : String(calculatedCurrentRealWeek)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 justify-between sm:justify-end w-full sm:w-auto">
+                    <span className="text-[10px] font-bold text-zinc-300 truncate">
+                      {isMasterProgram 
+                        ? (calculatedCurrentPhase === 1 ? "1: Setup Neurale" : (calculatedCurrentPhase === 2 ? "2: Micro-Overload" : (calculatedCurrentPhase === 3 ? "3: Intensificazione (+5%)" : "4: Scarico (Deload SNC)")))
+                        : (calculatedCurrentPhase === 1 ? "I: Accumulo Volume" : (calculatedCurrentPhase === 2 ? "II: Conversione" : (calculatedCurrentPhase === 3 ? "III: Scarico" : "IV: Picco")))}
+                    </span>
+                    
+                    {((isMasterProgram && calculatedCurrentPhase === 4) || (!isMasterProgram && calculatedCurrentPhase === 3)) && (
+                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Deload
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
 {/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
 <div className="grid gap-3 md:grid-cols-2">
