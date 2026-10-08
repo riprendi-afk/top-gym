@@ -43,7 +43,7 @@ export function RestTimerBar({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 text-white shadow-2xl z-50 flex items-center justify-between pb-safe">
+<div className="fixed bottom-[72px] md:bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 text-white shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-[60] flex items-center justify-between pb-safe">
       
       {/* STATO 1: TIMER ATTIVO */}
       {isRestActive && restSecondsRemaining !== null ? (
