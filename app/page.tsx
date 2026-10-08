@@ -2837,6 +2837,28 @@ if (isFinished) {
                 </div>
               )}
 
+              {/* BARRA DI PROGRESSO GLOBALE ALLENAMENTO */}
+              {(() => {
+                const totalWorkoutSets = activeRoutine.reduce((acc: number, ex: any) => acc + (ex.sets || 0), 0);
+                const workoutProgressPct = totalWorkoutSets > 0 ? Math.min(100, Math.round((todayLogs.length / totalWorkoutSets) * 100)) : 0;
+                return (
+                  <div className="mb-5 bg-black/40 p-3 rounded-xl border border-white/5">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-1.5">
+                        <TrendingUp className="w-3.5 h-3.5" /> Avanzamento Sessione
+                      </span>
+                      <span className="text-[12px] font-black text-white">{workoutProgressPct}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+                      <div 
+                        className="h-full bg-gradient-to-r from-orange-500 to-[#E50914] transition-all duration-700 ease-out" 
+                        style={{ width: `${workoutProgressPct}%` }} 
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
 {/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
 <div className="grid gap-3 md:grid-cols-2">
                 {activeRoutine.map((ex: any) => {
