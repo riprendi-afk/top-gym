@@ -2,9 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { Plus, Minus, X, CheckCircle, Loader2 } from 'lucide-react';
+// Assicurati che l'import di useWorkoutSession sia corretto per il tuo progetto
 import { useWorkoutSession } from '../lib/useWorkoutSession';
 
-// 1. Dichiariamo i props per risolvere l'errore TypeScript
 interface RestTimerBarProps {
   todayLogsCount: number;
   onFinishWorkout: () => void;
@@ -57,6 +57,7 @@ export function RestTimerBar({
 
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => adjustRestTime(-30)}
               className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
               aria-label="Togli 30 secondi"
@@ -64,6 +65,7 @@ export function RestTimerBar({
               <Minus size={20} className="text-gray-300" />
             </button>
             <button
+              type="button"
               onClick={() => adjustRestTime(30)}
               className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
               aria-label="Aggiungi 30 secondi"
@@ -71,6 +73,7 @@ export function RestTimerBar({
               <Plus size={20} className="text-gray-300" />
             </button>
             <button
+              type="button"
               onClick={stopRestTimer}
               className="p-2 bg-red-900/50 hover:bg-red-900 rounded-full border border-red-800 transition-colors ml-2"
               aria-label="Termina recupero"
@@ -91,14 +94,15 @@ export function RestTimerBar({
           </div>
           
           <button
+            type="button"
             onClick={onFinishWorkout}
             disabled={isSavingWorkout}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-[#E50914] hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider transition-colors disabled:opacity-50 shadow-lg cursor-pointer"
           >
             {isSavingWorkout ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
-              <CheckCircle size={20} />
+              <CheckCircle size={20} className="stroke-[3]" />
             )}
             {isSavingWorkout ? 'Salvataggio...' : 'Fine Workout'}
           </button>
