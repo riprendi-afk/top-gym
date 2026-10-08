@@ -1,197 +1,109 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Timer, X } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Plus, Minus, X, CheckCircle, Loader2 } from 'lucide-react';
+import { useWorkoutSession } from '../lib/useWorkoutSession';
 
+// 1. Dichiariamo i props per risolvere l'errore TypeScript
 interface RestTimerBarProps {
   todayLogsCount: number;
   onFinishWorkout: () => void;
   isSavingWorkout: boolean;
 }
 
-export default function RestTimerBar({
+export function RestTimerBar({
   todayLogsCount,
   onFinishWorkout,
-  isSavingWorkout,
+  isSavingWorkout
 }: RestTimerBarProps) {
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
-  const targetEndTimeRef = useRef<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const wakeLockRef = useRef<any>(null);
+  const {
+    restSecondsRemaining,
+    isRestActive,
+    completeSet,
+    adjustRestTime,
+    stopRestTimer,
+  } = useWorkoutSession();
 
-  // Beep Hardware con Web Audio API (funziona con cuffie Bluetooth e silenzioso attivo)
-  const playBeepTone = useCallback(() => {
-    try {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-
-      const playTone = (freq: number, startDelay: number, dur: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + startDelay);
-        gain.gain.setValueAtTime(0.4, ctx.currentTime + startDelay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + dur);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + startDelay);
-        osc.stop(ctx.currentTime + startDelay + dur);
-      };
-
-      playTone(880, 0, 0.25);
-      playTone(1174, 0.3, 0.45);
-    } catch (err) {
-      console.error('Impossibile riprodurre beep:', err);
-    }
-  }, []);
-
-  const stopRest = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    targetEndTimeRef.current = null;
-    setRemainingSeconds(null);
-
-    // Stop Keep-Alive Audio
-    if (silentAudioRef.current) {
-      silentAudioRef.current.pause();
-      silentAudioRef.current.currentTime = 0;
-    }
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'none';
-    }
-
-    // Rilascio Wake Lock
-    if (wakeLockRef.current) {
-      wakeLockRef.current.release().catch(() => {});
-      wakeLockRef.current = null;
-    }
-  }, []);
-
-  const triggerTimerFinish = useCallback(() => {
-    stopRest();
-    playBeepTone();
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([300, 150, 300, 150, 450]);
-    }
-  }, [stopRest, playBeepTone]);
-
-  const updateDelta = useCallback(() => {
-    if (!targetEndTimeRef.current) return;
-    const diff = Math.ceil((targetEndTimeRef.current - Date.now()) / 1000);
-
-    if (diff <= 0) {
-      triggerTimerFinish();
-    } else {
-      setRemainingSeconds(diff);
-    }
-  }, [triggerTimerFinish]);
-
-  const startRest = useCallback(
-    (seconds: number) => {
-      if (seconds <= 0) return;
-      stopRest();
-
-      // 1. Wake Lock
-      if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').then((lock) => {
-          wakeLockRef.current = lock;
-        }).catch(() => {});
-      }
-
-      // 2. Audio Keep-Alive
-      try {
-        if (!silentAudioRef.current) {
-          silentAudioRef.current = new Audio(
-            'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
-          );
-          silentAudioRef.current.loop = true;
-        }
-        silentAudioRef.current.play().catch(() => {});
-
-        if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: 'Recupero in corso',
-            artist: 'TOP GYM',
-            album: 'Timer Serie',
-          });
-          navigator.mediaSession.playbackState = 'playing';
-        }
-      } catch (_) {}
-
-      // 3. Target Timestamp assoluto (zero drift in background)
-      targetEndTimeRef.current = Date.now() + seconds * 1000;
-      setRemainingSeconds(seconds);
-
-      intervalRef.current = setInterval(updateDelta, 1000);
-    },
-    [stopRest, updateDelta]
-  );
-
-  // Listener Custom Event + Sincronizzazione al risveglio dello schermo
+  // Ascolto del CustomEvent isolato
   useEffect(() => {
-    const handleStartRestEvent = (e: Event) => {
+    const handleStartRest = (e: Event) => {
       const customEvent = e as CustomEvent<number>;
-      if (typeof customEvent.detail === 'number') {
-        startRest(customEvent.detail);
-      }
+      const seconds = customEvent.detail;
+      completeSet('metabolic', seconds); 
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && targetEndTimeRef.current) {
-        updateDelta();
-      }
-    };
+    window.addEventListener('topgym:start-rest', handleStartRest);
+    return () => window.removeEventListener('topgym:start-rest', handleStartRest);
+  }, [completeSet]);
 
-    window.addEventListener('topgym:start-rest', handleStartRestEvent);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('topgym:start-rest', handleStartRestEvent);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      stopRest();
-    };
-  }, [startRest, stopRest, updateDelta]);
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-4 right-4 z-40 max-w-5xl mx-auto bg-[#12151B]/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        {remainingSeconds !== null ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono font-bold">
-            <Timer className="w-4 h-4 animate-pulse" />
-            <span>
-              Recupero: {Math.floor(remainingSeconds / 60)}:
-              {(remainingSeconds % 60).toString().padStart(2, '0')}
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4 text-white shadow-2xl z-50 flex items-center justify-between pb-safe">
+      
+      {/* STATO 1: TIMER ATTIVO */}
+      {isRestActive && restSecondsRemaining !== null ? (
+        <>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Recupero</span>
+            <span className="text-3xl font-bold font-mono tracking-tighter text-blue-400">
+              {formatTime(restSecondsRemaining)}
             </span>
+          </div>
+
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              onClick={stopRest}
-              className="ml-1 text-zinc-400 hover:text-white transition cursor-pointer"
-              title="Interrompi recupero"
+              onClick={() => adjustRestTime(-30)}
+              className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Togli 30 secondi"
             >
-              <X className="w-3.5 h-3.5" />
+              <Minus size={20} className="text-gray-300" />
+            </button>
+            <button
+              onClick={() => adjustRestTime(30)}
+              className="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Aggiungi 30 secondi"
+            >
+              <Plus size={20} className="text-gray-300" />
+            </button>
+            <button
+              onClick={stopRestTimer}
+              className="p-2 bg-red-900/50 hover:bg-red-900 rounded-full border border-red-800 transition-colors ml-2"
+              aria-label="Termina recupero"
+            >
+              <X size={20} className="text-red-400" />
             </button>
           </div>
-        ) : (
-          <span className="text-xs text-zinc-400 font-medium">
-            Sessione in corso - {todayLogsCount} set registrati
-          </span>
-        )}
-      </div>
-
-      <button
-        type="button"
-        onClick={onFinishWorkout}
-        disabled={isSavingWorkout}
-        className="bg-emerald-600 hover:brightness-110 text-white font-black px-6 py-3 rounded-xl uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all disabled:opacity-50"
-      >
-        {isSavingWorkout ? 'Salvataggio...' : 'Termina e Salva'}
-      </button>
+        </>
+      ) : (
+        
+        /* STATO 2: NESSUN RECUPERO (MOSTRA PULSANTE FINE ALLENAMENTO) */
+        <>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Sessione</span>
+            <span className="text-sm font-bold text-gray-200">
+              {todayLogsCount} serie completate
+            </span>
+          </div>
+          
+          <button
+            onClick={onFinishWorkout}
+            disabled={isSavingWorkout}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50"
+          >
+            {isSavingWorkout ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <CheckCircle size={20} />
+            )}
+            {isSavingWorkout ? 'Salvataggio...' : 'Fine Workout'}
+          </button>
+        </>
+      )}
     </div>
   );
 }
