@@ -9,6 +9,7 @@ import {
   convertTemplateToProgramDays,
   TemplateMeta
 } from '@/lib/topgym-catalog';
+import { Zap, Shield, Flame, Clock, Award, CheckCircle, ArrowRight, ArrowLeft, X } from 'lucide-react';
 
 interface WorkoutWizardModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export default function WorkoutWizardModal({
   const [gender, setGender] = useState<Gender>('MALE');
   const [level, setLevel] = useState<TrainingLevel>('INTERMEDIO');
   const [profile, setProfile] = useState<PsychologicalProfile>('METABOLICO_PUMPING');
-  const [daysPerWeek, setDaysPerWeek] = useState<number>(5);
+  const [daysPerWeek, setDaysPerWeek] = useState<number>(4);
   const [goal, setGoal] = useState<string>('HYPERTROPHY');
 
   // Risultato generato
@@ -37,7 +38,8 @@ export default function WorkoutWizardModal({
   if (!isOpen) return null;
 
   const handleGenerate = () => {
-    const outcome = resolveTopGymTemplate(gender, level, profile, daysPerWeek);
+    // Ora passiamo anche il GOAL selezionato!
+    const outcome = resolveTopGymTemplate(gender, level, profile, daysPerWeek, goal);
     setAvailableTemplates(outcome.availableTemplates);
     setRecommendedTemplate(outcome.recommendedTemplate);
     setSelectedTemplate(outcome.recommendedTemplate);
@@ -51,7 +53,7 @@ export default function WorkoutWizardModal({
       onApplyProgram(
         programDays,
         selectedTemplate.primaryEngine,
-        `✨ Template ${selectedTemplate.id} (${selectedTemplate.title}) con ${selectedTemplate.daysCount} sedute applicato!`
+        `✨ Template ${selectedTemplate.id} (${selectedTemplate.title}) su Motore ${selectedTemplate.primaryEngine} con ${selectedTemplate.daysCount} sedute applicato!`
       );
       onClose();
     }
@@ -61,31 +63,44 @@ export default function WorkoutWizardModal({
     ? convertTemplateToProgramDays(selectedTemplate, gender)
     : [];
 
+  const getEngineBadge = (engine: string) => {
+    switch (engine) {
+      case 'HARDTOPGYM':
+        return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Bosco-Colli (HardTopGym)</span>;
+      case 'NOCERINO':
+        return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30">Biomeccanica Nocerino</span>;
+      case 'ACETO':
+        return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-red-500/20 text-[#E50914] border border-red-500/30">Chris Aceto Density</span>;
+      default:
+        return <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">TopGym Classic (Blocchi)</span>;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col text-white">
         {/* HEADER */}
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60 sticky top-0 z-10">
+        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60 sticky top-0 z-10 backdrop-blur-sm">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-              TOP GYM · Intelligent Engine Selector
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#E50914]">
+              TOP GYM · Intelligent Engine Triage
             </div>
             <h2 className="text-base font-bold text-white">Generatore Scientifico di Schede</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-white p-1 rounded-lg text-sm"
+            className="text-zinc-400 hover:text-white p-1 rounded-xl hover:bg-zinc-800 transition"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* PROGRESS BAR */}
         {step <= 5 && (
-          <div className="w-full bg-zinc-900 h-1">
+          <div className="w-full bg-zinc-900 h-1.5">
             <div
-              className="bg-emerald-500 h-1 transition-all duration-300"
+              className="bg-[#E50914] h-1.5 transition-all duration-300"
               style={{ width: `${(step / 5) * 100}%` }}
             />
           </div>
@@ -96,35 +111,35 @@ export default function WorkoutWizardModal({
           {/* STEP 1: SESSO */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">Dimensione A</div>
-              <h3 className="text-base font-bold text-zinc-100">1. Sesso e Profilo Biomeccanico:</h3>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dimensione 1 di 5</div>
+              <h3 className="text-lg font-bold text-white">Sesso e Profilo Biomeccanico:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setGender('MALE')}
-                  className={`p-4 rounded-xl text-left border transition-all ${
+                  className={`p-4 rounded-2xl text-left border transition-all ${
                     gender === 'MALE'
-                      ? 'border-blue-500 bg-blue-950/20 text-white shadow-lg shadow-blue-500/10'
-                      : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                      ? 'border-blue-500 bg-blue-950/30 text-white shadow-lg shadow-blue-500/10'
+                      : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                   }`}
                 >
-                  <div className="font-bold text-sm text-white mb-1">🏋️‍♂️ Uomo</div>
+                  <div className="font-black text-base text-white mb-1">🏋️‍♂️ Uomo</div>
                   <div className="text-xs text-zinc-400">
-                    Bias su torso, spinta/trazione e carichi neurali pesanti.
+                    Bias su catena di spinta/trazione, multiarticolari pesanti e carichi neurali elevati.
                   </div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setGender('FEMALE')}
-                  className={`p-4 rounded-xl text-left border transition-all ${
+                  className={`p-4 rounded-2xl text-left border transition-all ${
                     gender === 'FEMALE'
-                      ? 'border-pink-500 bg-pink-950/20 text-white shadow-lg shadow-pink-500/10'
-                      : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                      ? 'border-pink-500 bg-pink-950/30 text-white shadow-lg shadow-pink-500/10'
+                      : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                   }`}
                 >
-                  <div className="font-bold text-sm text-white mb-1">🏋️️‍♀️ Donna</div>
+                  <div className="font-black text-base text-white mb-1">🏋‍♀️ Donna</div>
                   <div className="text-xs text-zinc-400">
-                    Bias su glutei, catena posteriore, V-taper e cardio LISS drenante.
+                    Bias su glutei, catena posteriore, V-taper posturale e cardio LISS drenante anti-ritenzione.
                   </div>
                 </button>
               </div>
@@ -134,26 +149,26 @@ export default function WorkoutWizardModal({
           {/* STEP 2: ANZIANITÀ */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">Dimensione B</div>
-              <h3 className="text-base font-bold text-zinc-100">2. Anzianità di Allenamento:</h3>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dimensione 2 di 5</div>
+              <h3 className="text-lg font-bold text-white">Anzianità di Allenamento Reale:</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { id: 'NEOFITA', label: 'Neofita', sub: '< 6 Mesi', desc: 'Progressione lineare, buffer RIR 2, cedimento tecnico.' },
-                  { id: 'INTERMEDIO', label: 'Intermedio', sub: '6 - 24 Mesi', desc: 'Schemi stabili, tolleranza RIR 1-2, modulazione settimanale.' },
-                  { id: 'AVANZATO', label: 'Avanzato', sub: '> 24 Mesi', desc: 'Cedimento concentrico reale, carichi elevati e tecniche speciali.' }
+                  { id: 'NEOFITA', label: 'Neofita', sub: '< 6 Mesi', desc: 'Progressione lineare, buffer RIR 2, stabilizzazione tecnica.' },
+                  { id: 'INTERMEDIO', label: 'Intermedio', sub: '6 - 24 Mesi', desc: 'Schemi stabili, RIR 1-2, progressione settimanale dei carichi.' },
+                  { id: 'AVANZATO', label: 'Avanzato', sub: '> 24 Mesi', desc: 'Cedimento reale, tolleranza carichi neurali e tecniche ad alta intensità.' }
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setLevel(item.id as TrainingLevel)}
-                    className={`p-4 rounded-xl text-left border transition-all ${
+                    className={`p-4 rounded-2xl text-left border transition-all ${
                       level === item.id
-                        ? 'border-emerald-500 bg-emerald-950/20 text-white'
-                        : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                        ? 'border-[#E50914] bg-red-950/20 text-white'
+                        : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
-                    <div className="font-bold text-sm text-white">{item.label}</div>
-                    <div className="text-[10px] text-emerald-400 font-mono mb-1">{item.sub}</div>
+                    <div className="font-black text-sm text-white">{item.label}</div>
+                    <div className="text-[10px] text-[#E50914] font-mono mb-1">{item.sub}</div>
                     <div className="text-xs text-zinc-400">{item.desc}</div>
                   </button>
                 ))}
@@ -161,45 +176,45 @@ export default function WorkoutWizardModal({
             </div>
           )}
 
-          {/* STEP 3: ATTITUDINE PSICOLOGICA ALL'EFFORT */}
+          {/* STEP 3: ATTITUDINE PSICOLOGICA */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-amber-400">Dimensione C</div>
-              <h3 className="text-base font-bold text-zinc-100">3. Profilo Psicologico & Percezione dell&apos;Effort:</h3>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dimensione 3 di 5</div>
+              <h3 className="text-lg font-bold text-white">Attitudine Psicologica all&apos;Effort:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
                   {
                     id: 'CAUTO_ANSIA_CARICO',
                     title: '🛡️ Cauto / Ansia da Carico',
-                    desc: 'Bassa tolleranza sotto bilancieri pesanti. Predilige macchine guidate, manubri e progressioni a buffer (RIR 2-3).'
+                    desc: 'Timore sotto carichi liberi pesanti. Ottimale con macchine guidate, cavi e profilo biomeccanico Nocerino.'
                   },
                   {
                     id: 'AGGRESSIVO_NEURALE',
                     title: '⚡ Aggressivo / Neurale',
-                    desc: 'Forte carica agonistica. Richiede multiarticolari pesanti in CAT e buffer obbligatorio sui fondamentali.'
+                    desc: 'Forte grinta agonistica. Ideale con multiarticolari pesanti in CAT e metodo ormonale Bosco-Colli.'
                   },
                   {
                     id: 'METABOLICO_PUMPING',
                     title: '🔥 Metabolico / Pumping & Feeling',
-                    desc: 'Ama il bruciore, superset e contrazioni di picco. Ottimale con Stripping, Back-Off e serie 10+MAX.'
+                    desc: 'Ama il bruciore e le serie dense. Ottimale con Rest-Pause, Drop Set e metodo Chris Aceto.'
                   },
                   {
                     id: 'TIME_CONSTRAINED',
                     title: '⏱️ Time-Constrained / Efficienza',
-                    desc: 'Poco tempo a disposizione. Richiede sedute dense, senza tempi morti e ad altissimo impatto.'
+                    desc: 'Poco tempo a disposizione. Richiede sessioni compatte, ad alta densità e senza pause superflue.'
                   }
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setProfile(item.id as PsychologicalProfile)}
-                    className={`p-4 rounded-xl text-left border transition-all ${
+                    className={`p-4 rounded-2xl text-left border transition-all ${
                       profile === item.id
-                        ? 'border-emerald-500 bg-emerald-950/20 text-white shadow-lg shadow-emerald-500/10'
-                        : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                        ? 'border-[#E50914] bg-red-950/20 text-white shadow-lg'
+                        : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
-                    <div className="font-bold text-sm text-white mb-1">{item.title}</div>
+                    <div className="font-black text-sm text-white mb-1">{item.title}</div>
                     <div className="text-xs text-zinc-400 leading-relaxed">{item.desc}</div>
                   </button>
                 ))}
@@ -210,17 +225,18 @@ export default function WorkoutWizardModal({
           {/* STEP 4: FREQUENZA SETTIMANALE */}
           {step === 4 && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-zinc-100">4. Frequenza Settimanale (Giorni Reali):</h3>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dimensione 4 di 5</div>
+              <h3 className="text-lg font-bold text-white">Frequenza Settimanale (Giorni Effettivi):</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {([2, 3, 4, 5, 6] as const).map((days) => (
                   <button
                     key={days}
                     type="button"
                     onClick={() => setDaysPerWeek(days)}
-                    className={`p-4 rounded-xl text-center border transition-all ${
+                    className={`p-4 rounded-2xl text-center border transition-all ${
                       daysPerWeek === days
-                        ? 'border-emerald-500 bg-emerald-950/20 text-white shadow-lg shadow-emerald-500/10'
-                        : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                        ? 'border-[#E50914] bg-red-950/20 text-white shadow-lg'
+                        : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
                     <div className="text-2xl font-black text-white">{days}</div>
@@ -231,28 +247,29 @@ export default function WorkoutWizardModal({
             </div>
           )}
 
-          {/* STEP 5: OBIETTIVO */}
+          {/* STEP 5: OBIETTIVO PRIMARIO */}
           {step === 5 && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-zinc-100">5. Obiettivo Primario:</h3>
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dimensione 5 di 5</div>
+              <h3 className="text-lg font-bold text-white">Obiettivo Primario della Periodizzazione:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
-                  { id: 'HYPERTROPHY', title: 'Ipertrofia Massima', desc: 'Sovraccarico progressivo, densità e volume mirato.' },
-                  { id: 'STRENGTH', title: 'Forza Funzionale', desc: 'Aumento percentuali carico sui multiarticolari.' },
-                  { id: 'COMPOSITION', title: 'Ricomposizione & Tono', desc: 'Miglioramento capacità di lavoro e gestione del lattato.' },
-                  { id: 'CONTEST', title: 'Qualità Muscolare / Dettaglio', desc: 'Frequenza alta e isolamento per densità profonda.' }
+                  { id: 'HYPERTROPHY', title: '💪 Ipertrofia & Volume Target', desc: 'Sovraccarico progressivo, curve di resistenza e massima densità miofibrillare.' },
+                  { id: 'STRENGTH', title: '⚡ Forza & Potenza Neurale', desc: 'Accelerazione concentrica (CAT) sui multiarticolari fondamentali e percentuali crescenti.' },
+                  { id: 'COMPOSITION', title: '⚖️ Ricomposizione & Tono', desc: 'Aumento capacità di lavoro, densità lattacida e protocolli cardio-drenanti.' },
+                  { id: 'CONTEST', title: '🏆 Densità Muscolare & Dettaglio', desc: 'Alte frequenze, tecniche speciali estreme e stripping a esaurimento concentrico.' }
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setGoal(item.id)}
-                    className={`p-4 rounded-xl text-left border transition-all ${
+                    className={`p-4 rounded-2xl text-left border transition-all ${
                       goal === item.id
-                        ? 'border-emerald-500 bg-emerald-950/20 text-white'
-                        : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
+                        ? 'border-[#E50914] bg-red-950/20 text-white'
+                        : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
-                    <div className="font-bold text-sm text-white mb-1">{item.title}</div>
+                    <div className="font-black text-sm text-white mb-1">{item.title}</div>
                     <div className="text-xs text-zinc-400">{item.desc}</div>
                   </button>
                 ))}
@@ -260,34 +277,37 @@ export default function WorkoutWizardModal({
             </div>
           )}
 
-          {/* STEP 6: VERDETTO & SELETTORE MULTIPLO PER FREQUENZA ESATTA */}
+          {/* STEP 6: VERDETTO SCIENTIFICO */}
           {step === 6 && selectedTemplate && (
             <div className="space-y-5 animate-in fade-in">
               {/* RACCOMANDAZIONE */}
-              <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40">
-                <div className="flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-[#E50914]/40 shadow-xl">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                      🎯 Scheda Consigliata dall&apos;Algoritmo
+                    <div className="text-[10px] font-black uppercase tracking-wider text-[#E50914] flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5" /> Protocollo Scientifico Consigliato
                     </div>
-                    <div className="text-lg font-black text-white mt-0.5">
+                    <div className="text-lg font-black text-white mt-1">
                       {recommendedTemplate?.id} · {recommendedTemplate?.title}
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {daysPerWeek} Giorni Esatti
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {getEngineBadge(recommendedTemplate?.primaryEngine || '')}
+                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-black/60 text-zinc-300 border border-white/10">
+                      {daysPerWeek} Giorni
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
+                <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-white/5 pt-2">
                   {rationale}
                 </p>
               </div>
 
-              {/* SELETTORE ALTERNATIVE PER LA STESSA FREQUENZA */}
+              {/* SELETTORE ALTERNATIVE */}
               {availableTemplates.length > 1 && (
                 <div className="space-y-2">
                   <div className="text-xs font-bold uppercase text-zinc-400 tracking-wider">
-                    Scegli tra le schede disponibili per {daysPerWeek} giorni:
+                    Alternative disponibili per {daysPerWeek} giorni:
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {availableTemplates.map((tmpl) => {
@@ -300,14 +320,14 @@ export default function WorkoutWizardModal({
                           onClick={() => setSelectedTemplate(tmpl)}
                           className={`p-3 rounded-xl text-left border transition-all ${
                             isSelected
-                              ? 'border-emerald-500 bg-emerald-950/40 text-white shadow-md'
+                              ? 'border-[#E50914] bg-red-950/30 text-white shadow-md'
                               : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-xs text-white">{tmpl.id}</span>
                             {isRecommended && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500 text-black font-black uppercase">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#E50914] text-white font-black uppercase">
                                 Consigliata
                               </span>
                             )}
@@ -315,8 +335,9 @@ export default function WorkoutWizardModal({
                           <div className="text-xs font-semibold text-zinc-200 mt-1 line-clamp-1">
                             {tmpl.title}
                           </div>
-                          <div className="text-[10px] text-zinc-400 mt-0.5 font-mono">
-                            Motore: {tmpl.primaryEngine} · {tmpl.daysCount} Sedute
+                          <div className="text-[10px] text-zinc-400 mt-1 font-mono flex items-center justify-between">
+                            <span>Motore: {tmpl.primaryEngine}</span>
+                            <span>{tmpl.daysCount} Sedute</span>
                           </div>
                         </button>
                       );
@@ -325,20 +346,20 @@ export default function WorkoutWizardModal({
                 </div>
               )}
 
-              {/* ANTEPRIMA DELLE SEDUTE E DEGLI ESERCIZI (TUTTI I 7 ESERCIZI) */}
+              {/* ANTEPRIMA SESSIONI */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-zinc-400 uppercase">
                   <span>Anteprima Sessioni ({activeDaysPreview.length} Giorni Reali):</span>
-                  <span className="text-emerald-400 font-mono">
+                  <span className="text-[#E50914] font-mono">
                     {activeDaysPreview[0]?.exercises?.length || 0} esercizi a seduta
                   </span>
                 </div>
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                   {activeDaysPreview.map((day: any, i: number) => (
                     <div key={day.id || i} className="bg-zinc-900/80 p-3 rounded-xl border border-zinc-800 text-xs space-y-1">
                       <div className="font-bold text-white flex justify-between">
                         <span>{day.title}</span>
-                        <span className="text-emerald-400 text-[11px] font-mono">
+                        <span className="text-[#E50914] text-[11px] font-mono">
                           {day.exercises?.length} esercizi
                         </span>
                       </div>
@@ -359,9 +380,9 @@ export default function WorkoutWizardModal({
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-800"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:text-white bg-zinc-800 flex items-center gap-1.5"
             >
-              Indietro
+              <ArrowLeft className="w-3.5 h-3.5" /> Indietro
             </button>
           ) : (
             <div />
@@ -371,9 +392,9 @@ export default function WorkoutWizardModal({
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-white text-black hover:bg-zinc-200"
+              className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-white text-black hover:bg-zinc-200 flex items-center gap-1.5"
             >
-              Avanti
+              Avanti <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -381,9 +402,9 @@ export default function WorkoutWizardModal({
             <button
               type="button"
               onClick={handleGenerate}
-              className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 text-black hover:bg-emerald-400 shadow-lg shadow-emerald-500/20"
+              className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-[#E50914] text-white hover:bg-red-600 shadow-lg shadow-red-950/40 flex items-center gap-1.5"
             >
-              Elabora Scheda Top Gym ⚡
+              <Zap className="w-4 h-4 fill-white" /> Elabora Scheda Top Gym
             </button>
           )}
 
@@ -391,9 +412,9 @@ export default function WorkoutWizardModal({
             <button
               type="button"
               onClick={handleApply}
-              className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 text-black hover:bg-emerald-400 shadow-lg shadow-emerald-500/20"
+              className="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider bg-[#E50914] text-white hover:bg-red-600 shadow-lg shadow-red-950/40 flex items-center justify-center gap-2"
             >
-              Applica Scheda alla WebApp & Avvia Macrociclo
+              <CheckCircle className="w-4 h-4" /> Applica Scheda & Avvia Macrociclo
             </button>
           )}
         </div>

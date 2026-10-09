@@ -8,6 +8,8 @@ export type PsychologicalProfile =
   | 'METABOLICO_PUMPING'
   | 'TIME_CONSTRAINED';
 
+export type TrainingGoal = 'HYPERTROPHY' | 'STRENGTH' | 'COMPOSITION' | 'CONTEST';
+
 export type HatfieldSegment = 'NEURALE' | 'MECCANICO' | 'METABOLICO' | 'CORE_CARDIO';
 
 export interface ExerciseDefinition {
@@ -53,7 +55,7 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
     group: 'PRINCIPIANTE',
     daysCount: 2,
     primaryEngine: 'TOPGYM_BLOCKS',
-    description: 'Frequenza minima ad alta efficienza: Giorno 1 Upper Body completo, Giorno 2 Lower Body completo.',
+    description: 'Frequenza minima ad alta efficienza: G1 Upper Body completo, G2 Lower Body completo con buffer controllato.',
     generateSessions: () => [
       {
         dayLabel: 'Giorno 1: Torso Completo (Spinta & Trazione)',
@@ -179,14 +181,14 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
   },
   T12: {
     id: 'T12',
-    title: 'Push / Pull / Legs 3 Giorni Avanzata (High-Density Top Gym)',
+    title: 'Push / Pull / Legs 3 Giorni Power-Hyper (Bosco-Colli)',
     group: 'AVANZATO',
     daysCount: 3,
     primaryEngine: 'HARDTOPGYM',
-    description: 'Protocollo PPL 3 giorni per atleti intermedi/avanzati: 7 esercizi a seduta su segmenti Hatfield.',
+    description: 'Protocollo PPL per atleti avanzati su stimolo neurale CAT (Compensatory Acceleration) e micro-overload progressivo.',
     generateSessions: () => [
       {
-        dayLabel: 'Giorno 1: Push (Petto, Spalle Anteriori/Laterali & Tricipiti)',
+        dayLabel: 'Giorno 1: Push (Petto, Spalle Anteriori & Tricipiti)',
         sessionFocus: 'Forza Neurale Panca, Volume Meccanico & Stripping Deltoidi',
         exercises: [
           { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Pettorale Centrale', segment: 'NEURALE', sets: 4, reps: '5-6', restSeconds: 150, effort: 'RIR 1-2 (CAT)', technique: 'COMPENSATORY_ACCELERATION_CAT', notes: 'Fermo al petto di 1", spinta esplosiva concentrica.' },
@@ -226,17 +228,64 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
       }
     ]
   },
+  // NUOVO MOTORE NOCERINO (3 GIORNI)
+  T13: {
+    id: 'T13',
+    title: 'Biomeccanica 3 Giorni PPL a Tensione Continua (Metodo Nocerino)',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'NOCERINO',
+    description: 'Ottimizzazione delle curve di resistenza, macchine isotoniche e convergenze articolari con auto-avanzamento su 4 fasi biomeccaniche.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Push Biomeccanico (Allineamento Fibre)',
+        sessionFocus: 'Convergenza Clavicolare & Cavi Orizzontali',
+        exercises: [
+          { order: 1, name: 'Chest Press convergente a selettore', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta lungo la linea delle fibre clavicolari.' },
+          { order: 2, name: 'Croci ai cavi panca 30° con profilo a campana', targetMuscle: 'Petto Alto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'ISOMETRIA_DI_PICCO', notes: 'Tensione costante all\'apice.' },
+          { order: 3, name: 'Lento manubri panca a 75° con extrarotazione', targetMuscle: 'Spalle Anteriori', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Presa a 45° senza stress acromiale.' },
+          { order: 4, name: 'Alzate laterali al cavo singolo dietro la schiena', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Cavo all\'altezza del ginocchio per braccio di leva ottimale.' },
+          { order: 5, name: 'Pushdown barra a V con gomiti serrati', targetMuscle: 'Tricipiti', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Bloccare la spalla in retroversione.' },
+          { order: 6, name: 'Estensioni sopra la nuca al cavo basso', targetMuscle: 'Tricipiti (Capo Lungo)', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Massimo allungamento del capo lungo.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Pull Biomeccanico (Trazione sui Piani di Movimento)',
+        sessionFocus: 'Dorsale Puro, Traiettoria Iliaca & Bicipiti',
+        exercises: [
+          { order: 1, name: 'Lat Machine unilaterale al cavo (Tirata Iliaca)', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8 per lato', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Gomito verso la cresta iliaca senza torsione.' },
+          { order: 2, name: 'Pulley con presa neutra divergente', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Adduzione scapolare controllata.' },
+          { order: 3, name: 'Rematore alla macchina a petto appoggiato', targetMuscle: 'Dorso Alto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'Cedimento', technique: 'BACK_OFF_CEDIMENTO', notes: 'Eliminazione completa del compenso lombare.' },
+          { order: 4, name: 'Face pull al cavo alto con doppia corda', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'ISOMETRIA_DI_PICCO', notes: 'Doppia corda per aumentare il ROM posteriore.' },
+          { order: 5, name: 'Curl su panca inclinata a 60° (Stretch Capo Lungo)', targetMuscle: 'Bicipiti', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Gomiti fissi dietro il busto.' },
+          { order: 6, name: 'Spider Curl con manubri su panca a 45°', targetMuscle: 'Bicipiti (Picco)', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Massimo accorciamento concentrico.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Legs Biomeccanico (Isolamento Articolare)',
+        sessionFocus: 'Catene Chiuse/Aperte & Stabilizzazione Anca',
+        exercises: [
+          { order: 1, name: 'Hack Squat con piedi a base stretta', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 150, effort: 'RIR 1', technique: 'NONE', notes: 'Traiettoria guidata con massimo affondo sicuro.' },
+          { order: 2, name: 'Leg Press orizzontale a selettore', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Piedi bassi per enfasi sui vasti.' },
+          { order: 3, name: 'Leg Curl seduto (Isolamento Femorale in Flessione)', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 4, reps: '10-12', restSeconds: 75, effort: 'Cedimento', technique: 'ISOMETRIA_DI_PICCO', notes: 'Busto inclinato avanti per pre-stirare i femorali.' },
+          { order: 4, name: 'Stacco rumeno ai manubri con fermo in allungamento', targetMuscle: 'Catena Posteriore', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Fermo 2" nel punto di massima tensione.' },
+          { order: 5, name: 'Leg Extension (Profilo di Tensione Ottimale)', targetMuscle: 'Retto Femorale', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% all\'ultima serie.' },
+          { order: 6, name: 'Calf seduto per soleo', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Fermo di 2" in stretch profondo.' }
+        ]
+      }
+    ]
+  },
 
   // --------------------------------------------------------------------------
   // 4 GIORNI
   // --------------------------------------------------------------------------
   T11: {
     id: 'T11',
-    title: 'Upper / Lower 4 Giorni Metodo Hatfield',
+    title: 'Upper / Lower 4 Giorni Metodo Hatfield (Bosco-Colli)',
     group: 'INTERMEDIO',
     daysCount: 4,
     primaryEngine: 'HARDTOPGYM',
-    description: 'Sequenza Neurale -> Meccanico -> Metabolico con progressione settimanale dei carichi su 7 esercizi a seduta.',
+    description: 'Sequenza Neurale -> Meccanico -> Metabolico con progressione settimanale Bosco-Colli su 4 microcicli ormonali.',
     generateSessions: () => [
       {
         dayLabel: 'Giorno 1: Upper Hatfield Power',
@@ -288,6 +337,63 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
           { order: 5, name: 'Leg Curl sdraiato', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento Concentrico', technique: 'ISOMETRIA_DI_PICCO', notes: '1" di contrazione continua.' },
           { order: 6, name: 'Calf seduto per soleo', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15-20', restSeconds: 45, effort: 'Cedimento Concentrico', technique: 'NONE', notes: 'Stretch profondo in basso.' },
           { order: 7, name: 'Crunch al cavo con corda (in ginocchio)', targetMuscle: 'Addome', segment: 'CORE_CARDIO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento Concentrico', technique: 'NONE', notes: 'Flessione toracica espirando.' }
+        ]
+      }
+    ]
+  },
+  // NUOVO MOTORE NOCERINO (4 GIORNI)
+  T16: {
+    id: 'T16',
+    title: 'Torso / Arti Biomeccanico 4 Giorni (Metodo Nocerino)',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'NOCERINO',
+    description: 'Split Torso/Arti biomeccanica con isolamento dei profili di carico (braccia/deltoidi prioritari) e 4 fasi biomeccaniche progressive.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Torso (Spinta & Trazione Biomeccanica)',
+        sessionFocus: 'Petto & Dorso a Tensione Continua',
+        exercises: [
+          { order: 1, name: 'Chest Press convergente inclinata', targetMuscle: 'Petto Alto', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta convergente a gomiti bloccati sul piano scapolare.' },
+          { order: 2, name: 'Lat Machine presa neutra stretta', targetMuscle: 'Dorso Basso', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Trazione verticale con petto espanso.' },
+          { order: 3, name: 'Panca piana manubri con pronazione controllata', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa profonda senza rimbalzo.' },
+          { order: 4, name: 'Pulley basso con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Depressione scapolare prima del tiraggio.' },
+          { order: 5, name: 'Croci ai cavi orizzontali', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'ISOMETRIA_DI_PICCO', notes: 'Fermo 1" a massima adduzione.' },
+          { order: 6, name: 'Pullover al cavo alto con corda', targetMuscle: 'Gran Dorsale', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Braccia semitese.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Arti & Deltoidi (Gambe, Braccia & Spalle Focus)',
+        sessionFocus: 'Quadricipiti, Deltoidi e Super-Set Braccia',
+        exercises: [
+          { order: 1, name: 'Hack Squat o Leg Press 45°', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 150, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta uniforme a talloni saldi.' },
+          { order: 2, name: 'Lento con manubri panca a 75°', targetMuscle: 'Spalle Anteriori', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Freno di 3" nella fase eccentrica.' },
+          { order: 3, name: 'Alzate laterali ai cavi incrociati', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% all\'ultima serie.' },
+          { order: 4, name: 'Curl bilanciere sagomato EZ panca Scott', targetMuscle: 'Bicipiti', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Braccia in appoggio stabile.' },
+          { order: 5, name: 'French press con manubri su panca a 30°', targetMuscle: 'Tricipiti', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa controllata verso i lati del capo.' },
+          { order: 6, name: 'Leg Extension alla macchina', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'ISOMETRIA_DI_PICCO', notes: 'Fermo 1.5" in alto.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Torso Richiamo & Densità',
+        sessionFocus: 'Spessore Dorsale, Croci e Deltoidi Posteriori',
+        exercises: [
+          { order: 1, name: 'Rematore manubrio su panca orizzontale', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8 per lato', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Tirata radente il fianco.' },
+          { order: 2, name: 'Chest Press orizzontale a presa neutra', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Presa a martello per preservare la cuffia.' },
+          { order: 3, name: 'Lat machine presa inversa', targetMuscle: 'Dorso Basso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Tirata continua al mento.' },
+          { order: 4, name: 'Pectoral Machine (Pec Fly)', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'SERIE_10_PLUS_MAX', notes: '10 reps + scarico 40% a max reps.' },
+          { order: 5, name: 'Face pull al cavo alto con corda', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'ISOMETRIA_DI_PICCO', notes: 'Apertura continua alla fronte.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Catena Posteriore & Specializzazione Braccia',
+        sessionFocus: 'Femorali, Glutei e Superset Bicipiti/Tricipiti',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con bilanciere o manubri', targetMuscle: 'Ischiocrurali', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento profondo senza flessione lombare.' },
+          { order: 2, name: 'Leg Curl seduto', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'Cedimento', technique: 'BACK_OFF_CEDIMENTO', notes: '3 serie + 1 serie a -25% a cedimento.' },
+          { order: 3, name: 'Super-Set: Curl manubri inclinata + Pushdown fune', targetMuscle: 'Bicipiti + Tricipiti', segment: 'MECCANICO', sets: 3, reps: '10+10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Antagonisti continui.' },
+          { order: 4, name: 'Hammer curl al cavo basso con corda', targetMuscle: 'Brachioradiale', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Presa neutra solida.' },
+          { order: 5, name: 'Calf alla pressa', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Stretch di 2" in basso.' }
         ]
       }
     ]
@@ -418,7 +524,7 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
   },
 
   // --------------------------------------------------------------------------
-  // 5 GIORNI (ESATTAMENTE 5 GIORNI REALI)
+  // 5 GIORNI
   // --------------------------------------------------------------------------
   T17: {
     id: 'T17',
@@ -426,7 +532,7 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
     group: 'AVANZATO',
     daysCount: 5,
     primaryEngine: 'ACETO',
-    description: 'Split completa a 5 sessioni settimanali: Push, Pull, Legs, Upper Torso Richiamo, Specializzazione Braccia & Spalle.',
+    description: 'Split completa a 5 sessioni settimanali: Push, Pull, Legs, Upper Torso Richiamo, Specializzazione Braccia & Spalle con tecniche Chris Aceto.',
     generateSessions: () => [
       {
         dayLabel: 'Giorno 1: Push (Petto, Spalle Anteriori & Tricipiti)',
@@ -740,7 +846,7 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
 };
 
 // ============================================================================
-// RICERCA RIGOROSA PER FREQUENZA ESATTA (NESSUN DISALLINEAMENTO GIORNI)
+// RICERCA RIGOROSA PER FREQUENZA ESATTA
 // ============================================================================
 
 export function getTemplatesForExactDays(exactDays: number): TemplateMeta[] {
@@ -753,9 +859,9 @@ export function resolveTopGymTemplate(
   gender: Gender,
   level: TrainingLevel,
   profile: PsychologicalProfile,
-  daysPerWeek: number
+  daysPerWeek: number,
+  goal: string = 'HYPERTROPHY'
 ): { recommendedTemplate: TemplateMeta; availableTemplates: TemplateMeta[]; rationale: string } {
-  // Filtra TUTTE le schede che hanno ESATTAMENTE il numero di giorni scelto
   const availableTemplates = getTemplatesForExactDays(daysPerWeek);
 
   let selectedId = availableTemplates[0]?.id || 'T01';
@@ -766,7 +872,7 @@ export function resolveTopGymTemplate(
   // --------------------------------------------------------------------------
   if (daysPerWeek === 2) {
     selectedId = 'T04';
-    rationale = `Frequenza 2 Giorni: Template T04 Torso/Gambe Base da 2 sessioni piene ad alta densità.`;
+    rationale = `Frequenza 2 Giorni: Template T04 Torso/Gambe Base su motore TOPGYM Classico ad alta efficienza per massimizzare il tempo a disposizione.`;
   }
   // --------------------------------------------------------------------------
   // 3 GIORNI
@@ -774,13 +880,16 @@ export function resolveTopGymTemplate(
   else if (daysPerWeek === 3) {
     if (gender === 'FEMALE') {
       selectedId = 'T07';
-      rationale = `Frequenza 3 Giorni (Donna): Template T07 Cerniera d'Anca & Glutei su 3 sessioni (Hip Thrust, catena posteriore, V-taper e LISS drenante).`;
-    } else if (level === 'AVANZATO' || level === 'INTERMEDIO') {
-      selectedId = 'T12';
-      rationale = `Frequenza 3 Giorni (Uomo Intermedio/Avanzato): Template T12 Push/Pull/Legs ad alta densità (3 sessioni, 7 esercizi per seduta, segmenti Hatfield).`;
-    } else {
+      rationale = `Frequenza 3 Giorni (Donna): Template T07 Cerniera d'Anca & Glutei (Hip Thrust, femorali, V-taper e LISS drenante per prevenzione ritenzione idrica).`;
+    } else if (level === 'NEOFITA') {
       selectedId = 'T01';
-      rationale = `Frequenza 3 Giorni (Neofita): Template T01 Full Body Lineare Kraemer su 3 sessioni a buffer controllato (RIR 2).`;
+      rationale = `Frequenza 3 Giorni (Neofita): Template T01 Full Body Lineare Kraemer con buffer RIR 2 per apprendimento schemi motori fondamentali.`;
+    } else if (goal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
+      selectedId = 'T12';
+      rationale = `Frequenza 3 Giorni (Forza/Neurale): Template T12 Push/Pull/Legs su motore HARDTOPGYM (Bosco-Colli) con CAT (accelerazione compensatoria) e progressione settimanale dei carichi.`;
+    } else {
+      selectedId = 'T13';
+      rationale = `Frequenza 3 Giorni (Ipertrofia Biomeccanica): Template T13 su motore NOCERINO a curve di resistenza continue, allineamento fibre muscolari e isolamento articolare guidato.`;
     }
   }
   // --------------------------------------------------------------------------
@@ -788,31 +897,36 @@ export function resolveTopGymTemplate(
   // --------------------------------------------------------------------------
   else if (daysPerWeek === 4) {
     if (gender === 'FEMALE') {
-      if (level === 'AVANZATO') {
+      if (level === 'AVANZATO' || profile === 'METABOLICO_PUMPING') {
         selectedId = 'T28';
-        rationale = `Frequenza 4 Giorni (Donna Avanzata): Template T28 Focus Glutei & Spalle su 4 sessioni a 7 esercizi con Rest-Pause e parziali su Abductor.`;
+        rationale = `Frequenza 4 Giorni (Donna Avanzata): Template T28 Focus Glutei & Spalle su motore Chris ACETO con tecniche ad alta densità (Rest-Pause e parziali pulsate su Abductor).`;
       } else {
         selectedId = 'T18';
-        rationale = `Frequenza 4 Giorni (Donna Intermedia/Base): Template T18 Upper/Lower con Back-off (-25%) su 4 sessioni complete.`;
+        rationale = `Frequenza 4 Giorni (Donna Intermedia): Template T18 Upper/Lower con serie Back-Off (-25%) e LISS drenante post-seduta.`;
       }
     } else {
-      selectedId = 'T11';
-      rationale = `Frequenza 4 Giorni (Uomo): Template T11 Upper/Lower Hatfield su 4 sessioni da 7 esercizi (Neurale Power -> Meccanico -> Metabolico Pumping).`;
+      if (goal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
+        selectedId = 'T11';
+        rationale = `Frequenza 4 Giorni (Forza/Power): Template T11 Upper/Lower Hatfield su motore HARDTOPGYM (Bosco-Colli) con progressione neurale in CAT e micro-overload (+2.5%/+5%).`;
+      } else {
+        selectedId = 'T16';
+        rationale = `Frequenza 4 Giorni (Ipertrofia/Biomeccanica): Template T16 Torso/Arti su motore NOCERINO con 4 fasi progressive, protezione articolare e tensione continua sui distretti prioritari.`;
+      }
     }
   }
   // --------------------------------------------------------------------------
-  // 5 GIORNI (RISOLTO: ESATTAMENTE 5 SESSIONI!)
+  // 5 GIORNI
   // --------------------------------------------------------------------------
   else if (daysPerWeek === 5) {
     if (gender === 'FEMALE') {
       selectedId = 'T19';
-      rationale = `Frequenza 5 Giorni (Donna): Template T19 5 Giorni Glute & High-Density (3 Lower complementari + 2 Upper V-Taper, esattamente 5 sedute).`;
+      rationale = `Frequenza 5 Giorni (Donna): Template T19 con 3 sedute Lower complementari (Glute-Ham, Quad-Glute, Glute-Pump) e 2 sedute Upper V-Taper.`;
     } else if (profile === 'METABOLICO_PUMPING' || profile === 'TIME_CONSTRAINED') {
       selectedId = 'T22';
-      rationale = `Frequenza 5 Giorni (Uomo Monomuscolare): Template T22 5 Giorni Monomuscolare Top Gym (Petto, Dorso, Gambe, Spalle, Braccia - esattamente 5 sedute).`;
+      rationale = `Frequenza 5 Giorni (Monomuscolare): Template T22 Chris ACETO su 5 sessioni a distretto singolo per massimo pompaggio e cedimento muscolare profondo.`;
     } else {
       selectedId = 'T17';
-      rationale = `Frequenza 5 Giorni (Uomo PPL + Torso/Braccia): Template T17 Avanzato su esattamente 5 sedute (Push, Pull, Legs, Upper Torso, Braccia/Spalle).`;
+      rationale = `Frequenza 5 Giorni (PPL + Specializzazione): Template T17 Chris ACETO su 5 sedute con richiamo antagonisti e braccia/spalle dedicate.`;
     }
   }
   // --------------------------------------------------------------------------
@@ -820,7 +934,7 @@ export function resolveTopGymTemplate(
   // --------------------------------------------------------------------------
   else {
     selectedId = 'T25';
-    rationale = `Frequenza 6 Giorni: Template T25 Chris Aceto PPL x2 Multifrequenza ad alto volume (esattamente 6 sedute, 7 esercizi per seduta con tecniche speciali).`;
+    rationale = `Frequenza 6 Giorni: Template T25 Chris ACETO PPL x2 ad altissima frequenza e volume, con Rest-Pause sistematico e Stripping to 10.`;
   }
 
   const recommendedTemplate = TOPGYM_TEMPLATES_CATALOG[selectedId] || availableTemplates[0];
