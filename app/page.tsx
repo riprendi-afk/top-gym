@@ -17,6 +17,7 @@ import {
 } from "@/lib/store";
 import dynamic from 'next/dynamic';
 
+
 import {
   Trophy, Shield, Dumbbell, UserCheck, Timer, Plus, CheckCircle, TrendingUp,
   Volume2, VolumeX, Lock, Unlock, Eye, AlertTriangle, Copy, Sparkles, Scale,
@@ -42,6 +43,7 @@ import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
 import { useProgramRealtime } from "@/lib/useProgramRealtime";
 import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 import { ExerciseCard } from '@/components/ExerciseCard';
+import { exportProgramToPDF } from "@/lib/lib/exportPdf";
 
 // ==========================================
 // LAZY LOADING: Moduli Pesanti (Scaricati solo quando servono)
@@ -1770,6 +1772,8 @@ if (supabase && user) {
     const targetId = activeAthleteId || "default-user";
     let result: { success?: boolean; error?: string } = {};
 
+    
+
     // 1. Definiamo la firma in base al Coach connesso
     const coachEmail = isMasterCoach
       ? "riprendi@gmail.com"
@@ -1841,6 +1845,8 @@ if (supabase && user) {
       setTimeout(() => setBuilderSuccessMessage(null), 8000);
     }
   };
+
+
 
   // --- FUNZIONI RAPIDE WORKOUT ERGONOMICO (THUMB-ZONE) ---
   const handleQuickWeightAdjust = (delta: number) => {
@@ -3740,6 +3746,14 @@ if (isFinished) {
             </div>
           </div>
         )}
+
+<button
+  type="button"
+  onClick={() => exportProgramToPDF(activeAthlete.displayName, programName, programDays)}
+  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl uppercase text-xs tracking-wider"
+>
+  📄 Stampa / Salva in PDF
+</button>
 
 {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
 {activeTab === "analytics" && (
