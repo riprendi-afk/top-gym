@@ -1,7 +1,5 @@
-'use client';
-
 import React, { useState } from 'react';
-import { X, Sparkles, Dumbbell, Check, Layers, User } from 'lucide-react';
+import { Dumbbell, Layers, User, Sparkles, Check, X } from 'lucide-react';
 import { 
   getRecommendedTemplatesForBlock, 
   detectAthleteGender, 
@@ -28,7 +26,7 @@ export default function TemplatePickerModal({
 
   const detectedGender = detectAthleteGender(athleteName);
   const templates = getRecommendedTemplatesForBlock(currentBlock, athleteName);
-  
+
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
     templates[0]?.id || ''
   );
@@ -37,13 +35,13 @@ export default function TemplatePickerModal({
 
   const handleConfirm = () => {
     if (!selectedTemplate) return;
-    const confirmMsg = `Vuoi caricare il template "${selectedTemplate.name}"?
-ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilati del template.`;
-    
+    const templateName = (selectedTemplate as any).title || selectedTemplate.name || "Template";
+    const confirmMsg = `Vuoi caricare il template "${templateName}"?\nATTENZIONE: Sostituir� gli esercizi attuali della scheda con quelli precompilati del template.`;
+
     if (window.confirm(confirmMsg)) {
       // Clona per evitare mutazioni
       const clonedDays = JSON.parse(JSON.stringify(selectedTemplate.days));
-      onSelectTemplate(clonedDays, selectedTemplate.name);
+      onSelectTemplate(clonedDays, templateName);
       onClose();
     }
   };
@@ -60,19 +58,19 @@ ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilat
             </div>
             <div>
               <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                Selettore Template Schede · Metodo TOP GYM
+                Selettore Template Schede � Metodo TOP GYM
               </h3>
               <p className="text-xs text-zinc-400">
-                Atleta: <b className="text-white">{athleteName || 'Atleta'}</b> 
+                Atleta: <b className="text-white">{athleteName || 'Atleta'}</b>
                 <span className="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/5">
                   <User className="w-3 h-3 text-[#E50914]" />
-                  Profilo {detectedGender === 'FEMALE' ? 'Donna (Priorità Glutei/Fascia Estetica)' : 'Uomo (Priorità Forza Neurale/Upper)'}
+                  Profilo {detectedGender === 'FEMALE' ? 'Donna (Priorit� Glutei/Fascia Estetica)' : 'Uomo (Priorit� Forza Neurale/Upper)'}
                 </span>
               </p>
             </div>
           </div>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
           >
@@ -90,25 +88,28 @@ ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilat
             {templates.map(tmpl => {
               const isSelected = tmpl.id === selectedTemplateId;
               const isMatchingGender = tmpl.gender === detectedGender;
+              const displayName = (tmpl as any).title || tmpl.name || tmpl.id;
+              const daysCount = (tmpl as any).daysCount || tmpl.days?.length || 4;
+              const focusArea = (tmpl as any).focus || (tmpl as any).goal || 'Ipertrofia';
 
               return (
                 <div
                   key={tmpl.id}
                   onClick={() => setSelectedTemplateId(tmpl.id)}
                   className={`p-4 rounded-xl border text-left cursor-pointer transition relative flex flex-col justify-between ${
-                    isSelected 
-                      ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]' 
+                    isSelected
+                      ? 'bg-zinc-900 border-[#E50914] ring-1 ring-[#E50914]'
                       : 'bg-zinc-900/40 border-white/5 hover:border-white/20 hover:bg-zinc-900/70 text-zinc-400'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
-                        tmpl.gender === 'FEMALE' 
-                          ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' 
+                        tmpl.gender === 'FEMALE'
+                          ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
                           : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                       }`}>
-                        {tmpl.gender === 'FEMALE' ? 'Donna' : 'Uomo'} · 4 Giorni
+                        {tmpl.gender === 'FEMALE' ? 'Donna' : 'Uomo'} � {daysCount} Giorni
                       </span>
 
                       {isMatchingGender && (
@@ -119,7 +120,7 @@ ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilat
                     </div>
 
                     <b className={`text-sm block font-black ${isSelected ? 'text-white' : 'text-zinc-200'}`}>
-                      {tmpl.name}
+                      {displayName}
                     </b>
                     <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">
                       {tmpl.description}
@@ -127,7 +128,7 @@ ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilat
                   </div>
 
                   <div className="mt-3 pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px]">
-                    <span className="text-zinc-500 font-mono">Focus: <b className="text-zinc-300">{tmpl.focus}</b></span>
+                    <span className="text-zinc-500 font-mono">Focus: <b className="text-zinc-300">{focusArea}</b></span>
                     {isSelected && <Check className="w-4 h-4 text-[#E50914]" />}
                   </div>
                 </div>
@@ -136,21 +137,35 @@ ATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilat
           </div>
 
           {/* ANTEPRIMA GIORNATE DEL TEMPLATE SELEZIONATO */}
-          {selectedTemplate && (
+          {selectedTemplate && selectedTemplate.days && (
             <div className="bg-[#0E1116] border border-white/5 rounded-xl p-4 mt-4 space-y-2.5">
               <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <Dumbbell className="w-4 h-4 text-[#E50914]" />
                 Anteprima Giornate ({selectedTemplate.days.length} sedute totali)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {selectedTemplate.days.map(d => (
-                  <div key={d.id} className="bg-zinc-900/60 p-2.5 rounded-lg border border-white/5">
-                    <b className="text-zinc-200 block text-[11px]">{d.title}</b>
-                    <span className="text-[10px] text-zinc-500">
-                      {d.exercises.length} esercizi ({d.exercises.map(e => e.name).slice(0, 3).join(', ')}...)
-                    </span>
-                  </div>
-                ))}
+                {selectedTemplate.days.map((d: any, idx: number) => {
+                  const dayExercises: any[] = Array.isArray(d.exercises)
+                    ? d.exercises
+                    : Array.isArray(d.segments)
+                    ? d.segments.flatMap((s: any) => s.exercises || [])
+                    : [];
+
+                  return (
+                    <div key={d.id || d.dayNumber || idx} className="bg-zinc-900/60 p-2.5 rounded-lg border border-white/5">
+                      <b className="text-zinc-200 block text-[11px]">{d.title || `Giorno ${idx + 1}`}</b>
+                      <span className="text-[10px] text-zinc-500">
+                        {dayExercises.length} esercizi (
+                        {dayExercises
+                          .map((e: any) => e.name || e.exercise)
+                          .filter(Boolean)
+                          .slice(0, 3)
+                          .join(', ')}
+                        {dayExercises.length > 3 ? '...' : ''})
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
