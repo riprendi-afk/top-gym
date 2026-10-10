@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { Dumbbell, Layers, User, Sparkles, Check, X } from 'lucide-react';
 import { 
@@ -36,10 +37,9 @@ export default function TemplatePickerModal({
   const handleConfirm = () => {
     if (!selectedTemplate) return;
     const templateName = (selectedTemplate as any).title || selectedTemplate.name || "Template";
-    const confirmMsg = `Vuoi caricare il template "${templateName}"?\nATTENZIONE: Sostituirà gli esercizi attuali della scheda con quelli precompilati del template.`;
+    const confirmMsg = "Vuoi caricare il template " + templateName + "?\nATTENZIONE: Sostituira' gli esercizi attuali della scheda con quelli precompilati del template.";
 
     if (window.confirm(confirmMsg)) {
-      // Clona per evitare mutazioni
       const clonedDays = JSON.parse(JSON.stringify(selectedTemplate.days));
       onSelectTemplate(clonedDays, templateName);
       onClose();
@@ -58,13 +58,13 @@ export default function TemplatePickerModal({
             </div>
             <div>
               <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                Selettore Template Schede · Metodo TOP GYM
+                Selettore Template Schede - Metodo TOP GYM
               </h3>
               <p className="text-xs text-zinc-400">
                 Atleta: <b className="text-white">{athleteName || 'Atleta'}</b>
                 <span className="ml-2 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/5">
                   <User className="w-3 h-3 text-[#E50914]" />
-                  Profilo {detectedGender === 'FEMALE' ? 'Donna (Priorità Glutei/Fascia Estetica)' : 'Uomo (Priorità Forza Neurale/Upper)'}
+                  Profilo {detectedGender === 'FEMALE' ? 'Donna (Priorita Glutei/Fascia Estetica)' : 'Uomo (Priorita Forza Neurale/Upper)'}
                 </span>
               </p>
             </div>
@@ -109,7 +109,7 @@ export default function TemplatePickerModal({
                           ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
                           : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                       }`}>
-                        {tmpl.gender === 'FEMALE' ? 'Donna' : 'Uomo'} · {daysCount} Giorni
+                        {tmpl.gender === 'FEMALE' ? 'Donna' : 'Uomo'} - {daysCount} Giorni
                       </span>
 
                       {isMatchingGender && (
@@ -153,7 +153,7 @@ export default function TemplatePickerModal({
 
                   return (
                     <div key={d.id || d.dayNumber || idx} className="bg-zinc-900/60 p-2.5 rounded-lg border border-white/5">
-                      <b className="text-zinc-200 block text-[11px]">{d.title || `Giorno ${idx + 1}`}</b>
+                      <b className="text-zinc-200 block text-[11px]">{d.title || ('Giorno ' + (idx + 1))}</b>
                       <span className="text-[10px] text-zinc-500">
                         {dayExercises.length} esercizi (
                         {dayExercises
