@@ -44,6 +44,7 @@ import { useProgramRealtime } from "@/lib/useProgramRealtime";
 import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { exportProgramToPDF } from "@/lib/lib/exportPdf";
+import { autoAdvanceTopGymEngine } from "@/lib/topgym-auto-advance";
 
 // ==========================================
 // LAZY LOADING: Moduli Pesanti (Scaricati solo quando servono)
@@ -350,7 +351,14 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 // DOPO (SOSTITUISCI CON):
 const [programmingModel, setProgrammingModel] = useState<
-  "TOPGYM_BLOCKS" | "HARDTOPGYM" | "ACETO" | "NOCERINO"
+  | "TOPGYM_BLOCKS"
+  | "HARDTOPGYM"
+  | "ACETO"
+  | "NOCERINO"
+  | "POWERBLOCK_HYBRID"
+  | "BLOOD_VOLUME_OVERLOAD"
+  | "HELMS_PYRAMID"
+  | "BIKINI_WAVE"
 >("TOPGYM_BLOCKS");
 
 const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -1734,6 +1742,80 @@ if (supabase && user) {
           }
         }
         // ======================================================================
+        // ======================================================================
+        // AVANZAMENTO AUTOMATICO NUOVI MOTORI TOP GYM (HELMS & FITSCHEN T29-T33)
+        // ======================================================================
+        const isAdvancedEngine =
+          programmingModel === "POWERBLOCK_HYBRID" ||
+          programmingModel === "BLOOD_VOLUME_OVERLOAD" ||
+          programmingModel === "HELMS_PYRAMID" ||
+          programmingModel === "BIKINI_WAVE";
+
+        if (isAdvancedEngine && programDays && programDays.length >= 2) {
+          const splitSize = programDays.length;
+          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+
+          // Se l'atleta ha completato tutte le sessioni della split settimanale
+          if (updatedHistoryCount % splitSize === 0) {
+            const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
+            const currentWeek = completedWeeks + 1;
+
+            try {
+              // Prepara i log recenti della settimana
+              const recentSessionLogs = (todayLogs || []).map((l: any, idx: number) => ({
+                setIndex: idx + 1,
+                weight: Number(l.weight) || 0,
+                reps: Number(l.reps) || 0,
+                rpe: l.rpe ? Number(l.rpe) : undefined,
+              }));
+
+              const formattedLogs = [
+                {
+                  dayNumber: activeDay?.dayNumber || 1,
+                  exercises: [
+                    {
+                      name: activeDay?.title || "Session",
+                      sets: recentSessionLogs,
+                    },
+                  ],
+                },
+              ];
+
+              // Invocazione del motore scientifico dedicato
+              const advanceResult = autoAdvanceTopGymEngine(
+                {
+                  engine: programmingModel as any,
+                  currentWeek: currentWeek,
+                  isDeload: currentWeek % 4 === 0, // Deload automatico programmato ogni 4 settimane
+                },
+                formattedLogs as any,
+                programDays as any
+              );
+
+              if (advanceResult && advanceResult.modifiedDays) {
+                // 1. Aggiorna l'interfaccia con le nuove serie, ripetizioni e carichi
+                setProgramDays(advanceResult.modifiedDays as any);
+
+                // 2. Rende persistente la nuova scheda su Supabase
+                if (targetUserId) {
+                  saveProgramToSupabase(
+                    targetUserId,
+                    programName,
+                    advanceResult.modifiedDays as any
+                  ).catch((err: unknown) => {
+                    console.error(`[${programmingModel}] Errore salvataggio progressione:`, err);
+                  });
+                }
+
+                setWorkoutSuccessMessage(
+                  `🚀 Settimana ${currentWeek} completata! Progressione ${programmingModel} calcolata e applicata!`
+                );
+              }
+            } catch (engineErr) {
+              console.error(`[${programmingModel}] Errore calcolo avanzamento:`, engineErr);
+            }
+          }
+        }
       // ======================================================================
 
       await loadHistory(targetUserId);
