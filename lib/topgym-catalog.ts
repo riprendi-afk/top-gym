@@ -985,19 +985,66 @@ export function resolveTopGymTemplate(
 // CONVERTITORE VERSO IL FORMATO `programDays` DI app/page.tsx
 // ============================================================================
 
+export function generateSessionsFromTemplateDays(days: any[]): TemplateSession[] {
+  if (!Array.isArray(days)) return [];
+  return days.map((day: any, dIdx: number) => {
+    let rawExercises: any[] = [];
+    if (Array.isArray(day.exercises)) {
+      rawExercises = day.exercises;
+    } else if (Array.isArray(day.segments)) {
+      rawExercises = day.segments.flatMap((seg: any) =>
+        (seg.exercises || []).map((ex: any) => ({
+          ...ex,
+          segment: ex.segment || seg.type || 'MECCANICO',
+        }))
+      );
+    }
+
+    return {
+      dayLabel: day.title || `Giorno ${dIdx + 1}`,
+      sessionFocus: day.title || 'Sessione Target',
+      exercises: rawExercises.map((ex: any, eIdx: number) => ({
+        order: eIdx + 1,
+        name: ex.name || ex.exercise || `Esercizio ${eIdx + 1}`,
+        targetMuscle: ex.targetMuscle || 'Distretto Primario',
+        segment: (ex.segment || 'MECCANICO') as any,
+        sets: Number(ex.sets) || 3,
+        reps: String(ex.reps || '8-10'),
+        restSeconds: Number(ex.restSeconds) || 90,
+        effort: ex.effort || 'RIR 1-2',
+        technique: (ex.technique || 'NONE') as any,
+        notes: ex.notes || '',
+      })),
+    };
+  });
+}
+
 export function convertTemplateToProgramDays(
-  template: TemplateMeta,
+  template: any,
   gender: Gender
 ): any[] {
-  const sessions = template.generateSessions(gender);
+  // Percorso 1: template con metodo generateSessions
+  let sessions: TemplateSession[] = [];
+  if (typeof template.generateSessions === 'function') {
+    try {
+      sessions = template.generateSessions(gender);
+    } catch (e) {
+      console.warn("Errore durante generateSessions, fallback su days:", e);
+    }
+  }
 
-  return sessions.map((session, dayIdx) => ({
-    id: `${template.id.toLowerCase()}_day_${dayIdx + 1}`,
-    title: `${session.dayLabel} [${template.id}]`,
+  // Percorso 2: fallback difensivo se sessions � vuoto ma esistono i days
+  if ((!sessions || sessions.length === 0) && Array.isArray(template.days)) {
+    sessions = generateSessionsFromTemplateDays(template.days);
+  }
+
+  return (sessions || []).map((session, dayIdx) => ({
+    id: `${(template.id || 'tpl').toLowerCase()}_day_${dayIdx + 1}`,
+    title: `${session.dayLabel} [${template.id || ''}]`,
     isPeriodized: true,
-    method: template.primaryEngine,
-    exercises: session.exercises.map((ex, exIdx) => ({
-      id: `ex_${template.id.toLowerCase()}_${dayIdx}_${exIdx}`,
+    method: template.primaryEngine || 'TOPGYM_BLOCKS',
+    exercises: (session.exercises || []).map((ex, exIdx) => ({
+      id: `ex_${(template.id || 'tpl').toLowerCase()}_${dayIdx}_${exIdx}`,
       name: ex.name,
       baseSets: ex.sets,
       baseReps: ex.reps,
@@ -1006,10 +1053,10 @@ export function convertTemplateToProgramDays(
       reps: ex.reps,
       rest: ex.restSeconds,
       restSeconds: ex.restSeconds,
-      targetMuscle: ex.targetMuscle,
-      segment: ex.segment,
-      technique: ex.technique,
-      notes: `[${ex.segment}] ${ex.effort} | ${ex.notes}${ex.technique !== 'NONE' ? ` | ⚡ Tecnica: ${ex.technique}` : ''}`
+      targetMuscle: ex.targetMuscle || 'Corpo Libero',
+      segment: ex.segment || 'MECCANICO',
+      technique: ex.technique || 'NONE',
+      notes: `[${ex.segment || 'MECCANICO'}] ${ex.effort || ''} | ${ex.notes || ''}${ex.technique && ex.technique !== 'NONE' ? ` | Tecnica: ${ex.technique}` : ''}`
     }))
   }));
 }
@@ -1914,3 +1961,10 @@ export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
   TEMPLATE_T32 as any,
   TEMPLATE_T33 as any,
 ];
+
+// Garanzia retrocompatibilita': assegna generateSessions a tutti i template privi di esso
+[TEMPLATE_T29, TEMPLATE_T30, TEMPLATE_T31, TEMPLATE_T32, TEMPLATE_T33].forEach(t => {
+  if (t && !(t as any).generateSessions) {
+    (t as any).generateSessions = () => generateSessionsFromTemplateDays((t as any).days);
+  }
+});
