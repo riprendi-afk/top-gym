@@ -1902,3 +1902,15 @@ export function resolveExtendedTopGymTemplate(params: ResolveTemplateParams): st
   // per far scattare la resolveTopGymTemplate standard (T01 - T28).
   return null;
 }
+
+// ============================================================================
+// ESPORTAZIONE UNIFICATA CATALOGO COMPLETO (T01 - T33)
+// ============================================================================
+export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
+  ...Object.values(TOPGYM_TEMPLATES_CATALOG),
+  TEMPLATE_T29 as any,
+  TEMPLATE_T30 as any,
+  TEMPLATE_T31 as any,
+  TEMPLATE_T32 as any,
+  TEMPLATE_T33 as any,
+];

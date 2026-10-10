@@ -7,7 +7,8 @@ import {
   PsychologicalProfile,
   resolveTopGymTemplate,
   convertTemplateToProgramDays,
-  TemplateMeta
+  TemplateMeta,
+  ALL_TOPGYM_TEMPLATES
 } from '@/lib/topgym-catalog';
 import { Zap, Award, CheckCircle, ArrowRight, ArrowLeft, X } from 'lucide-react';
 
@@ -30,57 +31,66 @@ export default function WorkoutWizardModal({
   const [goal, setGoal] = useState<string>('HYPERTROPHY');
 
   // Risultati generati
-  const [allTemplates, setAllTemplates] = useState<TemplateMeta[]>([]);
-  const [filterDays, setFilterDays] = useState<number | 'ALL'>(4);
+  const [allTemplates, setAllTemplates] = useState<TemplateMeta[]>(() => {
+    return Array.isArray(ALL_TOPGYM_TEMPLATES)
+      ? [...ALL_TOPGYM_TEMPLATES].sort((a, b) =>
+          a.id.localeCompare(b.id, undefined, { numeric: true })
+        )
+      : [];
+  });
+  const [filterDays, setFilterDays] = useState<number | 'ALL'>('ALL');
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateMeta | null>(null);
   const [recommendedTemplate, setRecommendedTemplate] = useState<TemplateMeta | null>(null);
   const [rationale, setRationale] = useState<string>('');
 
   if (!isOpen) return null;
 
-  // Elaborazione con raccolta di TUTTI i template esistenti nel catalogo (2, 3, 4, 5, 6 giorni)
+  // Risoluzione guidata + unione blindata con la totalità del catalogo
   const handleGenerate = () => {
     const outcome = resolveTopGymTemplate(gender, level, profile, daysPerWeek, goal);
     setRecommendedTemplate(outcome.recommendedTemplate);
     setSelectedTemplate(outcome.recommendedTemplate);
     setRationale(outcome.rationale);
 
-    // Mappa tutti i template esistenti nel catalogo senza esclusioni
-    const frequencies = [2, 3, 4, 5, 6];
+    // Mappa Single Source of Truth garantendo la presenza di tutti i 33 template
     const catalogMap = new Map<string, TemplateMeta>();
 
-    frequencies.forEach((d) => {
-      try {
-        const res = resolveTopGymTemplate(gender, level, profile, d, goal);
-        if (res.recommendedTemplate && res.recommendedTemplate.id) {
-          catalogMap.set(res.recommendedTemplate.id, res.recommendedTemplate);
-        }
-        if (res.availableTemplates && Array.isArray(res.availableTemplates)) {
-          res.availableTemplates.forEach((t) => {
-            if (t && t.id) catalogMap.set(t.id, t);
-          });
-        }
-      } catch {
-        // Fallback trasparente
-      }
-    });
+    if (Array.isArray(ALL_TOPGYM_TEMPLATES)) {
+      ALL_TOPGYM_TEMPLATES.forEach((t) => {
+        if (t && t.id) catalogMap.set(t.id, t);
+      });
+    }
+
+    if (outcome.recommendedTemplate && outcome.recommendedTemplate.id) {
+      catalogMap.set(outcome.recommendedTemplate.id, outcome.recommendedTemplate);
+    }
 
     const fullCatalog = Array.from(catalogMap.values()).sort((a, b) =>
       a.id.localeCompare(b.id, undefined, { numeric: true })
     );
 
     setAllTemplates(fullCatalog);
-    setFilterDays(daysPerWeek);
+    setFilterDays(daysPerWeek); // Inizializza sui giorni scelti nel form
     setStep(6);
+  };
+
+  const getTemplateDaysCount = (tmpl: TemplateMeta): number => {
+    return (
+      tmpl.daysCount ??
+      (tmpl as any).daysPerWeek ??
+      ((tmpl as any).days ? (tmpl as any).days.length : 0) ??
+      daysPerWeek
+    );
   };
 
   const handleApply = () => {
     if (selectedTemplate) {
       const programDays = convertTemplateToProgramDays(selectedTemplate, gender);
+      const totalDays = getTemplateDaysCount(selectedTemplate);
       onApplyProgram(
         programDays,
         selectedTemplate.primaryEngine,
-        `✨ Template ${selectedTemplate.id} (${selectedTemplate.title}) su Motore ${selectedTemplate.primaryEngine} con ${selectedTemplate.daysCount} sedute applicato!`
+        `✨ Template ${selectedTemplate.id} (${selectedTemplate.title}) su Motore ${selectedTemplate.primaryEngine} con ${totalDays} sedute applicato!`
       );
       onClose();
     }
@@ -145,7 +155,7 @@ export default function WorkoutWizardModal({
       default:
         return (
           <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">
-            TopGym Classic (Blocchi)
+            {engine || 'TopGym Classic'}
           </span>
         );
     }
@@ -153,7 +163,7 @@ export default function WorkoutWizardModal({
 
   const displayedTemplates = allTemplates.filter((t) => {
     if (filterDays === 'ALL') return true;
-    return t.daysCount === filterDays || (t as any).daysPerWeek === filterDays;
+    return getTemplateDaysCount(t) === filterDays;
   });
 
   return (
@@ -376,7 +386,7 @@ export default function WorkoutWizardModal({
                   <div className="flex items-center gap-2">
                     {getEngineBadge(recommendedTemplate?.primaryEngine || '')}
                     <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-black/60 text-zinc-300 border border-white/10">
-                      {recommendedTemplate?.daysCount || daysPerWeek} Giorni
+                      {recommendedTemplate ? getTemplateDaysCount(recommendedTemplate) : daysPerWeek} Giorni
                     </span>
                   </div>
                 </div>
@@ -389,9 +399,9 @@ export default function WorkoutWizardModal({
               <div className="space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="text-xs font-bold uppercase text-zinc-400 tracking-wider">
-                    Scegli qualsiasi template disponibile:
+                    Catalogo Completo ({displayedTemplates.length} di {allTemplates.length} schede):
                   </div>
-                  <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[11px]">
+                  <div className="flex flex-wrap gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[11px]">
                     <button
                       type="button"
                       onClick={() => setFilterDays(daysPerWeek)}
@@ -408,7 +418,7 @@ export default function WorkoutWizardModal({
                         filterDays === 'ALL' ? 'bg-cyan-500 text-black font-bold' : 'text-zinc-400 hover:text-white'
                       }`}
                     >
-                      Tutti (T01-T33)
+                      Tutti ({allTemplates.length})
                     </button>
                     {([2, 3, 4, 5, 6] as const).map((d) => (
                       <button
@@ -429,7 +439,7 @@ export default function WorkoutWizardModal({
                   {displayedTemplates.map((tmpl) => {
                     const isSelected = selectedTemplate.id === tmpl.id;
                     const isRecommended = recommendedTemplate?.id === tmpl.id;
-                    const sedute = tmpl.daysCount || (tmpl as any).daysPerWeek || daysPerWeek;
+                    const sedute = getTemplateDaysCount(tmpl);
 
                     return (
                       <button
