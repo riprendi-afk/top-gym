@@ -852,11 +852,23 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
 // RICERCA RIGOROSA PER FREQUENZA ESATTA
 // ============================================================================
 
-export function getTemplatesForExactDays(exactDays: number): TemplateMeta[] {
-  return Object.values(TOPGYM_TEMPLATES_CATALOG).filter(
-    (tmpl) => tmpl.daysCount === exactDays
-  );
+// Assicura che getTemplatesForExactDays cerchi nell'intero catalogo unificato
+export function getTemplatesForExactDays(days: number): TemplateMeta[] {
+  // Prende tutti i template registrati nel catalogo
+  const all = Object.values(TOPGYM_TEMPLATES_CATALOG);
+  
+  // Ritorna tutte le schede che corrispondono a quel numero di giorni
+  return all.filter((tpl: any) => {
+    const daysMatch = tpl.daysCount === days || tpl.daysPerWeek === days;
+    return daysMatch;
+  });
 }
+
+// 3. Tutti i template del catalogo senza filtri
+export function getAllCatalogTemplates(): TemplateMeta[] {
+  return Object.values(TOPGYM_TEMPLATES_CATALOG);
+}
+
 
 export function resolveTopGymTemplate(
   gender: Gender,
@@ -869,6 +881,8 @@ export function resolveTopGymTemplate(
 
   let selectedId = availableTemplates[0]?.id || 'T01';
   let rationale = '';
+
+  const normalizedGoal = (goal || '').toUpperCase();
 
   // --------------------------------------------------------------------------
   // 2 GIORNI
@@ -887,7 +901,7 @@ export function resolveTopGymTemplate(
     } else if (level === 'NEOFITA') {
       selectedId = 'T01';
       rationale = `Frequenza 3 Giorni (Neofita): Template T01 Full Body Lineare Kraemer con buffer RIR 2 per apprendimento schemi motori fondamentali.`;
-    } else if (goal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
+    } else if (normalizedGoal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
       selectedId = 'T12';
       rationale = `Frequenza 3 Giorni (Forza/Neurale): Template T12 Push/Pull/Legs su motore HARDTOPGYM (Bosco-Colli) con CAT (accelerazione compensatoria) e progressione settimanale dei carichi.`;
     } else {
@@ -900,20 +914,28 @@ export function resolveTopGymTemplate(
   // --------------------------------------------------------------------------
   else if (daysPerWeek === 4) {
     if (gender === 'FEMALE') {
-      if (level === 'AVANZATO' || profile === 'METABOLICO_PUMPING') {
+      // DONNA: Bikini Modular Fitschen/Wilson vs Aceto vs Base
+      if (level === 'AVANZATO' && profile === 'METABOLICO_PUMPING') {
         selectedId = 'T28';
-        rationale = `Frequenza 4 Giorni (Donna Avanzata): Template T28 Focus Glutei & Spalle su motore Chris ACETO con tecniche ad alta densità (Rest-Pause e parziali pulsate su Abductor).`;
+        rationale = `Frequenza 4 Giorni (Donna Avanzata Pump): Template T28 Focus Glutei & Spalle su motore Chris ACETO con tecniche ad alta densità (Rest-Pause e parziali pulsate su Abductor).`;
+      } else if (level === 'INTERMEDIO' || normalizedGoal.includes('GLUTE') || normalizedGoal.includes('BIKINI') || normalizedGoal === 'HYPERTROPHY') {
+        selectedId = 'T32';
+        rationale = `Frequenza 4 Giorni (Bikini Division): Template T32 Fitschen & Wilson Bikini 4-Day Modular su motore BIKINI_WAVE. Onde triadiche con carichi pesanti (L: 4-6 rep) su stacchi/hip thrust e isolamento glutei/deltoidi ad alta densità (15-30 rep).`;
       } else {
         selectedId = 'T18';
-        rationale = `Frequenza 4 Giorni (Donna Intermedia): Template T18 Upper/Lower con serie Back-Off (-25%) e LISS drenante post-seduta.`;
+        rationale = `Frequenza 4 Giorni (Donna Base): Template T18 Upper/Lower con serie Back-Off (-25%) e LISS drenante post-seduta.`;
       }
     } else {
-      if (goal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
+      // UOMO / UNISEX: Helms Pyramid vs Hatfield vs Nocerino
+      if (normalizedGoal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE') {
         selectedId = 'T11';
         rationale = `Frequenza 4 Giorni (Forza/Power): Template T11 Upper/Lower Hatfield su motore HARDTOPGYM (Bosco-Colli) con progressione neurale in CAT e micro-overload (+2.5%/+5%).`;
+      } else if (level === 'INTERMEDIO' || normalizedGoal === 'HYPERTROPHY') {
+        selectedId = 'T31';
+        rationale = `Frequenza 4 Giorni (Evidence-Based Ipertrofia): Template T31 Eric Helms (The Muscle & Strength Pyramid) su motore HELMS_PYRAMID. Wave Loading lineare sui compound pesanti (4x6 -> 4x5 -> 4x4) e Double Progression (3x12-15) sugli isolamenti con gestione scientifica RPE.`;
       } else {
         selectedId = 'T16';
-        rationale = `Frequenza 4 Giorni (Ipertrofia/Biomeccanica): Template T16 Torso/Arti su motore NOCERINO con 4 fasi progressive, protezione articolare e tensione continua sui distretti prioritari.`;
+        rationale = `Frequenza 4 Giorni (Ipertrofia Biomeccanica): Template T16 Torso/Arti su motore NOCERINO con 4 fasi progressive, protezione articolare e tensione continua sui distretti prioritari.`;
       }
     }
   }
@@ -924,6 +946,9 @@ export function resolveTopGymTemplate(
     if (gender === 'FEMALE') {
       selectedId = 'T19';
       rationale = `Frequenza 5 Giorni (Donna): Template T19 con 3 sedute Lower complementari (Glute-Ham, Quad-Glute, Glute-Pump) e 2 sedute Upper V-Taper.`;
+    } else if (normalizedGoal === 'STRENGTH' || profile === 'AGGRESSIVO_NEURALE' || normalizedGoal.includes('POWER')) {
+      selectedId = 'T29';
+      rationale = `Frequenza 5 Giorni (Powerbuilding Scientifico): Template T29 Fitschen & Wilson Power-Block Periodization su motore POWERBLOCK_HYBRID. Day 1 Power neurale (Big 3 con AMRAP al 90% autoregolato) + 4 Block Days a mesocicli triadici di ripetizioni (5-7 -> 8-10 -> 10-15 -> 15-30).`;
     } else if (profile === 'METABOLICO_PUMPING' || profile === 'TIME_CONSTRAINED') {
       selectedId = 'T22';
       rationale = `Frequenza 5 Giorni (Monomuscolare): Template T22 Chris ACETO su 5 sessioni a distretto singolo per massimo pompaggio e cedimento muscolare profondo.`;
@@ -936,8 +961,16 @@ export function resolveTopGymTemplate(
   // 6 GIORNI
   // --------------------------------------------------------------------------
   else {
-    selectedId = 'T25';
-    rationale = `Frequenza 6 Giorni: Template T25 Chris ACETO PPL x2 ad altissima frequenza e volume, con Rest-Pause sistematico e Stripping to 10.`;
+    if (gender === 'FEMALE') {
+      selectedId = 'T33';
+      rationale = `Frequenza 6 Giorni (Bikini Elite Gara): Template T33 Fitschen & Wilson Bikini Division 6-Day Elite Contest Plan su motore BIKINI_WAVE. Tripla modulazione (Low 4-6 rep, Moderate 8-12 rep, High 15-30 rep) con incremento del volume delle serie solo sui fondamentali della catena cinetica.`;
+    } else if (level === 'AVANZATO' || profile === 'METABOLICO_PUMPING') {
+      selectedId = 'T30';
+      rationale = `Frequenza 6 Giorni (Doppia Stimolazione Cellulare): Template T30 Fitschen & Wilson Blood Volume & Maximum Overload su motore BLOOD_VOLUME_OVERLOAD. Rotazione a 6 workout (3 ON, 1 OFF, 2 ON, 1 OFF): Overload pesanti 3x4-7 con cedimento progressivo a 4 fasi + superserie Blood Volume a cadenza 3-0-3.`;
+    } else {
+      selectedId = 'T25';
+      rationale = `Frequenza 6 Giorni: Template T25 Chris ACETO PPL x2 ad altissima frequenza e volume, con Rest-Pause sistematico e Stripping to 10.`;
+    }
   }
 
   const recommendedTemplate = TOPGYM_TEMPLATES_CATALOG[selectedId] || availableTemplates[0];
@@ -948,7 +981,6 @@ export function resolveTopGymTemplate(
     rationale
   };
 }
-
 // ============================================================================
 // CONVERTITORE VERSO IL FORMATO `programDays` DI app/page.tsx
 // ============================================================================
@@ -1006,6 +1038,7 @@ export const TEMPLATE_T29 = {
   level: 'intermediate',
   profile: 'powerbuilder',
   daysPerWeek: 5,
+  daysCount: 5,
   goal: 'forza_ipertrofia',
   primaryEngine: 'POWERBLOCK_HYBRID' as TopGymExtendedEngine,
   description: 'Fusione tra progressione neurale sui Big 3 e blocchi ipertrofici a onde di ripetizioni triadiche (5-7 -> 8-10 -> 10-15 -> 15-30).',
@@ -1160,6 +1193,7 @@ export const TEMPLATE_T30 = {
   level: 'advanced' as const,
   profile: 'bodybuilder' as const,
   daysPerWeek: 6,
+  daysCount: 6,
   goal: 'ipertrofia_pura',
   primaryEngine: 'BLOOD_VOLUME_OVERLOAD' as any,
   description: 'Programma originale da competizione a doppia stimolazione cellulare di Fitschen & Wilson: alternanza tra Overload pesante (3x4-7 a cedimento progressivo) e Blood Volume (14-20 rep in superset con tempo 3-0-3).',
@@ -1353,6 +1387,7 @@ export const TEMPLATE_T31 = {
   level: 'intermediate',
   profile: 'bodybuilder',
   daysPerWeek: 4,
+  daysCount: 4,
   goal: 'ipertrofia_pura',
   primaryEngine: 'HELMS_PYRAMID' as TopGymExtendedEngine,
   description: 'Programmazione metodologica evidence-based Eric Helms: Wave Loading periodizzato sui compound pesanti e Double Progression controllata sugli isolamenti a RIR calibrato.',
@@ -1480,6 +1515,7 @@ export const TEMPLATE_T32 = {
   level: 'intermediate',
   profile: 'bikini',
   daysPerWeek: 4,
+  daysCount: 4,
   goal: 'tonificazione_glutei',
   primaryEngine: 'BIKINI_WAVE' as TopGymExtendedEngine,
   description: 'Adattamento modulare a 4 giorni del protocollo da competizione Fitschen/Wilson. Focus assoluto su glutei, deltoidi e catena cinetica posteriore, con alternanza di stimoli Low/Moderate/High reps.',
@@ -1621,6 +1657,7 @@ export const TEMPLATE_T33 = {
   level: 'advanced',
   profile: 'bikini',
   daysPerWeek: 6,
+  daysCount: 6,
   goal: 'definizione_gara',
   primaryEngine: 'BIKINI_WAVE' as TopGymExtendedEngine,
   description: 'Il protocollo autentico per atlete Bikini estratto da Fitschen & Wilson: 6 sessioni settimanali a onde triadiche di volume, alternando carichi pesanti (L: 4-6), ipertrofici (M: 8-12) e metabolici (H: 15-30).',
