@@ -41,6 +41,9 @@ export interface TemplateMeta {
   generateSessions: (gender: Gender) => TemplateSession[];
 }
 
+
+
+
 // ============================================================================
 // CATALOGO MASTER CON RIGOROSA SUDDIVISIONE PER FREQUENZA (2, 3, 4, 5, 6 GG)
 // ============================================================================
@@ -977,4 +980,888 @@ export function convertTemplateToProgramDays(
       notes: `[${ex.segment}] ${ex.effort} | ${ex.notes}${ex.technique !== 'NONE' ? ` | ⚡ Tecnica: ${ex.technique}` : ''}`
     }))
   }));
+}
+// ============================================================================
+// TOPGYM EXPANSION: NUOVI MOTORI & TEMPLATE ADDIZIONALI (T29 - T33)
+// ============================================================================
+
+export type TopGymExtendedEngine = 
+  | 'TOPGYM_BLOCKS'
+  | 'HARDTOPGYM'
+  | 'ACETO'
+  | 'NOCERINO'
+  | 'POWERBLOCK_HYBRID'
+  | 'BLOOD_VOLUME_OVERLOAD'
+  | 'HELMS_PYRAMID'
+  | 'BIKINI_WAVE';
+
+// ----------------------------------------------------------------------------
+// T29: POWER BLOCK PERIODIZATION (Fitschen & Wilson)
+// 5 Giorni: 1 Power Day + 4 Bodybuilding Block Days a rotazione
+// ----------------------------------------------------------------------------
+export const TEMPLATE_T29 = {
+  id: 'T29',
+  title: 'Power-Block Periodization (Fitschen/Wilson)',
+  gender: 'unisex',
+  level: 'intermediate',
+  profile: 'powerbuilder',
+  daysPerWeek: 5,
+  goal: 'forza_ipertrofia',
+  primaryEngine: 'POWERBLOCK_HYBRID' as TopGymExtendedEngine,
+  description: 'Fusione tra progressione neurale sui Big 3 e blocchi ipertrofici a onde di ripetizioni triadiche (5-7 -> 8-10 -> 10-15 -> 15-30).',
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Giorno 1: Powerlifting Neurale (Big 3 AMRAP Sub-Failure)',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Core Lifts - Reclutamento Specifico',
+          exercises: [
+            { name: 'Barbell Back Squat', sets: 5, reps: '5-3-1', restSeconds: 180, notes: '2x5@70%, 2x3@80%, 1x1@90%. Ultimo set: AMRAP a buffer 1 RIR. Se >=3 rep, +2.5kg la sett. successiva.' },
+            { name: 'Barbell Bench Press', sets: 5, reps: '5-3-1', restSeconds: 180, notes: '2x5@70%, 2x3@80%, 1x1@90%. Ultimo set: AMRAP sub-cedimento. Se >=3 rep, +2.5kg.' },
+            { name: 'Conventional Deadlift', sets: 5, reps: '5-3-1', restSeconds: 180, notes: '2x5@70%, 2x3@80%, 1x1@90%. Ultimo set: AMRAP sub-cedimento. Se >=3 rep, +2.5kg.' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Heavy Accessory Overload',
+          exercises: [
+            { name: 'Dumbbell Flat Bench Press', sets: 3, reps: '4-6', restSeconds: 120, notes: 'Focus stabilità scapolare e ROM profondo' },
+            { name: 'Cable Seated Low Row', sets: 3, reps: '4-6', restSeconds: 120, notes: 'Trazione orizzontale a gomiti stretti' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Accessori Articolari',
+          exercises: [
+            { name: 'Lying Leg Curl', sets: 3, reps: '4-6', restSeconds: 90, notes: 'Flessione del ginocchio a carico elevato' },
+            { name: 'Standing Calf Raise', sets: 3, reps: '4-6', restSeconds: 90, notes: 'Pausa di 2s in massimo allungamento' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 2,
+      title: 'Giorno 2: Block Day - Gambe & Spalle',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Quadricipiti & Catena Cinetica',
+          exercises: [
+            { name: 'Hack Squat', sets: 4, reps: 'Block Reps', restSeconds: 120, notes: 'W1-3: 5-7 rep | W4-6: 8-10 rep | W7-9: 10-15 rep | W10-12: 15-30 rep' },
+            { name: 'Leg Press 45°', sets: 2, reps: 'Block Reps', restSeconds: 120, notes: 'ROM profondo senza retroversione' },
+            { name: 'Leg Extension', sets: 4, reps: 'Block Reps', restSeconds: 90, notes: 'Picco di contrazione 1s' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Flessori & Polpacci',
+          exercises: [
+            { name: 'Seated Hamstring Curl', sets: 3, reps: 'Block Reps', restSeconds: 90 },
+            { name: 'Dumbbell Walking Lunges', sets: 2, reps: 'Block Reps', restSeconds: 90, notes: 'Passo lungo, busto leggermente flesso' },
+            { name: 'Calf Press su Leg Press', sets: 4, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Deltoidi Multi-Angolo',
+          exercises: [
+            { name: 'Dumbbell Overhead Press', sets: 3, reps: 'Block Reps', restSeconds: 90 },
+            { name: 'Dumbbell Lateral Raise', sets: 3, reps: 'Block Reps', restSeconds: 60 },
+            { name: 'Dumbbell Rear Delt Raise', sets: 3, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 3,
+      title: 'Giorno 3: Block Day - Schiena, Trapezi & Bicipiti',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Spessore e Ampiezza Dorso',
+          exercises: [
+            { name: 'T-Bar Row supportato', sets: 4, reps: 'Block Reps', restSeconds: 120, notes: 'W1-3: 5-7 | W4-6: 8-10 | W7-9: 10-15 | W10-12: 15-30' },
+            { name: 'Pull-Up (o Lat Machine presa prona)', sets: 5, reps: 'Block Reps', restSeconds: 120 },
+            { name: 'Cable Seated Row presa a V', sets: 4, reps: 'Block Reps', restSeconds: 90 },
+            { name: 'Deadlift da rialzo / Stacco regolare', sets: 2, reps: 'Block Reps', restSeconds: 120 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Trapezi e Flessori del Braccio',
+          exercises: [
+            { name: 'Dumbbell Shrugs', sets: 3, reps: 'Block Reps', restSeconds: 60, notes: 'Squeeze al vertice senza rotazione' },
+            { name: 'Dumbbell Bicep Curl alternato', sets: 4, reps: 'Block Reps', restSeconds: 60 },
+            { name: 'Preacher Curl con bilanciere sagomato', sets: 2, reps: 'Block Reps', restSeconds: 60 },
+            { name: 'Hammer Curl con manubri', sets: 2, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 4,
+      title: 'Giorno 4: Block Day - Petto, Tricipiti & Addome',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Catena Anteriore Superiore',
+          exercises: [
+            { name: 'Incline Dumbbell Press', sets: 3, reps: 'Block Reps', restSeconds: 120, notes: 'Panca a 30° | W1-3: 5-7 | W4-6: 8-10 | W7-9: 10-15 | W10-12: 15-30' },
+            { name: 'Machine Chest Press', sets: 4, reps: 'Block Reps', restSeconds: 90 },
+            { name: 'Cable Crossover / Croci ai cavi', sets: 4, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Estensori del Braccio',
+          exercises: [
+            { name: 'Cable Pushdown con barra', sets: 4, reps: 'Block Reps', restSeconds: 60 },
+            { name: 'Overhead Cable Triceps Extension', sets: 4, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Stabilità Centrale',
+          exercises: [
+            { name: 'Cable Woodchopper / Crunch cavo', sets: 3, reps: '15-20', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 5,
+      title: 'Giorno 5: Block Rotation (Rotazione 4° Giorno)',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Rotazione Settimanale Distretti',
+          exercises: [
+            { name: 'Hack Squat / T-Bar Row / Incline Press', sets: 4, reps: 'Block Reps', restSeconds: 120, notes: 'Esegui il distretto programmato per la rotazione (Settimana 1: Gambe/Spalle, Settimana 2: Dorso/Bicipiti, Settimana 3: Petto/Tricipiti).' },
+            { name: 'Esercizio Multiarticolare Complementare', sets: 4, reps: 'Block Reps', restSeconds: 90 },
+            { name: 'Isolamento Distretto Target', sets: 4, reps: 'Block Reps', restSeconds: 60 }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ============================================================================
+// T30: BLOOD VOLUME MAXIMUM OVERLOAD (Fitschen & Wilson)
+// Rotazione completa sui 6 Workout originali (Tabella 7.3)
+// Cadenza: 3 ON, 1 OFF, 2 ON, 1 OFF
+// ============================================================================
+export const TEMPLATE_T30 = {
+  id: 'T30',
+  title: 'Blood Volume & Maximum Overload (Fitschen/Wilson)',
+  gender: 'unisex' as const,
+  level: 'advanced' as const,
+  profile: 'bodybuilder' as const,
+  daysPerWeek: 6,
+  goal: 'ipertrofia_pura',
+  primaryEngine: 'BLOOD_VOLUME_OVERLOAD' as any,
+  description: 'Programma originale da competizione a doppia stimolazione cellulare di Fitschen & Wilson: alternanza tra Overload pesante (3x4-7 a cedimento progressivo) e Blood Volume (14-20 rep in superset con tempo 3-0-3).',
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Workout 1: Dorso & Trapezi (Overload) + Deltoidi (Blood Volume)',
+      segments: [
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Schiena e Trapezi Meccanico Pesante',
+          exercises: [
+            { name: 'Deadlift da terra', sets: 3, reps: '4-7', restSeconds: 180, notes: 'Overload. W1-2: 1-2 RIR | W3: set 3 a cedimento | W4: cedimento su tutti i set. Se completi 7 rep, aumenta il carico.' },
+            { name: 'Pull-Up (Trazioni alla sbarra)', sets: 3, reps: '4-7', restSeconds: 150, notes: 'Zavorra se necessario per restare nel range 4-7 rep.' },
+            { name: 'Lat Pulldown presa prona larga', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Trazione al petto, gomiti in basso.' },
+            { name: 'T-Bar Row con carico libero', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Busto inclinato a 45°.' },
+            { name: 'Low Machine Row presa neutra', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Focus retrazione scapolare.' },
+            { name: 'Barbell Shrug', sets: 2, reps: '4-7', restSeconds: 90, notes: 'Scrollate con bilanciere pesante.' }
+          ]
+        },
+        {
+          type: 'METABOLICO' as const,
+          name: 'Blood Volume: Spalle (Superset TUT 3-0-3)',
+          exercises: [
+            { name: 'Dumbbell Lateral Raise', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 1A: Cadenza 3s salita, 3s discesa, squeeze al picco. Rest max 10s.' },
+            { name: 'Dumbbell Overhead Shoulder Press', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 1B: Tensione continua senza lockout. Rest 90s a fine superset.' },
+            { name: 'Rear Delt Machine Fly (Reverse Pec Deck)', sets: 3, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 2A: TUT 3-0-3. Rest max 10s.' },
+            { name: 'Barbell Upright Row', sets: 3, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 2B: Tirate al mento/petto con presa media. Rest 90s.' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 2,
+      title: 'Workout 2: Gambe & Addominali (Blood Volume)',
+      segments: [
+        {
+          type: 'METABOLICO' as const,
+          name: 'Blood Volume: Quadricipiti, Flessori & Polpacci (TUT 3-0-3)',
+          exercises: [
+            { name: 'Leg Extension', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 1A: TUT 3-0-3 con 1s di squeeze isometrico in alto. Rest 10s.' },
+            { name: 'Leg Press 45°', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 1B: Pompaggio continuo, no blocco alle ginocchia. Rest 90s.' },
+            { name: 'Lying Hamstring Leg Curl', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 2A: TUT 3-0-3. Rest 10s.' },
+            { name: 'Hack Squat', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 2B: Discesa controllata 3s. Rest 90s.' },
+            { name: 'Barbell Hip Thrust', sets: 2, reps: '14-20', restSeconds: 60, notes: 'Squeeze gluteo di 2s al vertice.' },
+            { name: 'Dumbbell Standing Calf Raise', sets: 2, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 3A: Rest 10s.' },
+            { name: 'Toe Press su Leg Press', sets: 2, reps: '14-20', restSeconds: 60, notes: 'SUPERSET 3B: Rest 60s.' }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO' as const,
+          name: 'Blood Volume: Addominali (TUT 3-0-3)',
+          exercises: [
+            { name: 'Decline Sit-Up', sets: 3, reps: '14-20', restSeconds: 45, notes: 'Contrazione addominale continua.' },
+            { name: 'Cable Crunch al cavo alto', sets: 3, reps: '14-20', restSeconds: 45, notes: 'Flessione del tronco senza tirare con le braccia.' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 3,
+      title: 'Workout 3: Petto (Overload) + Bicipiti & Tricipiti (Blood Volume)',
+      segments: [
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Pettorali Meccanico Pesante',
+          exercises: [
+            { name: 'Barbell Flat Bench Press', sets: 3, reps: '4-7', restSeconds: 180, notes: 'Overload pesante. Rest 2-4 min. Se chiudi 7 rep, aumenta il carico la prossima volta.' },
+            { name: 'Decline Barbell Bench Press', sets: 3, reps: '4-7', restSeconds: 150, notes: 'Panca declinata con carico elevato.' },
+            { name: 'Incline Dumbbell Bench Press', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Panca a 30°.' },
+            { name: 'Pec Deck Machine', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Chiusura controllata.' }
+          ]
+        },
+        {
+          type: 'METABOLICO' as const,
+          name: 'Blood Volume: Braccia (Superset TUT 3-0-3)',
+          exercises: [
+            { name: 'Dumbbell Hammer Curl', sets: 3, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 1A: Presa neutra, TUT 3-0-3. Rest 10s.' },
+            { name: 'Barbell Bicep Curl', sets: 3, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 1B: Bilanciere dritto, gomiti stabili. Rest 90s.' },
+            { name: 'Wide Grip Dumbbell Curl', sets: 3, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 2A: Presa larga extraruotata. Rest 10s.' },
+            { name: 'Cable Low Bicep Curl', sets: 3, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 2B: Tensione continua al cavo. Rest 90s.' },
+            { name: 'V-Bar Cable Triceps Pushdown', sets: 3, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 3A: Gomiti aderenti ai fianchi. Rest 10s.' },
+            { name: 'Dumbbell Skullcrusher su panca piana', sets: 3, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 3B: Estensione tricipiti. Rest 90s.' },
+            { name: 'Two-Arm Dumbbell Kickback', sets: 3, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 4A: Busto a 90°, picco di 1s. Rest 10s.' },
+            { name: 'Machine Triceps Extension', sets: 3, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 4B: Pompaggio continuo. Rest 90s.' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 4,
+      title: 'Workout 4: Deltoidi (Overload) + Dorso & Trapezi (Blood Volume)',
+      segments: [
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Deltoidi Meccanico Pesante',
+          exercises: [
+            { name: 'Dumbbell Standing Military Press', sets: 3, reps: '4-7', restSeconds: 180, notes: 'Overload spalle. Se chiudi 7 rep, aumenta il peso la volta successiva.' },
+            { name: 'Dumbbell Standing Lateral Raise', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Carico pesante 4-7 rep con controllo eccentrico.' },
+            { name: 'Reverse Pec Deck Fly', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Deltoide posteriore con carico elevato.' },
+            { name: 'Barbell Upright Row', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Tirate pesanti al petto.' }
+          ]
+        },
+        {
+          type: 'METABOLICO' as const,
+          name: 'Blood Volume: Schiena & Trapezi (Superset TUT 3-0-3)',
+          exercises: [
+            { name: 'Neutral-Grip Cable Seated Row', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 1A: TUT 3-0-3, squeeze dorsale 1s. Rest 10s.' },
+            { name: 'Standing Bent-Over Dumbbell Row', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 1B: Trazione bilanciata con manubri. Rest 90s.' },
+            { name: 'Horizontal Machine Chest-Supported Row', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 2A: TUT 3-0-3. Rest 10s.' },
+            { name: 'Neutral-Grip Lat Pulldown', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 2B: Presa triangolo o parallela. Rest 90s.' },
+            { name: 'Dumbbell Shrug', sets: 1, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 3A: Pompaggio trapezi. Rest 10s.' },
+            { name: 'Straight-Bar Cable Shrug', sets: 1, reps: '14-20', restSeconds: 60, notes: 'SUPERSET 3B: Rest 60s.' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 5,
+      title: 'Workout 5: Gambe & Addominali (Overload)',
+      segments: [
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Gambe Meccanico Pesante',
+          exercises: [
+            { name: 'Barbell Back Squat', sets: 3, reps: '4-7', restSeconds: 180, notes: 'Overload squat pesante. Rest 2-4 min. Se chiudi 7 rep, aumenta il peso.' },
+            { name: 'Leg Extension con carico elevato', sets: 3, reps: '4-7', restSeconds: 120 },
+            { name: 'Dumbbell Lying Leg Curl', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Manubrio stretto tra i piedi (o leg curl macchinario pesante).' },
+            { name: 'Stiff-Leg Deadlift (Mezzi stacchi gambe tese)', sets: 3, reps: '4-7', restSeconds: 150, notes: 'Carico pesante sulla catena posteriore.' },
+            { name: 'Dumbbell Walking Lunges', sets: 1, reps: '7-10/leg', restSeconds: 90, notes: '1 serie pesante da 7-10 passi per gamba.' },
+            { name: 'Machine Hip Abduction', sets: 2, reps: '10', restSeconds: 60, notes: 'Carico medio-pesante per 10 rep.' },
+            { name: 'Machine Hip Adduction', sets: 2, reps: '10', restSeconds: 60, notes: 'Carico medio-pesante per 10 rep.' },
+            { name: 'Standing Calf Raise', sets: 2, reps: '10', restSeconds: 60, notes: 'Pausa di 2s in massimo allungamento.' }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO' as const,
+          name: 'Overload: Addominali con Sovraccarico',
+          exercises: [
+            { name: 'Weighted Sit-Up su declinata', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Disco al petto o dietro la nuca. 4-7 rep pesanti.' },
+            { name: 'Machine Abdominal Crunch', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Carico pesante alla macchina.' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 6,
+      title: 'Workout 6: Petto (Blood Volume) + Bicipiti & Tricipiti (Overload)',
+      segments: [
+        {
+          type: 'METABOLICO' as const,
+          name: 'Blood Volume: Petto (Superset TUT 3-0-3)',
+          exercises: [
+            { name: 'Dumbbell Flat Fly', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 1A: TUT 3-0-3 con squeeze pettorale al picco. Rest 10s.' },
+            { name: 'Dumbbell Flat Bench Press', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 1B: Pompaggio continuo senza sosta in lockout. Rest 90s.' },
+            { name: 'Pec Deck Machine', sets: 4, reps: '14-20', restSeconds: 10, notes: 'SUPERSET 2A: TUT 3-0-3. Rest 10s.' },
+            { name: 'Hammer Incline Chest Press', sets: 4, reps: '14-20', restSeconds: 90, notes: 'SUPERSET 2B: Spinta inclinata continua. Rest 90s.' }
+          ]
+        },
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Bicipiti Meccanico Pesante',
+          exercises: [
+            { name: 'Barbell Bicep Curl', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Overload bicipiti. Rest 2 min. Se chiudi 7 rep, aumenta il carico.' },
+            { name: 'Dumbbell Hammer Curl pesante', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Carico pesante per il brachioradiale.' },
+            { name: 'Machine Preacher Curl', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Isolamento bicipiti su panca Scott.' }
+          ]
+        },
+        {
+          type: 'NEURALE' as const,
+          name: 'Overload: Tricipiti Meccanico Pesante',
+          exercises: [
+            { name: 'Straight-Bar Cable Triceps Pushdown', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Overload tricipiti con sbarra dritta pesante. Se chiudi 7 rep, aumenta il carico.' },
+            { name: 'Barbell Skullcrusher su panca piana', sets: 3, reps: '4-7', restSeconds: 120, notes: 'Bilanciere sagomato alla fronte.' },
+            { name: 'Dumbbell Overhead Triceps Extension', sets: 3, reps: '4-7', restSeconds: 90, notes: 'Estensione a due mani sopra la testa.' }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ----------------------------------------------------------------------------
+// T31: ERIC HELMS INTERMEDIATE BODYBUILDING (The Muscle & Strength Pyramid)
+// 4 Giorni: Upper / Lower Split con Wave Loading e Double Progression
+// ----------------------------------------------------------------------------
+export const TEMPLATE_T31 = {
+  id: 'T31',
+  title: 'Helms Intermediate Upper/Lower (Pyramid Method)',
+  gender: 'unisex',
+  level: 'intermediate',
+  profile: 'bodybuilder',
+  daysPerWeek: 4,
+  goal: 'ipertrofia_pura',
+  primaryEngine: 'HELMS_PYRAMID' as TopGymExtendedEngine,
+  description: 'Programmazione metodologica evidence-based Eric Helms: Wave Loading periodizzato sui compound pesanti e Double Progression controllata sugli isolamenti a RIR calibrato.',
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Lower Body 1 - Focus Squat & Tensione Quadricipiti',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Compound Primario: Wave Loading',
+          exercises: [
+            { name: 'Barbell Back Squat', sets: 4, reps: '4-6', restSeconds: 180, notes: 'W1: 4x6 @RPE 7-8 | W2: 4x5 (+2.5kg) @RPE 8 | W3: 4x4 (+2.5kg) @RPE 8.5-9 | W4: Deload 2x4 (carico W1, RPE 6)' },
+            { name: 'Romanian Deadlift (RDL)', sets: 4, reps: '4-6', restSeconds: 150, notes: 'Controllo eccentrico 2-3s a ginocchio semiflesso. Stesso schema di progressione wave.' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Accessori Meccanici: Double Progression',
+          exercises: [
+            { name: 'Leg Extension', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression: inizia con carico per 3x8, porta a 3x12 prima di salire di peso.' },
+            { name: 'Lying Leg Curl', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression 8-12 rep' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Glutei & Polpacci',
+          exercises: [
+            { name: 'Seated Hip Abduction Machine', sets: 3, reps: '12-15', restSeconds: 60, notes: 'Double progression 12-15 rep' },
+            { name: 'Standing Calf Raise', sets: 4, reps: '6-8', restSeconds: 90, notes: 'Pausa di 2s al fondo della fase eccentrica' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 2,
+      title: 'Upper Body 1 - Spinta Orizzontale & Trazione Primaria',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Compound Orizzontali: Wave Loading',
+          exercises: [
+            { name: 'Barbell Flat Bench Press', sets: 4, reps: '4-6', restSeconds: 180, notes: 'W1: 4x6 @RPE 7-8 | W2: 4x5 (+2.5kg) | W3: 4x4 (+2.5kg) | W4: Deload 2x4' },
+            { name: 'Barbell Bent-Over Row', sets: 3, reps: '6-8', restSeconds: 120, notes: 'Schiena a 45°, trazione all addome basso' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Upper Body Secondari: Double Progression',
+          exercises: [
+            { name: 'Incline Dumbbell Bench Press', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression 8-12 rep' },
+            { name: 'Chin-Ups (Trazioni presa supina o Lat Machine)', sets: 3, reps: '8-12', restSeconds: 90, notes: 'ROM completo con estensione scapolare' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Deltoidi & Braccia',
+          exercises: [
+            { name: 'Dumbbell Lateral Raise', sets: 3, reps: '8-12', restSeconds: 60, notes: 'Double progression 8-12 rep' },
+            { name: 'Overhead Cable Triceps Extension', sets: 3, reps: '8-12', restSeconds: 60 },
+            { name: 'Incline Dumbbell Bicep Curl', sets: 3, reps: '8-12', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 3,
+      title: 'Lower Body 2 - Leg Press & Catena Posteriore',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Multiarticolari di Volume',
+          exercises: [
+            { name: 'Leg Press 45°', sets: 3, reps: '8-12', restSeconds: 120, notes: 'Double progression: 3x8 fino a 3x12 con esecuzione fluida' },
+            { name: 'Weighted Back Extension (Iperestensioni con disco)', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Focus su attivazione glutei e lombari' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Isolamento Quadricipiti, Flessori & Polpacci',
+          exercises: [
+            { name: 'Leg Extension', sets: 3, reps: '12-15', restSeconds: 60, notes: 'Double progression 12-15 rep' },
+            { name: 'Seated Leg Curl', sets: 3, reps: '12-15', restSeconds: 60, notes: 'Double progression 12-15 rep' },
+            { name: 'Seated Calf Raise', sets: 4, reps: '8-12', restSeconds: 60, notes: 'Focus su muscolo soleo' }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 4,
+      title: 'Upper Body 2 - Spinta Verticale & Densità Pectoro-Dorsale',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Compound Spinta e Trazione Verticale',
+          exercises: [
+            { name: 'Flat Dumbbell Press', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression 8-12 rep' },
+            { name: 'Lat Pulldown presa prona', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression 8-12 rep' },
+            { name: 'Standing Overhead Barbell Press (Military)', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Double progression 8-12 rep' },
+            { name: 'Cable Seated Row con triangolo', sets: 3, reps: '8-12', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Rifinitura e Pompaggio',
+          exercises: [
+            { name: 'Cable Chest Flyes', sets: 3, reps: '12-15', restSeconds: 60, notes: 'Double progression 12-15 rep' },
+            { name: 'Triceps Rope Pushdown', sets: 3, reps: '12-15', restSeconds: 60 },
+            { name: 'EZ-Bar Bicep Curl', sets: 3, reps: '12-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ----------------------------------------------------------------------------
+// T32: BIKINI DIVISION 4-DAY MODULAR (Fitschen & Wilson)
+// 4 Giorni: Progettato specificamente per donne - Glute, Hamstrings & Delts Priority
+// ----------------------------------------------------------------------------
+export const TEMPLATE_T32 = {
+  id: 'T32',
+  title: 'Bikini Division 4-Day Modular (Fitschen/Wilson)',
+  gender: 'female',
+  level: 'intermediate',
+  profile: 'bikini',
+  daysPerWeek: 4,
+  goal: 'tonificazione_glutei',
+  primaryEngine: 'BIKINI_WAVE' as TopGymExtendedEngine,
+  description: 'Adattamento modulare a 4 giorni del protocollo da competizione Fitschen/Wilson. Focus assoluto su glutei, deltoidi e catena cinetica posteriore, con alternanza di stimoli Low/Moderate/High reps.',
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Sessione A: Schiena Bassa (L) + Glutei Ipertrofici (M) + Addome',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Heavy Posterior Chain (Low Reps)',
+          exercises: [
+            { name: 'Conventional Deadlift (o Semi-Sumo)', sets: 3, reps: '4-6', restSeconds: 150, notes: 'W1-3: 3x6 | W4-6: 3x5 | W7-9: 3x4. Focus femorali e glutei.' },
+            { name: 'Pendlay Row / Barbell Row a 90°', sets: 3, reps: '4-8', restSeconds: 120, notes: 'W1-3: 6-8 rep | W4-6: 5-7 rep | W7-9: 4-6 rep.' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Glute Hypertrophy (Moderate Reps)',
+          exercises: [
+            { name: 'Barbell Hip Thrust', sets: 3, reps: '6-12', restSeconds: 90, notes: 'W1-3: 10-12 rep | W4-6: 8-10 rep | W7-9: 6-10 rep. Pausa 2s in chiusura.' },
+            { name: 'Dumbbell Walking Lunges per gamba', sets: 3, reps: '8-12', restSeconds: 90, notes: 'Passo lungo per massimo allungamento gluteo.' },
+            { name: 'Weighted 45° Back Extension (Focus Glutei)', sets: 3, reps: '10-15', restSeconds: 60, notes: 'Piedi extraruotati a 45°, colonna bloccata.' }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Addome & Stabilità',
+          exercises: [
+            { name: 'Cable Crunch al cavo alto', sets: 3, reps: '10-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 2,
+      title: 'Sessione B: Deltoidi (L/M) + Dorso Superiore + Spinta',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Spalle e Spinta (Low/Mod Reps)',
+          exercises: [
+            { name: 'Barbell Standing Overhead Press', sets: 3, reps: '4-6', restSeconds: 120, notes: 'W1-3: 3x6 | W4-6: 3x5 | W7-9: 3x4.' },
+            { name: 'Incline Dumbbell Bench Press', sets: 3, reps: '6-12', restSeconds: 90, notes: 'Solo per supporto pettorale clavicolare.' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Ampiezza Dorso & V-Shape',
+          exercises: [
+            { name: 'Pull-Up / Lat Machine presa neutra', sets: 3, reps: '6-10', restSeconds: 90, notes: 'Fondamentale per la proporzione V-Shape Bikini.' },
+            { name: 'Chest Supported Dumbbell Row', sets: 3, reps: '8-12', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Isolamento Deltoidi Laterali & Braccia',
+          exercises: [
+            { name: 'Seated Dumbbell Lateral Raise', sets: 4, reps: '8-15', restSeconds: 60, notes: 'W1-3: 10-15 | W4-6: 8-12 | W7-9: 8-10.' },
+            { name: 'Overhead Cable Triceps Extension', sets: 2, reps: '10-15', restSeconds: 60 },
+            { name: 'Standing EZ-Bar Curl', sets: 2, reps: '10-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 3,
+      title: 'Sessione C: Lower Body (L) + Glute Pump (High Reps)',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Gambe Forza (Low Reps)',
+          exercises: [
+            { name: 'Barbell Back Squat (o Front Squat)', sets: 3, reps: '4-6', restSeconds: 150, notes: 'W1-3: 3x6 | W4-6: 3x5 | W7-9: 3x4.' },
+            { name: 'Romanian Deadlift con manubri', sets: 3, reps: '4-6', restSeconds: 120, notes: 'Enfasi sull allungamento femorale.' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Catena Posteriore Intermedia',
+          exercises: [
+            { name: 'Bulgarian Split Squat per gamba', sets: 3, reps: '6-10', restSeconds: 90, notes: 'Busto inclinato a 45° per isolare il grande gluteo.' },
+            { name: 'Seated Hamstring Leg Curl', sets: 3, reps: '6-10', restSeconds: 75 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Glute Density Pump (High Reps: 15-30)',
+          exercises: [
+            { name: 'Cable Pull-Through', sets: 3, reps: '15-25', restSeconds: 60, notes: 'Squeeze gluteo di 2s al picco.' },
+            { name: 'Banded Hip Thrust (o manubrio su panca)', sets: 3, reps: '20-30', restSeconds: 45, notes: 'Bruciore metabolico continuo.' },
+            { name: 'Machine Hip Abductor', sets: 3, reps: '20-30', restSeconds: 45 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 4,
+      title: 'Sessione D: Deltoidi Pompaggio (H) + Dorso (H) + Glute Finisher',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Trazione e Deltoidi Multi-Angolo',
+          exercises: [
+            { name: 'Reverse-Grip Lat Pulldown', sets: 3, reps: '6-12', restSeconds: 90 },
+            { name: 'Standing 1-Arm Side Lateral Raise', sets: 4, reps: '6-10', restSeconds: 60, notes: 'Inclinati leggermente verso l esterno' },
+            { name: 'Rear Delt Dumbbell Raise', sets: 3, reps: '8-12', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'High-Rep Metabolic Finishers (15-30 Reps)',
+          exercises: [
+            { name: 'Cable Side Lateral Raise', sets: 4, reps: '20-30', restSeconds: 45, notes: 'Tensione continua al cavo basso.' },
+            { name: 'Straight-Arm Cable Pulldown', sets: 3, reps: '20-30', restSeconds: 45, notes: 'Isolamento del gran dorsale.' },
+            { name: 'Single-Leg Cable Glute Kickback', sets: 3, reps: '20-25', restSeconds: 45, notes: 'Isolamento gluteo alto/medio.' }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Core Rotation',
+          exercises: [
+            { name: 'Russian Twist a terra', sets: 3, reps: '10-15/side', restSeconds: 45 }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ----------------------------------------------------------------------------
+// T33: BIKINI DIVISION 6-DAY ELITE (Fitschen & Wilson Original Contest Plan)
+// 6 Giorni: Il protocollo da gara completo di Peter Fitschen & Cliff Wilson
+// ----------------------------------------------------------------------------
+export const TEMPLATE_T33 = {
+  id: 'T33',
+  title: 'Bikini Division 6-Day Elite (Fitschen/Wilson Original)',
+  gender: 'female',
+  level: 'advanced',
+  profile: 'bikini',
+  daysPerWeek: 6,
+  goal: 'definizione_gara',
+  primaryEngine: 'BIKINI_WAVE' as TopGymExtendedEngine,
+  description: 'Il protocollo autentico per atlete Bikini estratto da Fitschen & Wilson: 6 sessioni settimanali a onde triadiche di volume, alternando carichi pesanti (L: 4-6), ipertrofici (M: 8-12) e metabolici (H: 15-30).',
+  days: [
+    {
+      dayNumber: 1,
+      title: 'Day 1: Back (L) + Glutes (M) + Abs',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Back Low Reps',
+          exercises: [
+            { name: 'Deadlift', sets: 3, reps: '4-6', restSeconds: 150, notes: 'W1: 3x6 | W2: 4x6 | W3: 5x6 (W4-6: 5 rep | W7-9: 4 rep)' },
+            { name: 'Pendlay Row', sets: 3, reps: '4-8', restSeconds: 120, notes: 'W1-3: 6-8 rep | W4-6: 5-7 rep | W7-9: 4-6 rep' },
+            { name: 'Pull-Up', sets: 2, reps: '4-8', restSeconds: 120 },
+            { name: 'Dumbbell Row', sets: 2, reps: '5-10', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Glutes Moderate Reps',
+          exercises: [
+            { name: 'Dumbbell Lunge per gamba', sets: 3, reps: '8-12', restSeconds: 90 },
+            { name: 'Barbell Hip Thrust', sets: 3, reps: '8-12', restSeconds: 90 },
+            { name: 'Weighted Back Extension', sets: 3, reps: '8-15', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Abs',
+          exercises: [
+            { name: 'Cable Crunch', sets: 3, reps: '10-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 2,
+      title: 'Day 2: Chest (M) + Shoulders (M) + Arms (M)',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Upper Body Moderate Reps',
+          exercises: [
+            { name: 'Dumbbell Bench Press', sets: 3, reps: '6-12', restSeconds: 90 },
+            { name: 'Dumbbell Overhead Press', sets: 3, reps: '6-12', restSeconds: 90 },
+            { name: 'Seated Side Lateral Raise', sets: 3, reps: '8-15', restSeconds: 60 },
+            { name: 'Parallel Bars Dip (o panca)', sets: 3, reps: '6-12', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Arms Hypertrophy',
+          exercises: [
+            { name: 'Standing EZ-Bar Curl', sets: 3, reps: '6-12', restSeconds: 60 },
+            { name: 'Overhead Cable Extension', sets: 3, reps: '8-15', restSeconds: 60 },
+            { name: 'Rope Cable Curl', sets: 3, reps: '8-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 3,
+      title: 'Day 3: Lower Body (L) + Glutes (H) + Abs',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Lower Body Low Reps',
+          exercises: [
+            { name: 'Barbell Squat', sets: 3, reps: '4-6', restSeconds: 150, notes: 'W1: 3x6 | W2: 4x6 | W3: 5x6' },
+            { name: 'Romanian Deadlift (RDL)', sets: 3, reps: '4-6', restSeconds: 120 },
+            { name: 'Leg Extension', sets: 2, reps: '5-10', restSeconds: 90 },
+            { name: 'Hamstring Curl', sets: 2, reps: '5-10', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Glutes High Reps (15-30 Reps)',
+          exercises: [
+            { name: 'Step-Back Dumbbell Lunge', sets: 3, reps: '15-20', restSeconds: 60 },
+            { name: 'Cable Pull-Through', sets: 3, reps: '15-25', restSeconds: 60 },
+            { name: 'Banded Hip Thrust', sets: 3, reps: '20-30', restSeconds: 45 }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Abs',
+          exercises: [
+            { name: 'Lying Leg Raise', sets: 3, reps: '10-15', restSeconds: 60 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 4,
+      title: 'Day 4: Shoulders (L) + Back (H)',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Shoulders Low Reps',
+          exercises: [
+            { name: 'Barbell Overhead Press', sets: 3, reps: '4-6', restSeconds: 120 },
+            { name: '1-Arm Standing Side Lateral Raise', sets: 3, reps: '5-10', restSeconds: 60 },
+            { name: 'Barbell Upright Row', sets: 2, reps: '5-10', restSeconds: 60 },
+            { name: '1-Arm Braced Rear Raise', sets: 2, reps: '5-10', restSeconds: 60 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Back High Reps (15-30 Reps)',
+          exercises: [
+            { name: 'Moto Row (Cavo basso)', sets: 3, reps: '15-20', restSeconds: 60 },
+            { name: 'Chest-Supported Row con manubri', sets: 3, reps: '15-20', restSeconds: 60 },
+            { name: 'Straight-Arm Cable Pressdown', sets: 3, reps: '20-30', restSeconds: 45 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 5,
+      title: 'Day 5: Glutes (L) + Legs (H) + Abs',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Glutes Low Reps',
+          exercises: [
+            { name: 'Heavy Barbell Hip Thrust', sets: 3, reps: '4-6', restSeconds: 150, notes: 'W1: 3x6 | W2: 4x6 | W3: 5x6' },
+            { name: 'Bulgarian Split Squat per gamba', sets: 3, reps: '4-8', restSeconds: 90 },
+            { name: 'Sumo Leg Press', sets: 2, reps: '5-10', restSeconds: 90 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Legs High Reps (15-30 Reps)',
+          exercises: [
+            { name: 'Hack Squat discesa controllata', sets: 3, reps: '15-20', restSeconds: 75 },
+            { name: 'Leg Extension', sets: 3, reps: '20-30', restSeconds: 45 },
+            { name: 'Hamstring Curl', sets: 3, reps: '20-30', restSeconds: 45 },
+            { name: 'Standing Calf Raise', sets: 3, reps: '15-25', restSeconds: 45 }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Abs',
+          exercises: [
+            { name: 'Russian Twist con disco', sets: 3, reps: '8-12/side', restSeconds: 45 }
+          ]
+        }
+      ]
+    },
+    {
+      dayNumber: 6,
+      title: 'Day 6: Back (M) + Glutes (H) + Shoulders (H)',
+      segments: [
+        {
+          type: 'MECCANICO',
+          name: 'Back Moderate Reps',
+          exercises: [
+            { name: 'Reverse-Grip Pulldown', sets: 3, reps: '6-12', restSeconds: 90 },
+            { name: 'Meadows Row (T-bar ad un braccio)', sets: 3, reps: '6-12', restSeconds: 90 },
+            { name: 'Wide-Grip Cable Seated Row', sets: 3, reps: '8-15', restSeconds: 75 }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Glutes & Shoulders High Reps Pump',
+          exercises: [
+            { name: 'Single-Leg Hip Thrust', sets: 3, reps: '15-20', restSeconds: 60 },
+            { name: 'Cable Glute Kickback', sets: 3, reps: '20-25', restSeconds: 45 },
+            { name: 'Machine Abductor', sets: 3, reps: '20-30', restSeconds: 45 },
+            { name: 'Cable Side Lateral Raise', sets: 5, reps: '20-30', restSeconds: 45, notes: 'Volume estremo sui deltoidi laterali' }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ============================================================================
+// AGGIORNAMENTO DEL REGISTRO DEI TEMPLATE
+// Aggiunta non distruttiva all'array del catalogo
+// ============================================================================
+export const EXTENDED_TEMPLATES = [
+  TEMPLATE_T29,
+  TEMPLATE_T30,
+  TEMPLATE_T31,
+  TEMPLATE_T32,
+  TEMPLATE_T33
+];
+
+// ============================================================================
+// AGGIORNAMENTO DI RESOLVETOPGYMTEMPLATE (ROUTING ADDIZIONALE A 5 ASSI)
+// ============================================================================
+
+export interface ResolveTemplateParams {
+  gender: 'male' | 'female' | 'unisex';
+  level: 'beginner' | 'intermediate' | 'advanced';
+  profile: 'bodybuilder' | 'powerbuilder' | 'bikini' | 'wellness' | 'fitness';
+  daysPerWeek: number;
+  goal: string;
+}
+
+/**
+ * Risolutore additivo del wizard di TopGym:
+ * Mappa i 5 assi verso i nuovi protocolli T29-T33 preservando i rami preesistenti.
+ */
+export function resolveExtendedTopGymTemplate(params: ResolveTemplateParams): string | null {
+  const { gender, level, profile, daysPerWeek, goal } = params;
+
+  // 1. RAMO BIKINI (Target Donna, Glutei & Proporzioni da palco)
+  if (gender === 'female' || profile === 'bikini' || profile === 'wellness') {
+    if (daysPerWeek === 4) {
+      return 'T32'; // Bikini Division 4-Day Modular
+    }
+    if (daysPerWeek >= 5) {
+      return 'T33'; // Bikini Division 6-Day Elite
+    }
+  }
+
+  // 2. RAMO POWERBUILDER / IBRIDO FORZA-IPERTROFIA (Fitschen/Wilson Power-Block)
+  if (profile === 'powerbuilder' || goal === 'forza_ipertrofia') {
+    if (daysPerWeek === 5) {
+      return 'T29'; // Power-Block Periodization 5 Days
+    }
+  }
+
+  // 3. RAMO DENSITÀ ESTREMA & OVERLOAD (Fitschen/Wilson Blood Volume)
+  if (profile === 'bodybuilder' && level === 'advanced' && (daysPerWeek === 5 || daysPerWeek === 6)) {
+    if (goal === 'ipertrofia_pura' || goal === 'densita') {
+      return 'T30'; // Blood Volume & Maximum Overload
+    }
+  }
+
+  // 4. RAMO UPPER / LOWER INTERMEDIO RIGOROSO (Eric Helms)
+  if (daysPerWeek === 4 && (level === 'intermediate' || level === 'advanced')) {
+    if (goal === 'ipertrofia_pura' || goal === 'massa') {
+      return 'T31'; // Helms Intermediate Upper/Lower
+    }
+  }
+
+  // Se nessun ramo della nuova tranche intercetta la combinazione, ritorna null
+  // per far scattare la resolveTopGymTemplate standard (T01 - T28).
+  return null;
 }
