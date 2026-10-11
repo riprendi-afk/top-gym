@@ -79,45 +79,74 @@ export default function WorkoutWizardModal({
     const scored = fullCatalog.map((t: any) => {
       let score = 0;
       const tDays = getTemplateDaysCount(t);
+      const title = (getTemplateTitle(t) || '').toLowerCase();
       const desc = (t.description || '').toLowerCase();
       const engine = t.primaryEngine || 'TOPGYM_BLOCKS';
 
       // 1. Frequenza (giorni)
       if (tDays === daysPerWeek) {
-        score += 60;
+        score += 80;
       } else if (Math.abs(tDays - daysPerWeek) === 1) {
-        score += 20;
+        score += 15;
+      } else {
+        score -= 80;
       }
 
-      // 2. Sesso & Focus
-      const isFemaleTemplate = desc.includes('femminile') || desc.includes('glute') || desc.includes('bikini') || t.gender === 'FEMALE';
-      if (gender === 'FEMALE' && isFemaleTemplate) score += 40;
-      if (gender === 'MALE' && !isFemaleTemplate) score += 30;
+      // 2. Sesso & Esclusione tassativa
+      const isFemaleTemplate = desc.includes('femminile') || title.includes('femminile') || desc.includes('bikini') || desc.includes('glute') || (t as any).gender === 'FEMALE';
+      if (gender === 'FEMALE') {
+        if (isFemaleTemplate) score += 60;
+        else score -= 60;
+      } else {
+        if (isFemaleTemplate) score -= 500; // MAI proporre scheda femminile a un uomo
+        else score += 30;
+      }
 
-      // 3. Gestione Gambe per Uomo
+      // 3. Gestione Gambe & Split per UOMO
       if (gender === 'MALE') {
+        const isUpperLower = title.includes('upper / lower') || title.includes('upper/lower') || desc.includes('upper / lower') || desc.includes('upper/lower');
+
         if (legPreference === 'LEGS_ONCE') {
-          if (['T06', 'T08', 'T11', 'T12', 'T05', 'T30'].includes(t.id)) score += 55;
-          if (desc.includes('torso / arti') || desc.includes('ppl + torso') || desc.includes('monomuscolare')) score += 45;
+          // BLOCCO TASSATIVO: se vuole Gambe 1x, Upper/Lower e' punito severamente
+          if (isUpperLower) {
+            score -= 300;
+          }
+
+          // 4 GIORNI GAMBE 1X: Vince T07 (Torso / Arti Biomeccanico: 3 Upper + 1 Gambe)
+          if (daysPerWeek === 4) {
+            if (t.id === 'T07' || title.includes('torso / arti') || title.includes('torso/arti')) score += 180;
+            if (t.id === 'T30') score += 70;
+          }
+
+          // 3 GIORNI GAMBE 1X: PPL (T05 Biomeccanico o T04 Power: 2 Upper + 1 Gambe)
+          if (daysPerWeek === 3) {
+            if (t.id === 'T05' || t.id === 'T04' || title.includes('push / pull / legs') || title.includes('ppl')) score += 120;
+          }
+
+          // 5 GIORNI GAMBE 1X: T10 (PPL + Torso/Braccia) o T11 (Monomuscolare)
+          if (daysPerWeek === 5) {
+            if (t.id === 'T10' || t.id === 'T11' || title.includes('monomuscolare')) score += 120;
+          }
         } else if (legPreference === 'LEGS_BALANCED') {
-          if (['T07', 'T31', 'T01', 'T02'].includes(t.id)) score += 55;
-          if (desc.includes('upper / lower') || desc.includes('lineare')) score += 40;
+          // Equilibrato: qui premiamo Upper/Lower 2x
+          if (isUpperLower) score += 120;
+          if (t.id === 'T06' || t.id === 'T31') score += 80;
         } else if (legPreference === 'POWER_COMPOUND') {
-          if (['T29', 'T05', 'T07', 'T31'].includes(t.id)) score += 60;
-          if (engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 40;
+          // Fondamentali pesanti
+          if (t.id === 'T29' || t.id === 'T06' || t.id === 'T31' || engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 120;
         }
       }
 
-      // 4. Gestione Gambe/Glutei per Donna
+      // 4. Gestione per DONNA
       if (gender === 'FEMALE') {
         if (legPreference === 'GLUTES_HYPER') {
-          if (['T04', 'T09', 'T10', 'T13', 'T32'].includes(t.id)) score += 60;
-          if (desc.includes('glutei') || desc.includes('cerniera')) score += 45;
+          if (['T03', 'T08', 'T09', 'T12', 'T32'].includes(t.id)) score += 100;
+          if (desc.includes('glutei') || desc.includes('cerniera')) score += 60;
         } else if (legPreference === 'BIKINI_CONTEST') {
-          if (['T33', 'T32', 'T10'].includes(t.id)) score += 65;
-          if (engine === 'BIKINI_WAVE' || desc.includes('bikini')) score += 50;
+          if (['T33', 'T32', 'T09'].includes(t.id)) score += 120;
+          if (engine === 'BIKINI_WAVE' || desc.includes('bikini')) score += 80;
         } else {
-          if (['T01', 'T02', 'T03', 'T09'].includes(t.id)) score += 45;
+          if (['T01', 'T02', 'T03', 'T08'].includes(t.id)) score += 60;
         }
       }
 
@@ -143,7 +172,7 @@ export default function WorkoutWizardModal({
 
     let rationaleText = '';
     if (gender === 'MALE' && legPreference === 'LEGS_ONCE') {
-      rationaleText = 'Ideale per chi cerca massimo impatto visivo e divertimento: concentra lo stimolo su sedute Torso/Braccia ad alto pompaggio e riserva una sola seduta mirata alle gambe. Azzerata la noia e garantita la continuita.';
+      rationaleText = 'Ideale per chi cerca massimo impatto visivo e divertimento: concentra lo stimolo su 3 sedute Torso/Braccia ad alto pompaggio e riserva una sola seduta mirata alle gambe. Azzerata la noia e garantita la continuita.';
     } else if (gender === 'FEMALE' && legPreference === 'GLUTES_HYPER') {
       rationaleText = 'Priorita assoluta a Glutei e Catena Posteriore, associata a un lavoro Upper snello e a bassa infiammazione per prevenire ritenzione idrica da cortisolo.';
     } else if (gender === 'FEMALE' && legPreference === 'BIKINI_CONTEST') {
