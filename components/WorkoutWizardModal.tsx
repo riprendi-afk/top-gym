@@ -65,6 +65,11 @@ export default function WorkoutWizardModal({
     );
   };
 
+  const getTemplateTitle = (tmpl: any): string => {
+    if (!tmpl) return '';
+    return tmpl.title || tmpl.name || tmpl.id || 'Template';
+  };
+
   // ==========================================================================
   // MOTORE DI VALUTAZIONE CLINICA & SCORING SU TUTTI I 33 TEMPLATE
   // ==========================================================================
@@ -172,7 +177,7 @@ export default function WorkoutWizardModal({
       const programDays = convertTemplateToProgramDays(target, gender);
       const totalDays = getTemplateDaysCount(target);
       const engineName = target.primaryEngine || 'TOPGYM_BLOCKS';
-      const targetTitle = (target as any).title || target.name || target.id;
+      const targetTitle = getTemplateTitle(target);
       onApplyProgram(
         programDays,
         engineName,
@@ -207,10 +212,11 @@ export default function WorkoutWizardModal({
     const tDays = getTemplateDaysCount(t);
     const matchesDays = filterDays === 'ALL' || tDays === filterDays;
     const q = searchQuery.toLowerCase().trim();
+    const title = getTemplateTitle(t).toLowerCase();
     const matchesSearch =
       !q ||
       t.id.toLowerCase().includes(q) ||
-      ((t.title || t.name || '').toLowerCase().includes(q)) ||
+      title.includes(q) ||
       ((t.description || '').toLowerCase().includes(q));
     return matchesDays && matchesSearch;
   });
@@ -565,7 +571,7 @@ export default function WorkoutWizardModal({
                 </div>
 
                 <h3 className="text-lg font-black text-white">
-                  {(diagnosticResult.topMatch as any).title || diagnosticResult.topMatch.name}
+                  {getTemplateTitle(diagnosticResult.topMatch)}
                 </h3>
                 <p className="text-xs text-zinc-300 mt-1">
                   {diagnosticResult.topMatch.description}
@@ -585,7 +591,7 @@ export default function WorkoutWizardModal({
                   <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <span className="text-zinc-400">Alternativa Valida:</span>
-                      <b className="text-white">[{diagnosticResult.alternative.id}] {(diagnosticResult.alternative as any).title || diagnosticResult.alternative.name}</b>
+                      <b className="text-white">[{diagnosticResult.alternative.id}] {getTemplateTitle(diagnosticResult.alternative)}</b>
                       {renderEngineBadge(diagnosticResult.alternative.primaryEngine)}
                     </div>
                     <button
@@ -606,7 +612,7 @@ export default function WorkoutWizardModal({
                     <div className="flex items-center gap-2">
                       <Dumbbell className="w-4 h-4 text-[#E50914]" />
                       <h4 className="text-xs font-black text-white uppercase tracking-wider">
-                        Anteprima Sedute: {(selectedTemplate as any).title || selectedTemplate.name} [{selectedTemplate.id}]
+                        Anteprima Sedute: {getTemplateTitle(selectedTemplate)} [{selectedTemplate.id}]
                       </h4>
                     </div>
                     <span className="text-[11px] text-zinc-400 font-mono">
@@ -678,7 +684,7 @@ export default function WorkoutWizardModal({
                   {displayedCatalog.map(tmpl => {
                     const isSelected = selectedTemplate?.id === tmpl.id;
                     const daysCount = getTemplateDaysCount(tmpl);
-                    const titleText = (tmpl as any).title || tmpl.name || tmpl.id;
+                    const titleText = getTemplateTitle(tmpl);
 
                     return (
                       <div
