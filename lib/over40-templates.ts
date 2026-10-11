@@ -279,7 +279,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
         ]
       }
     ]
-  }
+  },
 
   // --------------------------------------------------------------------------
   // 6. SCO-O40-01: Postural Decompression & Pelvic Balance (Scoliosi a "S")
@@ -376,6 +376,161 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
           { order: 4, name: 'Glute bridge a terra a corpo libero (High Reps Finisher)', targetMuscle: 'Glutei Pompa Metabolica', segment: 'METABOLICO', sets: 3, reps: '25-30', restSeconds: 30, effort: 'Bruciore Puro', technique: 'NONE', notes: 'Esaurimento lattacido a zero carico vertebrale. Squeeze continuo.' },
           { order: 5, name: 'Calf raise alla pressa orizzontale', targetMuscle: 'Polpacci / Drenaggio', segment: 'METABOLICO', sets: 3, reps: '20', restSeconds: 30, effort: 'Medio', technique: 'NONE', notes: 'Fermo 2s in allungamento per favorire il ritorno venoso.' },
           { order: 6, name: 'Tapis Roulant camminata in salita moderata (LISS)', targetMuscle: 'Cardio Drenante / Decompressione', segment: 'METABOLICO', sets: 1, reps: '15 min', restSeconds: 0, effort: 'Pendenza 6-8%, Velocit� 4.5 km/h', technique: 'NONE', notes: 'Camminata fluida a schiena allungata: scarica la colonna e favorisce il consumo di lipidi.' }
+        ]
+      }
+    ]
+  },
+
+
+  // --------------------------------------------------------------------------
+  // TEMPLATE 1: TRADIZIONALE 3 GIORNI (UPPER / LOWER / FULL BODY) - SCOLIOSI
+  // --------------------------------------------------------------------------
+  {
+    id: 'SCO-TRAD-3D',
+    title: 'Scoliosi Tradizionale 3 Giorni (Upper / Lower / Full Body)',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'BOMPA_PERIODIZATION',
+    description: 'Protocollo asimmetrico correttivo a decompressione assiale per scoliosi destro-toracica e sinistro-lombare. Focus trazione asimmetrica, Schroth-modificato e zero compressione discale.',
+    generateSessions: (gender: Gender): TemplateSession[] => [
+      {
+        dayLabel: 'Giorno A: Upper Body (Focus Verticale) + Core',
+        sessionFocus: 'Warm-up Sospensione + Tirata Asimmetrica & Stabilizzazione Scapolare',
+        exercises: [
+          { order: 1, name: 'Sospensione asimmetrica sbarra + Allungamento quadrupedia', targetMuscle: 'Decompressione Toracica', segment: 'NEURALE', sets: 3, reps: '30s scarico SX', restSeconds: 45, effort: 'Warm-up Attivo', technique: 'DECOMPRESSIONE', notes: 'Warm-up: peso scaricato prevalentemente a SX per aprire la concavit� toracica. Allungamento in quadrupedia.' },
+          { order: 2, name: 'Lat Machine singola (Maniglia a D)', targetMuscle: 'Gran Dorsale Asimmetrico', segment: 'NEURALE', sets: 3, reps: '10-12 (+1 serie DX)', restSeconds: 60, effort: 'RIR 1-2', technique: 'ASIMMETRICO', notes: 'SX: allungamento estremo in risalita. DX: isometria 2" in chiusura. Eseguire +1 serie extra SOLO braccio DX.' },
+          { order: 3, name: 'Chest Press guidata', targetMuscle: 'Petto / Spinta Tronco', segment: 'MECCANICO', sets: 4, reps: '8', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'La macchina stabilizza il tronco. Focus: schiacciare bene la scapola destra contro lo schienale prima di spingere, per pareggiare il gibbo.' },
+          { order: 4, name: 'Pulldown a braccia tese cavo singolo', targetMuscle: 'Dorsale / Postura', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Traiettoria a braccio teso controllata per stabilit� e reclutamento del gran dorsale.' },
+          { order: 5, name: 'Pec Fly Rear Delt (Macchina deltoidi posteriori)', targetMuscle: 'Deltoidi Posteriori / Romboidi', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento Tecnico', technique: 'ASIMMETRICO', notes: 'Lavora monolaterale o concentrati a strizzare fortissimo la spalla DESTRA per accorciare i romboidi stirati.' },
+          { order: 6, name: 'Pallof Press in Ginocchio (Half-Kneeling)', targetMuscle: 'Core Anti-Rotazione', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 45, effort: 'Controllo Puro', technique: 'ANTI_ROTAZIONE', notes: 'Ginocchio SX a terra, resistenza del cavo proveniente da DESTRA.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno B: Lower Body (Zero Compressione) + Core',
+        sessionFocus: 'Warm-up Gamba Inibita + Spinta Unilaterale & Glutei Senza Carico Lombare',
+        exercises: [
+          { order: 1, name: 'Abductor machine (Pre-attivazione medio gluteo)', targetMuscle: 'Medio Gluteo', segment: 'NEURALE', sets: 2, reps: '15', restSeconds: 45, effort: 'Pre-Attivazione', technique: 'ISOLAMENTO', notes: 'Warm-up: solo gamba inibita per pre-attivazione e stabilizzazione pelvica.' },
+          { order: 2, name: 'Leg Press a 1 gamba (Singola)', targetMuscle: 'Quadricipiti / Glutei', segment: 'NEURALE', sets: 4, reps: '8-10 per lato', restSeconds: 75, effort: 'RIR 2', technique: 'UNILATERALE', notes: 'Schienale ben saldo, bacino incollato. Spinta controllata senza torsioni.' },
+          { order: 3, name: 'Affondi Indietro (Reverse Lunge) LIBERI con manubri', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Senza Multipower: liberi per assecondare la mobilit� asimmetrica del bacino.' },
+          { order: 4, name: 'Gluteus Machine guidata', targetMuscle: 'Grande Gluteo', segment: 'MECCANICO', sets: 4, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 1-2', technique: 'ISOLAMENTO', notes: 'Sostituisce lo stacco: isola il grande gluteo senza il minimo carico sulla zona lombare.' },
+          { order: 5, name: 'Leg Extension Singola', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12 per gamba', restSeconds: 45, effort: 'RIR 1', technique: 'UNILATERALE', notes: 'Tensione continua e controllo eccentrico della discesa.' },
+          { order: 6, name: 'Side Plank Schroth-Modificato', targetMuscle: 'Core Asimmetrico', segment: 'METABOLICO', sets: 3, reps: '40s', restSeconds: 45, effort: 'Isometrico', technique: 'SCHROTH', notes: 'Appoggio SOLO sul gomito DESTRO. Braccio SX oltre la testa, respiro diaframmatico a sinistra.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno C: Full Body (Tirata Orizzontale + Femorali)',
+        sessionFocus: 'Rematore Asimmetrico, B-Stance, Face Pull & Dead Bug al Cavo',
+        exercises: [
+          { order: 1, name: 'Rematore 1 manubrio su panca', targetMuscle: 'Dorso Posturale', segment: 'NEURALE', sets: 4, reps: '8-10 (+1 serie DX)', restSeconds: 75, effort: 'RIR 1-2', technique: 'ASIMMETRICO', notes: 'SX: massima protrazione in discesa. DX: massima retrazione e isometria. Eseguire +1 serie extra SOLO braccio DX.' },
+          { order: 2, name: 'Ponte Glutei B-Stance a terra', targetMuscle: 'Glutei / Bacino', segment: 'MECCANICO', sets: 4, reps: '12 per gamba', restSeconds: 60, effort: 'RIR 1', technique: 'B_STANCE', notes: 'Schiena a terra, una gamba spinge, l\'altra appoggia solo il tallone per equilibrio.' },
+          { order: 3, name: 'Face Pull Asimmetrico al cavo', targetMuscle: 'Deltoidi Posteriori / Spalla', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 45, effort: 'RIR 1', technique: 'ASIMMETRICO', notes: 'Tirare pi� indietro col braccio DX per correggere l\'anteriorizzazione della spalla.' },
+          { order: 4, name: 'Seated Leg Curl Unilaterale', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 1-2', technique: 'UNILATERALE', notes: 'Da seduto disattiva lo psoas e non inarca la lombare.' },
+          { order: 5, name: 'Dead Bug Asimmetrico al cavo', targetMuscle: 'Core Integrato', segment: 'METABOLICO', sets: 3, reps: '10 estensioni', restSeconds: 45, effort: 'Controllo Totale', technique: 'ASIMMETRICO', notes: 'Cavo basso dietro la testa che tira indietro SOLO il braccio SINISTRO.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // TEMPLATE 2: A CIRCUITO 3 GIORNI (FUNCTIONAL / POSTURALE) - SCOLIOSI
+  // --------------------------------------------------------------------------
+  {
+    id: 'SCO-CIRC-3D',
+    title: 'Scoliosi a Circuito Funzionale & Posturale (3 Giorni)',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'BOMPA_PERIODIZATION',
+    description: 'Circuito a tempo 4-5 Round (40" ON / 20" OFF). Circuito A su catena anteriore e anti-rotazione, Circuito B su catena posteriore e anti-flessione. Compensazione posturale dinamica.',
+    generateSessions: (gender: Gender): TemplateSession[] => [
+      {
+        dayLabel: 'Giorno 1: Circuito A (Catena Anteriore & Anti-Rotazione)',
+        sessionFocus: '4-5 Round � 40" Lavoro / 20" Recupero � 2 minuti di riposo a fine round',
+        exercises: [
+          { order: 1, name: 'Bulgarian Split Squat 1 manubrio (Offset)', targetMuscle: 'Gambe Monopodalico', segment: 'NEURALE', sets: 4, reps: '40s', restSeconds: 20, effort: 'Medio', technique: 'CIRCUITO_OFFSET', notes: 'Manubrio tenuto solo dal lato della gamba inibita per contrastare lo sbilanciamento del bacino.' },
+          { order: 2, name: 'Rematore al TRX / Cavo (1 braccio)', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Controllo', technique: 'CIRCUITO_ASIMMETRICO', notes: '40" solo a DX (isometria). Nel round successivo 40" solo a SX (allungamento).' },
+          { order: 3, name: 'Pallof Press Isometrico in ginocchio (Cavo da DX)', targetMuscle: 'Core Anti-Rotazione', segment: 'MECCANICO', sets: 4, reps: '40s tenuta statica', restSeconds: 20, effort: 'Isometrico', technique: 'CIRCUITO_ISOMETRIA', notes: 'Tenuta statica 40" con resistenza del cavo da destra.' },
+          { order: 4, name: 'Chest Press a macchina', targetMuscle: 'Petto / Cingolo Scapolare', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Controllato', technique: 'CIRCUITO_GUIDATO', notes: '40" controllati, focus sul blocco della scapola destra sullo schienale (sostituisce i push-up).' },
+          { order: 5, name: 'Suitcase Carry (Camminata del contadino unilaterale)', targetMuscle: 'Quadrato dei Lombi / Core', segment: 'METABOLICO', sets: 4, reps: '40s', restSeconds: 120, effort: 'Pesante SX', technique: 'CIRCUITO_UNILATERALE', notes: 'Carico pesante solo mano SINISTRA per attivazione riflessa QL destro. Fine round: riposo 2 minuti!' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Circuito B (Catena Posteriore & Anti-Flessione)',
+        sessionFocus: '4-5 Round � 40" Lavoro / 20" Recupero � 2 minuti di riposo a fine round',
+        exercises: [
+          { order: 1, name: 'Step-Up lento su panca liberi', targetMuscle: 'Gambe / Glutei', segment: 'NEURALE', sets: 4, reps: '40s', restSeconds: 20, effort: 'Cadenza Controllata', technique: 'CIRCUITO_MONOPODALICO', notes: 'Discesa eccentrica controllata, spinta solo sul tallone della gamba alta.' },
+          { order: 2, name: 'Pulldown a braccia tese singolo (Solo Braccio DX)', targetMuscle: 'Gran Dorsale Destro', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Isolamento DX', technique: 'CIRCUITO_ASIMMETRICO', notes: 'Sostituisce il pullover. Tira e blocca al fianco per accorciare il dorso destro.' },
+          { order: 3, name: 'Ponte Glutei B-Stance a terra (Isometria in alto)', targetMuscle: 'Gluteo Gamba Inibita', segment: 'MECCANICO', sets: 4, reps: '40s tenuta', restSeconds: 20, effort: 'Isometrico', technique: 'CIRCUITO_B_STANCE', notes: '40" spingendo con forza sulla gamba inibita con squeeze costante in alto.' },
+          { order: 4, name: 'Waiter\'s Walk (Manubrio in alto sopra la testa)', targetMuscle: 'De-rotazione Toracica', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Braccio SX', technique: 'CIRCUITO_OVERHEAD', notes: 'Solo braccio SINISTRO in alto disteso per aprire la concavit� toracica.' },
+          { order: 5, name: 'Barchetta asimmetrica a terra (Hollow Hold Asimmetrico)', targetMuscle: 'Core De-rotante', segment: 'METABOLICO', sets: 4, reps: '40s', restSeconds: 120, effort: 'Corpo Libero', technique: 'CIRCUITO_HALLOW', notes: 'Braccio SX esteso vicino all\'orecchio, braccio DX verso il tallone. Fine round: riposo 2 minuti!' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Circuito Integrazione Funzionale (A/B Alternato)',
+        sessionFocus: 'Rotazione continua delle stazioni per simmetria globale e decompressione',
+        exercises: [
+          { order: 1, name: 'Bulgarian Split Squat 1 manubrio (Offset)', targetMuscle: 'Gambe Monopodalico', segment: 'NEURALE', sets: 4, reps: '40s', restSeconds: 20, effort: 'Medio', technique: 'CIRCUITO_OFFSET', notes: 'Manubrio sul lato gamba inibita.' },
+          { order: 2, name: 'Pulldown a braccia tese singolo (Solo Braccio DX)', targetMuscle: 'Gran Dorsale DX', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Isolamento DX', technique: 'CIRCUITO_ASIMMETRICO', notes: 'Accorciamento dorso destro.' },
+          { order: 3, name: 'Ponte Glutei B-Stance a terra (Isometria)', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Isometrico', technique: 'CIRCUITO_B_STANCE', notes: 'Spinta attiva gamba debole.' },
+          { order: 4, name: 'Chest Press a macchina guidata', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 4, reps: '40s', restSeconds: 20, effort: 'Controllato', technique: 'CIRCUITO_GUIDATO', notes: 'Scapola destra ben salda allo schienale.' },
+          { order: 5, name: 'Suitcase Carry (Camminata del contadino unilaterale)', targetMuscle: 'Core & QL', segment: 'METABOLICO', sets: 4, reps: '40s', restSeconds: 120, effort: 'Pesante SX', technique: 'CIRCUITO_UNILATERALE', notes: 'Carico solo a SX. Fine round: riposo 2 minuti!' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // TEMPLATE 3: TRADIZIONALE 4 GIORNI (UPPER / LOWER SPLIT) - SCOLIOSI
+  // --------------------------------------------------------------------------
+  {
+    id: 'SCO-TRAD-4D',
+    title: 'Scoliosi Tradizionale 4 Giorni (Upper / Lower Split)',
+    group: 'AVANZATO',
+    daysCount: 4,
+    primaryEngine: 'BOMPA_PERIODIZATION',
+    description: 'Split Upper/Lower su 4 giorni per scoliosi: G1 Lower A (spinta), G2 Upper A (trazione verticale), G3 Lower B (catena posteriore), G4 Upper B (trazione orizzontale). Zero carico assiale.',
+    generateSessions: (gender: Gender): TemplateSession[] => [
+      {
+        dayLabel: 'Giorno 1: Lower A (Spinta Unilaterale & Stabilit� Pelvica)',
+        sessionFocus: 'Leg Press Singola, Affondi Liberi, Extension & Suitcase Carry',
+        exercises: [
+          { order: 1, name: 'Leg Press Singola (Unilaterale)', targetMuscle: 'Quadricipiti / Glutei', segment: 'NEURALE', sets: 4, reps: '8 per lato', restSeconds: 75, effort: 'RIR 2', technique: 'UNILATERALE', notes: 'Schienale e bacino completamente bloccati. Spinta fluida.' },
+          { order: 2, name: 'Affondi Indietro con manubri (Liberi)', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Movimento libero per assecondare la mobilit� asimmetrica del bacino.' },
+          { order: 3, name: 'Leg Extension Singola', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12 (+1 serie gamba debole)', restSeconds: 45, effort: 'RIR 1', technique: 'UNILATERALE', notes: '+1 serie extra sulla gamba debole/inibita per pareggiare il volume.' },
+          { order: 4, name: 'Ponte Glutei B-Stance a terra', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 4, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 1', technique: 'B_STANCE', notes: 'Spinta attiva sul piede di lavoro, tallone opposto di mero equilibrio.' },
+          { order: 5, name: 'Suitcase Carry (Camminata del contadino)', targetMuscle: 'Core & QL Destro', segment: 'METABOLICO', sets: 4, reps: '20 metri', restSeconds: 60, effort: 'Carico a SX', technique: 'UNILATERALE', notes: 'Carico tenuto SOLO a SX per stabilizzare il lato lombare opposto.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Upper A (Tirata Verticale / Macchine Guidate)',
+        sessionFocus: 'Lat Singola Asimmetrica, Chest Press, Bicipiti & Side Plank Schroth',
+        exercises: [
+          { order: 1, name: 'Lat Machine Singola (Maniglia D)', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8-10 (+1 serie DX)', restSeconds: 75, effort: 'RIR 1-2', technique: 'ASIMMETRICO', notes: 'SX: stretch profondo in alto. DX: isometria 2" in basso. +1 serie extra DX.' },
+          { order: 2, name: 'Chest Press a macchina', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 4, reps: '8', restSeconds: 75, effort: 'RIR 2', technique: 'GUIDATO', notes: 'Lavoro di spinta al 100% in sicurezza per il gibbo costale.' },
+          { order: 3, name: 'Pulldown braccia tese singolo', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 45, effort: 'RIR 1', technique: 'NONE', notes: 'Focus attivazione dorsale a braccio teso.' },
+          { order: 4, name: 'Curl Bicipiti manubri da seduta', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 45, effort: 'RIR 1', technique: 'NONE', notes: 'Seduta con schienale a 75� per evitare compensi lombari.' },
+          { order: 5, name: 'Side Plank Schroth-Modificato', targetMuscle: 'Core Asimmetrico', segment: 'METABOLICO', sets: 3, reps: '40s', restSeconds: 45, effort: 'Isometrico', technique: 'SCHROTH', notes: 'Appoggio SOLO su gomito DX, braccio SX proteso in alto.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Lower B (Catena Posteriore e Isolamento Gluteo)',
+        sessionFocus: 'Gluteus Machine, Bulgaro Libero, Leg Curl Seduto & Abductor',
+        exercises: [
+          { order: 1, name: 'Gluteus Machine guidata', targetMuscle: 'Grande Gluteo', segment: 'NEURALE', sets: 4, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 1-2', technique: 'ISOLAMENTO', notes: 'Sostituisce definitivamente qualsiasi variante di stacco con bilanciere.' },
+          { order: 2, name: 'Bulgarian Split Squat manubri liberi', targetMuscle: 'Glutei / Monopodalico', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Busto leggermente flesso avanti per focus gluteo, zero carico lombare.' },
+          { order: 3, name: 'Leg Curl Singolo (Seduto)', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 60, effort: 'RIR 1-2', technique: 'UNILATERALE', notes: 'Disattivazione dello psoas in posizione seduta.' },
+          { order: 4, name: 'Abductor Machine', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 4, reps: '12', restSeconds: 45, effort: 'RIR 1', technique: 'ISOLAMENTO', notes: 'Fondamentale per il medio gluteo che stabilizza il bacino.' },
+          { order: 5, name: 'Dead Bug Asimmetrico (Cavo a SX)', targetMuscle: 'Core Anti-Estensione', segment: 'METABOLICO', sets: 4, reps: '10 rep', restSeconds: 45, effort: 'Controllo', technique: 'ASIMMETRICO', notes: 'Cavo basso da dietro che resiste solo al braccio sinistro.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Upper B (Tirata Orizzontale & Deltoide Posteriore)',
+        sessionFocus: 'Rematore Manubrio Asimmetrico, Spinte Panca, Face Pull & Pallof',
+        exercises: [
+          { order: 1, name: 'Rematore 1 manubrio su panca', targetMuscle: 'Dorso Posturale', segment: 'NEURALE', sets: 4, reps: '8-10 (+1 serie DX)', restSeconds: 75, effort: 'RIR 1-2', technique: 'ASIMMETRICO', notes: 'SX: protrazione controllata / DX: retrazione forte. +1 serie extra DX.' },
+          { order: 2, name: 'Spinte Panca Piana con manubri o Chest Press', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 4, reps: '8', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Presa semi-neutra, scapole ben addotte sullo schienale.' },
+          { order: 3, name: 'Face Pull Asimmetrico al cavo', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'RIR 1', technique: 'ASIMMETRICO', notes: 'Tirata pi� accentuata a DX per spalla retroposa.' },
+          { order: 4, name: 'Pec Fly Rear Delt (Macchina)', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 45, effort: 'Cedimento', technique: 'ASIMMETRICO', notes: 'Monolaterale o focus estremo sulla contrazione del lato DESTRO.' },
+          { order: 5, name: 'Pallof Press in Ginocchio (Half-Kneeling)', targetMuscle: 'Core Anti-Rotazione', segment: 'METABOLICO', sets: 4, reps: '10 rep', restSeconds: 45, effort: 'Controllo', technique: 'ANTI_ROTAZIONE', notes: 'Resistenza del cavo proveniente da DESTRA.' }
         ]
       }
     ]
