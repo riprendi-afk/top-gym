@@ -3831,7 +3831,12 @@ if (isFinished) {
 
 <button
   type="button"
-  onClick={() => exportProgramToPDF(activeAthlete.displayName, programName, programDays)}
+  onClick={() => {
+                      const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete.displayName);
+                      if (printName !== null) {
+                        exportProgramToPDF(printName.trim() || activeAthlete.displayName, programName, programDays);
+                      }
+                    }}
   className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl uppercase text-xs tracking-wider"
 >
   📄 Stampa / Salva in PDF

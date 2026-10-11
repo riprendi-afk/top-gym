@@ -85,14 +85,14 @@ export default function WorkoutWizardModal({
 
       // 1. Frequenza (giorni)
       if (tDays === daysPerWeek) {
-        score += 80;
+        score += 90;
       } else if (Math.abs(tDays - daysPerWeek) === 1) {
         score += 15;
       } else {
-        score -= 80;
+        score -= 90;
       }
 
-      // 2. Sesso & Esclusione tassativa
+      // 2. Filtro Sesso Rigoroso
       const isFemaleTemplate = desc.includes('femminile') || title.includes('femminile') || desc.includes('bikini') || desc.includes('glute') || (t as any).gender === 'FEMALE';
       if (gender === 'FEMALE') {
         if (isFemaleTemplate) score += 60;
@@ -104,61 +104,58 @@ export default function WorkoutWizardModal({
 
       // 3. Gestione Gambe & Split per UOMO
       if (gender === 'MALE') {
-        const isUpperLower = title.includes('upper / lower') || title.includes('upper/lower') || desc.includes('upper / lower') || desc.includes('upper/lower');
+        const isUpperLower = title.includes('upper / lower') || title.includes('upper/lower');
 
         if (legPreference === 'LEGS_ONCE') {
-          // BLOCCO TASSATIVO: se vuole Gambe 1x, Upper/Lower e' punito severamente
-          if (isUpperLower) {
-            score -= 300;
-          }
+          // Esclusione rigida di Upper/Lower
+          if (isUpperLower) score -= 300;
 
-          // 4 GIORNI GAMBE 1X: Vince T07 (Torso / Arti Biomeccanico: 3 Upper + 1 Gambe)
+          // 4 GIORNI GAMBE 1X: T16 (Torso / Arti Biomeccanico)
           if (daysPerWeek === 4) {
-            if (t.id === 'T07' || title.includes('torso / arti') || title.includes('torso/arti')) score += 180;
-            if (t.id === 'T30') score += 70;
+            if (t.id === 'T16' || title.includes('torso / arti')) score += 200;
           }
 
-          // 3 GIORNI GAMBE 1X: PPL (T05 Biomeccanico o T04 Power: 2 Upper + 1 Gambe)
+          // 3 GIORNI GAMBE 1X: T13 (PPL Biomeccanica) o T12 (PPL Hatfield)
           if (daysPerWeek === 3) {
-            if (t.id === 'T05' || t.id === 'T04' || title.includes('push / pull / legs') || title.includes('ppl')) score += 120;
+            if (t.id === 'T13' || t.id === 'T12') score += 150;
           }
 
-          // 5 GIORNI GAMBE 1X: T10 (PPL + Torso/Braccia) o T11 (Monomuscolare)
+          // 5 GIORNI GAMBE 1X: T17 (PPL + Torso/Braccia) o T22 (Monomuscolare)
           if (daysPerWeek === 5) {
-            if (t.id === 'T10' || t.id === 'T11' || title.includes('monomuscolare')) score += 120;
+            if (t.id === 'T17' || t.id === 'T22') score += 150;
           }
         } else if (legPreference === 'LEGS_BALANCED') {
-          // Equilibrato: qui premiamo Upper/Lower 2x
+          // Equilibrato (Upper/Lower 2x)
           if (isUpperLower) score += 120;
-          if (t.id === 'T06' || t.id === 'T31') score += 80;
+          if (t.id === 'T11' || t.id === 'T31') score += 90;
         } else if (legPreference === 'POWER_COMPOUND') {
           // Fondamentali pesanti
-          if (t.id === 'T29' || t.id === 'T06' || t.id === 'T31' || engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 120;
+          if (t.id === 'T29' || t.id === 'T11' || t.id === 'T31' || engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 120;
         }
       }
 
       // 4. Gestione per DONNA
       if (gender === 'FEMALE') {
         if (legPreference === 'GLUTES_HYPER') {
-          if (['T03', 'T08', 'T09', 'T12', 'T32'].includes(t.id)) score += 100;
+          if (['T07', 'T18', 'T28', 'T32', 'T19'].includes(t.id)) score += 100;
           if (desc.includes('glutei') || desc.includes('cerniera')) score += 60;
         } else if (legPreference === 'BIKINI_CONTEST') {
-          if (['T33', 'T32', 'T09'].includes(t.id)) score += 120;
+          if (['T32', 'T33', 'T28'].includes(t.id)) score += 120;
           if (engine === 'BIKINI_WAVE' || desc.includes('bikini')) score += 80;
         } else {
-          if (['T01', 'T02', 'T03', 'T08'].includes(t.id)) score += 60;
+          if (['T04', 'T01', 'T18'].includes(t.id)) score += 60;
         }
       }
 
-      // 5. Stile di allenamento
+      // 5. Stile di allenamento & Feeling articolare
       if (trainingStyle === 'MACHINES_PUMP') {
-        if (engine === 'NOCERINO' || engine === 'BLOOD_VOLUME_OVERLOAD') score += 40;
+        if (engine === 'NOCERINO' || engine === 'BLOOD_VOLUME_OVERLOAD') score += 50;
         if (desc.includes('biomeccanica') || desc.includes('tensione continua')) score += 30;
       } else if (trainingStyle === 'FREE_WEIGHTS') {
-        if (engine === 'HELMS_PYRAMID' || engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 40;
+        if (engine === 'HELMS_PYRAMID' || engine === 'POWERBLOCK_HYBRID' || engine === 'HARDTOPGYM') score += 50;
         if (desc.includes('fondamentali') || desc.includes('bilanciere') || desc.includes('rir')) score += 30;
       } else if (trainingStyle === 'DENSITY_BURNOUT') {
-        if (engine === 'ACETO' || engine === 'HARDTOPGYM') score += 40;
+        if (engine === 'ACETO' || engine === 'HARDTOPGYM') score += 50;
         if (desc.includes('rest-pause') || desc.includes('cedimento')) score += 30;
       }
 
@@ -172,7 +169,7 @@ export default function WorkoutWizardModal({
 
     let rationaleText = '';
     if (gender === 'MALE' && legPreference === 'LEGS_ONCE') {
-      rationaleText = 'Ideale per chi cerca massimo impatto visivo e divertimento: concentra lo stimolo su 3 sedute Torso/Braccia ad alto pompaggio e riserva una sola seduta mirata alle gambe. Azzerata la noia e garantita la continuita.';
+      rationaleText = 'Ideale per chi cerca massimo impatto visivo e divertimento: concentra lo stimolo su sedute Torso/Braccia ad alto pompaggio e riserva una sola seduta mirata alle gambe. Azzerata la noia e garantita la continuita.';
     } else if (gender === 'FEMALE' && legPreference === 'GLUTES_HYPER') {
       rationaleText = 'Priorita assoluta a Glutei e Catena Posteriore, associata a un lavoro Upper snello e a bassa infiammazione per prevenire ritenzione idrica da cortisolo.';
     } else if (gender === 'FEMALE' && legPreference === 'BIKINI_CONTEST') {

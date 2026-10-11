@@ -36,7 +36,7 @@ export interface TemplateMeta {
   title: string;
   group: 'PRINCIPIANTE' | 'INTERMEDIO' | 'AVANZATO';
   daysCount: number; // 2, 3, 4, 5 o 6
-  primaryEngine: 'TOPGYM_BLOCKS' | 'HARDTOPGYM' | 'ACETO' | 'NOCERINO';
+  primaryEngine: 'TOPGYM_BLOCKS' | 'HARDTOPGYM' | 'ACETO' | 'NOCERINO' | 'POWERBLOCK_HYBRID' | 'BLOOD_VOLUME_OVERLOAD' | 'HELMS_PYRAMID' | 'BIKINI_WAVE' | string;
   description: string;
   generateSessions: (gender: Gender) => TemplateSession[];
 }
@@ -846,6 +846,870 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
       }
     ]
   }
+
+  // --------------------------------------------------------------------------
+  // T02: FULL BODY 2 GIORNI MINIMALIST ESSENTIALS (TOPGYM_BLOCKS)
+  // --------------------------------------------------------------------------
+  T02: {
+    id: 'T02',
+    title: 'Full Body 2 Giorni Minimalist Essentials',
+    group: 'PRINCIPIANTE',
+    daysCount: 2,
+    primaryEngine: 'TOPGYM_BLOCKS',
+    description: 'Protocollo minimale per chi ha solo 2 giorni: frequenza Full Body a stimolo denso con multiarticolari fondamentali e buffer controllato.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Full Body A (Spinta Orizzontale & Quadricipiti)',
+        sessionFocus: 'Panca, Pressa, Rematore, Spalle & Braccia',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '6', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Fermo al petto di 1s.' },
+          { order: 2, name: 'Leg press a 45� o Hack squat', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Discesa profonda controllata.' },
+          { order: 3, name: 'Rematore con manubrio su panca', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Gomito aderente al busto.' },
+          { order: 4, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Estensione completa.' },
+          { order: 5, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% all\'ultima serie.' },
+          { order: 6, name: 'Calf raise alla pressa', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Fermo in allungamento 2s.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Full Body B (Catena Posteriore & Spinta Inclinata)',
+        sessionFocus: 'Stacco Rumeno, Lat Machine, Lento & Braccia',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con manubri o bilanciere', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Cerniera d\'anca profonda.' },
+          { order: 2, name: 'Lat machine presa prona', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione piena allo sterno.' },
+          { order: 3, name: 'Military press con manubri seduto', targetMuscle: 'Deltoidi Anteriori', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Traiettoria verticale pulita.' },
+          { order: 4, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Fermo 1s in contrazione.' },
+          { order: 5, name: 'Super-serie: Curl manubri + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '10+10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pump braccia finale.' },
+          { order: 6, name: 'Crunch ai cavi o su fitball', targetMuscle: 'Addome', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Espirazione forzata.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T03: FULL BODY 3 GIORNI DUP DAILY UNDULATING (HELMS_PYRAMID)
+  // --------------------------------------------------------------------------
+  T03: {
+    id: 'T03',
+    title: 'Full Body 3 Giorni DUP (Daily Undulating Periodization)',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'HELMS_PYRAMID',
+    description: 'Periodizzazione ondulata Helms: G1 Forza Neurale (5 rep, RIR 2), G2 Ipertrofia Meccanica (8-10 rep, RIR 1-2), G3 Pompaggio Metabolico (12-15 rep, RIR 0-1).',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: DUP Heavy (Forza Neurale Sub-Massimale)',
+        sessionFocus: 'Carichi Alti, Basse Ripetizioni, Buffer Solido',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '5', restSeconds: 180, effort: 'RIR 2', technique: 'NONE', notes: 'Fermo 1s netto, traiettoria solida.' },
+          { order: 2, name: 'Squat al multipower o libero', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '5', restSeconds: 180, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita costante al parallelo.' },
+          { order: 3, name: 'Trazioni presa neutra o Lat machine', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '6', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione esplosiva controllata.' },
+          { order: 4, name: 'Lento avanti con bilanciere o manubri', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 3, reps: '6', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Stivaggio scapolare solido.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: DUP Moderate (Tensione Meccanica & Ipertrofia)',
+        sessionFocus: 'Ripetizioni Medie, Tut Controllato',
+        exercises: [
+          { order: 1, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Discesa in 3 secondi.' },
+          { order: 2, name: 'Leg press a 45�', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Spinta piena sul tallone.' },
+          { order: 3, name: 'Pulley basso con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Depressione scapolare.' },
+          { order: 4, name: 'Stacco rumeno con manubri', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Bacino indietro.' },
+          { order: 5, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Controllo eccentrico.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: DUP Light (Stress Metabolico & Congestione)',
+        sessionFocus: 'Alte Ripetizioni, Recuperi Brevi, Cedimento',
+        exercises: [
+          { order: 1, name: 'Croci ai cavi alti su panca inclinata', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Tensione continua sul pettorale.' },
+          { order: 2, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set all\'ultima serie.' },
+          { order: 3, name: 'Leg curl seduto o disteso', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Contrazione di picco.' },
+          { order: 4, name: 'Lat machine presa inversa', targetMuscle: 'Gran Dorsale', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Focus fasci bassi.' },
+          { order: 5, name: 'Super-serie: Curl bilanciere EZ + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Massimo pompaggio finale.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T05: PUSH / PULL / LEGS 3 GIORNI CLASSIC HYPERTROPHY (TOPGYM_BLOCKS)
+  // --------------------------------------------------------------------------
+  T05: {
+    id: 'T05',
+    title: 'Push / Pull / Legs 3 Giorni Classic Hypertrophy',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'TOPGYM_BLOCKS',
+    description: 'La split piu amata in sala con Gambe 1x: G1 Spinta (Petto/Spalle/Tricipiti), G2 Trazione (Dorso/Bicipiti), G3 Gambe concentrato. Aderenza assoluta.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Push (Petto, Spalle Anteriori/Laterali, Tricipiti)',
+        sessionFocus: 'Spinta Orizzontale & Verticale ad Alto Pompaggio',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Arco naturale e fermo 1s.' },
+          { order: 2, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Gomiti a 45�.' },
+          { order: 3, name: 'Shoulder press manubri o macchina', targetMuscle: 'Deltoidi Anteriori', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta fluida.' },
+          { order: 4, name: 'Dips alle parallele o Chest press guidata', targetMuscle: 'Petto/Tricipiti', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Leggera inclinazione in avanti.' },
+          { order: 5, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Ultima serie stripping a scalare.' },
+          { order: 6, name: 'Pushdown al cavo con corda', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Apertura finale della corda.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Pull (Dorso, Deltoidi Posteriori, Bicipiti)',
+        sessionFocus: 'Trazione Verticale & Orizzontale, Spessore e Ampiezza',
+        exercises: [
+          { order: 1, name: 'Lat machine presa prona larga', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Petto alto e scapole bloccate.' },
+          { order: 2, name: 'Rematore con bilanciere o Pulley basso', targetMuscle: 'Spessore Schiena', segment: 'MECCANICO', sets: 4, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Tirata all\'ombelico.' },
+          { order: 3, name: 'Pulley maniglia aperta o Lat presa inversa', targetMuscle: 'Dorso Medio', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento profondo in eccentrica.' },
+          { order: 4, name: 'Alzate a 90� su panca inclinata o cavi', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Gomiti alti.' },
+          { order: 5, name: 'Curl con bilanciere EZ in piedi', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '8-10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Zero slancio di schiena.' },
+          { order: 6, name: 'Hammer curl con manubri', targetMuscle: 'Brachiale/Avambracci', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Presa a martello salda.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Legs & Addome (1 Sola Volta a Settimana)',
+        sessionFocus: 'Quadricipiti, Ischiocrurali & Core Completo',
+        exercises: [
+          { order: 1, name: 'Squat al multipower o Leg press 45�', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita piena.' },
+          { order: 2, name: 'Stacco rumeno con manubri', targetMuscle: 'Ischiocrurali', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Focus cerniera d\'anca.' },
+          { order: 3, name: 'Affondi camminati con manubri', targetMuscle: 'Gambe/Glutei', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Passo medio controllato.' },
+          { order: 4, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% all\'ultima.' },
+          { order: 5, name: 'Leg curl seduto o sdraiato', targetMuscle: 'Femorali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Flessione completa.' },
+          { order: 6, name: 'Calf raise in piedi + Crunch', targetMuscle: 'Polpacci & Core', segment: 'METABOLICO', sets: 4, reps: '15+15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Super-serie di chiusura.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T06: UPPER / LOWER 4 GIORNI DOPPIA PROGRESSIONE (TOPGYM_BLOCKS)
+  // --------------------------------------------------------------------------
+  T06: {
+    id: 'T06',
+    title: 'Upper / Lower 4 Giorni Doppia Progressione',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'TOPGYM_BLOCKS',
+    description: 'Gold standard equilibrato a 4 giorni su doppia progressione di carico e ripetizioni: 2 sedute Upper e 2 sedute Lower a stimolo bilanciato.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Upper A (Focus Spinta Orizzontale & Trazione)',
+        sessionFocus: 'Panca Piana, Lat, Spinte Inclinata & Braccia',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Progressione doppia: aumenta carico a 8 rep.' },
+          { order: 2, name: 'Lat machine presa prona larga', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione piena.' },
+          { order: 3, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Discesa profonda.' },
+          { order: 4, name: 'Pulley basso con maniglia a V', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Adduzione scapolare.' },
+          { order: 5, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Controllo eccentrico.' },
+          { order: 6, name: 'Pushdown al cavo barra dritta', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Estensione completa.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Lower A (Focus Quadricipiti & Polpacci)',
+        sessionFocus: 'Squat, Pressa, Leg Extension & Ischiocrurali',
+        exercises: [
+          { order: 1, name: 'Squat al multipower o bilanciere libero', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 180, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita al parallelo.' },
+          { order: 2, name: 'Leg press a 45�', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Piedi a larghezza spalle.' },
+          { order: 3, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Fermo 1s in contrazione.' },
+          { order: 4, name: 'Leg curl sdraiato', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa lenta.' },
+          { order: 5, name: 'Calf raise alla pressa', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pausa 2s in massimo allungamento.' },
+          { order: 6, name: 'Crunch su panca inclinata o cavi', targetMuscle: 'Addome', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Arrotolamento del bacino.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Upper B (Focus Spinta Verticale & Spessore)',
+        sessionFocus: 'Military Press, Trazioni, Inclinata & Bicipiti',
+        exercises: [
+          { order: 1, name: 'Military press con bilanciere o manubri', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta decisa sopra la testa.' },
+          { order: 2, name: 'Trazioni presa neutra o Lat inversa', targetMuscle: 'Dorso/Bicipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione al petto.' },
+          { order: 3, name: 'Panca inclinata con bilanciere', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Inclinazione a 30�.' },
+          { order: 4, name: 'Rematore con manubrio su panca', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Tirata pura di gomito.' },
+          { order: 5, name: 'Croci ai cavi alti', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Enfasi sull\'allungamento.' },
+          { order: 6, name: 'Curl bilanciere sagomato EZ', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti fissi ai fianchi.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Lower B (Focus Catena Posteriore & Glutei)',
+        sessionFocus: 'Stacco Rumeno, Hack Squat, Femorali & Addome',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con bilanciere', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Schiena neutra, cerniera d\'anca.' },
+          { order: 2, name: 'Hack squat o Leg press a piedi alti', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Spinta sui talloni.' },
+          { order: 3, name: 'Affondi posteriori con manubri', targetMuscle: 'Glutei/Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Passo lungo per enfasi gluteo.' },
+          { order: 4, name: 'Leg curl seduto a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 0-1', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% ultima serie.' },
+          { order: 5, name: 'Calf seduto per soleo', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Contrazione di picco 1s.' },
+          { order: 6, name: 'Plank isometrico + Reverse crunch', targetMuscle: 'Core', segment: 'METABOLICO', sets: 3, reps: '45s+15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Stabilita addominale.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T08: FEMMINILE 3 GIORNI RICOMPOSIZIONE PHA (TOPGYM_BLOCKS)
+  // --------------------------------------------------------------------------
+  T08: {
+    id: 'T08',
+    title: 'Femminile 3 Giorni Ricomposizione PHA',
+    group: 'PRINCIPIANTE',
+    daysCount: 3,
+    primaryEngine: 'TOPGYM_BLOCKS',
+    description: 'Protocollo Peripheral Heart Action: alternanza di stazioni Lower e Upper per massimizzare il ritorno venoso e prevenire la ritenzione idrica da cortisolo.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: PHA Lower Glutei / Upper Spinta & Drenaggio',
+        sessionFocus: 'Hip Thrust, Lat Machine, Affondi & Deltoidi',
+        exercises: [
+          { order: 1, name: 'Hip thrust con bilanciere o multipower', targetMuscle: 'Glutei', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Pausa di 2 secondi in alto.' },
+          { order: 2, name: 'Lat machine presa neutra o prona', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Depressione scapolare per postura.' },
+          { order: 3, name: 'Affondi bulgari con manubri', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 75, effort: 'RIR 1-2', technique: 'NONE', notes: 'Busto inclinato a 45� in avanti.' },
+          { order: 4, name: 'Spinte manubri panca a 30� snelle', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Carico moderato, traiettoria controllata.' },
+          { order: 5, name: 'Slanci al cavo basso per gluteo', targetMuscle: 'Glutei', segment: 'METABOLICO', sets: 3, reps: '15 per gamba', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua.' },
+          { order: 6, name: 'Alzate laterali con manubri leggeri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Tonificazione e v-taper.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: PHA Cerniera d\'Anca / Upper Trazione & Core',
+        sessionFocus: 'Stacco Rumeno, Pulley, Step Up & Addome',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con manubri', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '10', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Allungamento profondo senza piegare schiena.' },
+          { order: 2, name: 'Pulley basso con maniglia stretta', targetMuscle: 'Dorso Medio', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Apertura toracica.' },
+          { order: 3, name: 'Step up su box con manubri', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta concentrata solo sulla gamba alta.' },
+          { order: 4, name: 'Shoulder press manubri seduta', targetMuscle: 'Deltoidi', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta controllata.' },
+          { order: 5, name: 'Abductor machine su 3 inclinazioni', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 3, reps: '15-20', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio metabolico glutei.' },
+          { order: 6, name: 'Plank isometrico a terra', targetMuscle: 'Core', segment: 'METABOLICO', sets: 3, reps: '45s', restSeconds: 45, effort: 'RIR 1', technique: 'NONE', notes: 'Ombelico risucchiato alla colonna.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: PHA Total Body Tonicita & Drenaggio Finale',
+        sessionFocus: 'Goblet Squat, Glute Bridge, Cavi & Cardio LISS',
+        exercises: [
+          { order: 1, name: 'Goblet squat con manubrio o kettlebell', targetMuscle: 'Gambe/Glutei', segment: 'NEURALE', sets: 4, reps: '10', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Piedi a papera, discesa profonda.' },
+          { order: 2, name: 'Trazioni alla easy power o Lat inversa', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Attivazione dorsale pulita.' },
+          { order: 3, name: 'Glute bridge a terra con disco', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 4, reps: '12-15', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Squeeze gluteo di 2 secondi.' },
+          { order: 4, name: 'Croci ai cavi per petto snello', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'RIR 2', technique: 'NONE', notes: 'Allungamento e apertura spalle.' },
+          { order: 5, name: 'Kickback cavo basso per gluteo alto', targetMuscle: 'Glutei', segment: 'METABOLICO', sets: 3, reps: '15 per gamba', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio senza sovraccarico.' },
+          { order: 6, name: 'Camminata in salita LISS drenante', targetMuscle: 'Cardio', segment: 'METABOLICO', sets: 1, reps: '15 min', restSeconds: 0, effort: 'LISS 65%', technique: 'NONE', notes: 'Pendenza 8-10%, velocita 4.5 km/h.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T09: FEMMINILE 4 GIORNI GLUTE & HIP THRUST SPECIALIZATION (TOPGYM_BLOCKS)
+  // --------------------------------------------------------------------------
+  T09: {
+    id: 'T09',
+    title: 'Femminile 4 Giorni Glute & Hip Thrust Specialization',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'TOPGYM_BLOCKS',
+    description: 'Specializzazione Glutei su 4 sedute: 2 giorni Lower pesanti con cerniera d\'anca e Hip Thrust + 2 giorni Upper snelli posturali per V-taper e punto vita stretto.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Glute Day Heavy (Hip Thrust, Affondi & Medio Gluteo)',
+        sessionFocus: 'Carico Pesante su Glutei & Catena Posteriore',
+        exercises: [
+          { order: 1, name: 'Hip thrust con bilanciere olimpico', targetMuscle: 'Glutei', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Fermo 2s in estensione piena del bacino.' },
+          { order: 2, name: 'Affondi in deficit con manubri', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Piede anteriore su disco per maggiore ROM.' },
+          { order: 3, name: 'Cable pull-through ai cavi bassi', targetMuscle: 'Catena Posteriore', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Chiusura decisa dei glutei in avanti.' },
+          { order: 4, name: 'Abductor machine su 3 inclinazioni', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 4, reps: '15-20', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Busto avanti, neutro e indietro (strip finale).' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Upper V-Taper & Core Posturale',
+        sessionFocus: 'Schiena a V, Deltoidi e Punto Vita Stretto',
+        exercises: [
+          { order: 1, name: 'Lat machine presa a V', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione verticale per apertura dorsale.' },
+          { order: 2, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '12-15', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Deltoidi tonici per dare risalto al punto vita.' },
+          { order: 3, name: 'Pulley basso con maniglia aperta', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Depressione scapolare correttiva.' },
+          { order: 4, name: 'Croci ai cavi su panca a 30�', targetMuscle: 'Petto Snello', segment: 'METABOLICO', sets: 2, reps: '15', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Solo apertura e allungamento leggero.' },
+          { order: 5, name: 'Crunch su fitball o declinata', targetMuscle: 'Core', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Espirazione completa.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Glute & Posterior Chain (Stacco Rumeno & Femorali)',
+        sessionFocus: 'Allungamento Ischiocrurali & Pompaggio Glutei',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con bilanciere', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Carico progressivo con schiena bloccata.' },
+          { order: 2, name: 'Hip thrust al multipower', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Squeeze continuo di 2 secondi in alto.' },
+          { order: 3, name: 'Leg curl seduto a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa in 3 secondi.' },
+          { order: 4, name: 'Kickback al cavo basso gamba tesa', targetMuscle: 'Gluteo Alto', segment: 'METABOLICO', sets: 3, reps: '15 per gamba', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento metabolico puro.' },
+          { order: 5, name: 'Calf raise alla pressa o gradino', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Favorisce il drenaggio linfatico.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Upper Snello & Cardio Drenante',
+        sessionFocus: 'Spinte Leggere, Rematore Cavo, Glutei Finish & LISS',
+        exercises: [
+          { order: 1, name: 'Spinte manubri panca a 30� snelle', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Traiettoria pulita senza sforzo estremo.' },
+          { order: 2, name: 'Row al cavo singolo orizzontale', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 3, reps: '12 per lato', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Rotazione controllata.' },
+          { order: 3, name: 'Alzate a 90� ai cavi bassi', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Apertura spalle.' },
+          { order: 4, name: 'Hyperextension focus glutei a 45�', targetMuscle: 'Glutei', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Schiena arrotondata e spinta di bacino.' },
+          { order: 5, name: 'Camminata in salita LISS post-allenamento', targetMuscle: 'Cardio Drenante', segment: 'METABOLICO', sets: 1, reps: '20 min', restSeconds: 0, effort: 'LISS', technique: 'NONE', notes: 'Inclinazione 10-12%, camminata continua.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T10: PUSH / PULL / LEGS + UPPER PUMP 4 GIORNI (NOCERINO)
+  // --------------------------------------------------------------------------
+  T10: {
+    id: 'T10',
+    title: 'Push / Pull / Legs + Upper Pump 4 Giorni (Metodo Nocerino)',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'NOCERINO',
+    description: 'Uomo Gambe 1x a totale tutela articolare: G1 Push, G2 Pull, G3 Legs, G4 Upper Body Pumping. Solo macchine convergenti e cavi a tensione continua.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Push Biomeccanico (Convergenze & Cavi)',
+        sessionFocus: 'Chest Press Convergente, Spinte Cavi & Tricipiti',
+        exercises: [
+          { order: 1, name: 'Chest press convergente su panca piana', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Traiettoria ad arco convergente, zero usura spalle.' },
+          { order: 2, name: 'Spinte con manubri su panca a 30� con convergenza', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Chiusura dei manubri senza toccarli.' },
+          { order: 3, name: 'Shoulder press convergente guidata', targetMuscle: 'Deltoidi Anteriori', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Gomiti sotto i polsi.' },
+          { order: 4, name: 'Croci ai cavi ad altezza spalle (Cross Cable)', targetMuscle: 'Petto Sternale', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua anche in chiusura.' },
+          { order: 5, name: 'Pushdown al cavo con barra dritta presa stretta', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% ultima serie.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Pull Biomeccanico (Traiettorie Guidate & Dorsali)',
+        sessionFocus: 'Lat Convergente, Pulley Ergonomico, Pullover & Bicipiti',
+        exercises: [
+          { order: 1, name: 'Lat machine convergente con maniglie indipendenti', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Trazione lungo il piano scapolare naturale.' },
+          { order: 2, name: 'Pulley basso con impugnatura neutra ergonomica', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 4, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Gomiti attaccati ai fianchi.' },
+          { order: 3, name: 'Pullover al cavo alto con corda o barra sagomata', targetMuscle: 'Gran Dorsale', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Massimo allungamento sotto carico.' },
+          { order: 4, name: 'Alzate a 90� ai cavi incrociati', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione costante sul deltoide posteriore.' },
+          { order: 5, name: 'Curl su panca inclinata al cavo basso', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Braccio indietro per allungare il capo lungo.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Legs Biomeccanico Guidato (1 Sola Volta a Settimana)',
+        sessionFocus: 'Leg Press, Extension Continua, Femorali & Polpacci',
+        exercises: [
+          { order: 1, name: 'Leg press a 45� o orizzontale a camme', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Piedi a larghezza spalle, zero stacco lombare.' },
+          { order: 2, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Contrazione di 1s in alto.' },
+          { order: 3, name: 'Leg curl sdraiato guidato', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Bacino bloccato sulla cuscineria.' },
+          { order: 4, name: 'Calf machine in piedi guidata', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Discesa profonda e fermo 2s.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Upper Body Pumping (Congestione & Braccia Piene)',
+        sessionFocus: 'Multipower, Triangolo, Cavi Singoli & Super-Serie',
+        exercises: [
+          { order: 1, name: 'Panca piana al multipower con fermo al petto', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Fermo netto di 1 secondo.' },
+          { order: 2, name: 'Lat machine presa stretta a triangolo', targetMuscle: 'Dorso Basso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Trazione profonda allo sterno.' },
+          { order: 3, name: 'Alzate laterali al cavo singolo dietro la schiena', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12-15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento puro del deltoide.' },
+          { order: 4, name: 'Super-serie: Curl su panca Scott + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '10+10', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip 30% all\'ultimo giro. Pompaggio massimo.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T14: UPPER / LOWER BIOMECCANICO 4 GIORNI (NOCERINO)
+  // --------------------------------------------------------------------------
+  T14: {
+    id: 'T14',
+    title: 'Upper / Lower Biomeccanico 4 Giorni (Metodo Nocerino)',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'NOCERINO',
+    description: 'Upper/Lower a 4 giorni su macchine isotoniche e cavi a tensione continua: elimina il sovraccarico assiale sulla colonna per chi soffre di dolori lombari o alle spalle.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Upper Biomeccanico 1 (Convergenza Spinta & Trazione)',
+        sessionFocus: 'Chest Press, Lat Divergente, Spinte 30� & Cavi',
+        exercises: [
+          { order: 1, name: 'Chest press guidata convergente', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Traiettoria protetta per le spalle.' },
+          { order: 2, name: 'Lat machine divergente con bracci indipendenti', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Allineamento perfetto delle fibre dorsali.' },
+          { order: 3, name: 'Spinte con manubri su panca a 30�', targetMuscle: 'Petto Alto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Controllo eccentrico in 3 secondi.' },
+          { order: 4, name: 'Pulley convergente o Row machine guidata', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Chiusura delle scapole.' },
+          { order: 5, name: 'Alzate laterali ai cavi bassi incrociati', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua al picco.' },
+          { order: 6, name: 'French press al cavo alto con corda', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Allungamento del capo lungo.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Lower Biomeccanico 1 (Presse & Camme Isotoniche)',
+        sessionFocus: 'Pressa 45�, Extension, Curl Seduto & Polpacci',
+        exercises: [
+          { order: 1, name: 'Leg press a 45� a piedi bassi', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Flessione massima del ginocchio senza alzare il bacino.' },
+          { order: 2, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Fermo 1 secondo in contrazione.' },
+          { order: 3, name: 'Leg curl seduto a camme', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Protezione totale del rachide lombare.' },
+          { order: 4, name: 'Calf raise alla pressa orizzontale', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pausa di 2 secondi in allungamento.' },
+          { order: 5, name: 'Crunch ai cavi in ginocchio', targetMuscle: 'Addome', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Flessione del torace sul bacino.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Upper Biomeccanico 2 (Spalle, Trazioni & Braccia)',
+        sessionFocus: 'Shoulder Press Guidata, Easy Power, Croci & Cavi',
+        exercises: [
+          { order: 1, name: 'Shoulder press convergente guidata', targetMuscle: 'Deltoidi', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Traiettoria guidata senza usura acromiale.' },
+          { order: 2, name: 'Trazioni guidate alla easy power o Lat inversa', targetMuscle: 'Dorso/Bicipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione continua al petto.' },
+          { order: 3, name: 'Croci ai cavi su panca inclinata a 30�', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Tensione costante anche in chiusura.' },
+          { order: 4, name: 'Pulley unilaterale al cavo orizzontale', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '10 per lato', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Focus fasci medi e bassi.' },
+          { order: 5, name: 'Curl ai cavi alti a crocifisso', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Picco di contrazione bicipite.' },
+          { order: 6, name: 'Pushdown con presa inversa al cavo', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Focus capo laterale e mediale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Lower Biomeccanico 2 (Hack Squat & Femorali Guidati)',
+        sessionFocus: 'Hack Squat, Stacco Multipower & Ischiocrurali',
+        exercises: [
+          { order: 1, name: 'Hack squat guidato a pedana media', targetMuscle: 'Gambe/Glutei', segment: 'NEURALE', sets: 3, reps: '10', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Schiena completamente appoggiata allo schienale.' },
+          { order: 2, name: 'Stacco rumeno al multipower', targetMuscle: 'Ischiocrurali/Glutei', segment: 'MECCANICO', sets: 4, reps: '8-10', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Traiettoria verticale obbligata, zero oscillazioni.' },
+          { order: 3, name: 'Affondi al multipower con passo lungo', targetMuscle: 'Glutei/Gambe', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Stivaggio perfetto del ginocchio.' },
+          { order: 4, name: 'Leg curl sdraiato a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Pausa di 1 secondo in flessione.' },
+          { order: 5, name: 'Calf raise seduto alla macchina', targetMuscle: 'Soleo', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Contrazione piena.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T15: PUSH / PULL / LEGS / SPALLE-BRACCIA 4 GIORNI (ACETO)
+  // --------------------------------------------------------------------------
+  T15: {
+    id: 'T15',
+    title: 'Push / Pull / Legs / Spalle-Braccia 4 Giorni (Metodo Aceto)',
+    group: 'AVANZATO',
+    daysCount: 4,
+    primaryEngine: 'ACETO',
+    description: 'Uomo Gambe 1x ad altissima intensita estetica: G1 Push, G2 Pull, G3 Gambe, G4 Spalle & Braccia Specialization. Tecniche Rest-Pause e cedimento concentrico Chris Aceto.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Push Aceto Density (Petto & Tricipiti Pesanti)',
+        sessionFocus: 'Inclinata Rest-Pause, Panca Manubri, Dips & Cedimento',
+        exercises: [
+          { order: 1, name: 'Panca inclinata con bilanciere a 30�', targetMuscle: 'Petto Alto', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Ultima serie: Rest-Pause 15s e altre 2-3 ripetizioni.' },
+          { order: 2, name: 'Spinte manubri su panca piana', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Discesa profonda e spinta esplosiva.' },
+          { order: 3, name: 'Croci manubri su panca piana con fermo', targetMuscle: 'Petto Sternale', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 0-1', technique: 'NONE', notes: 'Massimo allungamento sotto carico.' },
+          { order: 4, name: 'Dips alle parallele con sovraccarico', targetMuscle: 'Petto Basso/Tricipiti', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Inclinazione busto in avanti.' },
+          { order: 5, name: 'Pushdown con barra a V pesante', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip 30% all\'ultima serie fino a esaurimento.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Pull Aceto Density (Spessore Dorso & Trapezi)',
+        sessionFocus: 'T-Bar Pesante, Lat Machine, Pulley & Stacco Parziale',
+        exercises: [
+          { order: 1, name: 'T-Bar Row presa stretta a maniglia', targetMuscle: 'Spessore Schiena', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Rest-Pause sull\'ultima serie target.' },
+          { order: 2, name: 'Lat machine presa prona larga', targetMuscle: 'Gran Dorsale', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Trazione violenta allo sterno.' },
+          { order: 3, name: 'Pulley basso con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% all\'ultima serie.' },
+          { order: 4, name: 'Stacco parziale dai blocchi o multipower', targetMuscle: 'Catena Posteriore/Trapezi', segment: 'MECCANICO', sets: 3, reps: '6', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Partenza da sotto al ginocchio.' },
+          { order: 5, name: 'Scrollate con manubri pesanti (Shrugs)', targetMuscle: 'Trapezi Alti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Fermo 2s in massima contrazione.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Legs Blast (1 Sola Volta a Settimana)',
+        sessionFocus: 'Leg Press Pesante, Multipower, Extension & Ischiocrurali',
+        exercises: [
+          { order: 1, name: 'Leg press a 45� a pieno carico', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 150, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Rest-Pause sull\'ultima serie (10 rep + 15s + 4 rep).' },
+          { order: 2, name: 'Squat al multipower a piedi avanti', targetMuscle: 'Gambe/Glutei', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 120, effort: 'Cedimento', technique: 'NONE', notes: 'Profondita piena.' },
+          { order: 3, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 75, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Doppio drop set finale.' },
+          { order: 4, name: 'Stacco rumeno con manubri pesanti', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 4, reps: '8', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento brutale.' },
+          { order: 5, name: 'Leg curl sdraiato a pieno ROM', targetMuscle: 'Femorali', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Rest-Pause finale.' },
+          { order: 6, name: 'Calf raise in piedi alla macchina', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Bruciore puro.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Delts & Arms Blast (Specializzazione V-Taper & Braccia)',
+        sessionFocus: 'Lento Manubri, Alzate Laterali, Bicipiti & Tricipiti Aceto',
+        exercises: [
+          { order: 1, name: 'Lento avanti con manubri su panca a 75�', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Rest-Pause sull\'ultima serie target.' },
+          { order: 2, name: 'Alzate laterali con manubri in piedi', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Triplo drop set all\'ultima serie.' },
+          { order: 3, name: 'Alzate a 90� su panca inclinata', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Spalle a palla di cannone.' },
+          { order: 4, name: 'Super-serie: Curl bilanciere EZ + Skull Crusher', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '8-10+8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Congestione brutale.' },
+          { order: 5, name: 'Super-serie: Hammer curl + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '10-12+10-12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio finale estremo.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T20: MONOMUSCOLARE 4 GIORNI CLASSIC BRO-SPLIT (ACETO)
+  // --------------------------------------------------------------------------
+  T20: {
+    id: 'T20',
+    title: 'Monomuscolare 4 Giorni Classic Bro-Split (Metodo Aceto)',
+    group: 'INTERMEDIO',
+    daysCount: 4,
+    primaryEngine: 'ACETO',
+    description: 'La classica split da sala pesi su 4 giorni: G1 Petto/Tricipiti, G2 Dorso/Bicipiti, G3 Gambe (1 sola volta!), G4 Spalle/Addome. Massimo pompaggio localizzato.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Petto & Tricipiti (Pompaggio Localizzato)',
+        sessionFocus: 'Panca Piana, Inclinata, Dips, Croci & French Press',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 1-2', technique: 'NONE', notes: 'Progressione classica di carico.' },
+          { order: 2, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Alto', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Discesa profonda.' },
+          { order: 3, name: 'Dips alle parallele a corpo libero o zavorra', targetMuscle: 'Petto Basso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Inclinazione busto.' },
+          { order: 4, name: 'Croci ai cavi orizzontali', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set finale.' },
+          { order: 5, name: 'French press con bilanciere EZ su panca', targetMuscle: 'Tricipiti', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti chiusi.' },
+          { order: 6, name: 'Pushdown con corda al cavo', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Apertura finale corda.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Dorso & Bicipiti (Spessore, Ampiezza & Braccia)',
+        sessionFocus: 'Trazioni, Rematore, Lat, Pulley & Curl',
+        exercises: [
+          { order: 1, name: 'Trazioni alla sbarra presa prona o Lat pesante', targetMuscle: 'Gran Dorsale', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 120, effort: 'Cedimento', technique: 'NONE', notes: 'ROM completo fino al petto.' },
+          { order: 2, name: 'Rematore bilanciere presa supina (Yates)', targetMuscle: 'Spessore Schiena', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Tirata decisa all\'ombelico.' },
+          { order: 3, name: 'Lat machine presa inversa', targetMuscle: 'Dorso Basso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti aderenti.' },
+          { order: 4, name: 'Pulley basso con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip 30% ultima serie.' },
+          { order: 5, name: 'Curl con bilanciere in piedi', targetMuscle: 'Bicipiti', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Zero slancio lombare.' },
+          { order: 6, name: 'Curl su panca inclinata con manubri', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Allungamento profondo.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Gambe & Polpacci (1 Sola Volta a Settimana)',
+        sessionFocus: 'Squat, Pressa, Extension, Rumeno & Core',
+        exercises: [
+          { order: 1, name: 'Squat con bilanciere o multipower', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita al parallelo.' },
+          { order: 2, name: 'Leg press a 45�', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 120, effort: 'Cedimento', technique: 'NONE', notes: 'Piedi a larghezza spalle.' },
+          { order: 3, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Doppio drop set finale.' },
+          { order: 4, name: 'Stacco rumeno con bilanciere o manubri', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Cerniera d\'anca profonda.' },
+          { order: 5, name: 'Leg curl sdraiato', targetMuscle: 'Femorali', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Discesa controllata.' },
+          { order: 6, name: 'Calf raise in piedi + Crunch ai cavi', targetMuscle: 'Polpacci & Core', segment: 'METABOLICO', sets: 4, reps: '15+15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Super-serie finale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Spalle & Braccia Richiamo',
+        sessionFocus: 'Military Press, Alzate Laterali, 90� & Super-Serie Braccia',
+        exercises: [
+          { order: 1, name: 'Military press con manubri su panca a 75�', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 120, effort: 'Cedimento', technique: 'NONE', notes: 'Traiettoria pulita.' },
+          { order: 2, name: 'Alzate laterali con manubri in piedi', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip all\'ultima serie.' },
+          { order: 3, name: 'Alzate a 90� su panca inclinata', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti alti.' },
+          { order: 4, name: 'Tirate al mento al cavo basso presa larga', targetMuscle: 'Deltoidi/Trapezi', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti che guidano il movimento.' },
+          { order: 5, name: 'Super-serie: Curl alternato manubri + Dips tra panche', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '10+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio volumetrico finale.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T21: TORSO / GAMBE / SPALLE-BRACCIA 3 GIORNI POWER-HYPER (HARDTOPGYM)
+  // --------------------------------------------------------------------------
+  T21: {
+    id: 'T21',
+    title: 'Torso / Gambe / Spalle & Braccia 3 Giorni Power-Hyper (Metodo Hatfield)',
+    group: 'AVANZATO',
+    daysCount: 3,
+    primaryEngine: 'HARDTOPGYM',
+    description: 'Uomo Gambe 1x su 3 giorni Metodo Hatfield: sequenza rigida Neurale CAT (compensatory acceleration) -> Meccanico -> Metabolico su Torso, Gambe e Braccia.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Torso Completo (Neurale -> Meccanico -> Metabolico)',
+        sessionFocus: 'Panca CAT, Trazioni, Spinte Inclinata, Pulley & Cavi',
+        exercises: [
+          { order: 1, name: 'Panca piana bilanciere (CAT Neurale)', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '4-6', restSeconds: 150, effort: 'RIR 1-2', technique: 'NONE', notes: 'Accelerazione compensatoria massima nella fase concentrica.' },
+          { order: 2, name: 'Trazioni presa prona zavorrate o Lat pesante', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '4-6', restSeconds: 150, effort: 'RIR 1-2', technique: 'NONE', notes: 'Esplosivita in trazione.' },
+          { order: 3, name: 'Spinte manubri panca a 30� (Tensione Meccanica)', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'TUT 3-0-1 controllato.' },
+          { order: 4, name: 'Pulley basso con maniglia a V (Tensione Meccanica)', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Adduzione scapolare marcata.' },
+          { order: 5, name: 'Croci ai cavi inclinata (Stress Metabolico)', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Tensione continua senza pause.' },
+          { order: 6, name: 'Pullover al cavo alto con corda (Stress Metabolico)', targetMuscle: 'Gran Dorsale', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Massimo allungamento sotto carico.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Gambe & Core (1 Sola Volta a Settimana)',
+        sessionFocus: 'Squat CAT, Stacco Rumeno, Affondi, Extension & Calf',
+        exercises: [
+          { order: 1, name: 'Squat con bilanciere o multipower (CAT Neurale)', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '4-6', restSeconds: 180, effort: 'RIR 2', technique: 'NONE', notes: 'Discesa controllata e risalita alla massima velocita.' },
+          { order: 2, name: 'Stacco rumeno con bilanciere (Neurale/Meccanico)', targetMuscle: 'Ischiocrurali', segment: 'NEURALE', sets: 4, reps: '6', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Carico pesante con cerniera pulita.' },
+          { order: 3, name: 'Affondi con manubri posteriori (Tensione Meccanica)', targetMuscle: 'Gambe/Glutei', segment: 'MECCANICO', sets: 3, reps: '8 per gamba', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Passo controllato.' },
+          { order: 4, name: 'Leg curl seduto (Tensione Meccanica)', targetMuscle: 'Femorali', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa in 3 secondi.' },
+          { order: 5, name: 'Leg extension a tensione continua (Metabolico)', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% ultima serie.' },
+          { order: 6, name: 'Calf raise alla pressa (Metabolico)', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Fermo in allungamento 2s.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Spalle & Braccia (Neurale -> Meccanico -> Metabolico)',
+        sessionFocus: 'Military Press, Dips, Alzate Laterali, Curl & Pushdown',
+        exercises: [
+          { order: 1, name: 'Military press in piedi con bilanciere (CAT Neurale)', targetMuscle: 'Deltoidi Anteriori', segment: 'NEURALE', sets: 4, reps: '5', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta esplosiva sopra la testa.' },
+          { order: 2, name: 'Dips alle parallele pesanti (CAT Neurale)', targetMuscle: 'Tricipiti/Petto', segment: 'NEURALE', sets: 4, reps: '6', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Eventuale zavorra controllata.' },
+          { order: 3, name: 'Alzate laterali con manubri (Tensione Meccanica)', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Gomiti leggermente flessi.' },
+          { order: 4, name: 'Curl con bilanciere EZ in piedi (Tensione Meccanica)', targetMuscle: 'Bicipiti', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Isolamento puro.' },
+          { order: 5, name: 'Face pull al cavo alto (Stress Metabolico)', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Extrarotazione di spalla.' },
+          { order: 6, name: 'Super-serie: Pushdown corda + Curl Scott (Metabolico)', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio estremo di chiusura.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T23: HYBRID POWER-BUILDING 5 GIORNI (POWERBLOCK_HYBRID)
+  // --------------------------------------------------------------------------
+  T23: {
+    id: 'T23',
+    title: 'Hybrid Power-Building 5 Giorni (Fitschen/Wilson)',
+    group: 'AVANZATO',
+    daysCount: 5,
+    primaryEngine: 'POWERBLOCK_HYBRID',
+    description: 'Protocollo ibrido Fitschen/Wilson su 5 sedute: 2 giorni Neurale Power sui Big 3 sub-failure (Upper Power / Lower Power) + 3 giorni a blocchi ipertrofici ad alta densita.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Upper Power (Big 3 Sub-Failure Neurale)',
+        sessionFocus: 'Panca Piana Pesante, Rematore Bilanciere & Military',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere (Big 3)', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '3-5', restSeconds: 180, effort: 'RIR 1-2', technique: 'NONE', notes: 'Carico sub-massimale, controllo perfetto.' },
+          { order: 2, name: 'Rematore con bilanciere pesante', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '5', restSeconds: 150, effort: 'RIR 1-2', technique: 'NONE', notes: 'Schiena a 45�, tirata esplosiva.' },
+          { order: 3, name: 'Military press con bilanciere in piedi', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 3, reps: '5', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta verticale pura.' },
+          { order: 4, name: 'Dips con sovraccarico', targetMuscle: 'Tricipiti/Petto', segment: 'MECCANICO', sets: 3, reps: '6-8', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa controllata.' },
+          { order: 5, name: 'Curl bilanciere dritto pesante', targetMuscle: 'Bicipiti', segment: 'MECCANICO', sets: 3, reps: '6-8', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Presa salda.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Lower Power (Squat & Stacco Sub-Failure Neurale)',
+        sessionFocus: 'Squat Pesante, Stacco Rumeno & Leg Press',
+        exercises: [
+          { order: 1, name: 'Squat con bilanciere olimpico (Big 3)', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '3-5', restSeconds: 180, effort: 'RIR 1-2', technique: 'NONE', notes: 'Affondo solido al parallelo.' },
+          { order: 2, name: 'Stacco rumeno con bilanciere', targetMuscle: 'Ischiocrurali', segment: 'NEURALE', sets: 3, reps: '5', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Cerniera d\'anca pesante.' },
+          { order: 3, name: 'Leg press a 45� a pieno carico', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '6-8', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta sui talloni.' },
+          { order: 4, name: 'Calf raise in piedi alla macchina', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Pausa 2s in basso.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Block Day - Push Hypertrophy',
+        sessionFocus: 'Spinte 30�, Chest Press, Cavi & Alzate Laterali',
+        exercises: [
+          { order: 1, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento profondo.' },
+          { order: 2, name: 'Chest press convergente guidata', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Tensione continua.' },
+          { order: 3, name: 'Croci ai cavi su panca piana', targetMuscle: 'Petto Sternale', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio ematico.' },
+          { order: 4, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip all\'ultima serie.' },
+          { order: 5, name: 'Pushdown barra dritta al cavo', targetMuscle: 'Tricipiti', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Estensione completa.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Block Day - Pull Hypertrophy',
+        sessionFocus: 'Lat Presa Neutra, Pulley, T-Bar & Deltoidi Posteriori',
+        exercises: [
+          { order: 1, name: 'Lat machine presa a V o neutra', targetMuscle: 'Gran Dorsale', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Trazione piena.' },
+          { order: 2, name: 'Pulley basso con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Adduzione scapolare.' },
+          { order: 3, name: 'T-bar row su panca o guidato', targetMuscle: 'Spessore Schiena', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Gomiti stretti.' },
+          { order: 4, name: 'Alzate a 90� ai cavi incrociati', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti alti.' },
+          { order: 5, name: 'Curl su panca inclinata con manubri', targetMuscle: 'Bicipiti', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Supinazione marcata.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 5: Block Day - Legs Hypertrophy & Arms Finisher',
+        sessionFocus: 'Hack Squat, Extension, Femorali & Super-Serie Braccia',
+        exercises: [
+          { order: 1, name: 'Hack squat o Leg press a 45�', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 120, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa lenta.' },
+          { order: 2, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Drop set 30% ultima serie.' },
+          { order: 3, name: 'Leg curl sdraiato', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Contrazione di picco.' },
+          { order: 4, name: 'Super-serie: Curl bilanciere EZ + French press', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '10+10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Braccia piene a fine microciclo.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T24: FEMMINILE 4 GIORNI BIKINI AESTHETIC & DELTOIDI (BIKINI_WAVE)
+  // --------------------------------------------------------------------------
+  T24: {
+    id: 'T24',
+    title: 'Femminile 4 Giorni Bikini Aesthetic & Deltoidi (Metodo Bikini Wave)',
+    group: 'AVANZATO',
+    daysCount: 4,
+    primaryEngine: 'BIKINI_WAVE',
+    description: 'Protocollo Bikini Wave su 4 giorni: modulazione triadica (Low, Moderate, High reps) prioritizzata su glutei alti e deltoidi laterali per massimizzare la linea a clessidra.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Sessione A: Glute Wave Heavy (L) + Deltoidi Moderate (M)',
+        sessionFocus: 'Hip Thrust Pesante, Affondi Deficit & Spalle Laterali',
+        exercises: [
+          { order: 1, name: 'Hip thrust con bilanciere (Low Reps Heavy)', targetMuscle: 'Glutei', segment: 'NEURALE', sets: 4, reps: '5-6', restSeconds: 150, effort: 'RIR 1', technique: 'NONE', notes: 'Modulazione Low: carico elevato con fermo 2s in alto.' },
+          { order: 2, name: 'Affondi con manubri su rialzo (Moderate)', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '8-10 per gamba', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Modulazione Moderate: busto inclinato avanti.' },
+          { order: 3, name: 'Alzate laterali con manubri (Moderate)', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '10-12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Deltoide tonico per clessidra.' },
+          { order: 4, name: 'Face pull ai cavi alti (High Reps)', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Extrarotazione di spalla.' }
+        ]
+      },
+      {
+        dayLabel: 'Sessione B: Upper V-Taper Moderate (M) & Core Stretto',
+        sessionFocus: 'Lat Machine, Pulley, Spinte Snelle & Addome',
+        exercises: [
+          { order: 1, name: 'Lat machine convergente presa neutra (Moderate)', targetMuscle: 'Gran Dorsale', segment: 'MECCANICO', sets: 4, reps: '8-10', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Allargamento della schiena alta per assottigliare la vita.' },
+          { order: 2, name: 'Pulley basso con impugnatura media (Moderate)', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Apertura toracica e scapole depresse.' },
+          { order: 3, name: 'Spinte con manubri su panca a 30� snelle', targetMuscle: 'Petto', segment: 'METABOLICO', sets: 3, reps: '10-12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Carico moderato, traiettoria fluida.' },
+          { order: 4, name: 'Crunch su panca declinata o fitball', targetMuscle: 'Core', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Espirazione forzata.' },
+          { order: 5, name: 'Plank vacuum isometrico', targetMuscle: 'Trasverso Addome', segment: 'METABOLICO', sets: 3, reps: '45s', restSeconds: 45, effort: 'RIR 1', technique: 'NONE', notes: 'Pancia tirata in dentro.' }
+        ]
+      },
+      {
+        dayLabel: 'Sessione C: Glute & Posterior Wave Moderate (M) + Pump (H)',
+        sessionFocus: 'Stacco Rumeno, Multipower & Abductor Pumping',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con bilanciere olimpico (Low/Mod)', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Cerniera d\'anca profonda.' },
+          { order: 2, name: 'Hip thrust al multipower (Moderate)', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Contrazione di picco costante.' },
+          { order: 3, name: 'Leg curl seduto a tensione continua (Moderate)', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Discesa in 3 secondi.' },
+          { order: 4, name: 'Abductor machine su 3 inclinazioni (High Reps)', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 3, reps: '20-25', restSeconds: 45, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Modulazione High reps per bruciore metabolico.' }
+        ]
+      },
+      {
+        dayLabel: 'Sessione D: Delts High/Pump (H) + Glute Metabolic Finish (H)',
+        sessionFocus: 'Alzate ai Cavi, Kickback Glutei & Drenaggio',
+        exercises: [
+          { order: 1, name: 'Alzate laterali al cavo singolo (High Reps)', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '15-20', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua al picco.' },
+          { order: 2, name: 'Alzate a 90� ai cavi bassi (High Reps)', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '15-20', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento deltoide posteriore.' },
+          { order: 3, name: 'Slanci al cavo basso gamba tesa (High Reps)', targetMuscle: 'Gluteo Alto', segment: 'METABOLICO', sets: 4, reps: '20 per gamba', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio del gluteo senza affaticamento lombare.' },
+          { order: 4, name: 'Glute bridge a terra a corpo libero (High Reps)', targetMuscle: 'Glutei', segment: 'METABOLICO', sets: 3, reps: '25-30', restSeconds: 30, effort: 'Cedimento', technique: 'NONE', notes: 'Esaurimento finale con squeeze continuo.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T26: ARNOLD SPLIT 6 GIORNI CONGESTIONE MUSCOLARE (ACETO)
+  // --------------------------------------------------------------------------
+  T26: {
+    id: 'T26',
+    title: 'Arnold Split 6 Giorni Congestione Muscolare (Metodo Aceto)',
+    group: 'AVANZATO',
+    daysCount: 6,
+    primaryEngine: 'ACETO',
+    description: 'La celebre split antagonista su 6 giorni: G1/G4 Petto & Schiena, G2/G5 Spalle & Braccia, G3/G6 Gambe & Addome. Altissima congestione muscolare e densita Aceto.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Petto & Schiena Antagonisti (Heavy)',
+        sessionFocus: 'Panca Piana, Trazioni, Inclinata & Rematore Superset',
+        exercises: [
+          { order: 1, name: 'Super-serie: Panca piana bilanciere + Trazioni sbarra', targetMuscle: 'Petto & Dorso', segment: 'NEURALE', sets: 4, reps: '6-8+6-8', restSeconds: 120, effort: 'Cedimento', technique: 'NONE', notes: 'Lavoro antagonista per congestione massima.' },
+          { order: 2, name: 'Super-serie: Spinte 30� manubri + Rematore bilanciere', targetMuscle: 'Petto & Dorso', segment: 'MECCANICO', sets: 3, reps: '8-10+8-10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Spinta inclinata e trazione orizzontale.' },
+          { order: 3, name: 'Super-serie: Croci panca inclinata + Pulley basso', targetMuscle: 'Petto & Dorso', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Allungamento e strizzata finale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Spalle & Braccia Antagonisti (Heavy)',
+        sessionFocus: 'Lento Manubri, Alzate Laterali, Bicipiti & Tricipiti',
+        exercises: [
+          { order: 1, name: 'Lento avanti con manubri su panca a 75�', targetMuscle: 'Deltoidi', segment: 'NEURALE', sets: 4, reps: '8-10', restSeconds: 90, effort: 'Cedimento', technique: 'REST_PAUSE', notes: 'Rest-Pause sull\'ultima serie.' },
+          { order: 2, name: 'Alzate laterali con manubri in piedi', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip 30% ultima serie.' },
+          { order: 3, name: 'Alzate a 90� su panca inclinata', targetMuscle: 'Deltoidi Posteriori', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti alti.' },
+          { order: 4, name: 'Super-serie: Curl bilanciere EZ + French press EZ', targetMuscle: 'Bicipiti & Tricipiti', segment: 'MECCANICO', sets: 4, reps: '10+10', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Braccia piene.' },
+          { order: 5, name: 'Super-serie: Hammer curl + Pushdown corda', targetMuscle: 'Bicipiti & Tricipiti', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio terminale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Gambe & Addome A (Quadricipiti Focus)',
+        sessionFocus: 'Squat, Leg Press, Extension, Femorali & Polpacci',
+        exercises: [
+          { order: 1, name: 'Squat con bilanciere olimpico o multipower', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita piena.' },
+          { order: 2, name: 'Leg press a 45�', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Piedi a larghezza spalle.' },
+          { order: 3, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip all\'ultima serie.' },
+          { order: 4, name: 'Stacco rumeno con manubri', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento profondo.' },
+          { order: 5, name: 'Leg curl seduto o sdraiato', targetMuscle: 'Femorali', segment: 'METABOLICO', sets: 3, reps: '10', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Contrazione di picco.' },
+          { order: 6, name: 'Calf raise alla pressa + Crunch declinato', targetMuscle: 'Polpacci & Core', segment: 'METABOLICO', sets: 4, reps: '15+15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Super-serie finale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Petto & Schiena Antagonisti (Density & Cavi)',
+        sessionFocus: 'Chest Press + Lat Presa a V, Croci Cavi & Pullover',
+        exercises: [
+          { order: 1, name: 'Super-serie: Chest press guidata + Lat presa a V', targetMuscle: 'Petto & Dorso', segment: 'MECCANICO', sets: 4, reps: '10+10', restSeconds: 90, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua guidata.' },
+          { order: 2, name: 'Super-serie: Croci cavi alti + Pullover al cavo', targetMuscle: 'Petto & Dorso', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento e allungamento.' },
+          { order: 3, name: 'Super-serie: Dips su panche + Row al cavo basso', targetMuscle: 'Petto & Dorso', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio toracico totale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 5: Spalle & Braccia Antagonisti (Density & Pompaggio)',
+        sessionFocus: 'Shoulder Press, Alzate Cavi, Panca Scott & Cavi',
+        exercises: [
+          { order: 1, name: 'Shoulder press guidata o multipower', targetMuscle: 'Deltoidi', segment: 'MECCANICO', sets: 4, reps: '10', restSeconds: 75, effort: 'Cedimento', technique: 'NONE', notes: 'Spinta continua.' },
+          { order: 2, name: 'Alzate laterali al cavo singolo', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12-15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento puro.' },
+          { order: 3, name: 'Tirate al mento al cavo basso presa larga', targetMuscle: 'Deltoidi/Trapezi', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Gomiti alti.' },
+          { order: 4, name: 'Super-serie: Curl su panca Scott + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 4, reps: '10+10', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip sull\'ultimo giro.' },
+          { order: 5, name: 'Super-serie: Curl concentrato + French press manubrio', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Bruciore e congestione terminale.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 6: Gambe & Catena Posteriore B (Femorali Focus)',
+        sessionFocus: 'Hack Squat, Stacco Rumeno, Femorali & Polpacci',
+        exercises: [
+          { order: 1, name: 'Hack squat o Leg press a piedi alti', targetMuscle: 'Gambe', segment: 'NEURALE', sets: 4, reps: '10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Spinta piena sui talloni.' },
+          { order: 2, name: 'Stacco rumeno con bilanciere o manubri', targetMuscle: 'Ischiocrurali/Glutei', segment: 'MECCANICO', sets: 4, reps: '8-10', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Allungamento profondo del femorale.' },
+          { order: 3, name: 'Leg curl sdraiato a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '12', restSeconds: 60, effort: 'Cedimento', technique: 'STRIPPING_DROP_SET', notes: 'Strip finale.' },
+          { order: 4, name: 'Leg extension a fine seduta', targetMuscle: 'Quadricipiti', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Cedimento', technique: 'NONE', notes: 'Pompaggio vascolare.' },
+          { order: 5, name: 'Calf machine seduto per soleo', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '15', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Pausa in contrazione.' },
+          { order: 6, name: 'Reverse crunch su panca inclinata', targetMuscle: 'Addome', segment: 'METABOLICO', sets: 3, reps: '15-20', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Salita del bacino controllata.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // T27: UPPER / LOWER 6 GIORNI HIGH FREQUENCY (HELMS_PYRAMID)
+  // --------------------------------------------------------------------------
+  T27: {
+    id: 'T27',
+    title: 'Upper / Lower 6 Giorni High Frequency (Metodo Helms)',
+    group: 'AVANZATO',
+    daysCount: 6,
+    primaryEngine: 'HELMS_PYRAMID',
+    description: 'Multifrequenza 3x Upper/Lower (U/L/U/L/U/L) di Eric Helms: micro-sessioni compatte da 12-14 serie con rigorosa gestione del RIR per massimizzare la sintesi proteica.',
+    generateSessions: () => [
+      {
+        dayLabel: 'Giorno 1: Upper 1 (Forza Orizzontale & Ampiezza)',
+        sessionFocus: 'Panca Piana, Rematore Bilanciere & Spinte 30�',
+        exercises: [
+          { order: 1, name: 'Panca piana con bilanciere', targetMuscle: 'Petto', segment: 'NEURALE', sets: 4, reps: '4-6', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Fermo 1s netto al petto.' },
+          { order: 2, name: 'Rematore con bilanciere su panca o libero', targetMuscle: 'Dorso', segment: 'NEURALE', sets: 4, reps: '6', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Schiena bloccata a 45�.' },
+          { order: 3, name: 'Spinte manubri panca a 30�', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '8', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Discesa profonda.' },
+          { order: 4, name: 'Lat machine presa prona', targetMuscle: 'Gran Dorsale', segment: 'MECCANICO', sets: 3, reps: '8', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Trazione verticale solida.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Lower 1 (Quadricipiti Heavy & Polpacci)',
+        sessionFocus: 'Squat Pesante, Leg Press & Femorali',
+        exercises: [
+          { order: 1, name: 'Squat con bilanciere olimpico', targetMuscle: 'Quadricipiti', segment: 'NEURALE', sets: 4, reps: '4-6', restSeconds: 180, effort: 'RIR 2', technique: 'NONE', notes: 'Profondita al parallelo.' },
+          { order: 2, name: 'Leg press a 45�', targetMuscle: 'Gambe', segment: 'MECCANICO', sets: 3, reps: '8', restSeconds: 120, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta piena sui talloni.' },
+          { order: 3, name: 'Leg curl sdraiato a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 2', technique: 'NONE', notes: 'Discesa lenta in 3s.' },
+          { order: 4, name: 'Calf raise in piedi alla macchina', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 4, reps: '10-12', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Pausa 2s in allungamento.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Upper 2 (Ipertrofia Verticale & Spalle)',
+        sessionFocus: 'Military Press, Trazioni, Dips & Pulley',
+        exercises: [
+          { order: 1, name: 'Military press con bilanciere in piedi', targetMuscle: 'Spalle', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 1-2', technique: 'NONE', notes: 'Spinta decisa sopra la testa.' },
+          { order: 2, name: 'Trazioni presa neutra o Lat machine', targetMuscle: 'Dorso/Bicipiti', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Trazione piena.' },
+          { order: 3, name: 'Dips alle parallele', targetMuscle: 'Petto/Tricipiti', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Controllo eccentrico.' },
+          { order: 4, name: 'Pulley basso con maniglia a V', targetMuscle: 'Dorso Medio', segment: 'MECCANICO', sets: 3, reps: '10', restSeconds: 75, effort: 'RIR 1-2', technique: 'NONE', notes: 'Adduzione scapolare.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 4: Lower 2 (Cerniera d\'Anca & Glutei)',
+        sessionFocus: 'Stacco Rumeno, Hip Thrust, Extension & Polpacci',
+        exercises: [
+          { order: 1, name: 'Stacco rumeno con bilanciere', targetMuscle: 'Ischiocrurali/Glutei', segment: 'NEURALE', sets: 4, reps: '6-8', restSeconds: 150, effort: 'RIR 2', technique: 'NONE', notes: 'Cerniera d\'anca controllata.' },
+          { order: 2, name: 'Hip thrust con bilanciere o multipower', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '8-10', restSeconds: 120, effort: 'RIR 1-2', technique: 'NONE', notes: 'Fermo di 2s in alto.' },
+          { order: 3, name: 'Leg extension a tensione continua', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 75, effort: 'RIR 1-2', technique: 'NONE', notes: 'Pompaggio controllato.' },
+          { order: 4, name: 'Calf seduto alla macchina', targetMuscle: 'Soleo', segment: 'METABOLICO', sets: 4, reps: '12-15', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Contrazione di picco.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 5: Upper 3 (Volume & Isolamento)',
+        sessionFocus: 'Chest Press, Lat Larga, Alzate Laterali & Braccia',
+        exercises: [
+          { order: 1, name: 'Chest press convergente o manubri', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Tensione costante.' },
+          { order: 2, name: 'Lat machine presa prona larga', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Apertura alare dorsale.' },
+          { order: 3, name: 'Alzate laterali con manubri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 4, reps: '12-15', restSeconds: 45, effort: 'RIR 0-1', technique: 'NONE', notes: 'Pompaggio deltoidi.' },
+          { order: 4, name: 'Super-serie: Curl bicipiti + Pushdown corda', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Braccia in pump.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 6: Lower 3 (Catena Posteriore & Pompaggio)',
+        sessionFocus: 'Leg Press Piedi Alti, Affondi, Curl & Core',
+        exercises: [
+          { order: 1, name: 'Leg press a 45� a piedi alti', targetMuscle: 'Glutei/Gambe', segment: 'MECCANICO', sets: 3, reps: '10-12', restSeconds: 90, effort: 'RIR 1', technique: 'NONE', notes: 'Spinta talloni per catena cinetica.' },
+          { order: 2, name: 'Affondi con manubri posteriori', targetMuscle: 'Gambe/Glutei', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 75, effort: 'RIR 1', technique: 'NONE', notes: 'Passo controllato.' },
+          { order: 3, name: 'Leg curl seduto a tensione continua', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '12-15', restSeconds: 60, effort: 'RIR 0-1', technique: 'NONE', notes: 'Esaurimento ischiocrurali.' },
+          { order: 4, name: 'Crunch a terra + Plank', targetMuscle: 'Core', segment: 'METABOLICO', sets: 3, reps: '15+45s', restSeconds: 60, effort: 'RIR 1', technique: 'NONE', notes: 'Stabilita finale del tronco.' }
+        ]
+      }
+    ]
+  },
+
 };
 
 // ============================================================================
