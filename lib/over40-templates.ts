@@ -1,8 +1,8 @@
 import { TemplateMeta, TemplateSession, Gender } from './topgym-catalog';
 
 export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
-  // --------------------------------------------------------------------------
-  // 1. BOMPA-O40-01: Adattamento Anatomico (AA) Circuit - Full Body
+    // --------------------------------------------------------------------------
+  // 1. BOMPA-O40-01: Adattamento Anatomico (AA) Circuit - Full Body (Tudor Bompa)
   // --------------------------------------------------------------------------
   {
     id: 'BOMPA-O40-01',
@@ -10,57 +10,56 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     group: 'PRINCIPIANTE',
     daysCount: 3,
     primaryEngine: 'BOMPA_PERIODIZATION',
-    description: 'Circuito a stazioni Full Body a basso impatto articolare: capillarizzazione, rinforzo tendineo, eccentriche controllate (2-3s) e recupero attivo.',
+    description: 'Vero circuito a stazioni Bompa: 3 giorni differenziati (A-B-C). 1 serie per stazione, 30" di cambio postazione, 2 minuti di pausa a fine giro (3 giri totali). Massima tutela tendinea.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
-        dayLabel: 'Seduta 1: Circuito Adattamento Anatomico (Giro A)',
-        sessionFocus: '3-4 Giri a stazioni · 45-60" rec tra stazioni · 2-3\' tra i giri',
+        dayLabel: 'Giorno 1: Circuito AA - Variante A (Spinta & Dominanza Ginocchio)',
+        sessionFocus: 'CIRCUITO 9 STAZIONI: 3 Giri completi � 30" tra le stazioni � 2 minuti di riposo tra i giri',
         exercises: [
-          { order: 1, name: 'Leg press orizzontale o 45°', targetMuscle: 'Gambe / Spinta', segment: 'NEURALE', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Discesa frenata 3s, nessun blocco articolare al ginocchio.' },
-          { order: 2, name: 'Spinte con manubri su panca piana', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Presa semi-prona neutra per salvaguardia della cuffia dei rotatori.' },
-          { order: 3, name: 'Lat pulldown presa prona media', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Depressione scapolare solida, tirata allo sterno.' },
-          { order: 4, name: 'Step-Up su box o panca bassa', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Controllo dell\'allineamento ginocchio-bacino.' },
-          { order: 5, name: 'Dumbbell shoulder press seduto', targetMuscle: 'Deltoidi', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '35-40% 1RM', technique: 'CIRCUITO', notes: 'Schienale a 75-80° per scaricare l\'area lombare.' },
-          { order: 6, name: 'Pulley orizzontale al cavo', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Fermo di 1s in massima adduzione scapolare.' },
-          { order: 7, name: 'Leg curl seduto a camme', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Movimento fluido a tensione continua protetta.' },
-          { order: 8, name: 'Hyperextension su panca a 45°', targetMuscle: 'Catena Posteriore', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Allineamento tronco-bacino senza iperlordosi lombare.' },
-          { order: 9, name: 'Plank a terra o su panca', targetMuscle: 'Core Isometrico', segment: 'METABOLICO', sets: 3, reps: '40-45s', restSeconds: 90, effort: 'Isometrico', technique: 'CIRCUITO', notes: 'Compattezza glutei-addome, rachide in asse neutrale.' }
+          { order: 1, name: 'Stazione 1: Leg press orizzontale o 45�', targetMuscle: 'Gambe / Spinta', segment: 'NEURALE', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Giro 1-3. Discesa controllata 3s. Passa subito alla Stazione 2 dopo 30".' },
+          { order: 2, name: 'Stazione 2: Chest press o spinte manubri panca piana', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Giro 1-3. Presa neutra salva-spalle. Passa alla Stazione 3 dopo 30".' },
+          { order: 3, name: 'Stazione 3: Lat pulldown presa prona media', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Giro 1-3. Trazione controllata allo sterno. Passa alla Stazione 4 dopo 30".' },
+          { order: 4, name: 'Stazione 4: Leg curl seduto a camme', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Tensione continua protetta. Passa alla Stazione 5 dopo 30".' },
+          { order: 5, name: 'Stazione 5: Shoulder press con manubri da seduto', targetMuscle: 'Deltoidi', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '35-40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Schienale inclinato a 75� per scarico lombare. Passa alla Stazione 6.' },
+          { order: 6, name: 'Stazione 6: Pulley orizzontale con maniglia a V', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Fermo 1s in massima adduzione scapolare. Passa alla Stazione 7.' },
+          { order: 7, name: 'Stazione 7: Calf raise in piedi o seduto', targetMuscle: 'Polpacci', segment: 'METABOLICO', sets: 3, reps: '15-20 reps', restSeconds: 30, effort: 'Medio-leggero', technique: 'CIRCUITO', notes: 'Giro 1-3. Pausa 1s in allungamento. Ritorno venoso. Passa alla Stazione 8.' },
+          { order: 8, name: 'Stazione 8: Hyperextension su panca a 45�', targetMuscle: 'Catena Posteriore', segment: 'METABOLICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Giro 1-3. Cerniera d\'anca senza iperestensione lombare. Passa alla Stazione 9.' },
+          { order: 9, name: 'Stazione 9: Plank isometrico a terra o su panca', targetMuscle: 'Core Stabilit�', segment: 'METABOLICO', sets: 3, reps: '40-45s', restSeconds: 120, effort: 'Isometrico', technique: 'CIRCUITO', notes: 'Fine Giro! Riposa 2 minuti completi, poi ricomincia dalla Stazione 1 (3 Giri totali).' }
         ]
       },
       {
-        dayLabel: 'Seduta 2: Circuito Adattamento Anatomico (Giro B)',
-        sessionFocus: 'Ripetizione circuito con focus su ROM e respirazione diaframmatica',
+        dayLabel: 'Giorno 2: Circuito AA - Variante B (Cerniera d\'Anca & Trazione Posturale)',
+        sessionFocus: 'CIRCUITO 9 STAZIONI: 3 Giri completi � 30" tra le stazioni � 2 minuti di riposo tra i giri',
         exercises: [
-          { order: 1, name: 'Leg press orizzontale o 45°', targetMuscle: 'Gambe / Spinta', segment: 'NEURALE', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Discesa frenata 3s, zero blocco articolare.' },
-          { order: 2, name: 'Spinte con manubri su panca piana', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Presa neutra salva-spalle.' },
-          { order: 3, name: 'Lat pulldown presa prona media', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Apertura toracica e scapole depresse.' },
-          { order: 4, name: 'Step-Up su box o panca bassa', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Stabilità del bacino.' },
-          { order: 5, name: 'Dumbbell shoulder press seduto', targetMuscle: 'Deltoidi', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '35-40% 1RM', technique: 'CIRCUITO', notes: 'Schienale inclinato salva-rachide.' },
-          { order: 6, name: 'Pulley orizzontale al cavo', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Spalle basse e petto in fuori.' },
-          { order: 7, name: 'Leg curl seduto a camme', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Flessione del ginocchio controllata.' },
-          { order: 8, name: 'Hyperextension su panca a 45°', targetMuscle: 'Catena Posteriore', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Focus estensione anca, non lombare.' },
-          { order: 9, name: 'Plank a terra o su panca', targetMuscle: 'Core Isometrico', segment: 'METABOLICO', sets: 3, reps: '40-45s', restSeconds: 90, effort: 'Isometrico', technique: 'CIRCUITO', notes: 'Retroversione bacino.' }
+          { order: 1, name: 'Stazione 1: Goblet Box Squat su panca (seduta a 90�)', targetMuscle: 'Quadricipiti/Glutei', segment: 'NEURALE', sets: 3, reps: '15 reps', restSeconds: 30, effort: 'Medio (RIR 2)', technique: 'CIRCUITO', notes: 'Giro 1-3. Zero forze di taglio rotulee. Passa alla Stazione 2 dopo 30".' },
+          { order: 2, name: 'Stazione 2: Stacco Rumeno con manubri (Dumbbell RDL)', targetMuscle: 'Ischiocrurali/Glutei', segment: 'MECCANICO', sets: 3, reps: '12-15 reps', restSeconds: 30, effort: '45-50% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Focus cerniera d\'anca e schiena neutra. Passa alla Stazione 3 dopo 30".' },
+          { order: 3, name: 'Stazione 3: Spinte manubri su panca a 30� presa semi-neutra', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Gomiti a 45� per salvaguardia cuffia rotatori. Passa alla Stazione 4.' },
+          { order: 4, name: 'Stazione 4: Pulley orizzontale a presa larga', targetMuscle: 'Dorso Posturale', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Apertura toracica e depressione scapolare. Passa alla Stazione 5.' },
+          { order: 5, name: 'Stazione 5: Step-Up alternato su panca bassa o box', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 30, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Giro 1-3. Spinta solo sul tallone della gamba alta. Passa alla Stazione 6.' },
+          { order: 6, name: 'Stazione 6: Alzate laterali con manubri leggeri', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: 'Leggero', technique: 'CIRCUITO', notes: 'Giro 1-3. Controllo eccentrico continuo. Passa alla Stazione 7.' },
+          { order: 7, name: 'Stazione 7: Abductor machine su 3 inclinazioni', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 3, reps: '20 reps', restSeconds: 30, effort: 'Medio-leggero', technique: 'CIRCUITO', notes: 'Giro 1-3. Stabilizzatori anca e bacino. Passa alla Stazione 8.' },
+          { order: 8, name: 'Stazione 8: Superset braccia: Pushdown cavi + Curl manubri', targetMuscle: 'Braccia', segment: 'METABOLICO', sets: 3, reps: '12+12 reps', restSeconds: 30, effort: 'Leggero', technique: 'CIRCUITO', notes: 'Giro 1-3. Tonificazione braccia senza sovraccarico. Passa alla Stazione 9.' },
+          { order: 9, name: 'Stazione 9: Dead Bug a terra (schiena aderente)', targetMuscle: 'Core & Colonna Neutra', segment: 'METABOLICO', sets: 3, reps: '10 per lato', restSeconds: 120, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Fine Giro! Riposa 2 minuti completi, poi ricomincia dalla Stazione 1 (3 Giri totali).' }
         ]
       },
       {
-        dayLabel: 'Seduta 3: Circuito Adattamento Anatomico (Giro C)',
-        sessionFocus: 'Chiusura microciclo settimanale · Massima capillarizzazione',
+        dayLabel: 'Giorno 3: Circuito AA - Variante C (Drenaggio Vascolare & Catena Posteriore)',
+        sessionFocus: 'CIRCUITO 9 STAZIONI: 3 Giri completi � 30" tra le stazioni � 2 minuti di riposo tra i giri',
         exercises: [
-          { order: 1, name: 'Leg press orizzontale o 45°', targetMuscle: 'Gambe / Spinta', segment: 'NEURALE', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM (RIR 2)', technique: 'CIRCUITO', notes: 'Cadenza fluida 3-0-1.' },
-          { order: 2, name: 'Spinte con manubri su panca piana', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Discesa profonda controllata.' },
-          { order: 3, name: 'Lat pulldown presa prona media', targetMuscle: 'Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Gomiti che guidano verso il basso.' },
-          { order: 4, name: 'Step-Up su box o panca bassa', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Spinta solo sul tallone alto.' },
-          { order: 5, name: 'Dumbbell shoulder press seduto', targetMuscle: 'Deltoidi', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '35-40% 1RM', technique: 'CIRCUITO', notes: 'Spinta fino a estensione naturale.' },
-          { order: 6, name: 'Pulley orizzontale al cavo', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Squeeze scapolare 1 secondo.' },
-          { order: 7, name: 'Leg curl seduto a camme', targetMuscle: 'Ischiocrurali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Isolamento catena flessoria.' },
-          { order: 8, name: 'Hyperextension su panca a 45°', targetMuscle: 'Catena Posteriore', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Attivazione glutei in salita.' },
-          { order: 9, name: 'Plank a terra o su panca', targetMuscle: 'Core Isometrico', segment: 'METABOLICO', sets: 3, reps: '40-45s', restSeconds: 90, effort: 'Isometrico', technique: 'CIRCUITO', notes: 'Massima compattezza del corsetto.' }
+          { order: 1, name: 'Stazione 1: Leg press orizzontale a piedi larghi e alti', targetMuscle: 'Adduttori / Glutei', segment: 'NEURALE', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Spinta sui talloni, bacino incollato allo schienale. Passa alla Stazione 2.' },
+          { order: 2, name: 'Stazione 2: Lat pulldown presa inversa stretta', targetMuscle: 'Dorso Basso / Bicipiti', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '45% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Traiettoria verticale salva-spalle. Passa alla Stazione 3 dopo 30".' },
+          { order: 3, name: 'Stazione 3: Chest press convergente guidata', targetMuscle: 'Petto', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Movimento fluido senza bloccare i gomiti. Passa alla Stazione 4.' },
+          { order: 4, name: 'Stazione 4: Leg extension a cadenza rallentata', targetMuscle: 'Quadricipiti', segment: 'MECCANICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Cadenza 2-0-2 a tensione costante. Passa alla Stazione 5 dopo 30".' },
+          { order: 5, name: 'Stazione 5: Face pull ai cavi alti con corda', targetMuscle: 'Deltoidi Posteriori / Postura', segment: 'MECCANICO', sets: 3, reps: '15-18 reps', restSeconds: 30, effort: 'Leggero', technique: 'CIRCUITO', notes: 'Giro 1-3. Rinforzo extrarotatori della cuffia. Passa alla Stazione 6.' },
+          { order: 6, name: 'Stazione 6: Glute bridge a terra o su panca con disco', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '15-18 reps', restSeconds: 30, effort: 'Medio', technique: 'CIRCUITO', notes: 'Giro 1-3. Squeeze gluteo di 2 secondi in alto. Passa alla Stazione 7.' },
+          { order: 7, name: 'Stazione 7: Rematore su panca inclinata con manubri', targetMuscle: 'Dorso Medio', segment: 'METABOLICO', sets: 3, reps: '15 reps', restSeconds: 30, effort: '40% 1RM', technique: 'CIRCUITO', notes: 'Giro 1-3. Torace in appoggio per azzerare il carico lombare. Passa alla Stazione 8.' },
+          { order: 8, name: 'Stazione 8: Calf raise alla pressa o gradino', targetMuscle: 'Polpacci / Pompa Vascolare', segment: 'METABOLICO', sets: 3, reps: '20 reps', restSeconds: 30, effort: 'Medio', technique: 'CIRCUITO', notes: 'Giro 1-3. Ritorno venoso e drenaggio linfatico. Passa alla Stazione 9.' },
+          { order: 9, name: 'Stazione 9: Bird-Dog a terra o Plank su panca', targetMuscle: 'Core & Stabilit� Rachide', segment: 'METABOLICO', sets: 3, reps: '10 per lato', restSeconds: 120, effort: 'Corpo Libero', technique: 'CIRCUITO', notes: 'Fine Giro! Riposa 2 minuti completi, poi ricomincia dalla Stazione 1 (3 Giri totali).' }
         ]
       }
     ]
   },
 
-  // --------------------------------------------------------------------------
   // 2. BOMPA-O40-02: Muscular Endurance (M-E) - Upper / Lower
   // --------------------------------------------------------------------------
   {
