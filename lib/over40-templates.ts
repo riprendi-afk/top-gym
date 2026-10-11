@@ -280,4 +280,105 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
       }
     ]
   }
+
+  // --------------------------------------------------------------------------
+  // 6. SCO-O40-01: Postural Decompression & Pelvic Balance (Scoliosi a "S")
+  // --------------------------------------------------------------------------
+  {
+    id: 'SCO-O40-01',
+    title: 'Postural Decompression & Pelvic Balance (Scoliosi a "S" 3 Giorni)',
+    group: 'PRINCIPIANTE',
+    daysCount: 3,
+    primaryEngine: 'BOMPA_PERIODIZATION',
+    description: 'Protocollo specialistico per donna 40 anni con scoliosi destro-toracica e sinistro-lombare. Zero carichi assiali sulla colonna, decompressione attiva, supporto toracico su tutte le tirate e allineamento del cingolo pelvico.',
+    generateSessions: (gender: Gender): TemplateSession[] => [
+      {
+        dayLabel: 'Giorno 1: Decompressione Assiale, Spinta Vincolata & Cingolo Pelvico',
+        sessionFocus: 'Focus appoggio toracico vincolato, decompressione e attivazione glutei',
+        exercises: [
+          { order: 1, name: 'Leg press orizzontale a piedi paralleli medi', targetMuscle: 'Quadricipiti/Glutei', segment: 'NEURALE', sets: 4, reps: '12-15', restSeconds: 75, effort: 'RIR 2 (45-50% 1RM)', technique: 'NONE', notes: 'Bacino e zona lombare incollati allo schienale. Zero stacco sacrale.' },
+          { order: 2, name: 'Chest press convergente guidata da seduta', targetMuscle: 'Petto / Spinta', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Schienale a supporto totale, gomiti sotto la linea delle spalle.' },
+          { order: 3, name: 'Lat machine presa a triangolo stretta (Focus Allungamento)', targetMuscle: 'Dorso in Decompressione', segment: 'MECCANICO', sets: 4, reps: '12-15', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Fermo di 2s in massimo allungamento in alto per decomprimere il rachide.' },
+          { order: 4, name: 'Glute Bridge su panca con manubrio leggero', targetMuscle: 'Glutei', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: 'RIR 1-2', technique: 'NONE', notes: 'Squeeze di 2 secondi in alto. Spinta dai talloni per simmetrizzare il bacino.' },
+          { order: 5, name: 'Abductor machine (busto eretto aderente)', targetMuscle: 'Medio Gluteo', segment: 'METABOLICO', sets: 3, reps: '18-20', restSeconds: 45, effort: 'Medio-Leggero', technique: 'NONE', notes: 'Rinforzo degli stabilizzatori pelvici per contrastare il disallineamento lombare.' },
+          { order: 6, name: 'Dead Bug con respirazione diaframmatica guidata', targetMuscle: 'Core & Colonna Neutra', segment: 'METABOLICO', sets: 3, reps: '10 per lato', restSeconds: 60, effort: 'Corpo Libero', technique: 'NONE', notes: 'Espirazione forzata: schiaccia la zona lombare al suolo durante la discesa dell\'arto.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 2: Trazione Toracica Scaricata, Ischiocrurali & Anti-Rotazione',
+        sessionFocus: 'Focus scarico quadrato dei lombi, simmetria cingolo scapolare e stabilit�',
+        exercises: [
+          { order: 1, name: 'Seal Row o Rematore con manubri su panca a 30�', targetMuscle: 'Dorso Posturale', segment: 'NEURALE', sets: 4, reps: '12', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Torace incollato allo schienale: ZERO momento flettente sui paraspinali lombari.' },
+          { order: 2, name: 'Leg curl seduto a camme guidate', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 4, reps: '12-15', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Protezione assoluta del nervo sciatico e della curva lombare.' },
+          { order: 3, name: 'Spinte manubri panca a 30� con presa neutra', targetMuscle: 'Petto Clavicolare', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Gomiti a 45� per non creare asimmetrie sulla cuffia dei rotatori.' },
+          { order: 4, name: 'Step-Up assistito su rialzo basso (con appoggio mani)', targetMuscle: 'Gambe Monopodalico', segment: 'MECCANICO', sets: 3, reps: '12 per gamba', restSeconds: 60, effort: 'Corpo Libero', technique: 'NONE', notes: 'Focus arto inibito: spinta verticale pura senza inclinare il bacino lateralmente.' },
+          { order: 5, name: 'Pallof Press al cavo orizzontale da seduta', targetMuscle: 'Core Anti-Rotazione', segment: 'METABOLICO', sets: 3, reps: '12 per lato', restSeconds: 45, effort: 'Cavo Medio', technique: 'NONE', notes: 'Fondamentale per scoliosi: allineamento spalle-bacino contro la forza di torsione.' },
+          { order: 6, name: 'Side Plank facilitato su ginocchia (Focus Lato Convesso)', targetMuscle: 'Stabilizzatori Laterali', segment: 'METABOLICO', sets: 3, reps: '30s per lato', restSeconds: 45, effort: 'Corpo Libero', technique: 'NONE', notes: 'Insistere 5s in pi� sul lato della convessit� lombare sinistra per rinforzo.' }
+        ]
+      },
+      {
+        dayLabel: 'Giorno 3: Catena Posteriore a Catena Chiusa, Spalle & Drenaggio',
+        sessionFocus: 'Focus postura scapolare destra, deltoidi e camminata a scarico lombare',
+        exercises: [
+          { order: 1, name: 'Leg press a 45� a piedi larghi e schienale inclinato', targetMuscle: 'Glutei / Catena Posteriore', segment: 'NEURALE', sets: 4, reps: '12-15', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Supporto lombare massimo. Spinta sui talloni, discesa in 3 secondi controllata.' },
+          { order: 2, name: 'Pulley orizzontale al cavo con appoggio piedi alto', targetMuscle: 'Centro Dorso', segment: 'MECCANICO', sets: 4, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Depressione scapolare decisa: contrasta l\'anteposizione della scapola destra.' },
+          { order: 3, name: 'Hyperextension su panca a 45� (Range Ridotto)', targetMuscle: 'Glutei/Catena Posteriore', segment: 'MECCANICO', sets: 3, reps: '15', restSeconds: 60, effort: 'Corpo Libero', technique: 'NONE', notes: 'Cerniera d\'anca pura: fermarsi all\'allineamento del tronco, MAI iperestendere la lordosi.' },
+          { order: 4, name: 'Face Pull al cavo alto con corda (Focus Postura)', targetMuscle: 'Deltoidi Posteriori / Extrarotatori', segment: 'METABOLICO', sets: 3, reps: '15-18', restSeconds: 45, effort: 'Leggero', technique: 'NONE', notes: 'Apertura e derotazione cingolo scapolare.' },
+          { order: 5, name: 'Alzate laterali con manubri leggeri da seduta', targetMuscle: 'Deltoidi Laterali', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Leggero', technique: 'NONE', notes: 'Schiena appoggiata allo schienale a 80� per annullare i compensi del tronco.' },
+          { order: 6, name: 'Cyclette orizzontale (Recline Bike) decongestionante', targetMuscle: 'Cardio Drenante Lombare', segment: 'METABOLICO', sets: 1, reps: '12-15 min', restSeconds: 0, effort: 'Cadenza 65 RPM', technique: 'NONE', notes: 'Schienale anatomico a sostegno lombare: riattiva il microcircolo senza impatti.' }
+        ]
+      }
+    ]
+  },
+
+  // --------------------------------------------------------------------------
+  // 7. SCO-O40-02: Functional Glute Sculpt & Anti-Rotational Density
+  // --------------------------------------------------------------------------
+  {
+    id: 'SCO-O40-02',
+    title: 'Functional Glute Sculpt & Anti-Rotational Density (Scoliosi Sicura)',
+    group: 'INTERMEDIO',
+    daysCount: 3,
+    primaryEngine: 'BOMPA_PERIODIZATION',
+    description: 'Programma di rimodellamento glutei e v-taper per donna 40 anni con asimmetria scoliotica: massima enfasi estetica senza alcun carico su colonna e disco intervertebrale.',
+    generateSessions: (gender: Gender): TemplateSession[] => [
+      {
+        dayLabel: 'Sessione A: Glute Hypertrophy a Spinta Antero-Posteriore & Trazione',
+        sessionFocus: 'Hip Thrust guidato, Trazione Inversa, Medigluteo & Allungamento',
+        exercises: [
+          { order: 1, name: 'Hip Thrust al Multipower con cuscino spesso', targetMuscle: 'Glutei Primari', segment: 'NEURALE', sets: 4, reps: '10-12', restSeconds: 90, effort: 'RIR 1-2', technique: 'NONE', notes: 'Vettore di forza orizzontale, ZERO carico assiale. Fermo di 2s in massima contrazione.' },
+          { order: 2, name: 'Lat machine presa inversa a larghezza spalle', targetMuscle: 'Dorso Basso / Decompressione', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Gomiti che scorrono lungo il tronco, cassa toracica aperta.' },
+          { order: 3, name: 'Affondi posteriori al multipower con passo lungo', targetMuscle: 'Glutei / Monopodalico', segment: 'MECCANICO', sets: 3, reps: '10 per gamba', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Traiettoria guidata che impedisce sbilanciamenti del bacino scoliotico.' },
+          { order: 4, name: 'Abductor machine su 3 inclinazioni (Busto Avanti/Neutro/Dietro)', targetMuscle: 'Medio Gluteo Pompaggio', segment: 'METABOLICO', sets: 4, reps: '20', restSeconds: 45, effort: 'Cedimento Tecnico', technique: 'STRIPPING_DROP_SET', notes: 'Rimodellamento gluteo alto e stabilizzazione bacino. Drop set all\'ultima serie.' },
+          { order: 5, name: 'Croci ai cavi su panca a 30� per petto snello', targetMuscle: 'Petto / Postura', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'Leggero', technique: 'NONE', notes: 'Allungamento pettorale per contrastare le spalle chiuse.' },
+          { order: 6, name: 'Bird-Dog a terra con fermo isometrico di 3 secondi', targetMuscle: 'Core & Multifido Asimmetrico', segment: 'METABOLICO', sets: 3, reps: '8 per lato', restSeconds: 45, effort: 'Corpo Libero', technique: 'NONE', notes: 'Estendi braccio e gamba opposti senza ruotare il bacino. Stabilit� profonda.' }
+        ]
+      },
+      {
+        dayLabel: 'Sessione B: Upper V-Taper, Deltoidi Sagomati & Core Anti-Flessione',
+        sessionFocus: 'Schiena a V per assottigliare il punto vita senza toccare la colonna',
+        exercises: [
+          { order: 1, name: 'Row convergente guidato con supporto toracico', targetMuscle: 'Dorso / Spessore', segment: 'NEURALE', sets: 4, reps: '10-12', restSeconds: 75, effort: 'RIR 1-2', technique: 'NONE', notes: 'Impugnatura neutra. Schiena lombare totalmente neutra e scarica.' },
+          { order: 2, name: 'Spinte con manubri su panca a 45� da seduta', targetMuscle: 'Deltoidi Anteriori / Petto Alto', segment: 'MECCANICO', sets: 3, reps: '12', restSeconds: 60, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta fluida con gomiti controllati.' },
+          { order: 3, name: 'Alzate laterali al cavo singolo dietro la schiena', targetMuscle: 'Deltoidi Laterali', segment: 'MECCANICO', sets: 4, reps: '12-15 per lato', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Tensione continua al picco: deltoidi rotondi per dare illusione di vita sottile.' },
+          { order: 4, name: 'Pulley basso con fune allo sterno (Gomiti Larghi)', targetMuscle: 'Deltoidi Posteriori / Romboidi', segment: 'METABOLICO', sets: 3, reps: '15', restSeconds: 45, effort: 'RIR 1', technique: 'NONE', notes: 'Apertura toracica ad ogni tirata.' },
+          { order: 5, name: 'Superset braccia: Pushdown cavo + Curl manubri seduta', targetMuscle: 'Braccia Tonicit�', segment: 'METABOLICO', sets: 3, reps: '12+12', restSeconds: 60, effort: 'Medio', technique: 'SUPERSET', notes: 'Tonificazione braccia snelle senza affaticamento sistemico.' },
+          { order: 6, name: 'Side Plank con appoggio sul gomito (Core Anti-Flessione)', targetMuscle: 'Obliqui & Trasverso', segment: 'METABOLICO', sets: 3, reps: '35s per lato', restSeconds: 45, effort: 'Isometrico', technique: 'NONE', notes: 'Rinforzo della parete addominale per sostenere la colonna curva.' }
+        ]
+      },
+      {
+        dayLabel: 'Sessione C: Lower Posterior Chain, Glute Pump & Decompressione',
+        sessionFocus: 'Femorali isolati, glutei ad alta ripetizione e camminata in salita LISS',
+        exercises: [
+          { order: 1, name: 'Leg press orizzontale a piedi alti e uniti', targetMuscle: 'Glutei / Ischiocrurali', segment: 'NEURALE', sets: 4, reps: '12-15', restSeconds: 75, effort: 'RIR 2', technique: 'NONE', notes: 'Spinta potente sui talloni. Protezione discale totale.' },
+          { order: 2, name: 'Slanci al cavo basso gamba tesa (Cable Kickback)', targetMuscle: 'Gluteo Alto', segment: 'MECCANICO', sets: 3, reps: '15 per gamba', restSeconds: 45, effort: 'Cedimento', technique: 'NONE', notes: 'Isolamento puro: busto flesso a 45� con appoggio mani sulla colonna del cavo.' },
+          { order: 3, name: 'Leg curl seduto a tensione continua (Discesa 3s)', targetMuscle: 'Ischiocrurali', segment: 'MECCANICO', sets: 4, reps: '12', restSeconds: 60, effort: 'RIR 1-2', technique: 'NONE', notes: 'Cadenza 3-0-1 per reclutare i flessori senza sollecitare il bacino.' },
+          { order: 4, name: 'Glute bridge a terra a corpo libero (High Reps Finisher)', targetMuscle: 'Glutei Pompa Metabolica', segment: 'METABOLICO', sets: 3, reps: '25-30', restSeconds: 30, effort: 'Bruciore Puro', technique: 'NONE', notes: 'Esaurimento lattacido a zero carico vertebrale. Squeeze continuo.' },
+          { order: 5, name: 'Calf raise alla pressa orizzontale', targetMuscle: 'Polpacci / Drenaggio', segment: 'METABOLICO', sets: 3, reps: '20', restSeconds: 30, effort: 'Medio', technique: 'NONE', notes: 'Fermo 2s in allungamento per favorire il ritorno venoso.' },
+          { order: 6, name: 'Tapis Roulant camminata in salita moderata (LISS)', targetMuscle: 'Cardio Drenante / Decompressione', segment: 'METABOLICO', sets: 1, reps: '15 min', restSeconds: 0, effort: 'Pendenza 6-8%, Velocit� 4.5 km/h', technique: 'NONE', notes: 'Camminata fluida a schiena allungata: scarica la colonna e favorisce il consumo di lipidi.' }
+        ]
+      }
+    ]
+  },
+
 ];
