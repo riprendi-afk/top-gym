@@ -845,7 +845,7 @@ export const TOPGYM_TEMPLATES_CATALOG: Record<string, TemplateMeta> = {
         ]
       }
     ]
-  }
+  },
 
   // --------------------------------------------------------------------------
   // T02: FULL BODY 2 GIORNI MINIMALIST ESSENTIALS (TOPGYM_BLOCKS)
