@@ -1,4 +1,5 @@
 "use client";
+import Over40QuickModal from '@/components/Over40QuickModal';
 
 import React, {
   useState,
@@ -361,7 +362,8 @@ const [programmingModel, setProgrammingModel] = useState<
   | "BIKINI_WAVE"
 >("TOPGYM_BLOCKS");
 
-const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+const [isOver40ModalOpen, setIsOver40ModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -3260,13 +3262,20 @@ if (isFinished) {
           <>
             <button
               type="button"
+              onClick={() => setIsOver40ModalOpen(true)}
+              className="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <span>?? Over 40 (Desk PDF)</span>
+            </button>
+            <button
               onClick={() => setIsWizardOpen(true)}
               className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
             >
               <span>✨</span> Assegna Scheda tramite Sondaggio
             </button>
 
-            <WorkoutWizardModal
+            <Over40QuickModal isOpen={isOver40ModalOpen} onClose={() => setIsOver40ModalOpen(false)} />
+      <WorkoutWizardModal
               isOpen={isWizardOpen}
               onClose={() => setIsWizardOpen(false)}
               onApplyProgram={(newDays, recommendedEngine, successMessage) => {
