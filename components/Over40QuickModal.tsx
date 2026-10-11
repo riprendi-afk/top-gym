@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BOMPA_OVER40_TEMPLATES } from '@/lib/over40-templates';
+import { TOPGYM_OVER40_TEMPLATES } from '@/lib/over40-templates';
 import { convertTemplateToProgramDays, Gender } from '@/lib/topgym-catalog';
 import { exportProgramToPDF } from '@/lib/lib/exportPdf';
 import { 
@@ -21,14 +21,14 @@ interface Over40QuickModalProps {
 }
 
 export default function Over40QuickModal({ isOpen, onClose }: Over40QuickModalProps) {
-  const [selectedId, setSelectedId] = useState<string>('BOMPA-O40-01');
+  const [selectedId, setSelectedId] = useState<string>('TG-O40-01');
   const [athleteName, setAthleteName] = useState<string>('Cliente Over 40');
   const [gender, setGender] = useState<Gender>('MALE');
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
-  const currentTemplate = BOMPA_OVER40_TEMPLATES.find(t => t.id === selectedId) || BOMPA_OVER40_TEMPLATES[0];
+  const currentTemplate = TOPGYM_OVER40_TEMPLATES.find(t => t.id === selectedId) || TOPGYM_OVER40_TEMPLATES[0];
 
   const handleExportPDF = () => {
     const finalName = athleteName.trim() || 'Cliente Over 40 (Ospite Desk)';
@@ -57,10 +57,10 @@ export default function Over40QuickModal({ isOpen, onClose }: Over40QuickModalPr
             </div>
             <div>
               <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                Desk Over 40 � Tudor Bompa (Stampa Rapida PDF)
+                Desk Over 40 � TOP GYM (Stampa Rapida PDF)
               </h3>
               <p className="text-xs text-zinc-400">
-                Schede salva-articolazioni per clienti non iscritti o consulenze immediate al desk
+                Schede fisse pre-impostate pronte alla stampa per clienti non iscritti, over 40 o esigenze posturali
               </p>
             </div>
           </div>
@@ -125,14 +125,14 @@ export default function Over40QuickModal({ isOpen, onClose }: Over40QuickModalPr
             </div>
           </div>
 
-          {/* SELEZIONE DEI 5 PROTOCOLLI BOMPA */}
+          {/* SELEZIONE DEI SCHEDE STATICHE TOP GYM */}
           <div className="space-y-2.5">
             <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" /> Scegli la Scheda Over 40:
+              <Activity className="w-3.5 h-3.5 text-emerald-400" /> Seleziona la Scheda Statica Fissa:
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {BOMPA_OVER40_TEMPLATES.map((tmpl) => {
+              {TOPGYM_OVER40_TEMPLATES.map((tmpl) => {
                 const isSelected = tmpl.id === selectedId;
                 return (
                   <div

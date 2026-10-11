@@ -1,16 +1,16 @@
 import { TemplateMeta, TemplateSession, Gender } from './topgym-catalog';
 
-export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
+export const TOPGYM_OVER40_TEMPLATES: TemplateMeta[] = [
     // --------------------------------------------------------------------------
-  // 1. BOMPA-O40-01: Adattamento Anatomico (AA) Circuit - Full Body (Tudor Bompa)
+  // 1. TG-O40-01: Adattamento Anatomico (AA) Circuit - Full Body (Metodo TOP GYM)
   // --------------------------------------------------------------------------
   {
-    id: 'BOMPA-O40-01',
-    title: 'Adattamento Anatomico (AA) Circuit - Full Body (Tudor Bompa)',
+    id: 'TG-O40-01',
+    title: 'Adattamento Anatomico (AA) Circuit - Full Body (Metodo TOP GYM)',
     group: 'PRINCIPIANTE',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
-    description: 'Vero circuito a stazioni Bompa: 3 giorni differenziati (A-B-C). 1 serie per stazione, 30" di cambio postazione, 2 minuti di pausa a fine giro (3 giri totali). Massima tutela tendinea.',
+    primaryEngine: 'STATICA',
+    description: 'Vero circuito a stazioni TOP GYM: 3 giorni differenziati (A-B-C). 1 serie per stazione, 30" di cambio postazione, 2 minuti di pausa a fine giro (3 giri totali). Massima tutela tendinea.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
         dayLabel: 'Giorno 1: Circuito AA - Variante A (Spinta & Dominanza Ginocchio)',
@@ -60,14 +60,14 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     ]
   },
 
-  // 2. BOMPA-O40-02: Muscular Endurance (M-E) - Upper / Lower
+  // 2. TG-O40-02: Muscular Endurance (M-E) - Upper / Lower
   // --------------------------------------------------------------------------
   {
-    id: 'BOMPA-O40-02',
-    title: 'Muscular Endurance (M-E) Upper / Lower (Tudor Bompa)',
+    id: 'TG-O40-02',
+    title: 'Muscular Endurance (M-E) Upper / Lower (Metodo TOP GYM)',
     group: 'INTERMEDIO',
     daysCount: 4,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Split Upper/Lower 4 giorni per ricomposizione e aumento EPOC: serie dense a 15-20 ripetizioni, recuperi ridotti a 45-60" e zero usura articolare.',
     generateSessions: (): TemplateSession[] => [
       {
@@ -122,15 +122,15 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
   },
 
   // --------------------------------------------------------------------------
-  // 3. BOMPA-O40-03: Ibrido MxS Mantenimento & Circuito M-E - Full Body
+  // 3. TG-O40-03: Ibrido MxS Mantenimento & Circuito M-E - Full Body
   // --------------------------------------------------------------------------
   {
-    id: 'BOMPA-O40-03',
-    title: 'Ibrido MxS Mantenimento & Circuito M-E (Tudor Bompa)',
+    id: 'TG-O40-03',
+    title: 'Ibrido MxS Mantenimento & Circuito M-E (Metodo TOP GYM)',
     group: 'INTERMEDIO',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
-    description: 'Protocollo ibrido Tudor Bompa: Blocco 1 Neurale a carichi pesanti (75-80% 1RM, RIR 2) per densità ossea e forza + Blocco 2 in Triset M-E continuo per tono e dispendio calorico.',
+    primaryEngine: 'STATICA',
+    description: 'Protocollo ibrido TOP GYM: Blocco 1 Neurale a carichi pesanti (75-80% 1RM, RIR 2) per densità ossea e forza + Blocco 2 in Triset M-E continuo per tono e dispendio calorico.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
         dayLabel: 'Seduta A: Focus Anca & Spinta (Neurale + Triset M-E)',
@@ -166,14 +166,14 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
   },
 
   // --------------------------------------------------------------------------
-  // 4. BOMPA-O40-04: Split Agonisti / Antagonisti ad Alta Densità
+  // 4. TG-O40-04: Split Agonisti / Antagonisti ad Alta Densità
   // --------------------------------------------------------------------------
   {
-    id: 'BOMPA-O40-04',
-    title: 'Split Agonisti / Antagonisti ad Alta Densità (Tudor Bompa)',
+    id: 'TG-O40-04',
+    title: 'Split Agonisti / Antagonisti ad Alta Densità (Metodo TOP GYM)',
     group: 'AVANZATO',
     daysCount: 4,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Super-coppie antagoniste a recupero sfalsato (30" e 60"): massimo stimolo cardiovascolare continuo senza affaticamento neurale periferico.',
     generateSessions: (): TemplateSession[] => [
       {
@@ -232,14 +232,14 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
   },
 
   // --------------------------------------------------------------------------
-  // 5. BOMPA-O40-05: Full Body Step-Loading 3:1 a Carico Ondulato
+  // 5. TG-O40-05: Full Body Step-Loading 3:1 a Carico Ondulato
   // --------------------------------------------------------------------------
   {
-    id: 'BOMPA-O40-05',
-    title: 'Full Body Step-Loading 3:1 a Carico Ondulato (Tudor Bompa)',
+    id: 'TG-O40-05',
+    title: 'Full Body Step-Loading 3:1 a Carico Ondulato (Metodo TOP GYM)',
     group: 'INTERMEDIO',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Progressione a onde 3:1 (Sett 1: 3x15 50%, Sett 2: 4x15 55%, Sett 3: 4x12-14 60%, Sett 4: 2x12 45% Deload). Prevenzione sistematica dello stallo e dell\'overtraining.',
     generateSessions: (): TemplateSession[] => [
       {
@@ -289,7 +289,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     title: 'Postural Decompression & Pelvic Balance (Scoliosi a "S" 3 Giorni)',
     group: 'PRINCIPIANTE',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Protocollo specialistico per donna 40 anni con scoliosi destro-toracica e sinistro-lombare. Zero carichi assiali sulla colonna, decompressione attiva, supporto toracico su tutte le tirate e allineamento del cingolo pelvico.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
@@ -339,7 +339,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     title: 'Functional Glute Sculpt & Anti-Rotational Density (Scoliosi Sicura)',
     group: 'INTERMEDIO',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Programma di rimodellamento glutei e v-taper per donna 40 anni con asimmetria scoliotica: massima enfasi estetica senza alcun carico su colonna e disco intervertebrale.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
@@ -390,7 +390,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     title: 'Scoliosi Tradizionale 3 Giorni (Upper / Lower / Full Body)',
     group: 'INTERMEDIO',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Protocollo asimmetrico correttivo a decompressione assiale per scoliosi destro-toracica e sinistro-lombare. Focus trazione asimmetrica, Schroth-modificato e zero compressione discale.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
@@ -439,7 +439,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     title: 'Scoliosi a Circuito Funzionale & Posturale (3 Giorni)',
     group: 'INTERMEDIO',
     daysCount: 3,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Circuito a tempo 4-5 Round (40" ON / 20" OFF). Circuito A su catena anteriore e anti-rotazione, Circuito B su catena posteriore e anti-flessione. Compensazione posturale dinamica.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
@@ -486,7 +486,7 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
     title: 'Scoliosi Tradizionale 4 Giorni (Upper / Lower Split)',
     group: 'AVANZATO',
     daysCount: 4,
-    primaryEngine: 'BOMPA_PERIODIZATION',
+    primaryEngine: 'STATICA',
     description: 'Split Upper/Lower su 4 giorni per scoliosi: G1 Lower A (spinta), G2 Upper A (trazione verticale), G3 Lower B (catena posteriore), G4 Upper B (trazione orizzontale). Zero carico assiale.',
     generateSessions: (gender: Gender): TemplateSession[] => [
       {
@@ -537,3 +537,5 @@ export const BOMPA_OVER40_TEMPLATES: TemplateMeta[] = [
   },
 
 ];
+// Alias compatibilit�
+export const BOMPA_OVER40_TEMPLATES = TOPGYM_OVER40_TEMPLATES;
