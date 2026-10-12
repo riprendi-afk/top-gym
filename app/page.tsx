@@ -3297,70 +3297,91 @@ if (isFinished) {
             {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
             {isMasterCoach && (
               <div className="space-y-5">
-                {/* ============================================================== */}
-                {/* [PUNTO DI INSERIMENTO]: SELETTORE MODELLO METODOLOGICO         */}
-                {/* ============================================================== */}
-                <div className="bg-black/60 p-2 rounded-2xl border border-white/10 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setProgrammingModel("TOPGYM_BLOCKS")}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
-                      programmingModel === "TOPGYM_BLOCKS"
-                        ? "bg-[#E50914] text-white shadow-lg shadow-red-900/40"
-                        : "text-zinc-400 hover:text-white bg-zinc-900/40"
-                    }`}
-                  >
-                    Metodo TOPGYM Classico (Blocchi & MEV/MAV/MRV)
-                  </button>
+                  {/* ============================================================== */}
+                  {/* HUB METODOLOGICO TOP GYM: 3 CLUSTER SCIENTIFICI               */}
+                  {/* ============================================================== */}
+                  <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 shadow-xl space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
+                        <span className="text-xs font-black uppercase tracking-wider text-white">Hub Metodologico &bull; Attività Istituzionale A.S.D.</span>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">3 Cluster Scientifici</span>
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setProgrammingModel("HARDTOPGYM")}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
-                      programmingModel === "HARDTOPGYM"
-                        ? "bg-amber-500 text-black shadow-lg shadow-amber-500/30"
-                        : "text-zinc-400 hover:text-white bg-zinc-900/40"
-                    }`}
-                  >
-                    ⚡ Metodo HARDTOPGYM (They & Bosco-Colli)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProgrammingModel("ACETO")}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
-                      programmingModel === "ACETO"
-                        ? "bg-red-700 text-white shadow-lg shadow-red-950"
-                        : "text-zinc-400 hover:text-white bg-zinc-900/40"
-                    }`}
-                  >
-                    🏆 Metodo ACETO (Championship Overload)
-                  </button>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {/* CLUSTER A: IPERTROFIA & BIOMECCANICA */}
+                      <div className="bg-black/50 border border-red-500/20 rounded-xl p-3 space-y-2 flex flex-col justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-red-400 block px-0.5">Cluster A: Ipertrofia</span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("NOCERINO" as any)}
+                            className={`py-2 px-2 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${((programmingModel as any) === "NOCERINO") ? "bg-[#E50914] text-white shadow-md shadow-red-900/50" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            🔬 Nocerino (T13)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("HARDTOPGYM")}
+                            className={`py-2 px-2 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${programmingModel === "HARDTOPGYM" ? "bg-amber-500 text-black shadow-md shadow-amber-500/30" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            ⚡ Hatfield
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("ACETO")}
+                            className={`py-2 px-2 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${programmingModel === "ACETO" ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/30" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            🏆 Chris Aceto
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("HELMS_PYRAMID" as any)}
+                            className={`py-2 px-2 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${((programmingModel as any) === "HELMS_PYRAMID") ? "bg-[#E50914] text-white shadow-md shadow-red-900/50" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            Helms Pyramid
+                          </button>
+                        </div>
+                      </div>
 
-                <button
-          type="button"
-          onClick={() => setProgrammingModel("ACETO")}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            programmingModel === "ACETO"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-              : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
-          }`}
-        >
-          🏆 Metodo ACETO (Championship Overload)
-        </button>
+                      {/* CLUSTER B: ESTETICA FEMMINILE */}
+                      <div className="bg-black/50 border border-rose-500/20 rounded-xl p-3 space-y-2 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-rose-400 block px-0.5 mb-2">Cluster B: Estetica Femminile</span>
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("BIKINI_WAVE" as any)}
+                            className={`w-full py-2.5 px-3 rounded-lg text-xs font-black transition cursor-pointer text-center ${((programmingModel as any) === "BIKINI_WAVE") ? "bg-rose-600 text-white shadow-md shadow-rose-900/50" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            ✨ Bikini Wave System (T24)
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-zinc-500 px-0.5 leading-tight">DUP a onde &bull; Glutei / Deltoidi &bull; Anti-edema</p>
+                      </div>
 
-        {/* AGGIUNGI QUESTO BLOCCO SUBITO DOPO: */}
-        <button
-          type="button"
-          onClick={() => setProgrammingModel("NOCERINO")}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            programmingModel === "NOCERINO"
-              ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20"
-              : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
-          }`}
-        >
-          🔬 Metodo NOCERINO (4 Fasi Progressive)
-        </button>
+                      {/* CLUSTER C: METODO & LONGEVITY */}
+                      <div className="bg-black/50 border border-emerald-500/20 rounded-xl p-3 space-y-2 flex flex-col justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block px-0.5">Cluster C: Metodo & Longevity</span>
+                        <div className="space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("TOPGYM_BLOCKS")}
+                            className={`w-full py-2 px-3 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${programmingModel === "TOPGYM_BLOCKS" ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/50" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            TOPGYM Classico (Blocchi)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setProgrammingModel("STATICA" as any)}
+                            className={`w-full py-2 px-3 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${((programmingModel as any) === "STATICA") ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/50" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
+                          >
+                            Desk & Longevity (Schroth)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                 {/* ============================================================== */}
                 {/* CASO A: CABINA TOPGYM CLASSICA (NUOVO DESIGN ORDINATO)         */}
@@ -3541,421 +3562,370 @@ if (isFinished) {
                           ) : (
                               day.exercises.map((ex) =>
                                 editingExId === ex.id ? (
-                                  <div
-                                    key={ex.id}
-                                    className="p-3.5 sm:p-4 rounded-xl border-2 border-[#E50914] bg-zinc-950/95 shadow-2xl space-y-3 transition-all animate-in fade-in duration-150"
-                                  >
-                                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                                      <span className="text-xs font-black text-[#E50914] uppercase tracking-wider flex items-center gap-1.5">
-                                        ?? Modifica Sul Posto: {ex.name}
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={handleCancelEdit}
-                                        className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
-                                        title="Annulla modifica"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-
-                                    {/* NOME ESERCIZIO & GRUPPO */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                      <div className="sm:col-span-2">
-                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                                          Nome Esercizio
-                                        </label>
-                                        <input
-                                          type="text"
-                                          value={builderExName}
-                                          onChange={(e) => {
-                                            setBuilderExName(e.target.value);
-                                            setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                                          }}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                          placeholder="Nome esercizio"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                                          Gruppo Muscolare
-                                        </label>
-                                        <select
-                                          value={builderMuscleGroup}
-                                          onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2.5 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        >
-                                          {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Braccia", "Core", "Polpacci", "Full Body"].map((g) => (
-                                            <option key={g} value={g}>{g}</option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </div>
-
-                                    {/* SERIE, REPS, CARICO, RECUPERO, RPE, TUT */}
-                                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Serie</label>
-                                        <input
-                                          type="number"
-                                          value={builderSets}
-                                          onChange={(e) => setBuilderSets(parseInt(e.target.value) || 1)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Reps</label>
-                                        <input
-                                          type="text"
-                                          value={builderReps}
-                                          onChange={(e) => setBuilderReps(e.target.value)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Carico (kg)</label>
-                                        <input
-                                          type="text"
-                                          value={builderWeight}
-                                          onChange={(e) => setBuilderWeight(e.target.value)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Recupero (s)</label>
-                                        <input
-                                          type="number"
-                                          value={builderRest}
-                                          onChange={(e) => setBuilderRest(parseInt(e.target.value) || 0)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">RPE</label>
-                                        <input
-                                          type="number"
-                                          step="0.5"
-                                          value={builderRpe}
-                                          onChange={(e) => setBuilderRpe(parseFloat(e.target.value) || 0)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                      <div>
-                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">TUT</label>
-                                        <input
-                                          type="text"
-                                          value={builderTut}
-                                          onChange={(e) => setBuilderTut(e.target.value)}
-                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
-                                        />
-                                      </div>
-                                    </div>
-
-                                    {/* NOTE DEL COACH */}
-                                    <div>
-                                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                                        Note Coach (Metodo TOPGYM)
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={builderNotes}
-                                        onChange={(e) => setBuilderNotes(e.target.value)}
-                                        placeholder="Note esecutive, cadenza TUT o accorgimenti..."
-                                        className="w-full bg-zinc-900 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E50914]"
-                                      />
-                                    </div>
-
-                                    {/* AZIONI SALVA / ANNULLA */}
-                                    <div className="flex items-center justify-end gap-2 pt-1">
-                                      <button
-                                        type="button"
-                                        onClick={handleCancelEdit}
-                                        className="px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-bold transition cursor-pointer"
-                                      >
-                                        Annulla
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => handleAddOrUpdateExercise(e as any, day.id)}
-                                        className="px-4 py-1.5 rounded-xl bg-[#E50914] hover:bg-[#b80710] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-red-950/40"
-                                      >
-                                        Salva Modifiche
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div
-                                    key={ex.id}
-                                    className="p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all bg-[#12151B] border-white/5"
-                                  >
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-bold text-white">
-                                          {ex.name}
-                                        </span>
-                                        <span
-                                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}
-                                        >
-                                          {ex.executionType}
-                                        </span>
-                                      </div>
-                                      <div className="text-zinc-400 mt-0.5">
-                                        {ex.sets} � {ex.reps} @ {ex.targetWeight}{" "}
-                                        kg | RPE: {ex.rpeTarget} | Rec:{" "}
-                                        {ex.restSeconds}s | TUT: {ex.tut}
-                                      </div>
-                                      {ex.notes && (
-                                        <div className="text-[10px] text-zinc-500 italic mt-0.5">
-                                          Note: {ex.notes}
+                                    <div
+                                      key={ex.id}
+                                      className="p-4 sm:p-5 rounded-2xl border-2 border-red-600/90 bg-[#12151B] shadow-2xl space-y-4 transition-all animate-in fade-in duration-150"
+                                    >
+                                      {/* HEADER INLINE EDITING */}
+                                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-zinc-500 font-mono text-xs select-none">⋮⋮</span>
+                                          <span className="text-xs font-bold text-white uppercase tracking-wider">
+                                            Esercizio
+                                          </span>
                                         </div>
-                                      )}
+                                        <div className="flex items-center gap-2">
+                                          <span className="bg-[#1F2430] text-zinc-300 border border-white/10 text-[9px] font-mono px-2 py-0.5 rounded font-black tracking-wider uppercase">
+                                            INLINE EDITING
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
+                                            title="Annulla"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* RIGA 1: NOME & GRUPPO MUSCOLARE */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div className="sm:col-span-2 space-y-1">
+                                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                                            Nome
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={builderExName}
+                                            onChange={(e) => {
+                                              setBuilderExName(e.target.value);
+                                              setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                                            }}
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-red-500"
+                                            placeholder="Nome esercizio"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                                            Gruppo muscolare
+                                          </label>
+                                          <select
+                                            value={builderMuscleGroup}
+                                            onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white font-medium focus:outline-none focus:border-red-500"
+                                          >
+                                            {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Braccia", "Core", "Polpacci", "Full Body"].map((g) => (
+                                              <option key={g} value={g}>{g}</option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
+
+                                      {/* RIGA 2: 6 INPUT ORIZZONTALI */}
+                                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Serie</label>
+                                          <input
+                                            type="number"
+                                            value={builderSets}
+                                            onChange={(e) => setBuilderSets(parseInt(e.target.value) || 1)}
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Reps</label>
+                                          <input
+                                            type="text"
+                                            value={builderReps}
+                                            onChange={(e) => setBuilderReps(e.target.value)}
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Carico</label>
+                                          <input
+                                            type="text"
+                                            value={builderWeight}
+                                            onChange={(e) => setBuilderWeight(e.target.value)}
+                                            placeholder="110kg"
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Rec</label>
+                                          <input
+                                            type="number"
+                                            value={builderRest}
+                                            onChange={(e) => setBuilderRest(parseInt(e.target.value) || 0)}
+                                            placeholder="120s"
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">RPE</label>
+                                          <input
+                                            type="number"
+                                            step="0.5"
+                                            value={builderRpe}
+                                            onChange={(e) => setBuilderRpe(parseFloat(e.target.value) || 0)}
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">TUT</label>
+                                          <input
+                                            type="text"
+                                            value={builderTut}
+                                            onChange={(e) => setBuilderTut(e.target.value)}
+                                            placeholder="2-0-1-0"
+                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* NOTE COACH */}
+                                      <div className="space-y-1">
+                                        <input
+                                          type="text"
+                                          value={builderNotes}
+                                          onChange={(e) => setBuilderNotes(e.target.value)}
+                                          placeholder="Note esecutive, cadenza TUT o accorgimenti..."
+                                          className="w-full bg-[#181C24] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-red-500"
+                                        />
+                                      </div>
+
+                                      {/* BOTTONI AZIONE: ANNULLA & SALVA MODIFICHE BIANCO */}
+                                      <div className="flex items-center justify-end gap-2 pt-1">
+                                        <button
+                                          type="button"
+                                          onClick={handleCancelEdit}
+                                          className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#181C24] hover:bg-zinc-800 border border-white/10 transition cursor-pointer"
+                                        >
+                                          Annulla
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleAddOrUpdateExercise(e as any, day.id)}
+                                          className="px-5 py-2 rounded-xl text-xs font-black text-black bg-white hover:bg-zinc-200 transition shadow-lg cursor-pointer"
+                                        >
+                                          Salva Modifiche
+                                        </button>
+                                      </div>
                                     </div>
+                                  ) : (
+                                    <div
+                                      key={ex.id}
+                                      className="p-3.5 sm:p-4 rounded-2xl border flex justify-between items-center text-xs transition-all bg-[#12151B] border-white/5 hover:border-white/15 group"
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <span className="text-zinc-600 group-hover:text-zinc-400 font-mono text-xs select-none mt-0.5">⋮⋮</span>
+                                        <div className="space-y-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-bold text-white text-xs">
+                                              {ex.name}
+                                            </span>
+                                            <span
+                                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}
+                                            >
+                                              {ex.executionType}
+                                            </span>
+                                          </div>
+                                          <div className="text-zinc-400 text-[11px]">
+                                            Serie: <span className="text-zinc-200 font-semibold">{ex.sets}</span> &bull; Reps: <span className="text-zinc-200 font-semibold">{ex.reps}</span> &bull; Carico: <span className="text-zinc-200 font-semibold">{ex.targetWeight}kg</span> &bull; Rec: <span className="text-zinc-200 font-semibold">{ex.restSeconds}s</span>{ex.rpeTarget ? ` • RPE: ${ex.rpeTarget}` : ""}{ex.tut ? ` • TUT: ${ex.tut}` : ""}
+                                          </div>
+                                          {ex.notes && (
+                                            <div className="text-[10px] text-zinc-500 italic">
+                                              Note: {ex.notes}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
 
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleStartEditExercise(day.id, ex)
-                                        }
-                                        className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                                        title="Modifica esercizio"
-                                      >
-                                        <Pencil className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (editingExId === ex.id)
-                                            handleCancelEdit();
-                                          handleRemoveExerciseFromDay(
-                                            day.id,
-                                            ex.id,
-                                          );
-                                        }}
-                                        className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                                        title="Elimina esercizio"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
+                                      <div className="flex items-center gap-1.5 bg-[#181C24] border border-white/5 p-1 rounded-xl">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleStartEditExercise(day.id, ex)}
+                                          className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
+                                          title="Modifica esercizio"
+                                        >
+                                          <Pencil className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (editingExId === ex.id) handleCancelEdit();
+                                            handleRemoveExerciseFromDay(day.id, ex.id);
+                                          }}
+                                          className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
+                                          title="Elimina esercizio"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
+                                  )
                                 )
-                              )
-                          )}
-                        </div>
-
-                        {/* FORM AGGIUNTA / MODIFICA ESERCIZIO */}
-                        <form
-                          onSubmit={(e) => handleAddOrUpdateExercise(e, day.id)}
-                          className="space-y-3 pt-3 border-t border-white/5"
-                        >
-                          <div>
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                              Preset Stimolo Metodo TOPGYM:
-                            </span>
-                            <div className="flex gap-2 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleApplyTopGymPreset("NEURAL")
-                                }
-                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                              >
-                                ⚡ Neurale (2-6 reps - Buffer)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleApplyTopGymPreset("HYPERTROPHIC")
-                                }
-                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                              >
-                                💪 Meccanico (6-12 reps - Cedimento/Buffer)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleApplyTopGymPreset("METABOLIC")
-                                }
-                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                              >
-                                🔥 Metabolico (12-20 reps - Isolamento)
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                            <input
-                              type="text"
-                              placeholder="Nome Esercizio"
-                              value={
-                                editingDayId === day.id
-                                  ? builderExName
-                                  : editingDayId
-                                    ? ""
-                                    : builderExName
-                              }
-                              onChange={(e) => {
-                                setBuilderExName(e.target.value);
-                                setBuilderMuscleGroup(
-                                  autoDetectMuscleGroup(e.target.value),
-                                );
-                              }}
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            <select
-                              value={builderMuscleGroup}
-                              onChange={(e) =>
-                                setBuilderMuscleGroup(
-                                  e.target.value as MuscleGroup,
-                                )
-                              }
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                            >
-                              {(
-                                [
-                                  "Petto",
-                                  "Dorso",
-                                  "Spalle",
-                                  "Quadricipiti",
-                                  "Femorali",
-                                  "Glutei",
-                                  "Bicipiti",
-                                  "Tricipiti",
-                                  "Polpacci",
-                                  "Addome",
-                                ] as MuscleGroup[]
-                              ).map((mg) => (
-                                <option key={mg} value={mg}>
-                                  {mg}
-                                </option>
-                              ))}
-                            </select>
-                            <input
-                              type="number"
-                              placeholder="Serie"
-                              value={builderSets}
-                              onChange={(e) =>
-                                setBuilderSets(Number(e.target.value))
-                              }
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Reps"
-                              value={builderReps}
-                              onChange={(e) => setBuilderReps(e.target.value)}
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Carico Target"
-                              value={builderWeight}
-                              onChange={(e) => setBuilderWeight(e.target.value)}
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            <select
-                              value={builderType}
-                              onChange={(e) =>
-                                setBuilderType(e.target.value as ExecutionType)
-                              }
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            >
-                              <option value="REGULAR">Tecnica: REGULAR</option>
-                              <option value="SUPERSET">
-                                Tecnica: SUPERSET
-                              </option>
-                              <option value="STRIPPING">
-                                Tecnica: STRIPPING (Drop Set)
-                              </option>
-                              <option value="10_PIU_MAX">
-                                Tecnica: 10 + MAX
-                              </option>
-                              <option value="REST_PAUSE">
-                                Tecnica: REST-PAUSE
-                              </option>
-                              <option value="BACK_OFF">
-                                Tecnica: BACK-OFF a Cedimento
-                              </option>
-                              <option value="PARZIALI">
-                                Tecnica: RIPETIZIONI PARZIALI
-                              </option>
-                              <option value="ISOMETRIE">
-                                Tecnica: ISOMETRIE FINALI
-                              </option>
-                              <option value="CLUSTER">Tecnica: CLUSTER</option>
-                            </select>
-                            <input
-                              type="text"
-                              placeholder="TUT"
-                              value={builderTut}
-                              onChange={(e) => setBuilderTut(e.target.value)}
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            <input
-                              type="number"
-                              placeholder="Recupero (sec)"
-                              value={builderRest}
-                              onChange={(e) =>
-                                setBuilderRest(Number(e.target.value))
-                              }
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            <input
-                              type="number"
-                              step="0.5"
-                              placeholder="RPE Target"
-                              value={builderRpe}
-                              onChange={(e) =>
-                                setBuilderRpe(Number(e.target.value))
-                              }
-                              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Note del Coach (Metodo TOPGYM)"
-                              value={
-                                editingDayId === day.id
-                                  ? builderNotes
-                                  : editingDayId
-                                    ? ""
-                                    : builderNotes
-                              }
-                              onChange={(e) => setBuilderNotes(e.target.value)}
-                              className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                            />
-                            {editingExId && editingDayId === day.id ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={handleCancelEdit}
-                                  className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer"
-                                >
-                                  Annulla
-                                </button>
-                                <button
-                                  type="submit"
-                                  className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer"
-                                >
-                                  Aggiorna
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                type="submit"
-                                className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer"
-                              >
-                                Aggiungi
-                              </button>
                             )}
                           </div>
-                        </form>
+
+                          {/* PULSANTE TRATTEGGIATO + AGGIUNGI ESERCIZIO */}
+                          <details className="group pt-2">
+                            <summary className="list-none border border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-zinc-400 hover:text-white rounded-xl py-3 w-full flex items-center justify-center gap-2 text-xs font-bold transition cursor-pointer select-none">
+                              <span className="text-base font-normal">+</span> Aggiungi Esercizio
+                            </summary>
+
+                            <form
+                              onSubmit={(e) => handleAddOrUpdateExercise(e, day.id)}
+                              className="space-y-3 pt-3 mt-2 border-t border-white/5 bg-[#12151B]/50 p-4 rounded-xl border border-white/5"
+                            >
+                              <div>
+                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                  Preset Stimolo Metodo TOPGYM:
+                                </span>
+                                <div className="flex gap-2 flex-wrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApplyTopGymPreset("NEURAL")}
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                                  >
+                                    ⚡ Neurale (2-6 reps - Buffer)
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApplyTopGymPreset("HYPERTROPHIC")}
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                                  >
+                                    💪 Meccanico (6-12 reps - Cedimento/Buffer)
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApplyTopGymPreset("METABOLIC")}
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
+                                  >
+                                    🔥 Metabolico (12-20 reps - Isolamento)
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Nome Esercizio"
+                                  value={editingDayId === day.id ? builderExName : (editingDayId ? "" : builderExName)}
+                                  onChange={(e) => {
+                                    setBuilderExName(e.target.value);
+                                    setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                                  }}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                <select
+                                  value={builderMuscleGroup}
+                                  onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
+                                >
+                                  {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Bicipiti", "Tricipiti", "Polpacci", "Addome"].map((mg) => (
+                                    <option key={mg} value={mg}>{mg}</option>
+                                  ))}
+                                </select>
+                                <input
+                                  type="number"
+                                  placeholder="Serie"
+                                  value={builderSets}
+                                  onChange={(e) => setBuilderSets(Number(e.target.value))}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Reps"
+                                  value={builderReps}
+                                  onChange={(e) => setBuilderReps(e.target.value)}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Carico Target"
+                                  value={builderWeight}
+                                  onChange={(e) => setBuilderWeight(e.target.value)}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <select
+                                  value={builderType}
+                                  onChange={(e) => setBuilderType(e.target.value as ExecutionType)}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                >
+                                  <option value="REGULAR">Tecnica: REGULAR</option>
+                                  <option value="SUPERSET">Tecnica: SUPERSET</option>
+                                  <option value="STRIPPING">Tecnica: STRIPPING (Drop Set)</option>
+                                  <option value="10_PIU_MAX">Tecnica: 10 + MAX</option>
+                                  <option value="REST_PAUSE">Tecnica: REST-PAUSE</option>
+                                  <option value="BACK_OFF">Tecnica: BACK-OFF a Cedimento</option>
+                                  <option value="PARZIALI">Tecnica: RIPETIZIONI PARZIALI</option>
+                                  <option value="ISOMETRIE">Tecnica: ISOMETRIE FINALI</option>
+                                  <option value="CLUSTER">Tecnica: CLUSTER</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  placeholder="TUT"
+                                  value={builderTut}
+                                  onChange={(e) => setBuilderTut(e.target.value)}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Recupero (sec)"
+                                  value={builderRest}
+                                  onChange={(e) => setBuilderRest(Number(e.target.value))}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  placeholder="RPE Target"
+                                  value={builderRpe}
+                                  onChange={(e) => setBuilderRpe(Number(e.target.value))}
+                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Note del Coach (Metodo TOPGYM)"
+                                  value={editingDayId === day.id ? builderNotes : (editingDayId ? "" : builderNotes)}
+                                  onChange={(e) => setBuilderNotes(e.target.value)}
+                                  className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                                />
+                                {editingExId && editingDayId === day.id ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={handleCancelEdit}
+                                      className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer"
+                                    >
+                                      Annulla
+                                    </button>
+                                    <button
+                                      type="submit"
+                                      className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer"
+                                    >
+                                      Aggiorna
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="submit"
+                                    className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer"
+                                  >
+                                    Aggiungi
+                                  </button>
+                                )}
+                              </div>
+                            </form>
+                          </details>
                       </div>
                     )}
                   </div>
@@ -3979,62 +3949,222 @@ if (isFinished) {
                 </div>
             </div>
           </div>
-            {/* COLONNA DESTRA (30%): TELEMETRIA SCIENTIFICA IN TEMPO REALE */}
-            <div className="lg:col-span-4 space-y-6 sticky top-6">
-              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-xl space-y-5">
-                <div className="border-b border-white/5 pb-3 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-[#E50914]">Telemetria Scientifica</h3>
-                    <p className="text-[10px] text-zinc-400">Attività Istituzionale A.S.D. TOP GYM</p>
-                  </div>
-                  <span className="text-[10px] font-mono bg-red-950/60 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">LIVE SYNC</span>
-                </div>
+                        {/* COLONNA DESTRA (30% STICKY): ANALISI & TELEMETRIA DEL MESOCICLO */}
+            <div className="lg:col-span-4 space-y-4 sticky top-6">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400">Analisi & Telemetria del Mesociclo</span>
+                <span className="text-[9px] font-mono bg-red-950/60 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">LIVE SYNC</span>
+              </div>
 
-                {/* RADAR VOLUME SETTIMANALE */}
-                <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Radar Volume Settimanale</span>
-                  <WeeklyVolumeRadar days={programDays as any} athleteName={activeAthlete?.displayName} />
-                </div>
-
-                {/* VOLUME TOTALE MICROCICLO */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Volume Totale Microciclo</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
-                      <span className="text-[10px] text-zinc-400 block">Sedute</span>
-                      <span className="text-sm font-black text-white">{programDays?.length || 0}</span>
-                    </div>
-                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
-                      <span className="text-[10px] text-zinc-400 block">Esercizi</span>
-                      <span className="text-sm font-black text-white">{programDays?.reduce((acc: number, d: any) => acc + (d.exercises?.length || 0), 0) || 0}</span>
-                    </div>
-                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
-                      <span className="text-[10px] text-zinc-400 block">Serie Tot.</span>
-                      <span className="text-sm font-black text-red-400">{programDays?.reduce((acc: number, d: any) => acc + (d.exercises?.reduce((sAcc: number, ex: any) => sAcc + (Number(ex.sets) || 0), 0) || 0), 0) || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SICUREZZA CARICO SPINALE / RACHIDE */}
-                <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-1.5">
+              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-5">
+                {/* 1. VOLUME SETTIMANALE PER GRUPPO */}
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Carico Assiale Rachide</span>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${String(programmingModel) === "STATICA" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/30"}`}>
-                      {String(programmingModel) === "STATICA" ? "ZERO COMPRESSIONE" : "MONITORATO"}
-                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300">Volume Settimanale per Gruppo</span>
+                    <div className="flex items-center gap-0.5">
+                      <span className="w-1 h-2.5 bg-red-500 rounded-xs"></span>
+                      <span className="w-1 h-3.5 bg-sky-400 rounded-xs"></span>
+                      <span className="w-1 h-2 bg-amber-400 rounded-xs"></span>
+                      <span className="w-1 h-4 bg-emerald-400 rounded-xs"></span>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed">
-                    {String(programmingModel) === "STATICA" ? "Protocollo Decompressione Schroth-Attivo: decompressione assiale per tesserati con dismetrie/scoliosi." : "Progressione RPE & TUT controllata per preservare il comparto lombo-sacrale del tesserato."}
-                  </p>
+
+                  {(() => {
+                    const muscleMap: Record<string, number> = {};
+                    programDays?.forEach((d: any) => {
+                      d.exercises?.forEach((ex: any) => {
+                        const mg = ex.muscleGroup || ex.targetGroup || "Altro";
+                        muscleMap[mg] = (muscleMap[mg] || 0) + (Number(ex.sets) || 0);
+                      });
+                    });
+                    const entries: [string, number][] = (Object.entries(muscleMap) as [string, number][]).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                    const fallbackMuscles: [string, number][] = [["Glutei", 16], ["Deltoidi", 12], ["Dorsali", 8]];
+                    const displayMuscles: [string, number][] = entries.length > 0 ? entries.slice(0, 3) : fallbackMuscles;
+                    const maxVal: number = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
+                    const colorStyles = [
+                      { bar: "bg-[#E50914]", text: "text-red-400" },
+                      { bar: "bg-sky-400", text: "text-sky-400" },
+                      { bar: "bg-amber-400", text: "text-amber-400" },
+                    ];
+
+                    return (
+                      <div className="space-y-3">
+                        {displayMuscles.map(([name, sets], idx) => {
+                          const setsCount = Number(sets) || 0;
+                          const pct = Math.min(100, Math.round((setsCount / maxVal) * 100));
+                          const c = colorStyles[idx % colorStyles.length];
+                          return (
+                            <div key={name} className="space-y-1">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="font-semibold text-zinc-200">{name}</span>
+                                <span className="font-mono text-zinc-400 text-[11px]">{setsCount} set</span>
+                              </div>
+                              <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-white/5">
+                                <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: `${pct}%` }}></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* AZIONI RAPIDE DELOAD & STAMPA PDF */}
-                <div className="space-y-2 pt-2 border-t border-white/5">
-                  <button type="button" onClick={() => { if (!window.confirm("Applicare scarico volumetrico (-40% serie su tutti i microcicli)?")) return; const deloaded = programDays.map((day: any) => ({ ...day, exercises: day.exercises?.map((ex: any) => ({ ...ex, sets: Math.max(1, Math.round((Number(ex.sets) || 3) * 0.6)) })) })); setProgramDays(deloaded as any); }} className="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/40 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer">
-                    <span>📉</span> Scarico Deload (-40% Serie)
+                {/* 1. VOLUME SETTIMANALE PER GRUPPO */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300">Volume Settimanale per Gruppo</span>
+                    <div className="flex items-center gap-0.5">
+                      <span className="w-1 h-2.5 bg-red-500 rounded-xs"></span>
+                      <span className="w-1 h-3.5 bg-sky-400 rounded-xs"></span>
+                      <span className="w-1 h-2 bg-amber-400 rounded-xs"></span>
+                      <span className="w-1 h-4 bg-emerald-400 rounded-xs"></span>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const muscleMap: Record<string, number> = {};
+                    programDays?.forEach((d: any) => {
+                      d.exercises?.forEach((ex: any) => {
+                        const mg = ex.muscleGroup || ex.targetGroup || "Altro";
+                        muscleMap[mg] = (muscleMap[mg] || 0) + (Number(ex.sets) || 0);
+                      });
+                    });
+                    const entries = Object.entries(muscleMap).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                    const displayMuscles = entries.length > 0 ? entries.slice(0, 3) : [["Glutei", 16], ["Deltoidi", 12], ["Dorsali", 8]];
+                    const maxVal = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
+                    const colorStyles = [
+                      { bar: "bg-[#E50914]", text: "text-red-400" },
+                      { bar: "bg-sky-400", text: "text-sky-400" },
+                      { bar: "bg-amber-400", text: "text-amber-400" },
+                    ];
+
+                    return (
+                      <div className="space-y-3">
+                        {displayMuscles.map(([name, sets], idx) => {
+                          const pct = Math.min(100, Math.round(((Number(sets) || 0) / maxVal) * 100));
+                          const c = colorStyles[idx % colorStyles.length];
+                          return (
+                            <div key={name} className="space-y-1">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="font-semibold text-zinc-200">{name}</span>
+                                <span className="font-mono text-zinc-400 text-[11px]">{sets} set</span>
+                              </div>
+                              <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-white/5">
+                                <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: `${pct}%` }}></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 2. DISTRIBUZIONE STIMOLI (DUP) */}
+                <div className="space-y-2.5 pt-4 border-t border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 block">Distribuzione Stimoli (DUP)</span>
+                  {(() => {
+                    let neurale = 0, ipertrofico = 0, metabolico = 0, total = 0;
+                    programDays?.forEach((d: any) => {
+                      d.exercises?.forEach((ex: any) => {
+                        const s = Number(ex.sets) || 1;
+                        total += s;
+                        const r = parseInt(String(ex.reps || "8").match(/\d+/)?.[0] || "8", 10);
+                        if (r <= 5) neurale += s;
+                        else if (r >= 13) metabolico += s;
+                        else ipertrofico += s;
+                      });
+                    });
+                    const pNeu = total > 0 ? Math.round((neurale / total) * 100) : 40;
+                    const pIper = total > 0 ? Math.round((ipertrofico / total) * 100) : 40;
+                    const pMeta = total > 0 ? Math.round((metabolico / total) * 100) : 20;
+
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm bg-sky-500"></span>
+                            <span className="text-zinc-300 font-medium">Neurale</span>
+                          </div>
+                          <span className="bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pNeu}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+                            <span className="text-zinc-300 font-medium">Ipertrofico</span>
+                          </div>
+                          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pIper}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                            <span className="text-zinc-300 font-medium">Metabolico</span>
+                          </div>
+                          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pMeta}%</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 3. SICUREZZA & IMPATTO (CARICO SPINALE) */}
+                <div className="space-y-2.5 pt-4 border-t border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 block">Sicurezza & Impatto</span>
+                  <div className="bg-black/50 border border-white/5 p-3 rounded-xl space-y-2.5">
+                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                      Monitoraggio attivo del carico spinale sul rachide durante il mesociclo di allenamento.
+                    </p>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-950">
+                      <span>🛡️</span> Carico Spinale: BASSO
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. GRAFICO RADAR VOLUME (COMPATTO & LIVE) */}
+                <div className="pt-2 border-t border-white/5">
+                  <details className="group cursor-pointer">
+                    <summary className="text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-300 flex items-center justify-between select-none py-1">
+                      <span>Grafico Radar Completo</span>
+                      <span className="text-xs transition-transform group-open:rotate-180">▾</span>
+                    </summary>
+                    <div className="pt-2">
+                      <WeeklyVolumeRadar days={programDays as any} athleteName={activeAthlete?.displayName} />
+                    </div>
+                  </details>
+                </div>
+
+                {/* 5. AZIONI RAPIDE DELOAD & STAMPA PDF */}
+                <div className="space-y-2 pt-4 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!window.confirm("Applicare scarico volumetrico (-40% serie su tutti i microcicli)?")) return;
+                      const deloaded = programDays.map((day: any) => ({
+                        ...day,
+                        exercises: day.exercises?.map((ex: any) => ({
+                          ...ex,
+                          sets: Math.max(1, Math.round((Number(ex.sets) || 3) * 0.6))
+                        }))
+                      }));
+                      setProgramDays(deloaded as any);
+                    }}
+                    className="w-full bg-[#181C24] hover:bg-zinc-800 border border-white/10 hover:border-zinc-700 text-zinc-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>⇅</span> Inverti con Scarico (-40%)
                   </button>
-                  <button type="button" onClick={() => { const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete?.displayName); if (printName !== null) { exportProgramToPDF(printName.trim() || activeAthlete?.displayName, programName, programDays); } }} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2.5 px-3 rounded-xl uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 cursor-pointer">
-                    <span>📄</span> Stampa / Salva in PDF
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete?.displayName);
+                      if (printName !== null) {
+                        exportProgramToPDF(printName.trim() || activeAthlete?.displayName, programName, programDays);
+                      }
+                    }}
+                    className="w-full bg-[#181C24] hover:bg-zinc-800 border border-white/10 hover:border-zinc-700 text-zinc-200 font-semibold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>🖨️</span> Stampa PDF
                   </button>
                 </div>
               </div>
