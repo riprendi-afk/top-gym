@@ -629,7 +629,7 @@ useEffect(() => {
     user?.user_metadata?.username ||
     (user?.email ? user.email.split("@")[0] : "Atleta");
   const targetUserId =
-    userRole === "COACH" ? activeAthleteId || user?.id || "" : user?.id || "";
+    ((userRole as any) === "COACH") ? activeAthleteId || user?.id || "" : user?.id || "";
   const targetAthleteName = useMemo(
     () => athletes.find((a) => a.id === targetUserId)?.displayName ?? "Atleta",
     [athletes, targetUserId],
@@ -698,7 +698,7 @@ useEffect(() => {
               (a.email && a.email.toLowerCase().trim() === myEmail),
           );
 
-          if (userRole === "ATHLETE" && myProfile) {
+          if (((userRole as any) === "ATHLETE") && myProfile) {
             setActiveAthleteId(myProfile.id);
           } else if (!activeAthleteId) {
             setActiveAthleteId(myProfile ? myProfile.id : formatted[0].id);
@@ -1356,7 +1356,7 @@ const calculatedCurrentPhase: MicroWeek = useMemo(() => {
 // 4. Motore Esecutivo: delega al rispettivo engine in lib/
 const dynamicActiveDay = useMemo(() => {
   if (!activeDay) return null;
-  if (userRole === "COACH" && activeTab === "builder") return activeDay;
+  if (((userRole as any) === "COACH") && activeTab === "builder") return activeDay;
 
   if (isMasterProgram) {
     const progressed = applyHardTopGymWeekProgression([activeDay], calculatedCurrentPhase);
@@ -2515,7 +2515,8 @@ if (isFinished) {
   return (
     <div className="min-h-screen bg-[#090A0D] text-white font-sans flex">
         {/* SIDEBAR VERTICALE SINISTRA (STILE GEMINI TARGET) */}
-        <aside className="w-64 min-h-screen bg-[#0C0E14] border-r border-white/10 flex flex-col justify-between p-4 sticky top-0 h-screen shrink-0 z-40">
+        {((userRole as any) === "COACH") && (
+<aside className="w-64 min-h-screen bg-[#0C0E14] border-r border-white/10 flex flex-col justify-between p-4 sticky top-0 h-screen shrink-0 z-40">
           <div className="space-y-6">
             {/* LOGO BRAND */}
             <div className="flex items-center gap-3 px-2 py-1">
@@ -2534,7 +2535,7 @@ if (isFinished) {
 
             {/* NAVIGAZIONE PRINCIPALE */}
             <nav className="space-y-1">
-              {userRole === "COACH" && (
+              {((userRole as any) === "COACH") && (
                 <button
                   type="button"
                   onClick={() => setActiveTab("coachDashboard")}
@@ -2662,7 +2663,7 @@ if (isFinished) {
           {/* PIEDE SIDEBAR: RUOLO, ATLETA E LOGOUT */}
           <div className="pt-4 border-t border-white/10 space-y-3">
             {/* SELETTORE ATLETA SE COACH */}
-            {userRole === "COACH" && (
+            {((userRole as any) === "COACH") && (
               <div className="space-y-1">
                 <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
                   Gestisci Atleta:
@@ -2687,7 +2688,7 @@ if (isFinished) {
                 type="button"
                 onClick={() => handleRoleSwitchRequest("ATHLETE")}
                 className={`flex-1 py-1 rounded-lg transition-all flex items-center justify-center gap-1 ${
-                  userRole === "ATHLETE"
+                  ((userRole as any) === "ATHLETE")
                     ? "bg-[#E50914] text-white shadow font-bold"
                     : "text-zinc-400 hover:text-white"
                 }`}
@@ -2698,12 +2699,12 @@ if (isFinished) {
                 type="button"
                 onClick={() => handleRoleSwitchRequest("COACH")}
                 className={`flex-1 py-1 rounded-lg transition-all flex items-center justify-center gap-1 ${
-                  userRole === "COACH"
+                  ((userRole as any) === "COACH")
                     ? "bg-[#E50914] text-white shadow font-bold"
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                {userRole === "COACH" ? (
+                {((userRole as any) === "COACH") ? (
                   <Unlock className="w-3 h-3 text-green-400" />
                 ) : (
                   <Lock className="w-3 h-3" />
@@ -2729,6 +2730,7 @@ if (isFinished) {
             </div>
           </div>
         </aside>
+        )}
 
         {/* PIN COACH MODAL (PRESERVATO AL 100%) */}
         {showCoachPinModal && (
@@ -2780,7 +2782,8 @@ if (isFinished) {
 
         {/* COLONNA CONTENUTI PRINCIPALE CON TOPBAR */}
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 border-b border-white/5 bg-[#12151B]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+          {((userRole as any) === "COACH") ? (
+<header className="h-16 border-b border-white/5 bg-[#12151B]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">TOP GYM /</span>
               <span className="text-xs font-black uppercase tracking-wider text-white">
@@ -2827,10 +2830,264 @@ if (isFinished) {
               </div>
             </div>
           </header>
+          ) : (
+            <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+<header className="max-w-5xl mx-auto bg-[#12151B] rounded-2xl p-5 border border-white/10 shadow-2xl mb-6 backdrop-blur-md">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
+              <Dumbbell className="w-7 h-7" /> TOP GYM
+            </h1>
+            <p className="text-xs text-zinc-400 mt-1">
+              Utente:{" "}
+              <span className="text-white font-bold">{displayUserName}</span>
+            </p>
+
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              <div className="flex bg-black/50 p-1 rounded-xl border border-white/5 text-xs font-semibold">
+                <button
+                  onClick={() => handleRoleSwitchRequest("ATHLETE")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${((userRole as any) === "ATHLETE") ? "bg-[#E50914] text-white shadow font-bold" : "text-zinc-400 hover:text-white"}`}
+                >
+                  <Eye className="w-3.5 h-3.5" /> Atleta
+                </button>
+                <button
+                  onClick={() => handleRoleSwitchRequest("COACH")}
+                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${((userRole as any) === "COACH") ? "bg-[#E50914] text-white shadow font-bold" : "text-zinc-400 hover:text-white"}`}
+                >
+                  {((userRole as any) === "COACH") ? (
+                    <Unlock className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5" />
+                  )}{" "}
+                  Coach
+                </button>
+              </div>
+
+              {((userRole as any) === "COACH") && (
+                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                  <span className="text-zinc-400 text-xs font-bold">
+                    Gestisci Atleta:
+                  </span>
+                  <select
+                    value={activeAthleteId}
+                    onChange={(e) => setActiveAthleteId(e.target.value)}
+                    className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 font-bold outline-none cursor-pointer"
+                  >
+                    {athletes.map((ath) => (
+                      <option key={ath.id} value={ath.id}>
+                        {ath.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between flex-wrap">
+            <div className="flex items-center gap-2">
+              <NotificationBell
+                userId={targetUserId}
+                onNavigateToWorkout={() => setActiveTab("workout")}
+              />
+
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="p-2.5 bg-black/40 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition"
+              >
+                {soundEnabled ? (
+                  <Volume2 className="w-4 h-4 text-green-400" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-zinc-600" />
+                )}
+              </button>
+            </div>
+
+            {latestReadiness && (
+              <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
+                <Gauge
+                  className={`w-4 h-4 ${latestReadiness.readinessScore >= 80 ? "text-green-400" : "text-yellow-400"}`}
+                />
+                <div>
+                  <div className="text-[9px] text-zinc-400 uppercase font-bold">
+                    READINESS
+                  </div>
+                  <div className="text-xs font-black">
+                    {latestReadiness.readinessScore}%
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
+              <Shield className="text-yellow-500 w-4 h-4 flex-shrink-0" />
+              <div className="w-32">
+                <div className="text-[9px] text-yellow-500 font-black uppercase tracking-wider truncate">
+                  {userRank}
+                </div>
+                <div className="flex justify-between items-center text-[9px] text-zinc-400 font-bold">
+                  <span>Lvl {userLevel}/99</span>
+                  <span className="font-mono">{userXp} XP</span>
+                </div>
+                <div className="w-full bg-zinc-800 h-1 rounded-full mt-0.5 overflow-hidden">
+                  <div
+                    className="bg-yellow-500 h-full transition-all duration-300"
+                    style={{ width: `${levelProgressPercentage}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-black/40 border border-white/5 px-3 py-2.5 rounded-xl"
+            >
+              <LogOut className="w-4 h-4 text-red-500" /> Esci
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* PIN COACH MODAL (Z-INDEX GARANTITO) */}
+      {showCoachPinModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
+              <Lock className="text-[#E50914]" /> Area Riservata Coach
+            </h3>
+            <p className="text-xs text-zinc-400 mb-4">
+              Inserisci il PIN (default: 1234) per accedere alla gestione coach.
+            </p>
+            <form onSubmit={verifyCoachPin} className="space-y-4">
+              <input
+                type="password"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                placeholder="PIN"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-center text-xl font-mono text-white outline-none focus:border-[#E50914]"
+                autoFocus
+              />
+              {pinError && (
+                <p className="text-xs text-[#E50914] text-center font-bold">
+                  PIN Errato o non autorizzato!
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCoachPinModal(false);
+                    setPinInput("");
+                    setPinError(false);
+                  }}
+                  className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300 cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 bg-[#E50914] hover:brightness-110 py-2.5 rounded-xl text-xs font-bold text-white uppercase cursor-pointer"
+                >
+                  Sblocca
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NAVBAR A SCORRIMENTO MODERNA */}
+      <nav className="hidden md:block max-w-5xl mx-auto mb-6">
+        <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-[#12151B] backdrop-blur-md border border-white/10 rounded-2xl scrollbar-none shadow-lg">
+          {((userRole as any) === "ATHLETE") && (
+            <button
+              onClick={() => setActiveTab("workout")}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeTab === "workout" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+            >
+              Esegui Allenamento
+            </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab("readiness")}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "readiness" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+          >
+            <Gauge className="w-4 h-4 text-green-400" /> Check Readiness
+          </button>
+
+          <button
+            onClick={() => setActiveTab("records")}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "records" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+          >
+            <Trophy className="w-4 h-4 text-yellow-500" /> Record
+          </button>
+
+          <button
+            onClick={() => setActiveTab("goals")}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "goals" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+          >
+            <Target className="w-4 h-4 text-[#E50914]" /> Obiettivi
+          </button>
+
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "analytics" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+          >
+            <TrendingUp className="w-4 h-4 text-blue-400" /> Progressi
+          </button>
+
+          <button
+  type="button"
+  onClick={() => setActiveTab("chat")}
+  className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${
+    activeTab === "chat" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"
+  }`}
+>
+  <MessageSquare className="w-4 h-4" /> Chat & Assistenza
+</button>
+
+          {((userRole as any) === "COACH") && (
+            <>
+              <button
+                onClick={() => setActiveTab("coachDashboard")}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "coachDashboard" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+              >
+                <Users className="w-4 h-4 text-indigo-400" /> Dashboard Atleti
+              </button>
+              <button
+                onClick={() => setActiveTab("builder")}
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "builder" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+              >
+                <UserCheck className="w-4 h-4 text-emerald-400" /> Gestisci
+                Scheda (Coach)
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "leaderboard" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+          >
+            <Medal className="w-4 h-4 text-yellow-500" /> Classifica
+          </button>
+
+          {((userRole as any) === "ATHLETE") && (
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "settings" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
+            >
+              <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
+            </button>
+          )}
+        </div>
+      </nav>
+            </div>
+          )}
 
           <main className="flex-1 max-w-[1600px] w-full mx-auto space-y-6 px-4 md:px-8 py-6">
         {/* Banner Notifiche per Atleta */}
-        {showPushBanner && userRole === "ATHLETE" && (
+        {showPushBanner && ((userRole as any) === "ATHLETE") && (
           <div className="bg-gradient-to-r from-red-950/80 to-[#12151B] border border-[#E50914]/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-md">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-[#E50914] text-white rounded-xl">
@@ -2867,7 +3124,7 @@ if (isFinished) {
         )}
 
         {/* TAB 1: WORKOUT */}
-        {activeTab === "workout" && userRole === "ATHLETE" && (
+        {activeTab === "workout" && ((userRole as any) === "ATHLETE") && (
           <div className="space-y-6">
             {highFatigueDetected && (
               <div className="bg-amber-950/40 border border-amber-600/60 p-4 rounded-2xl flex items-start gap-3 text-amber-300 backdrop-blur-md">
@@ -3080,7 +3337,7 @@ if (isFinished) {
         {activeTab === "readiness" && (
           <div className="space-y-6">
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
-              {userRole === "ATHLETE" && (
+              {((userRole as any) === "ATHLETE") && (
                 <div>
                   <h2 className="text-xl font-bold flex items-center gap-2 text-white">
                     <Gauge className="text-green-400" /> Check-in Giornaliero
@@ -3100,7 +3357,7 @@ if (isFinished) {
                 </div>
               )}
 
-              {userRole === "ATHLETE" && (
+              {((userRole as any) === "ATHLETE") && (
                 <form onSubmit={handleSaveReadiness} className="space-y-5">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
@@ -3239,7 +3496,7 @@ if (isFinished) {
             <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <History className="text-green-400" /> Storico Check Readiness (
-                {userRole === "COACH"
+                {((userRole as any) === "COACH")
                   ? activeAthlete.displayName
                   : displayUserName}
                 )
@@ -3306,7 +3563,7 @@ if (isFinished) {
         )}
 
         {/* TAB 5: COACH DASHBOARD */}
-        {activeTab === "coachDashboard" && userRole === "COACH" && (
+        {activeTab === "coachDashboard" && ((userRole as any) === "COACH") && (
           <CoachDashboard
             athletes={athletes}
             activeAthleteId={activeAthleteId}
@@ -3355,7 +3612,7 @@ if (isFinished) {
         {/* ====================================================================== */}
 
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
-        {activeTab === "builder" && userRole === "COACH" && (
+        {activeTab === "builder" && ((userRole as any) === "COACH") && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div className="lg:col-span-8 space-y-6">
             {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
             {isMasterCoach && (
@@ -4252,10 +4509,10 @@ if (isFinished) {
 {activeTab === "chat" && (
           <div className="p-4 max-w-4xl mx-auto w-full animate-in fade-in duration-200">
             <ChatBox 
-              roomId={userRole === "COACH" ? (activeAthlete?.id || "sala-generale") : (targetUserId || "atleta-room")} 
-              userId={userRole === "COACH" ? "coach-admin" : (targetUserId || "atleta-id")} 
-              userName={userRole === "COACH" ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")}
-              chatTitle={userRole === "COACH" ? `Chat con: ${activeAthlete?.displayName || "Seleziona un atleta"}` : "Chat Privata con il Coach"}
+              roomId={((userRole as any) === "COACH") ? (activeAthlete?.id || "sala-generale") : (targetUserId || "atleta-room")} 
+              userId={((userRole as any) === "COACH") ? "coach-admin" : (targetUserId || "atleta-id")} 
+              userName={((userRole as any) === "COACH") ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")}
+              chatTitle={((userRole as any) === "COACH") ? `Chat con: ${activeAthlete?.displayName || "Seleziona un atleta"}` : "Chat Privata con il Coach"}
             />
           </div>
         )}
@@ -4318,7 +4575,7 @@ if (isFinished) {
         )}
 
         {/* TAB 9: IMPOSTAZIONI */}
-        {activeTab === "settings" && userRole === "ATHLETE" && (
+        {activeTab === "settings" && ((userRole as any) === "ATHLETE") && (
           <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2 text-white">
