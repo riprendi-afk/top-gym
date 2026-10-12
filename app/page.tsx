@@ -8,8 +8,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import {
-  supabase,
+import { supabase,
   saveCompletedWorkoutToSupabase,
   getWorkoutHistoryFromSupabase,
   deleteWorkoutHistoryFromSupabase,
@@ -24,8 +23,7 @@ import {
   Volume2, VolumeX, Lock, Unlock, Eye, AlertTriangle, Copy, Sparkles, Scale,
   LogOut, Medal, Moon, Brain, BatteryCharging, Gauge, CalendarDays, Trash2,
   History, Settings, UserX, ChevronDown, ChevronUp, Pencil, Target, Users,
-  Bell, MessageSquare,
-} from "lucide-react";
+  Bell, MessageSquare, X } from "lucide-react";
 
 // --- IMPORTAZIONI STATICHE (Core Leggero) ---
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
@@ -3261,11 +3259,14 @@ if (isFinished) {
         {activeTab === "builder" && (
           <>
             <button
-              type="button"
               onClick={() => setIsOver40ModalOpen(true)}
-              className="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
+              className="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition cursor-pointer"
             >
-              <span>?? Over 40 (Desk PDF)</span>
+              <svg className="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+              <span>Over 40 (Desk PDF)</span>
             </button>
             <button
               onClick={() => setIsWizardOpen(true)}
@@ -3537,67 +3538,208 @@ if (isFinished) {
                               Nessun esercizio inserito in questa giornata.
                             </p>
                           ) : (
-                            day.exercises.map((ex) => (
-                              <div
-                                key={ex.id}
-                                className={`p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all ${
-                                  editingExId === ex.id
-                                    ? "bg-red-950/30 border-[#E50914]"
-                                    : "bg-[#12151B] border-white/5"
-                                }`}
-                              >
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-white">
-                                      {ex.name}
-                                    </span>
-                                    <span
-                                      className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}
-                                    >
-                                      {ex.executionType}
-                                    </span>
-                                  </div>
-                                  <div className="text-zinc-400 mt-0.5">
-                                    {ex.sets} × {ex.reps} @ {ex.targetWeight}{" "}
-                                    kg | RPE: {ex.rpeTarget} | Rec:{" "}
-                                    {ex.restSeconds}s | TUT: {ex.tut}
-                                  </div>
-                                  {ex.notes && (
-                                    <div className="text-[10px] text-zinc-500 italic mt-0.5">
-                                      Note: {ex.notes}
+                              day.exercises.map((ex) =>
+                                editingExId === ex.id ? (
+                                  <div
+                                    key={ex.id}
+                                    className="p-3.5 sm:p-4 rounded-xl border-2 border-[#E50914] bg-zinc-950/95 shadow-2xl space-y-3 transition-all animate-in fade-in duration-150"
+                                  >
+                                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                                      <span className="text-xs font-black text-[#E50914] uppercase tracking-wider flex items-center gap-1.5">
+                                        ?? Modifica Sul Posto: {ex.name}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
+                                        title="Annulla modifica"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
                                     </div>
-                                  )}
-                                </div>
 
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleStartEditExercise(day.id, ex)
-                                    }
-                                    className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                                    title="Modifica esercizio"
+                                    {/* NOME ESERCIZIO & GRUPPO */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      <div className="sm:col-span-2">
+                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                          Nome Esercizio
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={builderExName}
+                                          onChange={(e) => {
+                                            setBuilderExName(e.target.value);
+                                            setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
+                                          }}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                          placeholder="Nome esercizio"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                          Gruppo Muscolare
+                                        </label>
+                                        <select
+                                          value={builderMuscleGroup}
+                                          onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2.5 py-2 text-xs text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        >
+                                          {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Braccia", "Core", "Polpacci", "Full Body"].map((g) => (
+                                            <option key={g} value={g}>{g}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    {/* SERIE, REPS, CARICO, RECUPERO, RPE, TUT */}
+                                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Serie</label>
+                                        <input
+                                          type="number"
+                                          value={builderSets}
+                                          onChange={(e) => setBuilderSets(parseInt(e.target.value) || 1)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Reps</label>
+                                        <input
+                                          type="text"
+                                          value={builderReps}
+                                          onChange={(e) => setBuilderReps(e.target.value)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Carico (kg)</label>
+                                        <input
+                                          type="text"
+                                          value={builderWeight}
+                                          onChange={(e) => setBuilderWeight(e.target.value)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Recupero (s)</label>
+                                        <input
+                                          type="number"
+                                          value={builderRest}
+                                          onChange={(e) => setBuilderRest(parseInt(e.target.value) || 0)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">RPE</label>
+                                        <input
+                                          type="number"
+                                          step="0.5"
+                                          value={builderRpe}
+                                          onChange={(e) => setBuilderRpe(parseFloat(e.target.value) || 0)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">TUT</label>
+                                        <input
+                                          type="text"
+                                          value={builderTut}
+                                          onChange={(e) => setBuilderTut(e.target.value)}
+                                          className="w-full bg-zinc-900 border border-white/15 rounded-xl px-2 py-1.5 text-xs text-center text-white font-bold focus:outline-none focus:border-[#E50914]"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* NOTE DEL COACH */}
+                                    <div>
+                                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                                        Note Coach (Metodo TOPGYM)
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={builderNotes}
+                                        onChange={(e) => setBuilderNotes(e.target.value)}
+                                        placeholder="Note esecutive, cadenza TUT o accorgimenti..."
+                                        className="w-full bg-zinc-900 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E50914]"
+                                      />
+                                    </div>
+
+                                    {/* AZIONI SALVA / ANNULLA */}
+                                    <div className="flex items-center justify-end gap-2 pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        className="px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-bold transition cursor-pointer"
+                                      >
+                                        Annulla
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleAddOrUpdateExercise(e as any, day.id)}
+                                        className="px-4 py-1.5 rounded-xl bg-[#E50914] hover:bg-[#b80710] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-red-950/40"
+                                      >
+                                        Salva Modifiche
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    key={ex.id}
+                                    className="p-3.5 rounded-xl border flex justify-between items-center text-xs transition-all bg-[#12151B] border-white/5"
                                   >
-                                    <Pencil className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (editingExId === ex.id)
-                                        handleCancelEdit();
-                                      handleRemoveExerciseFromDay(
-                                        day.id,
-                                        ex.id,
-                                      );
-                                    }}
-                                    className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
-                                    title="Elimina esercizio"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold text-white">
+                                          {ex.name}
+                                        </span>
+                                        <span
+                                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}
+                                        >
+                                          {ex.executionType}
+                                        </span>
+                                      </div>
+                                      <div className="text-zinc-400 mt-0.5">
+                                        {ex.sets} � {ex.reps} @ {ex.targetWeight}{" "}
+                                        kg | RPE: {ex.rpeTarget} | Rec:{" "}
+                                        {ex.restSeconds}s | TUT: {ex.tut}
+                                      </div>
+                                      {ex.notes && (
+                                        <div className="text-[10px] text-zinc-500 italic mt-0.5">
+                                          Note: {ex.notes}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleStartEditExercise(day.id, ex)
+                                        }
+                                        className="p-1.5 text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
+                                        title="Modifica esercizio"
+                                      >
+                                        <Pencil className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (editingExId === ex.id)
+                                            handleCancelEdit();
+                                          handleRemoveExerciseFromDay(
+                                            day.id,
+                                            ex.id,
+                                          );
+                                        }}
+                                        className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition cursor-pointer"
+                                        title="Elimina esercizio"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              )
                           )}
                         </div>
 
