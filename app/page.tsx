@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Over40QuickModal from '@/components/Over40QuickModal';
 
 import React, {
@@ -2764,7 +2764,7 @@ if (isFinished) {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto space-y-6">
+      <main className="max-w-[1600px] w-full mx-auto space-y-6 px-4 md:px-8">
         {/* Banner Notifiche per Atleta */}
         {showPushBanner && userRole === "ATHLETE" && (
           <div className="bg-gradient-to-r from-red-950/80 to-[#12151B] border border-[#E50914]/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-md">
@@ -3292,7 +3292,7 @@ if (isFinished) {
 
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && userRole === "COACH" && (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div className="lg:col-span-8 space-y-6">
             {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
             {isMasterCoach && (
               <div className="space-y-5">
@@ -3975,10 +3975,10 @@ if (isFinished) {
                   Salva e Assegna Scheda Metodo TOPGYM (
                   {activeAthlete.displayName})
                 </button>
-              </div>
+                </div>
             </div>
           </div>
-        )}
+        
 
 <button
   type="button"
@@ -3992,6 +3992,52 @@ if (isFinished) {
 >
   📄 Stampa / Salva in PDF
 </button>
+            </div>
+            )/* COLONNA DESTRA (30%): TELEMETRIA SCIENTIFICA IN TEMPO REALE */}
+            <div className="lg:col-span-4 space-y-6 sticky top-6">
+              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-xl space-y-5">
+                <div className="border-b border-white/5 pb-3 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-[#E50914]">Telemetria Scientifica</h3>
+                    <p className="text-[10px] text-zinc-400">Attività Istituzionale A.S.D. TOP GYM</p>
+                  </div>
+                  <span className="text-[10px] font-mono bg-red-950/60 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">LIVE SYNC</span>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Volume Totale Microciclo</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
+                      <span className="text-[10px] text-zinc-400 block">Sedute</span>
+                      <span className="text-sm font-black text-white">{programDays?.length || 0}</span>
+                    </div>
+                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
+                      <span className="text-[10px] text-zinc-400 block">Esercizi</span>
+                      <span className="text-sm font-black text-white">{programDays?.reduce((acc: number, d: any) => acc + (d.exercises?.length || 0), 0) || 0}</span>
+                    </div>
+                    <div className="bg-black/40 border border-white/5 p-2 rounded-xl text-center">
+                      <span className="text-[10px] text-zinc-400 block">Serie Tot.</span>
+                      <span className="text-sm font-black text-red-400">{programDays?.reduce((acc: number, d: any) => acc + (d.exercises?.reduce((sAcc: number, ex: any) => sAcc + (Number(ex.sets) || 0), 0) || 0), 0) || 0}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Carico Assiale Rachide</span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${String(programmingModel) === "STATICA" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/30"}`}>
+                      {String(programmingModel) === "STATICA" ? "ZERO COMPRESSIONE" : "MONITORATO"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 leading-relaxed">
+                    {String(programmingModel) === "STATICA" ? "Protocollo Decompressione Schroth-Attivo: decompressione assiale per tesserati con dismetrie/scoliosi." : "Progressione RPE & TUT controllata per preservare il comparto lombo-sacrale del tesserato."}
+                  </p>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <button type="button" onClick={() => { if (!window.confirm("Applicare scarico volumetrico (-40% serie su tutti i microcicli)?")) return; const deloaded = programDays.map((day: any) => ({ ...day, exercises: day.exercises?.map((ex: any) => ({ ...ex, sets: Math.max(1, Math.round((Number(ex.sets) || 3) * 0.6)) })) })); setProgramDays(deloaded as any); }} className="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/40 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer">
+                    <span>📉</span> Scarico Deload (-40% Serie)
+                  </button>
+                </div>
+              </div>
+            </div>
 
 {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
 {activeTab === "analytics" && (
