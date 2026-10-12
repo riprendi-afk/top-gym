@@ -2513,259 +2513,322 @@ if (isFinished) {
   }
 
   return (
-    <div className="min-h-screen bg-[#090A0D] text-white font-sans p-4 md:p-8 pb-28">
-      <header className="max-w-5xl mx-auto bg-[#12151B] rounded-2xl p-5 border border-white/10 shadow-2xl mb-6 backdrop-blur-md">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-wider text-[#E50914] flex items-center gap-2">
-              <Dumbbell className="w-7 h-7" /> TOP GYM
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Utente:{" "}
-              <span className="text-white font-bold">{displayUserName}</span>
-            </p>
-
-            <div className="flex items-center gap-3 mt-3 flex-wrap">
-              <div className="flex bg-black/50 p-1 rounded-xl border border-white/5 text-xs font-semibold">
-                <button
-                  onClick={() => handleRoleSwitchRequest("ATHLETE")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${userRole === "ATHLETE" ? "bg-[#E50914] text-white shadow font-bold" : "text-zinc-400 hover:text-white"}`}
-                >
-                  <Eye className="w-3.5 h-3.5" /> Atleta
-                </button>
-                <button
-                  onClick={() => handleRoleSwitchRequest("COACH")}
-                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${userRole === "COACH" ? "bg-[#E50914] text-white shadow font-bold" : "text-zinc-400 hover:text-white"}`}
-                >
-                  {userRole === "COACH" ? (
-                    <Unlock className="w-3.5 h-3.5 text-green-400" />
-                  ) : (
-                    <Lock className="w-3.5 h-3.5" />
-                  )}{" "}
-                  Coach
-                </button>
+    <div className="min-h-screen bg-[#090A0D] text-white font-sans flex">
+        {/* SIDEBAR VERTICALE SINISTRA (STILE GEMINI TARGET) */}
+        <aside className="w-64 min-h-screen bg-[#0C0E14] border-r border-white/10 flex flex-col justify-between p-4 sticky top-0 h-screen shrink-0 z-40">
+          <div className="space-y-6">
+            {/* LOGO BRAND */}
+            <div className="flex items-center gap-3 px-2 py-1">
+              <div className="p-2 bg-[#E50914]/15 rounded-xl border border-[#E50914]/30 flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-[#E50914]" />
               </div>
-
-              {userRole === "COACH" && (
-                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                  <span className="text-zinc-400 text-xs font-bold">
-                    Gestisci Atleta:
-                  </span>
-                  <select
-                    value={activeAthleteId}
-                    onChange={(e) => setActiveAthleteId(e.target.value)}
-                    className="bg-zinc-900 border border-white/10 text-white text-xs rounded-lg px-2.5 py-1 font-bold outline-none cursor-pointer"
-                  >
-                    {athletes.map((ath) => (
-                      <option key={ath.id} value={ath.id}>
-                        {ath.displayName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <span className="font-black text-lg tracking-wider text-white">
+                  TOP <span className="text-[#E50914]">GYM</span>
+                </span>
+                <p className="text-[10px] text-zinc-500 font-mono tracking-wider uppercase leading-none">
+                  COACH SYSTEM
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto justify-between flex-wrap">
-            <div className="flex items-center gap-2">
-              <NotificationBell
-                userId={targetUserId}
-                onNavigateToWorkout={() => setActiveTab("workout")}
-              />
+            {/* NAVIGAZIONE PRINCIPALE */}
+            <nav className="space-y-1">
+              {userRole === "COACH" && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("coachDashboard")}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    activeTab === "coachDashboard"
+                      ? "bg-white/10 text-white border border-white/15 shadow-sm"
+                      : "text-zinc-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-indigo-400" />
+                  <span>Atleti</span>
+                </button>
+              )}
 
               <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-2.5 bg-black/40 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition"
+                type="button"
+                onClick={() => setActiveTab("builder")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "builder"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
               >
-                {soundEnabled ? (
-                  <Volume2 className="w-4 h-4 text-green-400" />
-                ) : (
-                  <VolumeX className="w-4 h-4 text-zinc-600" />
+                <div className="flex items-center gap-3">
+                  <UserCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Programmi</span>
+                </div>
+                {activeTab === "builder" && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 )}
               </button>
-            </div>
 
-            {latestReadiness && (
-              <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
-                <Gauge
-                  className={`w-4 h-4 ${latestReadiness.readinessScore >= 80 ? "text-green-400" : "text-yellow-400"}`}
-                />
-                <div>
-                  <div className="text-[9px] text-zinc-400 uppercase font-bold">
-                    READINESS
-                  </div>
-                  <div className="text-xs font-black">
-                    {latestReadiness.readinessScore}%
-                  </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab("analytics")}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "analytics" || activeTab === "records"
+                    ? "bg-white/10 text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Medal className="w-4 h-4 text-amber-400" />
+                <span>Archivio</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-white/10 text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Settings className="w-4 h-4 text-zinc-300" />
+                <span>Impostazioni</span>
+              </button>
+
+              {/* MENU A TENDINA COMPATTO PER ALTRI MODULI */}
+              <details className="group pt-2">
+                <summary className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 cursor-pointer list-none transition">
+                  <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-bold">Altri Moduli</span>
+                  <span className="text-[9px] text-zinc-500 transition-transform group-open:rotate-180">▼</span>
+                </summary>
+                <div className="pl-3 pr-1 pt-1.5 space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("readiness")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "readiness" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Check Readiness
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("workout")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "workout" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Scheda Atleta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("records")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "records" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Record Personali
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("goals")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "goals" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Obiettivi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("chat")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "chat" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Chat & Assistenza
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("leaderboard")}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      activeTab === "leaderboard" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Classifica
+                  </button>
                 </div>
+              </details>
+            </nav>
+          </div>
+
+          {/* PIEDE SIDEBAR: RUOLO, ATLETA E LOGOUT */}
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            {/* SELETTORE ATLETA SE COACH */}
+            {userRole === "COACH" && (
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                  Gestisci Atleta:
+                </span>
+                <select
+                  value={activeAthleteId}
+                  onChange={(e) => setActiveAthleteId(e.target.value)}
+                  className="w-full bg-[#181C24] border border-white/10 text-white text-xs rounded-xl px-2.5 py-1.5 font-bold outline-none cursor-pointer focus:border-[#E50914]"
+                >
+                  {athletes.map((ath) => (
+                    <option key={ath.id} value={ath.id}>
+                      {ath.displayName}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
-            <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-xl border border-white/5">
-              <Shield className="text-yellow-500 w-4 h-4 flex-shrink-0" />
-              <div className="w-32">
-                <div className="text-[9px] text-yellow-500 font-black uppercase tracking-wider truncate">
-                  {userRank}
-                </div>
-                <div className="flex justify-between items-center text-[9px] text-zinc-400 font-bold">
-                  <span>Lvl {userLevel}/99</span>
-                  <span className="font-mono">{userXp} XP</span>
-                </div>
-                <div className="w-full bg-zinc-800 h-1 rounded-full mt-0.5 overflow-hidden">
-                  <div
-                    className="bg-yellow-500 h-full transition-all duration-300"
-                    style={{ width: `${levelProgressPercentage}%` }}
-                  />
-                </div>
-              </div>
+            {/* SWITCH RUOLO */}
+            <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => handleRoleSwitchRequest("ATHLETE")}
+                className={`flex-1 py-1 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  userRole === "ATHLETE"
+                    ? "bg-[#E50914] text-white shadow font-bold"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <Eye className="w-3 h-3" /> Atleta
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSwitchRequest("COACH")}
+                className={`flex-1 py-1 rounded-lg transition-all flex items-center justify-center gap-1 ${
+                  userRole === "COACH"
+                    ? "bg-[#E50914] text-white shadow font-bold"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {userRole === "COACH" ? (
+                  <Unlock className="w-3 h-3 text-green-400" />
+                ) : (
+                  <Lock className="w-3 h-3" />
+                )}
+                Coach
+              </button>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-black/40 border border-white/5 px-3 py-2.5 rounded-xl"
-            >
-              <LogOut className="w-4 h-4 text-red-500" /> Esci
-            </button>
+            {/* INFO UTENTE E LOGOUT */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="truncate">
+                <p className="text-[10px] text-zinc-500 font-mono leading-none">Accesso come</p>
+                <p className="text-xs font-bold text-white truncate">{displayUserName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition cursor-pointer"
+                title="Esci"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </aside>
 
-      {/* PIN COACH MODAL (Z-INDEX GARANTITO) */}
-      {showCoachPinModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
-          <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl">
-            <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
-              <Lock className="text-[#E50914]" /> Area Riservata Coach
-            </h3>
-            <p className="text-xs text-zinc-400 mb-4">
-              Inserisci il PIN (default: 1234) per accedere alla gestione coach.
-            </p>
-            <form onSubmit={verifyCoachPin} className="space-y-4">
-              <input
-                type="password"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                placeholder="PIN"
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-center text-xl font-mono text-white outline-none focus:border-[#E50914]"
-                autoFocus
-              />
-              {pinError && (
-                <p className="text-xs text-[#E50914] text-center font-bold">
-                  PIN Errato o non autorizzato!
-                </p>
+        {/* PIN COACH MODAL (PRESERVATO AL 100%) */}
+        {showCoachPinModal && (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 max-w-sm w-full shadow-2xl">
+              <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
+                <Lock className="text-[#E50914]" /> Area Riservata Coach
+              </h3>
+              <p className="text-xs text-zinc-400 mb-4">
+                Inserisci il PIN (default: 1234) per accedere alla gestione coach.
+              </p>
+              <form onSubmit={verifyCoachPin} className="space-y-4">
+                <input
+                  type="password"
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  placeholder="PIN"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-center text-xl font-mono text-white outline-none focus:border-[#E50914]"
+                  autoFocus
+                />
+                {pinError && (
+                  <p className="text-xs text-[#E50914] text-center font-bold">
+                    PIN Errato o non autorizzato!
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCoachPinModal(false);
+                      setPinInput("");
+                      setPinError(false);
+                    }}
+                    className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300 cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-1/2 bg-[#E50914] hover:brightness-110 py-2.5 rounded-xl text-xs font-bold text-white uppercase cursor-pointer"
+                  >
+                    Sblocca
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* COLONNA CONTENUTI PRINCIPALE CON TOPBAR */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-16 border-b border-white/5 bg-[#12151B]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">TOP GYM /</span>
+              <span className="text-xs font-black uppercase tracking-wider text-white">
+                {activeTab === "builder" ? "PROGRAM BUILDER" : activeTab === "coachDashboard" ? "GESTIONE ATLETI" : activeTab.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {latestReadiness && (
+                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                  <Gauge className={`w-3.5 h-3.5 ${latestReadiness.readinessScore >= 80 ? "text-green-400" : "text-yellow-400"}`} />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-zinc-400 font-bold uppercase">Readiness</span>
+                    <span className="text-xs font-black text-white">{latestReadiness.readinessScore}%</span>
+                  </div>
+                </div>
               )}
-              <div className="flex gap-2">
+
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                <Shield className="text-yellow-500 w-3.5 h-3.5 flex-shrink-0" />
+                <div className="flex items-center gap-2 text-[10px]">
+                  <span className="text-yellow-500 font-black uppercase truncate max-w-[80px]">{userRank}</span>
+                  <span className="text-zinc-400 font-mono">Lvl {userLevel}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <NotificationBell
+                  userId={targetUserId}
+                  onNavigateToWorkout={() => setActiveTab("workout")}
+                />
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowCoachPinModal(false);
-                    setPinInput("");
-                    setPinError(false);
-                  }}
-                  className="w-1/2 bg-zinc-800 py-2.5 rounded-xl text-xs font-bold text-zinc-300 cursor-pointer"
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className="p-2 bg-black/40 border border-white/5 rounded-xl text-zinc-400 hover:text-white transition cursor-pointer"
+                  title="Audio"
                 >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/2 bg-[#E50914] hover:brightness-110 py-2.5 rounded-xl text-xs font-bold text-white uppercase cursor-pointer"
-                >
-                  Sblocca
+                  {soundEnabled ? (
+                    <Volume2 className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <VolumeX className="w-3.5 h-3.5 text-zinc-600" />
+                  )}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          </header>
 
-      {/* NAVBAR A SCORRIMENTO MODERNA */}
-      <nav className="hidden md:block max-w-5xl mx-auto mb-6">
-        <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 bg-[#12151B] backdrop-blur-md border border-white/10 rounded-2xl scrollbar-none shadow-lg">
-          {userRole === "ATHLETE" && (
-            <button
-              onClick={() => setActiveTab("workout")}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeTab === "workout" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-            >
-              Esegui Allenamento
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab("readiness")}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "readiness" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-          >
-            <Gauge className="w-4 h-4 text-green-400" /> Check Readiness
-          </button>
-
-          <button
-            onClick={() => setActiveTab("records")}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "records" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-          >
-            <Trophy className="w-4 h-4 text-yellow-500" /> Record
-          </button>
-
-          <button
-            onClick={() => setActiveTab("goals")}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "goals" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-          >
-            <Target className="w-4 h-4 text-[#E50914]" /> Obiettivi
-          </button>
-
-          <button
-            onClick={() => setActiveTab("analytics")}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "analytics" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-          >
-            <TrendingUp className="w-4 h-4 text-blue-400" /> Progressi
-          </button>
-
-          <button
-  type="button"
-  onClick={() => setActiveTab("chat")}
-  className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${
-    activeTab === "chat" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"
-  }`}
->
-  <MessageSquare className="w-4 h-4" /> Chat & Assistenza
-</button>
-
-          {userRole === "COACH" && (
-            <>
-              <button
-                onClick={() => setActiveTab("coachDashboard")}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "coachDashboard" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-              >
-                <Users className="w-4 h-4 text-indigo-400" /> Dashboard Atleti
-              </button>
-              <button
-                onClick={() => setActiveTab("builder")}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "builder" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-              >
-                <UserCheck className="w-4 h-4 text-emerald-400" /> Gestisci
-                Scheda (Coach)
-              </button>
-            </>
-          )}
-
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "leaderboard" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-          >
-            <Medal className="w-4 h-4 text-yellow-500" /> Classifica
-          </button>
-
-          {userRole === "ATHLETE" && (
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === "settings" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"}`}
-            >
-              <Settings className="w-4 h-4 text-zinc-300" /> Impostazioni
-            </button>
-          )}
-        </div>
-      </nav>
-
-      <main className="max-w-[1600px] w-full mx-auto space-y-6 px-4 md:px-8">
+          <main className="flex-1 max-w-[1600px] w-full mx-auto space-y-6 px-4 md:px-8 py-6">
         {/* Banner Notifiche per Atleta */}
         {showPushBanner && userRole === "ATHLETE" && (
           <div className="bg-gradient-to-r from-red-950/80 to-[#12151B] border border-[#E50914]/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl backdrop-blur-md">
@@ -4422,6 +4485,7 @@ if (isFinished) {
           </div>
         )}
       </main>
+        </div>
 
       <MobileBottomNav
         activeTab={activeTab}
