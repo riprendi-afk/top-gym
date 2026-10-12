@@ -1,4 +1,5 @@
 ﻿"use client";
+import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
 import Over40QuickModal from '@/components/Over40QuickModal';
 
 import React, {
@@ -3978,22 +3979,7 @@ if (isFinished) {
                 </div>
             </div>
           </div>
-        
-
-<button
-  type="button"
-  onClick={() => {
-                      const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete.displayName);
-                      if (printName !== null) {
-                        exportProgramToPDF(printName.trim() || activeAthlete.displayName, programName, programDays);
-                      }
-                    }}
-  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl uppercase text-xs tracking-wider"
->
-  📄 Stampa / Salva in PDF
-</button>
-            </div>
-            )/* COLONNA DESTRA (30%): TELEMETRIA SCIENTIFICA IN TEMPO REALE */}
+            {/* COLONNA DESTRA (30%): TELEMETRIA SCIENTIFICA IN TEMPO REALE */}
             <div className="lg:col-span-4 space-y-6 sticky top-6">
               <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-xl space-y-5">
                 <div className="border-b border-white/5 pb-3 flex items-center justify-between">
@@ -4003,6 +3989,14 @@ if (isFinished) {
                   </div>
                   <span className="text-[10px] font-mono bg-red-950/60 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">LIVE SYNC</span>
                 </div>
+
+                {/* RADAR VOLUME SETTIMANALE */}
+                <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Radar Volume Settimanale</span>
+                  <WeeklyVolumeRadar days={programDays as any} athleteName={activeAthlete?.displayName} />
+                </div>
+
+                {/* VOLUME TOTALE MICROCICLO */}
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Volume Totale Microciclo</span>
                   <div className="grid grid-cols-3 gap-2">
@@ -4020,6 +4014,8 @@ if (isFinished) {
                     </div>
                   </div>
                 </div>
+
+                {/* SICUREZZA CARICO SPINALE / RACHIDE */}
                 <div className="bg-black/40 border border-white/5 p-3 rounded-xl space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Carico Assiale Rachide</span>
@@ -4031,13 +4027,20 @@ if (isFinished) {
                     {String(programmingModel) === "STATICA" ? "Protocollo Decompressione Schroth-Attivo: decompressione assiale per tesserati con dismetrie/scoliosi." : "Progressione RPE & TUT controllata per preservare il comparto lombo-sacrale del tesserato."}
                   </p>
                 </div>
+
+                {/* AZIONI RAPIDE DELOAD & STAMPA PDF */}
                 <div className="space-y-2 pt-2 border-t border-white/5">
                   <button type="button" onClick={() => { if (!window.confirm("Applicare scarico volumetrico (-40% serie su tutti i microcicli)?")) return; const deloaded = programDays.map((day: any) => ({ ...day, exercises: day.exercises?.map((ex: any) => ({ ...ex, sets: Math.max(1, Math.round((Number(ex.sets) || 3) * 0.6)) })) })); setProgramDays(deloaded as any); }} className="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 hover:border-amber-500/40 text-amber-300 font-bold py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer">
                     <span>📉</span> Scarico Deload (-40% Serie)
                   </button>
+                  <button type="button" onClick={() => { const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete?.displayName); if (printName !== null) { exportProgramToPDF(printName.trim() || activeAthlete?.displayName, programName, programDays); } }} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2.5 px-3 rounded-xl uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 cursor-pointer">
+                    <span>📄</span> Stampa / Salva in PDF
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
 {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
 {activeTab === "analytics" && (
