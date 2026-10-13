@@ -90,6 +90,15 @@ export default function AnalyticsDashboard({
     [volumeStatuses],
   );
 
+  const totalPlannedSets = useMemo(() => {
+    return Object.values(plannedMap).reduce((a, b) => a + (Number(b) || 0), 0);
+  }, [plannedMap]);
+
+  const adherenceRate = useMemo(() => {
+    if (!totalPlannedSets || totalPlannedSets === 0) return 0;
+    return Math.min(150, Math.round((totalDirectSets / totalPlannedSets) * 100));
+  }, [totalDirectSets, totalPlannedSets]);
+
   // 2. Mappa dei Massimali (1RM) per calcolo Intensità
   const best1RMByExercise = useMemo(() => {
     const map = new Map<string, number>();
@@ -395,18 +404,33 @@ export default function AnalyticsDashboard({
           </div>
         </div>
 
-        <div className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5 text-xs">
+        <div className="flex flex-wrap justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5 text-xs gap-2">
           <span className="text-zinc-400">
             Modalità:{" "}
             <b className="text-white">
               {viewMode === "LOGGED"
-                ? "Serie realmente completate"
-                : "Serie totali previste dalla split"}
+                ? "Serie realmente completate (sul campo)"
+                : "Serie totali previste dalla split (preventivo)"}
             </b>
           </span>
-          <span className="text-white font-mono font-bold bg-zinc-900 px-3 py-1 rounded-lg border border-white/5">
-            {totalDirectSets} Serie Totali
-          </span>
+          <div className="flex items-center gap-2">
+            {viewMode === "LOGGED" && totalPlannedSets > 0 && (
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
+                adherenceRate >= 90
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                  : adherenceRate >= 70
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                  : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+              }`}>
+                Aderenza: {adherenceRate}%
+              </span>
+            )}
+            <span className="text-white font-mono font-bold bg-zinc-900 px-3 py-1 rounded-lg border border-white/5">
+              {viewMode === "LOGGED" && totalPlannedSets > 0
+                ? `${totalDirectSets} / ${totalPlannedSets} Serie`
+                : `${totalDirectSets} Serie Totali`}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

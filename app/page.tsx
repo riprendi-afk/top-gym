@@ -2573,14 +2573,19 @@ if (isFinished) {
               <button
                 type="button"
                 onClick={() => setActiveTab("analytics")}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                  activeTab === "analytics" || activeTab === "records"
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "analytics"
                     ? "bg-white/10 text-white border border-white/15 shadow-sm"
                     : "text-zinc-400 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <Medal className="w-4 h-4 text-amber-400" />
-                <span>Archivio</span>
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-4 h-4 text-blue-400" />
+                  <span>Progressi & Analisi</span>
+                </div>
+                {activeTab === "analytics" && (
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                )}
               </button>
 
               <button
@@ -4445,17 +4450,19 @@ if (isFinished) {
                 </div>
 
                 {/* 4. GRAFICO RADAR VOLUME (COMPATTO & LIVE) */}
-                <div className="pt-2 border-t border-white/5">
-                  <details className="group cursor-pointer">
-                    <summary className="text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-300 flex items-center justify-between select-none py-1">
-                      <span>Grafico Radar Completo</span>
-                      <span className="text-xs transition-transform group-open:rotate-180">▾</span>
-                    </summary>
-                    <div className="pt-2">
+                <div className="space-y-2 pt-3 border-t border-white/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                        <span>📊</span> Radar Volume Settimanale
+                      </span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">
+                        Live Scheda
+                      </span>
+                    </div>
+                    <div className="bg-black/40 border border-white/5 rounded-xl p-2.5">
                       <WeeklyVolumeRadar days={programDays as any} athleteName={activeAthlete?.displayName} />
                     </div>
-                  </details>
-                </div>
+                  </div>
 
                 {/* 5. AZIONI RAPIDE DELOAD & STAMPA PDF */}
                 <div className="space-y-2 pt-4 border-t border-white/5">
