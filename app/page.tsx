@@ -57,6 +57,7 @@ const AnalyticsDashboard = dynamic(() => import("@/components/AnalyticsDashboard
 const WorkoutWizardModal = dynamic(() => import("@/components/WorkoutWizardModal"), { ssr: false });
 const CoachDashboard = dynamic(() => import("@/components/CoachDashboard"), { ssr: false });
 const TemplatePickerModal = dynamic(() => import("@/components/TemplatePickerModal"), { ssr: false });
+const MethodologyPickerModal = dynamic(() => import("@/components/MethodologyPickerModal"), { ssr: false });
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
@@ -349,6 +350,7 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isMethodologyModalOpen, setIsMethodologyModalOpen] = useState(false);
 // DOPO (SOSTITUISCI CON):
 const [programmingModel, setProgrammingModel] = useState<
   | "TOPGYM_BLOCKS"
@@ -3704,7 +3706,48 @@ if (isFinished) {
                   </div>
 
                 {/* ============================================================== */}
-                {/* CASO A: CABINA TOPGYM CLASSICA (NUOVO DESIGN ORDINATO)         */}
+                {/* ============================================================== */}
+                    {/* HUB METODOLOGICO TOP GYM: BARRA COMPATTA + MODALE A SCOMPARSA   */}
+                    {/* ============================================================== */}
+                    <div className="bg-[#12151B] border border-white/10 rounded-2xl p-3 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
+                        <span className="text-xs font-black uppercase tracking-wider text-white">Hub Metodologico:</span>
+                        <span className="px-2.5 py-1 bg-black/50 border border-white/10 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 font-mono">
+                          {((programmingModel as any) === "NOCERINO") && "🔬 Nocerino (T13)"}
+                          {programmingModel === "HARDTOPGYM" && "⚡ Hatfield"}
+                          {programmingModel === "ACETO" && "🏆 Chris Aceto"}
+                          {((programmingModel as any) === "HELMS_PYRAMID") && "🏛️ Helms Pyramid"}
+                          {((programmingModel as any) === "BIKINI_WAVE") && "✨ Bikini Wave System"}
+                          {programmingModel === "TOPGYM_BLOCKS" && "🛡️ TOPGYM Classico"}
+                          {((programmingModel as any) === "STATICA") && "🌿 Desk & Longevity"}
+                          {!["NOCERINO","HARDTOPGYM","ACETO","HELMS_PYRAMID","BIKINI_WAVE","TOPGYM_BLOCKS","STATICA"].includes(programmingModel as string) && String(programmingModel)}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsMethodologyModalOpen(true)}
+                        className="text-xs bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 px-3.5 py-1.5 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#E50914]" />
+                        <span>Libreria Metodologie (3 Cluster)</span>
+                        <span className="text-[10px] bg-[#E50914]/20 text-[#E50914] border border-[#E50914]/30 px-1.5 py-0.5 rounded font-mono font-bold">Cambia</span>
+                      </button>
+                    </div>
+
+                    {/* MODALE CATALOGO METODOLOGIE */}
+                    <MethodologyPickerModal
+                      isOpen={isMethodologyModalOpen}
+                      onClose={() => setIsMethodologyModalOpen(false)}
+                      currentModel={programmingModel as string}
+                      onSelectModel={(model: any) => {
+                        setProgrammingModel(model);
+                        setIsMethodologyModalOpen(false);
+                      }}
+                    />
+
+                    {/* CASO A: CABINA TOPGYM CLASSICA (NUOVO DESIGN ORDINATO)         */}
                 {/* ============================================================== */}
                 {programmingModel === "TOPGYM_BLOCKS" && (
                   <>
@@ -3789,45 +3832,56 @@ if (isFinished) {
         )}
                 
             {/* SEZIONE GESTIONE SCHEDA - VISIBILE A ENTRAMBI I COACH */}
-            <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-6">
-              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-4 border-b border-white/10">
-                <div className="space-y-2 flex-1 max-w-md">
-                  <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                    <UserCheck className="text-[#E50914]" /> Gestione Scheda -{" "}
-                    {activeAthlete.displayName}
-                  </h2>
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
-                      Nome della Scheda
-                    </label>
-                    <input
-                      type="text"
-                      value={programName}
-                      onChange={(e) => setProgramName(e.target.value)}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-[#E50914]"
-                    />
+              <div className="bg-[#12151B] p-4 sm:p-5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-3.5">
+                <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h2 className="text-sm sm:text-base font-black flex items-center gap-2 text-white uppercase tracking-wider">
+                      <UserCheck className="w-5 h-5 text-[#E50914]" /> Gestione Scheda
+                    </h2>
+                    <span className="text-xs font-mono bg-black/40 text-zinc-300 px-2.5 py-1 rounded-lg border border-white/5">
+                      Atleta: <b className="text-white">{activeAthlete.displayName}</b>
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
-                  <span className="text-xs font-bold text-zinc-400">
-                    Giorni:
-                  </span>
-                  <div className="flex gap-1">
-                    {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => handleDayCountChange(num)}
-                        className={`px-3 py-1 text-xs font-black rounded-lg border transition-all ${selectedDayCount === num ? "bg-[#E50914] border-[#E50914] text-white shadow" : "bg-zinc-800 border-white/5 text-zinc-400 hover:text-white cursor-pointer"}`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
-              {/* ELENCO GIORNI DEL BUILDER A FISARMONICA (ACCORDION) */}
+                  <div className="flex items-center gap-3 flex-wrap flex-1 justify-end">
+                    <div className="flex items-center gap-2 flex-1 max-w-sm min-w-[220px]">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0">
+                        Nome Scheda:
+                      </span>
+                      <input
+                        type="text"
+                        value={programName}
+                        onChange={(e) => setProgramName(e.target.value)}
+                        placeholder="Nome della Scheda..."
+                        className="w-full bg-zinc-900/90 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914] transition"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-black/40 px-2.5 py-1 rounded-xl border border-white/5 shrink-0">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        Giorni:
+                      </span>
+                      <div className="flex gap-1">
+                        {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => handleDayCountChange(num)}
+                            className={`w-7 h-7 flex items-center justify-center text-xs font-black rounded-lg border transition-all ${
+                              selectedDayCount === num
+                                ? "bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50"
+                                : "bg-zinc-800/80 border-white/5 text-zinc-400 hover:text-white cursor-pointer"
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ELENCO GIORNI DEL BUILDER A FISARMONICA (ACCORDION) */}
               {programDays.map((day) => {
                 const isOpen = openDayId === day.id;
 
@@ -4318,57 +4372,6 @@ if (isFinished) {
                               <div className="flex justify-between items-center text-xs">
                                 <span className="font-semibold text-zinc-200">{name}</span>
                                 <span className="font-mono text-zinc-400 text-[11px]">{setsCount} set</span>
-                              </div>
-                              <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-white/5">
-                                <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: `${pct}%` }}></div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* 1. VOLUME SETTIMANALE PER GRUPPO */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300">Volume Settimanale per Gruppo</span>
-                    <div className="flex items-center gap-0.5">
-                      <span className="w-1 h-2.5 bg-red-500 rounded-xs"></span>
-                      <span className="w-1 h-3.5 bg-sky-400 rounded-xs"></span>
-                      <span className="w-1 h-2 bg-amber-400 rounded-xs"></span>
-                      <span className="w-1 h-4 bg-emerald-400 rounded-xs"></span>
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const muscleMap: Record<string, number> = {};
-                    programDays?.forEach((d: any) => {
-                      d.exercises?.forEach((ex: any) => {
-                        const mg = ex.muscleGroup || ex.targetGroup || "Altro";
-                        muscleMap[mg] = (muscleMap[mg] || 0) + (Number(ex.sets) || 0);
-                      });
-                    });
-                    const entries = Object.entries(muscleMap).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-                    const displayMuscles = entries.length > 0 ? entries.slice(0, 3) : [["Glutei", 16], ["Deltoidi", 12], ["Dorsali", 8]];
-                    const maxVal = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
-                    const colorStyles = [
-                      { bar: "bg-[#E50914]", text: "text-red-400" },
-                      { bar: "bg-sky-400", text: "text-sky-400" },
-                      { bar: "bg-amber-400", text: "text-amber-400" },
-                    ];
-
-                    return (
-                      <div className="space-y-3">
-                        {displayMuscles.map(([name, sets], idx) => {
-                          const pct = Math.min(100, Math.round(((Number(sets) || 0) / maxVal) * 100));
-                          const c = colorStyles[idx % colorStyles.length];
-                          return (
-                            <div key={name} className="space-y-1">
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="font-semibold text-zinc-200">{name}</span>
-                                <span className="font-mono text-zinc-400 text-[11px]">{sets} set</span>
                               </div>
                               <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-white/5">
                                 <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: `${pct}%` }}></div>
