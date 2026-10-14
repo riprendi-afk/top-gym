@@ -316,13 +316,16 @@ export function calculateLoggedWeeklySets(
 }
 
 export function calculatePlannedWeeklySets(
-  days: any[],
+  daysOrTemplate: any,
   programDict?: Map<string, MuscleTarget>
 ): Record<MuscleTarget, number> {
   const map = createEmptySetsMap();
+  const targetDays = Array.isArray(daysOrTemplate)
+    ? daysOrTemplate
+    : (daysOrTemplate && Array.isArray(daysOrTemplate.days) ? daysOrTemplate.days : []);
 
-  (days || []).forEach(day => {
-    (day.exercises || []).forEach((ex: any) => {
+  targetDays.forEach((day: any) => {
+    (day?.exercises || []).forEach((ex: any) => {
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
       const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
@@ -377,12 +380,16 @@ export function buildMuscleVolumeStatuses(
 }
 
 export function calculateWeeklyVolumeRadar(
-  days: any[],
-  gender: AthleteGender = 'MALE',
+  daysOrTemplate: any,
+  genderParam?: AthleteGender,
   _includeIndirect: boolean = false
 ): MuscleVolumeStatus[] {
-  const plannedMap = calculatePlannedWeeklySets(days);
-  return buildMuscleVolumeStatuses(plannedMap, gender);
+  const targetDays = Array.isArray(daysOrTemplate)
+    ? daysOrTemplate
+    : (daysOrTemplate && Array.isArray(daysOrTemplate.days) ? daysOrTemplate.days : []);
+  const targetGender: AthleteGender = genderParam || daysOrTemplate?.gender || "MALE";
+  const plannedMap = calculatePlannedWeeklySets(targetDays);
+  return buildMuscleVolumeStatuses(plannedMap, targetGender);
 }
 
 export function calculateFromMuscleMap(
