@@ -46,7 +46,7 @@ export function useWorkoutSession() {
 
   // Avvio automatico timer al completamento della serie
   const completeSet = useCallback((segment: ExerciseSegment, customRestSec?: number) => {
-    const defaultTime = customRestSec ?? SEGMENT_REST_TIMES[segment];
+    try { playBeep(0, 0.001); } catch (e) {} const defaultTime = customRestSec ?? SEGMENT_REST_TIMES[segment];
     setRestSecondsRemaining(defaultTime);
     setIsRestActive(true);
   }, []);
@@ -74,8 +74,8 @@ export function useWorkoutSession() {
     }
 
     if (restSecondsRemaining <= 0) {
-      playBeep(880, 0.35);
-      triggerVibration([250, 100, 250]);
+      playBeep(880, 0.2); setTimeout(() => playBeep(1046, 0.2), 140); setTimeout(() => playBeep(1318, 0.35), 280);
+      triggerVibration([250, 100, 250, 100, 400]);
       stopRestTimer();
       return;
     }

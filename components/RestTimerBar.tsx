@@ -76,13 +76,13 @@ export function RestTimerBar({
 
       {/* 2. PILL FLUTTUANTE COMPATTO PER IL TIMER (SOLO SE ATTIVO, NESSUNA BARRA FISSA A SCHERMO INTERO) */}
       {isRestActive && restSecondsRemaining !== null && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-50 bg-zinc-950/95 backdrop-blur-md border border-cyan-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-2xl px-4 py-2.5 flex items-center gap-3 text-white animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <div className="fixed bottom-24 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:w-auto z-[9999] bg-zinc-950/95 backdrop-blur-md border border-cyan-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.85)] rounded-2xl px-4 py-2.5 flex items-center gap-3 text-white animate-in fade-in slide-in-from-bottom-3 duration-300">
           <div className="flex flex-col">
             <span className="text-[9px] text-cyan-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
               Recupero
             </span>
-            <span className="text-2xl font-black font-mono tracking-tight text-white leading-none mt-0.5">
+            <span className="text-3xl font-black font-mono text-cyan-300 tracking-tight text-white leading-none mt-0.5">
               {formatTime(restSecondsRemaining)}
             </span>
           </div>
