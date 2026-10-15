@@ -449,52 +449,26 @@ export function calculatePlannedWeeklySets(
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
 
-      const name = (ex.name || "").toLowerCase().trim();
       const declared = (ex.muscleGroup || "").trim();
+      let target: MuscleTarget | null = null;
 
-      let target: MuscleTarget = "Petto";
-
-      // 1. Priorità assoluta al nome reale per correggere errori di etichetta nel database
-      if (name.includes("pushdown") || name.includes("french") || name.includes("tricipit") || name.includes("cavo corda")) {
-        target = "Tricipiti";
-      } else if (name.includes("curl") || name.includes("bicipit")) {
-        target = "Bicipiti";
-      } else if (name.includes("70") || name.includes("lento") || name.includes("military") || name.includes("shoulder") || name.includes("alzate")) {
-        if (name.includes("lateral")) target = "Deltoidi Laterali";
-        else if (name.includes("post") || name.includes("90") || name.includes("face pull")) target = "Deltoidi Posteriori";
-        else target = "Deltoidi Anteriori";
-      } else if (name.includes("stacco") || name.includes("deadlift") || name.includes("rumeno") || name.includes("semitese") || name.includes("leg curl")) {
-        target = "Femorali";
-      } else if (name.includes("hip thrust") || name.includes("glute") || name.includes("abductor") || name.includes("ponte")) {
-        target = "Glutei";
-      } else if (name.includes("squat") || name.includes("leg press") || name.includes("pressa") || name.includes("leg extension") || name.includes("affondi") || name.includes("bulgar")) {
-        target = "Quadricipiti";
-      } else if (name.includes("trazioni") || name.includes("lat machine") || name.includes("lat pulldown")) {
-        target = "Gran Dorsale";
-      } else if (name.includes("rematore") || name.includes("row") || name.includes("pulley")) {
-        target = "Upper Back";
-      } else if (name.includes("calf") || name.includes("polpacc")) {
-        target = "Polpacci";
-      } else if (name.includes("crunch") || name.includes("plank") || name.includes("addom")) {
-        target = "Addome";
-      } else if (name.includes("adductor")) {
-        target = "Adduttori";
-      } else if (name.includes("panca") || name.includes("spinte") || name.includes("chest") || name.includes("croci") || name.includes("dip")) {
-        target = "Petto";
+      // 1. LA VOLONTÀ DEL COACH È SOVRANA: se il gruppo muscolare impostato è uno dei 14 distretti validi, usalo!
+      if (declared && ALL_MUSCLE_TARGETS.includes(declared as MuscleTarget)) {
+        target = declared as MuscleTarget;
       } else {
-        // Fallback sul distretto dichiarato se valido
+        // 2. Se manca o non è standard, risolvi tramite il dizionario o autodetect intelligente
         const resolved = resolveMuscleTarget(ex.name, declared, programDict);
-        target = resolved || "Petto";
+        target = resolved || null;
       }
 
-      if (map[target] !== undefined) {
+      if (target && map[target] !== undefined) {
         map[target] += setsCount;
       }
     });
   });
 
   return map;
-};
+};;
 
 export function buildMuscleVolumeStatuses(
   setsMap: Record<MuscleTarget, number>,
