@@ -504,6 +504,25 @@ useEffect(() => {
   );
 
   const [programName, setProgramName] = useState("Scheda Metodo TOPGYM");
+  
+  // Allinea gli esercizi della scheda ai loro gruppi reali se sporcati da vecchi salvataggi
+  const sanitizeProgramExercises = (days: any[]) => {
+    return days.map((d: any) => ({
+      ...d,
+      exercises: (d.exercises || []).map((ex: any) => {
+        const name = (ex.name || "").toLowerCase();
+        let targetGroup = ex.muscleGroup;
+        // Se un esercizio per le braccia e rimasto etichettato come Petto, sanalo direttamente nella scheda
+        if (ex.muscleGroup === "Petto" && (name.includes("pushdown") || name.includes("french") || name.includes("ercolina") || name.includes("kickback"))) {
+          targetGroup = "Tricipiti";
+        } else if (ex.muscleGroup === "Petto" && (name.includes("curl") || name.includes("hammer") || name.includes("scott"))) {
+          targetGroup = "Bicipiti";
+        }
+        return { ...ex, muscleGroup: targetGroup };
+      })
+    }));
+  };
+  
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);

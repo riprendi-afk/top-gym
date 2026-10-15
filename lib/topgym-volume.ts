@@ -432,15 +432,17 @@ export function calculatePlannedWeeklySets(
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
 
-      const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
-      if (target && map[target] !== undefined) {
-        map[target] += setsCount;
+      // COLLEGAMENTO DIRETTO ALLA SCHEDA:
+      // Conta le serie esattamente sul distretto selezionato dal coach nella scheda
+      const group = (ex.muscleGroup || "").trim();
+      if (group && map[group as MuscleTarget] !== undefined) {
+        map[group as MuscleTarget] += setsCount;
       }
     });
   });
 
   return map;
-};;;
+};;;;
 
 export function buildMuscleVolumeStatuses(
   setsMap: Record<MuscleTarget, number>,
