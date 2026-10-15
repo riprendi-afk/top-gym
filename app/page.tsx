@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
 import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
 import Over40QuickModal from '@/components/Over40QuickModal';
 
@@ -4336,38 +4337,38 @@ if (isFinished) {
               </div>
 
               <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-5">
-                {/* 1. VOLUME SETTIMANALE PER GRUPPO */}
+                {/* 1. VOLUME SETTIMANALE PER DISTRETTO (TOPGYM ENGINE 14 DISTRETTI) */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300">Volume Settimanale per Gruppo</span>
-                    <div className="flex items-center gap-0.5">
-                      <span className="w-1 h-2.5 bg-red-500 rounded-xs"></span>
-                      <span className="w-1 h-3.5 bg-sky-400 rounded-xs"></span>
-                      <span className="w-1 h-2 bg-amber-400 rounded-xs"></span>
-                      <span className="w-1 h-4 bg-emerald-400 rounded-xs"></span>
-                    </div>
+                    <span className="text-[9px] font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 rounded font-bold">14 Distretti</span>
                   </div>
 
                   {(() => {
-                    const muscleMap: Record<string, number> = {};
-                    programDays?.forEach((d: any) => {
-                      d.exercises?.forEach((ex: any) => {
-                        const mg = ex.muscleGroup || ex.targetGroup || "Altro";
-                        muscleMap[mg] = (muscleMap[mg] || 0) + (Number(ex.sets) || 0);
-                      });
-                    });
-                    const entries: [string, number][] = (Object.entries(muscleMap) as [string, number][]).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-                    const fallbackMuscles: [string, number][] = [["Glutei", 16], ["Deltoidi", 12], ["Dorsali", 8]];
-                    const displayMuscles: [string, number][] = entries.length > 0 ? entries.slice(0, 3) : fallbackMuscles;
-                    const maxVal: number = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
+                    const plannedMap = calculatePlannedWeeklySets(programDays || []);
+                    const entries = Object.entries(plannedMap)
+                      .filter(([_, sets]) => (Number(sets) || 0) > 0)
+                      .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0));
+
+                    if (entries.length === 0) {
+                      return (
+                        <p className="text-xs text-zinc-500 italic py-2">Nessun esercizio presente nella scheda.</p>
+                      );
+                    }
+
+                    const displayMuscles = entries.slice(0, 6);
+                    const maxVal = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
                     const colorStyles = [
                       { bar: "bg-[#E50914]", text: "text-red-400" },
-                      { bar: "bg-sky-400", text: "text-sky-400" },
+                      { bar: "bg-cyan-400", text: "text-cyan-400" },
                       { bar: "bg-amber-400", text: "text-amber-400" },
+                      { bar: "bg-emerald-400", text: "text-emerald-400" },
+                      { bar: "bg-purple-400", text: "text-purple-400" },
+                      { bar: "bg-sky-400", text: "text-sky-400" }
                     ];
 
                     return (
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {displayMuscles.map(([name, sets], idx) => {
                           const setsCount = Number(sets) || 0;
                           const pct = Math.min(100, Math.round((setsCount / maxVal) * 100));
@@ -4376,14 +4377,19 @@ if (isFinished) {
                             <div key={name} className="space-y-1">
                               <div className="flex justify-between items-center text-xs">
                                 <span className="font-semibold text-zinc-200">{name}</span>
-                                <span className="font-mono text-zinc-400 text-[11px]">{setsCount} set</span>
+                                <span className="font-mono text-zinc-400 text-[11px]">{setsCount} set/sett</span>
                               </div>
                               <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden border border-white/5">
-                                <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: `${pct}%` }}></div>
+                                <div className={"h-full " + c.bar + " rounded-full transition-all duration-500"} style={{ width: pct + "%" }}></div>
                               </div>
                             </div>
                           );
                         })}
+                        {entries.length > 6 && (
+                          <div className="text-[10px] text-zinc-500 text-right pt-0.5">
+                            + altri {entries.length - 6} distretti attivi nel radar
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
@@ -4391,43 +4397,69 @@ if (isFinished) {
 
                 {/* 2. DISTRIBUZIONE STIMOLI (DUP) */}
                 <div className="space-y-2.5 pt-4 border-t border-white/5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 block">Distribuzione Stimoli (DUP)</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 block">Distribuzione Stimoli (DUP)</span>
+                    <span className="text-[9px] text-zinc-400 font-mono">Dinamico su Reps</span>
+                  </div>
                   {(() => {
                     let neurale = 0, ipertrofico = 0, metabolico = 0, total = 0;
-                    programDays?.forEach((d: any) => {
-                      d.exercises?.forEach((ex: any) => {
-                        const s = Number(ex.sets) || 1;
+                    (programDays || []).forEach((d: any) => {
+                      (d.exercises || []).forEach((ex: any) => {
+                        const s = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 1);
                         total += s;
-                        const r = parseInt(String(ex.reps || "8").match(/\d+/)?.[0] || "8", 10);
-                        if (r <= 5) neurale += s;
-                        else if (r >= 13) metabolico += s;
-                        else ipertrofico += s;
+                        const repsStr = String(ex.reps || "").toLowerCase();
+                        const nameStr = String(ex.name || "").toLowerCase();
+                        const notesStr = String(ex.notes || "").toLowerCase();
+                        const full = nameStr + " " + repsStr + " " + notesStr;
+
+                        const isMetabolic = repsStr.includes("+max") || repsStr.includes("rest-pause") || repsStr.includes("stripping") || repsStr.includes("pompa") || repsStr.includes("drop") || full.includes("pompa venosa") || full.includes("rest pause");
+
+                        let repNum = 8;
+                        const nums = repsStr.match(/\d+/g);
+                        if (nums && nums.length > 0) {
+                          if (nums.length >= 2 && (repsStr.includes("x") || repsStr.includes("*"))) {
+                            repNum = parseInt(nums[1], 10);
+                          } else if (nums.length >= 2 && repsStr.includes("-")) {
+                            repNum = (parseInt(nums[0], 10) + parseInt(nums[1], 10)) / 2;
+                          } else {
+                            repNum = parseInt(nums[0], 10);
+                          }
+                        }
+
+                        if (isMetabolic || repNum >= 13) {
+                          metabolico += s;
+                        } else if (repNum <= 6) {
+                          neurale += s;
+                        } else {
+                          ipertrofico += s;
+                        }
                       });
                     });
-                    const pNeu = total > 0 ? Math.round((neurale / total) * 100) : 40;
-                    const pIper = total > 0 ? Math.round((ipertrofico / total) * 100) : 40;
-                    const pMeta = total > 0 ? Math.round((metabolico / total) * 100) : 20;
+
+                    const pNeu = total > 0 ? Math.round((neurale / total) * 100) : 0;
+                    const pIper = total > 0 ? Math.round((ipertrofico / total) * 100) : 0;
+                    const pMeta = total > 0 ? Math.max(0, 100 - pNeu - pIper) : 0;
 
                     return (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-sm bg-sky-500"></span>
-                            <span className="text-zinc-300 font-medium">Neurale</span>
+                            <span className="text-zinc-300 font-medium">Neurale (1-6 reps / CAT)</span>
                           </div>
                           <span className="bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pNeu}%</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
-                            <span className="text-zinc-300 font-medium">Ipertrofico</span>
+                            <span className="text-zinc-300 font-medium">Ipertrofico (7-12 reps / MAV)</span>
                           </div>
                           <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pIper}%</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
-                            <span className="text-zinc-300 font-medium">Metabolico</span>
+                            <span className="text-zinc-300 font-medium">Metabolico (13+ reps / Tecniche)</span>
                           </div>
                           <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[11px] font-mono font-bold">{pMeta}%</span>
                         </div>
@@ -4439,32 +4471,40 @@ if (isFinished) {
                 {/* 3. SICUREZZA & IMPATTO (CARICO SPINALE) */}
                 <div className="space-y-2.5 pt-4 border-t border-white/5">
                   <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 block">Sicurezza & Impatto</span>
-                  <div className="bg-black/50 border border-white/5 p-3 rounded-xl space-y-2.5">
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                      Monitoraggio attivo del carico spinale sul rachide durante il mesociclo di allenamento.
-                    </p>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-950">
-                      <span>🛡️</span> Carico Spinale: BASSO
-                    </div>
-                  </div>
+                  {(() => {
+                    let axialSets = 0;
+                    (programDays || []).forEach((d: any) => {
+                      (d.exercises || []).forEach((ex: any) => {
+                        const name = String(ex.name || "").toLowerCase();
+                        if (name.includes("squat") || name.includes("stacco") || name.includes("military") || name.includes("lento avanti") || name.includes("rack pull") || name.includes("rematore con bilanciere")) {
+                          axialSets += Number(ex.sets) || 1;
+                        }
+                      });
+                    });
+
+                    let label = "BASSO";
+                    let colorClass = "bg-emerald-950/60 text-emerald-400 border-emerald-500/40 shadow-emerald-950";
+                    if (axialSets >= 16) {
+                      label = "ALTO (Monitorare Recupero)";
+                      colorClass = "bg-rose-950/60 text-rose-400 border-rose-500/40 shadow-rose-950";
+                    } else if (axialSets >= 8) {
+                      label = "MODERATO";
+                      colorClass = "bg-amber-950/60 text-amber-400 border-amber-500/40 shadow-amber-950";
+                    }
+
+                    return (
+                      <div className="bg-black/50 border border-white/5 p-3 rounded-xl space-y-2.5">
+                        <p className="text-[11px] text-zinc-400 leading-relaxed">
+                          Stress assiale stimato sul rachide in base ai fondamentali pesanti (" + axialSets + " set totali).
+                        </p>
+                        <div className={"inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black border shadow-sm " + colorClass}>
+                          <span>🛡️</span> Carico Spinale: {label}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-
-                {/* 4. GRAFICO RADAR VOLUME (COMPATTO & LIVE) */}
-                <div className="space-y-2 pt-3 border-t border-white/5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                        <span>📊</span> Radar Volume Settimanale
-                      </span>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">
-                        Live Scheda
-                      </span>
-                    </div>
-                    <div className="bg-black/40 border border-white/5 rounded-xl p-2.5">
-                      <WeeklyVolumeRadar days={programDays as any} athleteName={activeAthlete?.displayName} />
-                    </div>
-                  </div>
-
-                {/* 5. AZIONI RAPIDE DELOAD & STAMPA PDF */}
+{/* 5. AZIONI RAPIDE DELOAD & STAMPA PDF */}
                 <div className="space-y-2 pt-4 border-t border-white/5">
                   <button
                     type="button"
