@@ -91,143 +91,159 @@ export type MacroBlock =
 export type MicroWeek = 1 | 2 | 3 | 4; // Map: 1=Fase I, 2=Fase II, 3=Scarico, 4=Fase III
 export type TopGymStimulus = "NEURAL" | "HYPERTROPHIC" | "METABOLIC";
 
-export const autoDetectMuscleGroup = (exerciseName: string): MuscleGroup => {
-  const name = exerciseName.toLowerCase().trim();
+export const autoDetectMuscleGroup = (nameRaw: string): MuscleGroup => {
+  const name = (nameRaw || "").toLowerCase().trim();
+  if (!name) return "Petto" as MuscleGroup;
 
-  // 1. FEMORALI (da controllare PRIMA di Dorso e Bicipiti per evitare conflitti con 'stacco' e 'curl')
-  if (
-    name.includes("stacco rumeno") ||
-    name.includes("rdl") ||
-    name.includes("leg curl") ||
-    name.includes("femoral") ||
-    name.includes("hamstring") ||
-    name.includes("lying curl") ||
-    name.includes("seated curl") ||
-    name.includes("standing curl") ||
-    name.includes("nordic") ||
-    name.includes("ghr") ||
-    name.includes("good morning") ||
-    name.includes("gambe tese")
-  )
-    return "Femorali";
-
-  // 2. GLUTEI (da controllare PRIMA di Petto/Quadricipiti per evitare conflitti con 'panca', 'spinte', 'squat')
-  if (
-    name.includes("hip thrust") ||
-    name.includes("glute") ||
-    name.includes("kickback") ||
-    name.includes("kick back") ||
-    name.includes("slanci") ||
-    name.includes("abductor") ||
-    name.includes("abduzion") ||
-    name.includes("bridge") ||
-    name.includes("ponte") ||
-    name.includes("frog pump") ||
-    name.includes("clamshell") ||
-    name.includes("step up") ||
-    name.includes("step-up") ||
-    name.includes("bulgar") ||
-    name.includes("hyperextension") ||
-    name.includes("iperestension")
-  )
-    return "Glutei";
-
-  // 3. DORSO (dopo Femorali, così 'stacco' prende solo lo stacco regolare/sumo da terra)
-  if (
-    name.includes("trazioni") ||
-    name.includes("lat") ||
-    name.includes("rematore") ||
-    name.includes("pulley") ||
-    name.includes("stacco") ||
-    name.includes("pull down") ||
-    name.includes("pulldown") ||
-    name.includes("chin up") ||
-    name.includes("row")
-  )
-    return "Dorso";
-
-  // 4. QUADRICIPITI
-  if (
-    name.includes("squat") ||
-    name.includes("pressa") ||
-    name.includes("leg ext") ||
-    name.includes("affondi") ||
-    name.includes("lunge") ||
-    name.includes("hack") ||
-    name.includes("quadricipit")
-  )
-    return "Quadricipiti";
-
-  // 5. SPALLE
-  if (
-    name.includes("shoulder") ||
-    name.includes("military") ||
-    name.includes("lento") ||
-    name.includes("alzate") ||
-    name.includes("deltoid") ||
-    name.includes("arnold") ||
-    name.includes("press spalle") ||
-    name.includes("shrug")
-  )
-    return "Spalle";
-
-  // 6. PETTO
-  if (
-    name.includes("panca") ||
-    name.includes("chest") ||
-    name.includes("croci") ||
-    name.includes("dip") ||
-    name.includes("push up") ||
-    name.includes("piegament") ||
-    name.includes("pectoral") ||
-    name.includes("spinte") ||
-    name.includes("fly")
-  )
-    return "Petto";
-
-  // 7. TRICIPITI (da controllare prima di bicipiti per 'pushdown')
+  // 1. TRICIPITI (Pushdown, Cavi Corda, French Press, Ercolina, Kickback)
   if (
     name.includes("pushdown") ||
     name.includes("french") ||
     name.includes("tricipit") ||
     name.includes("triceps") ||
+    name.includes("ercolina") ||
+    name.includes("corda") ||
+    name.includes("kickback") ||
     name.includes("skull crusher") ||
-    name.includes("estensioni manubrio")
-  )
-    return "Tricipiti";
+    name.includes("cavo alto") ||
+    (name.includes("dip") && !name.includes("petto"))
+  ) {
+    return "Tricipiti" as MuscleGroup;
+  }
 
-  // 8. BICIPITI (dopo Femorali e Tricipiti)
+  // 2. BICIPITI
   if (
     name.includes("curl") ||
     name.includes("bicipit") ||
     name.includes("biceps") ||
     name.includes("hammer") ||
     name.includes("scott")
-  )
-    return "Bicipiti";
+  ) {
+    return "Bicipiti" as MuscleGroup;
+  }
 
-  // 9. POLPACCI
+  // 3. SPALLE - DELTOIDI SPECIFICI (Anteriori, Laterali, Posteriori)
+  if (name.includes("lateral") || name.includes("cavo lateral")) {
+    return "Deltoidi Laterali" as MuscleGroup;
+  }
+  if (name.includes("face pull") || name.includes("alzate 90") || name.includes("deltoidi post") || name.includes("croci inverse") || name.includes("rear delt")) {
+    return "Deltoidi Posteriori" as MuscleGroup;
+  }
   if (
-    name.includes("polpacc") ||
-    name.includes("calf") ||
-    name.includes("calves")
-  )
-    return "Polpacci";
+    name.includes("70") ||
+    name.includes("lento") ||
+    name.includes("military") ||
+    name.includes("shoulder") ||
+    name.includes("spinte spalle") ||
+    name.includes("arnold") ||
+    name.includes("frontali") ||
+    name.includes("alzate")
+  ) {
+    return "Deltoidi Anteriori" as MuscleGroup;
+  }
 
-  // 10. ADDOME
+  // 4. SCHIENA SPECIFICA (Gran Dorsale vs Upper Back)
+  if (
+    name.includes("trazioni") ||
+    name.includes("lat machine") ||
+    name.includes("lat pulldown") ||
+    name.includes("pullover")
+  ) {
+    return "Gran Dorsale" as MuscleGroup;
+  }
+  if (
+    name.includes("rematore") ||
+    name.includes("row") ||
+    name.includes("pulley") ||
+    name.includes("seal") ||
+    name.includes("scrollate") ||
+    name.includes("shrug") ||
+    name.includes("dorso")
+  ) {
+    return "Upper Back" as MuscleGroup;
+  }
+
+  // 5. FEMORALI (Stacco Rumeno, Leg Curl, RDL)
+  if (
+    name.includes("rumeno") ||
+    name.includes("semitese") ||
+    name.includes("rdl") ||
+    name.includes("leg curl") ||
+    name.includes("femorali") ||
+    name.includes("iperestensioni")
+  ) {
+    return "Femorali" as MuscleGroup;
+  }
+
+  // 6. STACCO DA TERRA / DEADLIFT
+  if (name.includes("stacco da terra") || name.includes("deadlift") || name.includes("rack pull")) {
+    return "Femorali" as MuscleGroup;
+  }
+
+  // 7. GLUTEI
+  if (
+    name.includes("hip thrust") ||
+    name.includes("glute") ||
+    name.includes("ponte") ||
+    name.includes("abductor") ||
+    name.includes("slanci")
+  ) {
+    return "Glutei" as MuscleGroup;
+  }
+
+  // 8. ADDUTTORI
+  if (name.includes("adductor") || name.includes("adduttor")) {
+    return "Adduttori" as MuscleGroup;
+  }
+
+  // 9. QUADRICIPITI
+  if (
+    name.includes("squat") ||
+    name.includes("pressa") ||
+    name.includes("leg press") ||
+    name.includes("leg extension") ||
+    name.includes("affondi") ||
+    name.includes("bulgar") ||
+    name.includes("hack") ||
+    name.includes("sissy")
+  ) {
+    return "Quadricipiti" as MuscleGroup;
+  }
+
+  // 10. POLPACCI
+  if (
+    name.includes("calf") ||
+    name.includes("polpacc") ||
+    name.includes("soleo")
+  ) {
+    return "Polpacci" as MuscleGroup;
+  }
+
+  // 11. ADDOME / CORE
   if (
     name.includes("crunch") ||
     name.includes("plank") ||
-    name.includes("addominal") ||
+    name.includes("addom") ||
     name.includes("core") ||
     name.includes("leg raise") ||
     name.includes("sit up")
-  )
-    return "Addome";
+  ) {
+    return "Addome" as MuscleGroup;
+  }
 
-  // Se non riconosciuto, NON ritornare 'Petto' alla cieca!
-  // Restituiamo un default intelligente o lasciamolo come Glutei/Addome/Altro se non specificato
-  return "Addome"; // Oppure gestito come distretto jolly/Addome invece di intasare il Petto
+  // 12. PETTO (Default per spinte piane/inclinate, croci)
+  if (
+    name.includes("panca") ||
+    name.includes("spinte") ||
+    name.includes("chest") ||
+    name.includes("croci") ||
+    name.includes("pectoral") ||
+    name.includes("dip")
+  ) {
+    return "Petto" as MuscleGroup;
+  }
+
+  return "Petto" as MuscleGroup;
 };
 
 export interface Exercise {
@@ -555,7 +571,16 @@ useEffect(() => {
     setEditingDayId(dayId);
     setEditingExId(ex.id);
     setBuilderExName(ex.name);
-    setBuilderMuscleGroup(ex.muscleGroup || autoDetectMuscleGroup(ex.name));
+    const detectedMG = autoDetectMuscleGroup(ex.name);
+    const valid14 = [
+      "Petto", "Gran Dorsale", "Upper Back", "Deltoidi Anteriori", "Deltoidi Laterali", 
+      "Deltoidi Posteriori", "Tricipiti", "Bicipiti", "Quadricipiti", "Femorali", 
+      "Glutei", "Adduttori", "Polpacci", "Addome"
+    ];
+    const isInvalid = !valid14.includes(ex.muscleGroup as any);
+    const isCorruptedPetto = ex.muscleGroup === "Petto" && detectedMG !== "Petto";
+    const healedMG = (isInvalid || isCorruptedPetto) ? detectedMG : (ex.muscleGroup || detectedMG);
+    setBuilderMuscleGroup(healedMG as MuscleGroup);
     setBuilderStimulus(ex.stimulusType || "HYPERTROPHIC");
     setBuilderSets(ex.sets);
     setBuilderReps(ex.reps);
@@ -4015,7 +4040,22 @@ if (isFinished) {
                                             onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
                                             className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white font-medium focus:outline-none focus:border-red-500"
                                           >
-                                            {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Braccia", "Core", "Polpacci", "Full Body"].map((g) => (
+                                            {[
+                                              "Petto",
+                                              "Gran Dorsale",
+                                              "Upper Back",
+                                              "Deltoidi Anteriori",
+                                              "Deltoidi Laterali",
+                                              "Deltoidi Posteriori",
+                                              "Tricipiti",
+                                              "Bicipiti",
+                                              "Quadricipiti",
+                                              "Femorali",
+                                              "Glutei",
+                                              "Adduttori",
+                                              "Polpacci",
+                                              "Addome"
+                                            ].map((g) => (
                                               <option key={g} value={g}>{g}</option>
                                             ))}
                                           </select>
@@ -4224,7 +4264,22 @@ if (isFinished) {
                                   onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
                                   className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
                                 >
-                                  {["Petto", "Dorso", "Spalle", "Quadricipiti", "Femorali", "Glutei", "Bicipiti", "Tricipiti", "Polpacci", "Addome"].map((mg) => (
+                                  {[
+                                              "Petto",
+                                              "Gran Dorsale",
+                                              "Upper Back",
+                                              "Deltoidi Anteriori",
+                                              "Deltoidi Laterali",
+                                              "Deltoidi Posteriori",
+                                              "Tricipiti",
+                                              "Bicipiti",
+                                              "Quadricipiti",
+                                              "Femorali",
+                                              "Glutei",
+                                              "Adduttori",
+                                              "Polpacci",
+                                              "Addome"
+                                            ].map((mg) => (
                                     <option key={mg} value={mg}>{mg}</option>
                                   ))}
                                 </select>
