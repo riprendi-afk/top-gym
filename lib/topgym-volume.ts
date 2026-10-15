@@ -213,122 +213,105 @@ export function resolveMuscleTarget(
   declaredGroup?: string,
   programDictionary?: Map<string, MuscleTarget>
 ): MuscleTarget | null {
-  // 1. Se il gruppo è già uno dei 14 distretti ufficiali, usalo subito
-  if (declaredGroup && ALL_MUSCLE_TARGETS.includes(declaredGroup as MuscleTarget)) {
-    return declaredGroup as MuscleTarget;
-  }
-
-  const name = (exerciseName || '').toLowerCase().trim();
-  if (!name) return null;
+  const name = (exerciseName || "").toLowerCase().trim();
+  const declared = (declaredGroup || "").trim() as MuscleTarget;
 
   if (programDictionary && programDictionary.has(name)) {
     return programDictionary.get(name)!;
   }
 
-  // 2. ADDUTTORI (priorità massima per non confonderli con quadricipiti o abduttori)
-  if (
-    name.includes('adductor') || name.includes('adduttor') || name.includes('adduzion') ||
-    name.includes('copenaghen') || name.includes('copenhagen') || name.includes('sumo squat') ||
-    name.includes('affondi lateral') || name.includes('lunge lateral')
-  ) return 'Adduttori';
+  // 1. FILTRO ANTI-CORRUZIONE: Esercizi che NON POSSONO MAI essere Petto
+  const isDefinitelyNotPetto =
+    name.includes("pushdown") ||
+    name.includes("french") ||
+    name.includes("tricipit") ||
+    name.includes("triceps") ||
+    name.includes("ercolina") ||
+    name.includes("corda") ||
+    name.includes("kickback") ||
+    name.includes("skull crusher") ||
+    name.includes("curl") ||
+    name.includes("bicipit") ||
+    name.includes("biceps") ||
+    name.includes("hammer") ||
+    name.includes("scott") ||
+    name.includes("lento") ||
+    name.includes("military") ||
+    name.includes("shoulder") ||
+    name.includes("alzate") ||
+    name.includes("face pull") ||
+    name.includes("deltoid") ||
+    name.includes("arnold") ||
+    name.includes("70") ||
+    name.includes("trazioni") ||
+    name.includes("lat machine") ||
+    name.includes("lat pulldown") ||
+    name.includes("pulley") ||
+    name.includes("rematore") ||
+    name.includes("row") ||
+    name.includes("dorsal") ||
+    name.includes("pullover") ||
+    name.includes("squat") ||
+    name.includes("pressa") ||
+    name.includes("leg press") ||
+    name.includes("leg extension") ||
+    name.includes("affondi") ||
+    name.includes("bulgar") ||
+    name.includes("hack") ||
+    name.includes("stacco") ||
+    name.includes("deadlift") ||
+    name.includes("rumeno") ||
+    name.includes("semitese") ||
+    name.includes("rdl") ||
+    name.includes("leg curl") ||
+    name.includes("femorali") ||
+    name.includes("hip thrust") ||
+    name.includes("glute") ||
+    name.includes("abductor") ||
+    name.includes("adductor") ||
+    name.includes("calf") ||
+    name.includes("polpacc") ||
+    name.includes("crunch") ||
+    name.includes("plank") ||
+    name.includes("addom");
 
-  // 3. FEMORALI (Ischiocrurali)
-  if (
-    name.includes('stacco rumeno') || name.includes('rdl') || name.includes('leg curl') ||
-    name.includes('femoral') || name.includes('hamstring') || name.includes('lying curl') ||
-    name.includes('seated curl') || name.includes('good morning') || name.includes('gambe tese') ||
-    name.includes('nordic') || name.includes('ghr')
-  ) return 'Femorali';
-
-  // 4. GLUTEI
-  if (
-    name.includes('hip thrust') || name.includes('glute') || name.includes('kickback') ||
-    name.includes('kick back') || name.includes('slanci') || name.includes('abductor') ||
-    name.includes('abduzion') || name.includes('bridge') || name.includes('ponte') ||
-    name.includes('frog pump') || name.includes('clamshell') || name.includes('step up') ||
-    name.includes('step-up') || name.includes('bulgar') || name.includes('hyperextension') ||
-    name.includes('iperestension') || name.includes('reverse hyper')
-  ) return 'Glutei';
-
-  // 5. QUADRICIPITI
-  if (
-    name.includes('squat') || name.includes('leg press') || name.includes('pressa') ||
-    name.includes('leg ext') || name.includes('affondi') || name.includes('lunge') ||
-    name.includes('hack') || name.includes('sissy') || name.includes('quadricipit')
-  ) return 'Quadricipiti';
-
-  // 6. DELTOIDI POSTERIORI
-  if (
-    name.includes('face pull') || name.includes('face-pull') || name.includes('facepull') ||
-    name.includes('90°') || name.includes('90 gradi') || name.includes('posteriore') ||
-    name.includes('posteriori') || name.includes('rear delt') || name.includes('reverse fly') ||
-    name.includes('pec deck invers')
-  ) return 'Deltoidi Posteriori';
-
-  // 7. DELTOIDI LATERALI
-  if (
-    name.includes('alzate lateral') || name.includes('alzata lateral') || name.includes('lateral raise') ||
-    name.includes('tirate al petto') || name.includes('tirate al mento') || name.includes('cavi later')
-  ) return 'Deltoidi Laterali';
-
-  // 8. DELTOIDI ANTERIORI
-  if (
-    name.includes('military') || name.includes('lento') || name.includes('shoulder press') ||
-    name.includes('press spalle') || name.includes('arnold') || name.includes('alzate frontal') ||
-    name.includes('front raise')
-  ) return 'Deltoidi Anteriori';
-
-  // 9. GRAN DORSALE (Ampiezza / Piani verticali e adduzione)
-  if (
-    name.includes('lat machine') || name.includes('lat ') || name.includes('trazioni') ||
-    name.includes('pull up') || name.includes('pull-up') || name.includes('pullup') ||
-    name.includes('chin up') || name.includes('chin-up') || name.includes('chinup') ||
-    name.includes('pulldown') || name.includes('pull down') || name.includes('pullover')
-  ) return 'Gran Dorsale';
-
-  // 10. UPPER BACK (Spessore, Romboidi, Trapezio)
-  if (
-    name.includes('rematore') || name.includes('pulley') || name.includes('row') ||
-    name.includes('t-bar') || name.includes('tbar') || name.includes('seal row') ||
-    name.includes('shrug') || name.includes('scrollat') || name.includes('stacco da terra') ||
-    name.includes('deadlift')
-  ) return 'Upper Back';
-
-  // 11. PETTO
-  if (
-    name.includes('panca') || name.includes('chest') || name.includes('croci') ||
-    name.includes('dip') || name.includes('push up') || name.includes('push-up') ||
-    name.includes('piegament') || name.includes('pectoral') || name.includes('spinte') ||
-    name.includes('fly')
-  ) return 'Petto';
-
-  // 12. TRICIPITI
-  if (
-    name.includes('pushdown') || name.includes('french') || name.includes('tricipit') ||
-    name.includes('triceps') || name.includes('skull crusher')
-  ) return 'Tricipiti';
-
-  // 13. BICIPITI
-  if (
-    name.includes('curl') || name.includes('bicipit') || name.includes('biceps') ||
-    name.includes('hammer') || name.includes('scott')
-  ) return 'Bicipiti';
-
-  // 14. POLPACCI
-  if (name.includes('polpacc') || name.includes('calf') || name.includes('calves') || name.includes('soleo')) {
-    return 'Polpacci';
+  // Se l'esercizio e' salvato come Petto ma e' palesemente un altro muscolo, ignora l'etichetta corrotta!
+  if (declared === "Petto" && isDefinitelyNotPetto) {
+    // Risoluzione forzata sul distretto reale da nome
+    if (name.includes("pushdown") || name.includes("french") || name.includes("tricipit") || name.includes("corda") || name.includes("ercolina")) return "Tricipiti";
+    if (name.includes("curl") || name.includes("bicipit") || name.includes("hammer")) return "Bicipiti";
+    if (name.includes("lateral") || name.includes("cavo lateral")) return "Deltoidi Laterali";
+    if (name.includes("post") || name.includes("face pull") || name.includes("90")) return "Deltoidi Posteriori";
+    if (name.includes("70") || name.includes("lento") || name.includes("military") || name.includes("shoulder") || name.includes("alzate")) return "Deltoidi Anteriori";
+    if (name.includes("trazioni") || name.includes("lat machine") || name.includes("pullover")) return "Gran Dorsale";
+    if (name.includes("rematore") || name.includes("pulley") || name.includes("row")) return "Upper Back";
+    if (name.includes("squat") || name.includes("press") || name.includes("leg extension")) return "Quadricipiti";
+    if (name.includes("stacco") || name.includes("rumeno") || name.includes("leg curl")) return "Femorali";
+    if (name.includes("hip thrust") || name.includes("glute")) return "Glutei";
+    if (name.includes("calf") || name.includes("polpacc")) return "Polpacci";
+    if (name.includes("crunch") || name.includes("plank") || name.includes("addom")) return "Addome";
   }
 
-  // 15. ADDOME
-  if (
-    name.includes('crunch') || name.includes('plank') || name.includes('addom') ||
-    name.includes('core') || name.includes('leg raise') || name.includes('sit up')
-  ) return 'Addome';
+  // 2. Se l'etichetta e' valida e non e' un falso Petto, rispettala
+  if (declared && ALL_MUSCLE_TARGETS.includes(declared)) {
+    return declared;
+  }
 
-  // 16. Fallback retrocompatibilità per vecchi gruppi generici
-  if (declaredGroup === 'Dorso') return 'Gran Dorsale';
-  if (declaredGroup === 'Spalle') return 'Deltoidi Laterali';
-  if (declaredGroup === 'Braccia') return 'Bicipiti';
+  // 3. Riconoscimento standard dal nome per tutto il resto
+  if (name.includes("pushdown") || name.includes("french") || name.includes("tricipit") || name.includes("corda") || name.includes("ercolina")) return "Tricipiti";
+  if (name.includes("curl") || name.includes("bicipit") || name.includes("hammer")) return "Bicipiti";
+  if (name.includes("lateral") || name.includes("cavo lateral")) return "Deltoidi Laterali";
+  if (name.includes("post") || name.includes("face pull") || name.includes("90")) return "Deltoidi Posteriori";
+  if (name.includes("70") || name.includes("lento") || name.includes("military") || name.includes("shoulder") || name.includes("spinte spalle")) return "Deltoidi Anteriori";
+  if (name.includes("trazioni") || name.includes("lat machine") || name.includes("pullover")) return "Gran Dorsale";
+  if (name.includes("rematore") || name.includes("pulley") || name.includes("row")) return "Upper Back";
+  if (name.includes("squat") || name.includes("press") || name.includes("leg extension") || name.includes("affondi")) return "Quadricipiti";
+  if (name.includes("stacco") || name.includes("rumeno") || name.includes("leg curl") || name.includes("semitese")) return "Femorali";
+  if (name.includes("hip thrust") || name.includes("glute")) return "Glutei";
+  if (name.includes("calf") || name.includes("polpacc")) return "Polpacci";
+  if (name.includes("adductor")) return "Adduttori";
+  if (name.includes("crunch") || name.includes("plank") || name.includes("addom")) return "Addome";
+  if (name.includes("panca") || name.includes("spinte") || name.includes("chest") || name.includes("croci") || name.includes("dip")) return "Petto";
 
   return null;
 }
@@ -449,18 +432,7 @@ export function calculatePlannedWeeklySets(
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
 
-      const declared = (ex.muscleGroup || "").trim();
-      let target: MuscleTarget | null = null;
-
-      // 1. LA VOLONTÀ DEL COACH È SOVRANA: se il gruppo muscolare impostato è uno dei 14 distretti validi, usalo!
-      if (declared && ALL_MUSCLE_TARGETS.includes(declared as MuscleTarget)) {
-        target = declared as MuscleTarget;
-      } else {
-        // 2. Se manca o non è standard, risolvi tramite il dizionario o autodetect intelligente
-        const resolved = resolveMuscleTarget(ex.name, declared, programDict);
-        target = resolved || null;
-      }
-
+      const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
       if (target && map[target] !== undefined) {
         map[target] += setsCount;
       }
@@ -468,7 +440,7 @@ export function calculatePlannedWeeklySets(
   });
 
   return map;
-};;
+};;;
 
 export function buildMuscleVolumeStatuses(
   setsMap: Record<MuscleTarget, number>,
