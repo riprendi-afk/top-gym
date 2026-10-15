@@ -1,4 +1,65 @@
 
+export function normalizeMuscleTarget(declared?: string, exerciseName?: string): MuscleTarget {
+  const g = (declared || "").trim().toLowerCase();
+  const n = (exerciseName || "").trim().toLowerCase();
+
+  // Match diretto sui 14 distretti ufficiali
+  if (g === "petto" || g === "pettorali" || g === "chest") return "Petto";
+  if (g === "gran dorsale" || g === "lat machine" || g === "trazioni" || g === "pulldown") return "Gran Dorsale";
+  if (g === "upper back" || g === "trapezio" || g === "dorso alto") return "Upper Back";
+  if (g === "deltoidi anteriori" || g === "spalla anteriore") return "Deltoidi Anteriori";
+  if (g === "deltoidi laterali" || g === "spalla laterale") return "Deltoidi Laterali";
+  if (g === "deltoidi posteriori" || g === "spalla posteriore" || g === "rear delt") return "Deltoidi Posteriori";
+  if (g === "tricipiti" || g === "triceps") return "Tricipiti";
+  if (g === "bicipiti" || g === "biceps") return "Bicipiti";
+  if (g === "quadricipiti" || g === "quads" || g === "quadricipite") return "Quadricipiti";
+  if (g === "femorali" || g === "ischiocrurali" || g === "hamstrings") return "Femorali";
+  if (g === "glutei" || g === "gluteo" || g === "glutes") return "Glutei";
+  if (g === "adduttori" || g === "adductor") return "Adduttori";
+  if (g === "polpacci" || g === "calf" || g === "polpaccio") return "Polpacci";
+  if (g === "addome" || g === "core" || g === "abs" || g === "addominali") return "Addome";
+
+  // Risoluzione etichette macro / storiche
+  if (g === "dorso" || g === "schiena") {
+    if (n.includes("rematore") || n.includes("pulley") || n.includes("row") || n.includes("seal") || n.includes("scrollat")) return "Upper Back";
+    return "Gran Dorsale";
+  }
+  if (g === "spalle" || g === "deltoidi") {
+    if (n.includes("lateral") || n.includes("alzate lat")) return "Deltoidi Laterali";
+    if (n.includes("post") || n.includes("face pull") || n.includes("90") || n.includes("rear")) return "Deltoidi Posteriori";
+    return "Deltoidi Anteriori";
+  }
+  if (g === "braccia") {
+    if (n.includes("pushdown") || n.includes("french") || n.includes("ercolina") || n.includes("corda") || n.includes("tricipit") || n.includes("dip")) return "Tricipiti";
+    return "Bicipiti";
+  }
+  if (g === "gambe") {
+    if (n.includes("stacco") || n.includes("rumeno") || n.includes("leg curl") || n.includes("rdl") || n.includes("femor")) return "Femorali";
+    if (n.includes("hip thrust") || n.includes("glute") || n.includes("abductor")) return "Glutei";
+    if (n.includes("calf") || n.includes("polpacc")) return "Polpacci";
+    return "Quadricipiti";
+  }
+
+  // Risoluzione da nome se l'etichetta non era impostata
+  if (n.includes("pushdown") || n.includes("french") || n.includes("tricipit") || n.includes("ercolina") || n.includes("corda")) return "Tricipiti";
+  if (n.includes("curl") || n.includes("bicipit") || n.includes("hammer")) return "Bicipiti";
+  if (n.includes("lateral") || n.includes("alzate lat")) return "Deltoidi Laterali";
+  if (n.includes("face pull") || n.includes("post") || n.includes("90") || n.includes("rear")) return "Deltoidi Posteriori";
+  if (n.includes("70") || n.includes("lento") || n.includes("military") || n.includes("shoulder") || n.includes("alzate") || n.includes("spinte spalle")) return "Deltoidi Anteriori";
+  if (n.includes("trazioni") || n.includes("lat machine") || n.includes("pullover") || n.includes("dorsal")) return "Gran Dorsale";
+  if (n.includes("rematore") || n.includes("row") || n.includes("pulley") || n.includes("seal")) return "Upper Back";
+  if (n.includes("squat") || n.includes("press") || n.includes("leg extension") || n.includes("affondi") || n.includes("bulgar")) return "Quadricipiti";
+  if (n.includes("stacco") || n.includes("rumeno") || n.includes("leg curl") || n.includes("semitese") || n.includes("rdl")) return "Femorali";
+  if (n.includes("hip thrust") || n.includes("glute") || n.includes("ponte")) return "Glutei";
+  if (n.includes("adductor")) return "Adduttori";
+  if (n.includes("calf") || n.includes("polpacc")) return "Polpacci";
+  if (n.includes("crunch") || n.includes("plank") || n.includes("addom") || n.includes("core")) return "Addome";
+  if (n.includes("panca") || n.includes("spinte") || n.includes("chest") || n.includes("croci") || n.includes("dip") || n.includes("pectoral")) return "Petto";
+
+  return "Petto";
+}
+
+
 export type MultiTargetMap = Partial<Record<MuscleTarget, number>>;
 
 export function resolveMultiTargetDistribution(exerciseName?: string, declaredGroup?: string): MultiTargetMap {
@@ -432,17 +493,15 @@ export function calculatePlannedWeeklySets(
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
 
-      // COLLEGAMENTO DIRETTO ALLA SCHEDA:
-      // Conta le serie esattamente sul distretto selezionato dal coach nella scheda
-      const group = (ex.muscleGroup || "").trim();
-      if (group && map[group as MuscleTarget] !== undefined) {
-        map[group as MuscleTarget] += setsCount;
+      const target = normalizeMuscleTarget(ex.muscleGroup, ex.name);
+      if (map[target] !== undefined) {
+        map[target] += setsCount;
       }
     });
   });
 
   return map;
-};;;;
+};;;;;
 
 export function buildMuscleVolumeStatuses(
   setsMap: Record<MuscleTarget, number>,
