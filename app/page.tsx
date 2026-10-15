@@ -4439,7 +4439,8 @@ if (isFinished) {
                   </div>
 
                   {(() => {
-                    const plannedMap = calculatePlannedWeeklySets(programDays || []);
+                    
+                  const plannedMap = calculatePlannedWeeklySets(programDays || []);
                     const entries = Object.entries(plannedMap)
                       .filter(([_, sets]) => (Number(sets) || 0) > 0)
                       .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0));

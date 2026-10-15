@@ -476,14 +476,132 @@ export function calculateLoggedWeeklySets(
     }
   });
 
-  return map;
+  return map as Record<MuscleTarget, number>;
+}
+
+export const TOPGYM_14_DISTRETTI: MuscleTarget[] = [
+  "Petto",
+  "Gran Dorsale",
+  "Upper Back",
+  "Deltoidi Anteriori",
+  "Deltoidi Laterali",
+  "Deltoidi Posteriori",
+  "Tricipiti",
+  "Bicipiti",
+  "Quadricipiti",
+  "Femorali",
+  "Glutei",
+  "Adduttori",
+  "Polpacci",
+  "Addome"
+];
+
+export function resolveExactTopGymDistrict(nameRaw?: string, declaredGroup?: string): MuscleTarget {
+  const g = (declaredGroup || "").trim();
+  const n = (nameRaw || "").toLowerCase().trim();
+
+  // 1. Se il coach ha impostato a mano uno dei 14 distretti ufficiali, rispettalo!
+  if (TOPGYM_14_DISTRETTI.includes(g as MuscleTarget)) {
+    return g as MuscleTarget;
+  }
+
+  // 2. Mappatura chirurgica da nome ed etichette legacy
+  // PETTO (Panca, Spinte, Pec Fly, Chest Press, Croci)
+  if (
+    n.includes("panca") ||
+    n.includes("pec fly") ||
+    n.includes("chest press") ||
+    n.includes("croci") ||
+    (n.includes("spinte") && (n.includes("30") || n.includes("piana") || n.includes("inclinata") || n.includes("multipower")))
+  ) {
+    return "Petto";
+  }
+
+  // DELTOIDI LATERALI (Alzate laterali manubri, cavi, macchinario)
+  if (n.includes("alzate laterali") || n.includes("lateral raise")) {
+    return "Deltoidi Laterali";
+  }
+
+  // DELTOIDI POSTERIORI (Deltoidi post, alzate a 90, face pull)
+  if (n.includes("deltoidi post") || n.includes("90") || n.includes("face pull") || n.includes("rear delt")) {
+    return "Deltoidi Posteriori";
+  }
+
+  // DELTOIDI ANTERIORI (Lento avanti, Military press, Spinte spalle)
+  if (n.includes("lento") || n.includes("military") || n.includes("shoulder") || n.includes("spinte spalle")) {
+    return "Deltoidi Anteriori";
+  }
+
+  // GRAN DORSALE (Lat machine, Pullover, Trazioni)
+  if (n.includes("lat machine") || n.includes("trazioni") || n.includes("pullover") || n.includes("lat pulldown")) {
+    return "Gran Dorsale";
+  }
+
+  // UPPER BACK (Rematori bilanciere/manubrio, Pulley basso, Rack pull, Scrollate)
+  if (n.includes("rematore") || n.includes("pulley") || n.includes("rack pull") || n.includes("seal") || n.includes("shrug")) {
+    return "Upper Back";
+  }
+
+  // TRICIPITI (French press, Pushdown, Ercolina, Cavo alto)
+  if (n.includes("french") || n.includes("pushdown") || n.includes("tricipit") || n.includes("corda")) {
+    return "Tricipiti";
+  }
+
+  // BICIPITI (Curl bilanciere/manubri, Hammer curl, Scott)
+  if (n.includes("curl") || n.includes("bicipit") || n.includes("hammer")) {
+    return "Bicipiti";
+  }
+
+  // QUADRICIPITI (Squat, Hack squat, Leg press, Affondi bulgari, Leg extension)
+  if (n.includes("squat") || n.includes("press") || n.includes("affondi") || n.includes("bulgar") || n.includes("leg extension")) {
+    return "Quadricipiti";
+  }
+
+  // FEMORALI (Stacco rumeno, RDL, Leg curl, Semitese)
+  if (n.includes("rumeno") || n.includes("stacco") || n.includes("leg curl") || n.includes("femorali") || n.includes("rdl")) {
+    return "Femorali";
+  }
+
+  // POLPACCI (Calf)
+  if (n.includes("calf") || n.includes("polpacc")) {
+    return "Polpacci";
+  }
+
+  // ADDOME (Crunch, Plank, Core)
+  if (n.includes("crunch") || n.includes("plank") || n.includes("addom") || n.includes("core")) {
+    return "Addome";
+  }
+
+  // Risoluzione residua macro-gruppi storici
+  if (g === "Dorso") return "Upper Back";
+  if (g === "Spalle") return "Deltoidi Laterali";
+  if (g === "Femorali") return "Femorali";
+  if (g === "Polpacci") return "Polpacci";
+
+  return "Petto";
 }
 
 export function calculatePlannedWeeklySets(
   daysOrTemplate: any,
   programDict?: Map<string, MuscleTarget>
 ): Record<MuscleTarget, number> {
-  const map = createEmptySetsMap();
+  const map: Record<MuscleTarget, number> = {
+    "Petto": 0,
+    "Gran Dorsale": 0,
+    "Upper Back": 0,
+    "Deltoidi Anteriori": 0,
+    "Deltoidi Laterali": 0,
+    "Deltoidi Posteriori": 0,
+    "Tricipiti": 0,
+    "Bicipiti": 0,
+    "Quadricipiti": 0,
+    "Femorali": 0,
+    "Glutei": 0,
+    "Adduttori": 0,
+    "Polpacci": 0,
+    "Addome": 0
+  };
+
   const targetDays = Array.isArray(daysOrTemplate)
     ? daysOrTemplate
     : (daysOrTemplate && Array.isArray(daysOrTemplate.days) ? daysOrTemplate.days : []);
@@ -493,7 +611,7 @@ export function calculatePlannedWeeklySets(
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
 
-      const target = normalizeMuscleTarget(ex.muscleGroup, ex.name);
+      const target = resolveExactTopGymDistrict(ex.name, ex.muscleGroup);
       if (map[target] !== undefined) {
         map[target] += setsCount;
       }
