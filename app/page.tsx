@@ -767,6 +767,26 @@ useEffect(() => {
     }
   }, []);
 
+  const loadAllAthletesReadiness = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from("readiness_logs")
+        .select("user_id, readiness_score, date")
+        .order("date", { ascending: false });
+      if (!error && data) {
+        const mapped = data.map((d: any) => ({ athleteId: d.user_id, readinessScore: d.readiness_score, date: d.date }));
+        setReadinessHistory(mapped as any);
+      }
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    if (userRole === "COACH") {
+      loadAllAthletesReadiness();
+    }
+  }, [userRole, loadAllAthletesReadiness]);
+
   const loadReadinessHistory = useCallback(async (userId: string) => {
     if (!supabase || !userId) {
       setReadinessLoadError(null);
@@ -4356,7 +4376,7 @@ if (isFinished) {
                       );
                     }
 
-                    const displayMuscles = entries.slice(0, 6);
+                    const displayMuscles = entries;
                     const maxVal = Math.max(...displayMuscles.map(m => Number(m[1]) || 0), 1);
                     const colorStyles = [
                       { bar: "bg-[#E50914]", text: "text-red-400" },
@@ -4368,7 +4388,7 @@ if (isFinished) {
                     ];
 
                     return (
-                      <div className="space-y-2.5">
+                      <div className="space-y-2 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
                         {displayMuscles.map(([name, sets], idx) => {
                           const setsCount = Number(sets) || 0;
                           const pct = Math.min(100, Math.round((setsCount / maxVal) * 100));
@@ -4385,11 +4405,7 @@ if (isFinished) {
                             </div>
                           );
                         })}
-                        {entries.length > 6 && (
-                          <div className="text-[10px] text-zinc-500 text-right pt-0.5">
-                            + altri {entries.length - 6} distretti attivi nel radar
-                          </div>
-                        )}
+                        
                       </div>
                     );
                   })()}

@@ -83,9 +83,8 @@ export default function CoachDashboard({
           const level = Math.min(99, Math.floor(Math.sqrt(ath.xp / 25)));
 
           // Ultima readiness per atleta
-          const latestR = readinessHistory && readinessHistory.length > 0 && isSelected 
-            ? readinessHistory[0]?.readinessScore 
-            : null;
+          const latestItem = (readinessHistory || []).find((r: any) => r.athleteId === ath.id || r.user_id === ath.id);
+          const latestR = latestItem ? (latestItem.readinessScore ?? latestItem.readiness_score) : ((ath as any).readinessScore || null);
 
           return (
             <div
@@ -112,12 +111,19 @@ export default function CoachDashboard({
                 </div>
               </div>
 
-              {isSelected && latestR !== null && latestR !== undefined && (
+              {latestR !== null && latestR !== undefined ? (
                 <div className="mb-3 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
                   <span className="text-zinc-400 flex items-center gap-1.5">
                     <Gauge className="w-3.5 h-3.5 text-emerald-400" /> Forma Attuale:
                   </span>
                   <b className={`font-mono ${latestR >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>{latestR}%</b>
+                </div>
+              ) : (
+                <div className="mb-3 bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                  <span className="text-zinc-500 flex items-center gap-1.5">
+                    <Gauge className="w-3.5 h-3.5 text-zinc-600" /> Forma Attuale:
+                  </span>
+                  <span className="font-mono text-zinc-500 text-[11px]">Nessun Check-in</span>
                 </div>
               )}
 

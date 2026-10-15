@@ -1,3 +1,123 @@
+
+export type MultiTargetMap = Partial<Record<MuscleTarget, number>>;
+
+export function resolveMultiTargetDistribution(exerciseName?: string, declaredGroup?: string): MultiTargetMap {
+  const name = (exerciseName || "").toLowerCase().trim();
+  const group = (declaredGroup || "").toLowerCase().trim();
+
+  // Spinte 70° / Lento Avanti / Military / Spinte Spalle
+  if (name.includes("70") || name.includes("lento") || name.includes("military") || name.includes("shoulder") || name.includes("spinte spalle")) {
+    return {
+      "Deltoidi Anteriori": 1.0,
+      "Deltoidi Laterali": 0.5,
+      "Deltoidi Posteriori": 0.3,
+      "Upper Back": 0.3,
+      "Tricipiti": 0.4
+    };
+  }
+
+  // Stacco da Terra / Deadlift / Rack Pull
+  if (name.includes("stacco da terra") || name.includes("deadlift") || name.includes("rack pull")) {
+    return {
+      "Glutei": 0.8,
+      "Femorali": 0.8,
+      "Upper Back": 0.6,
+      "Gran Dorsale": 0.4,
+      "Quadricipiti": 0.3,
+      "Addome": 0.4
+    };
+  }
+
+  // Stacco Rumeno / Gambe Semitese
+  if (name.includes("rumeno") || name.includes("semitese") || name.includes("rdl")) {
+    return {
+      "Femorali": 1.0,
+      "Glutei": 0.8,
+      "Upper Back": 0.3
+    };
+  }
+
+  // Dip alle Parallele
+  if (name.includes("dip")) {
+    return {
+      "Petto": 0.7,
+      "Tricipiti": 0.8,
+      "Deltoidi Anteriori": 0.4
+    };
+  }
+
+  // Panca Inclinata / Spinte 30°
+  if ((name.includes("panca") || name.includes("spinte") || name.includes("chest")) && (name.includes("inclinat") || name.includes("30"))) {
+    return {
+      "Petto": 1.0,
+      "Deltoidi Anteriori": 0.6,
+      "Tricipiti": 0.4
+    };
+  }
+
+  // Panca Piana / Spinte Orizzontali / Chest Press
+  if (name.includes("panca piana") || (name.includes("spinte") && !name.includes("70")) || (name.includes("chest press") && !name.includes("inclinat"))) {
+    return {
+      "Petto": 1.0,
+      "Deltoidi Anteriori": 0.5,
+      "Tricipiti": 0.4
+    };
+  }
+
+  // Squat / Box Squat / Leg Press / Hack Squat
+  if (name.includes("squat") || name.includes("pressa") || name.includes("leg press")) {
+    return {
+      "Quadricipiti": 1.0,
+      "Glutei": 0.6,
+      "Adduttori": 0.4,
+      "Addome": 0.3
+    };
+  }
+
+  // Hip Thrust / Macchine Glutei
+  if (name.includes("hip thrust") || name.includes("glute") || name.includes("ponte")) {
+    return {
+      "Glutei": 1.0,
+      "Femorali": 0.3
+    };
+  }
+
+  // Rematori / Pulley / Row
+  if (name.includes("rematore") || name.includes("row") || name.includes("pulley")) {
+    return {
+      "Upper Back": 1.0,
+      "Gran Dorsale": 0.7,
+      "Deltoidi Posteriori": 0.5,
+      "Bicipiti": 0.4
+    };
+  }
+
+  // Trazioni / Lat Machine
+  if (name.includes("trazioni") || name.includes("lat machine") || name.includes("lat pulldown")) {
+    return {
+      "Gran Dorsale": 1.0,
+      "Upper Back": 0.5,
+      "Deltoidi Posteriori": 0.3,
+      "Bicipiti": 0.4
+    };
+  }
+
+  // Isolamenti specifici
+  if (name.includes("french") || name.includes("pushdown") || name.includes("tricipit") || group.includes("tricipiti")) return { "Tricipiti": 1.0 };
+  if (name.includes("curl") || group.includes("bicipiti")) return { "Bicipiti": 1.0 };
+  if (name.includes("alzate lateral") || name.includes("cavo lateral")) return { "Deltoidi Laterali": 1.0 };
+  if (name.includes("face pull") || name.includes("alzate 90") || name.includes("deltoidi post")) return { "Deltoidi Posteriori": 0.8, "Upper Back": 0.5 };
+  if (name.includes("leg extension")) return { "Quadricipiti": 1.0 };
+  if (name.includes("leg curl")) return { "Femorali": 1.0 };
+  if (name.includes("adductor")) return { "Adduttori": 1.0 };
+  if (name.includes("calf") || name.includes("polpacc")) return { "Polpacci": 1.0 };
+  if (name.includes("crunch") || name.includes("plank") || name.includes("addom")) return { "Addome": 1.0 };
+  if (name.includes("croci") || name.includes("pectoral")) return { "Petto": 1.0 };
+
+  const single = resolveMuscleTarget(exerciseName, declaredGroup);
+  return single ? { [single]: 1.0 } : {};
+}
+
 ﻿// MOTORE ANALISI VOLUME SETTIMANALE & METRICHE · METODO TOP GYM
 // TASSONOMIA ANATOMICA COMPLETA A 14 DISTRETTI FUNZIONALI
 
@@ -328,8 +448,12 @@ export function calculatePlannedWeeklySets(
     (day?.exercises || []).forEach((ex: any) => {
       const setsCount = Number(ex.sets) || (Array.isArray(ex.targetReps) ? ex.targetReps.length : 0);
       if (setsCount <= 0) return;
-      const target = resolveMuscleTarget(ex.name, ex.muscleGroup, programDict);
-      if (target) map[target] += setsCount;
+      const multi = resolveMultiTargetDistribution(ex.name, ex.muscleGroup);
+      Object.entries(multi).forEach(([muscle, factor]) => {
+        if (map[muscle as MuscleTarget] !== undefined) {
+          map[muscle as MuscleTarget] += Math.round(setsCount * (factor || 1));
+        }
+      });
     });
   });
 
