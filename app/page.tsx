@@ -820,17 +820,25 @@ useEffect(() => {
         .select("user_id, readiness_score, date")
         .order("date", { ascending: false });
       if (!error && data) {
-        const mapped = data.map((d: any) => ({ athleteId: d.user_id, readinessScore: d.readiness_score, date: d.date }));
-        setReadinessHistory(mapped as any);
+        const mapped = data.map((d: any) => ({
+          athleteId: d.user_id,
+          user_id: d.user_id,
+          readinessScore: Number(d.readiness_score) || 0,
+          readiness_score: Number(d.readiness_score) || 0,
+          date: d.date
+        }));
+        setCoachReadinessHistory(mapped);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Errore caricamento readiness globale coach:", e);
+    }
   }, []);
 
   useEffect(() => {
-    if (userRole === "COACH") {
+    if (userRole === "COACH" || activeTab === "coachDashboard") {
       loadAllAthletesReadiness();
     }
-  }, [userRole, loadAllAthletesReadiness]);
+  }, [userRole, activeTab, loadAllAthletesReadiness]);
 
   const loadReadinessHistory = useCallback(async (userId: string) => {
     if (!supabase || !userId) {
@@ -3631,7 +3639,7 @@ if (isFinished) {
             onSelectAthlete={(id) => setActiveAthleteId(id)}
             onNavigateToBuilder={() => setActiveTab("builder")}
             workoutHistory={workoutHistory}
-            readinessHistory={coachReadinessHistory.length > 0 ? coachReadinessHistory : readinessHistory}
+            readinessHistory={coachReadinessHistory}
           />
         )}
 
