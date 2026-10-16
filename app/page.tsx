@@ -499,6 +499,7 @@ useEffect(() => {
   );
 
   const [readinessHistory, setReadinessHistory] = useState<ReadinessLog[]>([]);
+  const [coachReadinessHistory, setCoachReadinessHistory] = useState<any[]>([]);
   const [readinessLoadError, setReadinessLoadError] = useState<string | null>(
     null,
   );
@@ -3630,7 +3631,7 @@ if (isFinished) {
             onSelectAthlete={(id) => setActiveAthleteId(id)}
             onNavigateToBuilder={() => setActiveTab("builder")}
             workoutHistory={workoutHistory}
-            readinessHistory={readinessHistory}
+            readinessHistory={coachReadinessHistory.length > 0 ? coachReadinessHistory : readinessHistory}
           />
         )}
 
