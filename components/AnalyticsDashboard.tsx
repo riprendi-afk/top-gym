@@ -132,8 +132,14 @@ export default function AnalyticsDashboard({
   const volumeIntensitySeries = useMemo(() => {
     const sessions = workoutHistory.slice(0, 10).reverse();
     return sessions.map((item, idx) => {
-      const volume = item.total_volume || item.totalVolume || 0;
       const sessionLogs: any[] = Array.isArray(item.logs) ? item.logs : [];
+        let volume = Number(item.total_volume || item.totalVolume || 0);
+        if ((!volume || volume <= 0 || volume > 100000) && sessionLogs.length > 0) {
+          volume = sessionLogs.reduce(
+            (sum: number, l: any) => sum + (Number(l.effectiveLoad ?? l.weight ?? 0) * Number(l.reps || 0)),
+            0
+          );
+        }
 
       const intensities: number[] = [];
       const rpes: number[] = [];

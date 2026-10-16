@@ -176,15 +176,19 @@ export function ExerciseCard({
               <div className="flex items-center gap-1 justify-center mb-1.5 opacity-50">
                 <Zap className="w-3 h-3 text-amber-500" /> <span className="text-[9px] uppercase font-black text-amber-500">Intensità</span>
               </div>
-              <div className="flex gap-1 bg-gradient-to-r from-emerald-900/40 via-amber-900/40 to-red-900/40 p-1 rounded-lg">
+              <div className="flex gap-1 bg-gradient-to-r from-emerald-900/40 via-amber-900/40 to-red-900/40 p-1 rounded-lg overflow-x-auto scrollbar-none">
                 {[
-                  { v: '7', color: 'hover:bg-emerald-500' },
-                  { v: '7.5', color: 'hover:bg-emerald-400' },
-                  { v: '8', color: 'hover:bg-amber-500' },
-                  { v: '8.5', color: 'hover:bg-amber-600' },
-                  { v: '9', color: 'hover:bg-orange-500' },
-                  { v: '9.5', color: 'hover:bg-red-500' },
-                  { v: '10', color: 'hover:bg-red-600' }
+                  { v: '5', color: 'hover:bg-emerald-600' },
+                    { v: '5.5', color: 'hover:bg-emerald-500' },
+                    { v: '6', color: 'hover:bg-emerald-500' },
+                    { v: '6.5', color: 'hover:bg-teal-500' },
+                    { v: '7', color: 'hover:bg-teal-400' },
+                    { v: '7.5', color: 'hover:bg-amber-400' },
+                    { v: '8', color: 'hover:bg-amber-500' },
+                    { v: '8.5', color: 'hover:bg-amber-600' },
+                    { v: '9', color: 'hover:bg-orange-500' },
+                    { v: '9.5', color: 'hover:bg-red-500' },
+                    { v: '10', color: 'hover:bg-red-600' }
                 ].map(item => (
                   <button 
                     key={item.v} 

@@ -1356,10 +1356,7 @@ useEffect(() => {
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
 
   const handleSafeFinish = () => {
-    const confirmed = window.confirm("Sei sicuro di voler terminare e salvare l'allenamento?");
-    if (confirmed) {
-      handleFinishAndSaveWorkout();
-    }
+    handleFinishAndSaveWorkout();
   };
 
   // 1. Calcolo Settimana Reale
@@ -1618,35 +1615,26 @@ const currentIntensityPreview = useMemo(() => {
   }, [logs]);
 
   const handleFinishAndSaveWorkout = async () => {
-    if (!window.confirm("Sei sicuro di voler terminare e salvare l'allenamento?")) {
+    if (isSavingWorkout) return;
+
+    if (todayLogs.length === 0) {
+      if (!window.confirm("Attenzione: non hai registrato alcuna serie oggi. Vuoi salvare comunque l'allenamento?")) {
+        return;
+      }
+    } else {
+      if (!window.confirm("Sei sicuro di voler terminare e salvare l'allenamento?")) {
+        return;
+      }
+    }
+
+    if (!targetUserId) {
+      setWorkoutSuccessMessage("⚠️ Impossibile salvare: utente non identificato.");
+      setTimeout(() => setWorkoutSuccessMessage(null), 5000);
       return;
     }
-    if (isSavingWorkout) return;
+
     setIsSavingWorkout(true);
 
-// SALVATAGGIO CLOUD SU SUPABASE
-if (supabase && user) {
-  try {
-    await (supabase as any).from("workouts").insert([
-      {
-        user_id: user.id,
-        program_name: activeDay?.title || (isMasterProgram ? "HARDTOPGYM" : "TOPGYM Classico"),
-        day_number: activeDay?.dayNumber || (activeDay ? 1 : 1),
-        logs: todayLogs,
-        total_volume: todayLogs.reduce((acc: number, l: any) => {
-          const w = Number(l.weight) || 0;
-          const r = Number(l.reps) || 0;
-          const eff = Number(l.effectiveVolume);
-          const validEff = eff && eff > 0 && eff < 100000 ? eff : (Number(l.volume) || (w * r));
-          return acc + validEff;
-        }, 0),
-        created_at: new Date().toISOString(),
-      },
-    ]);
-  } catch (cloudErr) {
-    console.error("Errore salvataggio sessione cloud:", cloudErr);
-  }
-}
     const dayName = activeDay ? activeDay.title : "Giornata di Allenamento";
     const totalVol =
     todayLogs.reduce((acc, curr) => {
@@ -1891,7 +1879,7 @@ if (supabase && user) {
     } else {
       const detail = result?.error ? ` (${result.error})` : "";
       setWorkoutSuccessMessage(
-        `⚠️ Errore nel salvataggio dell'allenamento${detail}. Riprova.`,
+        `⚠️ Errore nel salvataggio dell'allenamento${detail}. Verifica la connessione e riprova.`,
       );
       setTimeout(() => setWorkoutSuccessMessage(null), 8000);
     }
@@ -3718,7 +3706,7 @@ if (isFinished) {
                             onClick={() => setProgrammingModel("HARDTOPGYM")}
                             className={`py-2 px-2 rounded-lg text-[11px] font-black transition cursor-pointer text-center ${programmingModel === "HARDTOPGYM" ? "bg-amber-500 text-black shadow-md shadow-amber-500/30" : "text-zinc-400 hover:text-white bg-zinc-900/70 border border-white/5"}`}
                           >
-                            ⚡ Hatfield
+                            ⚡ HARDTOPGYM
                           </button>
                           <button
                             type="button"
@@ -3785,7 +3773,7 @@ if (isFinished) {
                         <span className="text-xs font-black uppercase tracking-wider text-white">Hub Metodologico:</span>
                         <span className="px-2.5 py-1 bg-black/50 border border-white/10 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 font-mono">
                           {((programmingModel as any) === "NOCERINO") && "🔬 Nocerino (T13)"}
-                          {programmingModel === "HARDTOPGYM" && "⚡ Hatfield"}
+                          {programmingModel === "HARDTOPGYM" && "⚡ HARDTOPGYM"}
                           {programmingModel === "ACETO" && "🏆 Chris Aceto"}
                           {((programmingModel as any) === "HELMS_PYRAMID") && "🏛️ Helms Pyramid"}
                           {((programmingModel as any) === "BIKINI_WAVE") && "✨ Bikini Wave System"}

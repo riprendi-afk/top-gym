@@ -82,7 +82,7 @@ export default function MethodologyPickerModal({
                         : "text-zinc-300 hover:text-white bg-zinc-900/80 border border-white/5 hover:border-white/10"
                     }`}
                   >
-                    <span>⚡ Hatfield</span>
+                    <span>⚡ HARDTOPGYM (Hatfield)</span>
                     {currentModel === "HARDTOPGYM" && <Check className="w-4 h-4" />}
                   </button>
 
