@@ -1,5 +1,18 @@
 'use client';
 
+// Calcolo Massimale Teorico Dinamico modulato su RPE/RIR (Formula Epley estesa)
+export function calculateEstimated1RM(weight: number, reps: number, rpe: number = 10): number {
+  const w = Number(weight) || 0;
+  const r = Number(reps) || 0;
+  const p = Number(rpe) || 10;
+  if (w <= 0 || r <= 0) return 0;
+  const rir = Math.max(0, 10 - p);
+  const effectiveReps = r + rir;
+  if (effectiveReps <= 1) return Math.round(w);
+  const e1rm = w * (1 + effectiveReps / 30);
+  return Math.round(e1rm * 10) / 10;
+}
+
 import React, { useMemo, useState } from 'react';
 import { ChevronUp, ChevronDown, CheckCircle, Copy, Plus, Trash2, Info, Dumbbell, Repeat, Target, Clock, Zap, History } from 'lucide-react';
 import type { Exercise, SetLog, ExecutionType } from '@/app/page.tsx';
@@ -41,6 +54,30 @@ export function ExerciseCard({
   const exerciseLogs = useMemo(() => todayLogs.filter(l => l.exerciseName === ex.name), [todayLogs, ex.name]);
   const hasLoggedToday = exerciseLogs.length > 0;
   const isFinished = exerciseLogs.length >= ex.sets;
+
+  // Calcolo e1RM baseline della prima serie completata della seduta
+  const firstSetE1RM = useMemo(() => {
+    if (exerciseLogs.length === 0) return null;
+    const first = exerciseLogs[0];
+    const w = Number(first.effectiveLoad ?? first.weight ?? 0);
+    const r = Number(first.reps ?? 0);
+    const p = Number(first.rpe ?? 10);
+    return calculateEstimated1RM(w, r, p);
+  }, [exerciseLogs]);
+
+  // Calcolo e1RM dinamico in tempo reale per la serie in digitazione
+  const currentInputE1RM = useMemo(() => {
+    const numWeight = parseFloat(weight) || 0;
+    const numReps = parseInt(reps, 10) || 0;
+    const numRpe = parseFloat(rpe) || 10;
+    return calculateEstimated1RM(numWeight, numReps, numRpe);
+  }, [weight, reps, rpe]);
+
+  // Delta prestazionale di fatica rispetto alla prima serie
+  const fatigueDelta = useMemo(() => {
+    if (!firstSetE1RM || firstSetE1RM <= 0 || currentInputE1RM <= 0) return null;
+    return Math.round(((currentInputE1RM - firstSetE1RM) / firstSetE1RM) * 100);
+  }, [firstSetE1RM, currentInputE1RM]);
 
   return (
     <div 
@@ -215,7 +252,27 @@ export function ExerciseCard({
                 {exerciseLogs.map((log, i) => (
                   <div key={log.id} className="flex items-center gap-2 bg-zinc-900 px-2.5 py-1.5 rounded-lg border border-white/5 shadow-inner">
                     <span className="text-[10px] font-black text-zinc-600">S{i+1}</span>
-                    <span className="text-[11px] font-black text-white">{log.weight}<span className="text-[9px] text-zinc-500 font-normal">kg</span> × {log.reps}</span>
+                    <div className="flex flex-col">
+                        <span className="text-[11px] font-black text-white">
+                          {log.weight}<span className="text-[9px] text-zinc-500 font-normal">kg</span> × {log.reps}
+                          {log.rpe && <span className="text-[9px] text-amber-400 ml-1 font-mono">@{log.rpe}</span>}
+                        </span>
+                        {(() => {
+                          const setE1rm = calculateEstimated1RM(Number(log.weight || 0), Number(log.reps || 0), Number(log.rpe || 10));
+                          if (setE1rm <= 0) return null;
+                          const delta = firstSetE1RM && i > 0 ? Math.round(((setE1rm - firstSetE1RM) / firstSetE1RM) * 100) : null;
+                          return (
+                            <span className="text-[8px] text-zinc-400 font-mono">
+                              e1RM: <b className="text-zinc-200">{setE1rm}kg</b>
+                              {delta !== null && (
+                                <span className={delta >= 0 ? ' text-emerald-400 ml-1' : delta >= -5 ? ' text-amber-400 ml-1' : ' text-rose-400 ml-1 font-bold'}>
+                                  ({delta >= 0 ? `+${delta}%` : `${delta}%`})
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     <button type="button" onClick={() => handleDeleteLog(log.id)} className="text-zinc-600 hover:text-rose-500 transition-colors ml-1 active:scale-90"><Trash2 className="w-3.5 h-3.5"/></button>
                   </div>
                 ))}
