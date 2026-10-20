@@ -1624,6 +1624,15 @@ const currentIntensityPreview = useMemo(() => {
   }, [logs]);
 
   const handleFinishAndSaveWorkout = async () => {
+  // Helper anti-virgola iOS per evitare NaN su PostgreSQL
+  const parseSafeNumber = (val: any): number => {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const str = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  };
+
     if (isSavingWorkout) return;
 
     if (todayLogs.length === 0) {
@@ -1645,32 +1654,45 @@ const currentIntensityPreview = useMemo(() => {
     setIsSavingWorkout(true);
 
     const dayName = activeDay ? activeDay.title : "Giornata di Allenamento";
-    const totalVol =
-    todayLogs.reduce((acc, curr) => {
-      const w = Number(curr.weight) || 0;
-      const r = Number(curr.reps) || 0;
-      // Se c'è un effectiveVolume anomalo (> 100.000 kg), usa il volume reale peso * reps
-      const eff = Number(curr.effectiveVolume);
-      const validEff = eff && eff > 0 && eff < 100000 ? eff : (Number(curr.volume) || (w * r));
-      return acc + validEff;
-    }, 0) || 0;
+    const totalVol = Math.round(
+      todayLogs.reduce((acc, curr) => {
+        const w = parseSafeNumber(curr.weight);
+        const r = parseSafeNumber(curr.reps);
+        const eff = parseSafeNumber(curr.effectiveVolume);
+        const validEff = eff > 0 && eff < 100000 ? eff : (parseSafeNumber(curr.volume) || (w * r));
+        return acc + validEff;
+      }, 0) * 10
+    ) / 10;
 
     let result: { success?: boolean; error?: string } = {};
     try {
-      result = await saveCompletedWorkoutToSupabase({
-        userId: targetUserId,
-        dayName: dayName,
-        totalVolume: totalVol,
-        exercisesCount: activeRoutine.length,
-        logs: todayLogs,
-      });
+      const sanitizedLogs = todayLogs.map(l => ({
+          ...l,
+          weight: parseSafeNumber(l.weight),
+          reps: parseSafeNumber(l.reps),
+          volume: parseSafeNumber(l.weight) * parseSafeNumber(l.reps)
+        }));
+
+        result = await saveCompletedWorkoutToSupabase({
+          userId: targetUserId,
+          dayName: dayName,
+          totalVolume: totalVol,
+          exercisesCount: activeRoutine.length,
+          logs: sanitizedLogs as any,
+        });
     } catch (e: any) {
       result = { success: false, error: e?.message };
     } finally {
       setIsSavingWorkout(false);
     }
 
-    if (result?.success) {
+    if (!result?.success) {
+        alert("⚠️ Attenzione: Impossibile salvare l'allenamento sul server: " + (result?.error || "Errore di connessione.") + "\n\nI tuoi dati NON sono stati cancellati. Controlla la connessione e riprova a premere Salva.");
+        setWorkoutSuccessMessage("⚠️ Salvataggio fallito. I tuoi dati sono al sicuro sul telefono, riprova a salvare.");
+        return;
+      }
+
+      if (result?.success) {
       await addXp(50);
       setLogs([]);
       // Pulisce la memoria locale del telefono
