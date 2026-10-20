@@ -1739,7 +1739,72 @@ const currentIntensityPreview = useMemo(() => {
       }
 
 // ======================================================================
-      // AVANZAMENTO AUTOMATICO METODO ACETO A CHIUSURA MICROCICLO (6 SETTIMANE)
+      
+        // ======================================================================
+        // AVANZAMENTO AUTOMATICO METODO TOPGYM CLASSIC / BLOCKS (12 SETTIMANE)
+        // ======================================================================
+        const isTopGymClassicModel =
+          programmingModel === "TOPGYM_BLOCKS" ||
+          (!["HARDTOPGYM", "ACETO", "NOCERINO", "POWERBLOCK_HYBRID", "BLOOD_VOLUME_OVERLOAD", "HELMS_PYRAMID", "BIKINI_WAVE"].includes(programmingModel as any));
+
+        if (
+          isTopGymClassicModel &&
+          programDays &&
+          programDays.length >= 2
+        ) {
+          const splitSize = programDays.length;
+          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+
+          // Scatta ogni volta che l'atleta chiude l'intera split settimanale
+          if (updatedHistoryCount % splitSize === 0) {
+            const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
+            const nextWeek = (completedWeeks % 12) + 1; // Ciclo continuo a 12 settimane
+
+            // 1. Calcolo del Macro-Blocco (1-4: Forza, 5-8: Trasformazione, 9-12: Qualità)
+            let currentMacroBlock: "BLOCCO_1_FORZA" | "BLOCCO_2_TRASFORMAZIONE" | "BLOCCO_3_QUALITA" = "BLOCCO_1_FORZA";
+            if (nextWeek >= 5 && nextWeek <= 8) {
+              currentMacroBlock = "BLOCCO_2_TRASFORMAZIONE";
+            } else if (nextWeek >= 9 && nextWeek <= 12) {
+              currentMacroBlock = "BLOCCO_3_QUALITA";
+            }
+
+            // 2. Calcolo della Micro-Fase interna al blocco (1: Accumulo, 2: Tensione, 3: Deload, 4: Intensificazione)
+            const phaseIndex = (((nextWeek - 1) % 4) + 1) as 1 | 2 | 3 | 4;
+
+            // 3. Applicazione scientifica della fase tramite il motore nativo topgym-engine
+            const progressedDays = applyPhaseToProgram(
+              programDays as any,
+              currentMacroBlock,
+              phaseIndex
+            );
+
+            setProgramDays(progressedDays as any);
+
+            // 4. Salvataggio persistente su Supabase
+            if (targetUserId) {
+              saveProgramToSupabase(
+                targetUserId,
+                programName,
+                progressedDays as any
+              ).catch((err: unknown) => {
+                console.error("[TOPGYM ENGINE] Errore salvataggio progressione su Supabase:", err);
+              });
+            }
+
+            // 5. Notifica dinamica all'atleta con la fase esatta raggiunta
+            const phaseLabel =
+              phaseIndex === 3 ? "Scarico (Deload)" :
+              phaseIndex === 4 ? "Intensificazione" :
+              phaseIndex === 2 ? (currentMacroBlock === "BLOCCO_1_FORZA" ? "Conversione" : "Tensione Meccanica") :
+              "Accumulo";
+
+            setWorkoutSuccessMessage(
+              `🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek} (${currentMacroBlock.replace(/_/g, " ")} - ${phaseLabel})!`
+            );
+          }
+        }
+
+        // AVANZAMENTO AUTOMATICO METODO ACETO A CHIUSURA MICROCICLO (6 SETTIMANE)
       // ======================================================================
       if (
         programmingModel === "ACETO" &&
