@@ -1397,9 +1397,9 @@ useEffect(() => {
   // 1. Calcolo Settimana Reale
   const calculatedCurrentRealWeek = useMemo(() => {
     const daysInRoutine = Math.max(1, programDays.length || 4);
-    const completedCount = workoutHistory.length;
-    return Math.floor(completedCount / daysInRoutine) + 1;
-  }, [programDays.length, workoutHistory.length]);
+    const activeCount = Math.max(0, computeActiveWorkoutCount(programDays, workoutHistory) - 1);
+    return Math.floor(activeCount / daysInRoutine) + 1;
+  }, [programDays, workoutHistory]);
 
 // 1. Identificazione esplicita del Metodo attivo sulla scheda (Zero Errori TypeScript)
 const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" | null = useMemo(() => {
@@ -1805,28 +1805,39 @@ const currentIntensityPreview = useMemo(() => {
 
           // Scatta ogni volta che l'atleta chiude l'intera split settimanale
           if (updatedHistoryCount % splitSize === 0) {
-            const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
-            const nextWeek = (completedWeeks % 12) + 1; // Ciclo continuo a 12 settimane
+              const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
+              const nextWeek = (completedWeeks % 48) + 1; // Macrociclo a 48 settimane (3 blocchi da 16)
 
-            // 1. Calcolo del Macro-Blocco (1-4: Forza, 5-8: Trasformazione, 9-12: Qualità)
-            let currentMacroBlock: "BLOCCO_1_FORZA" | "BLOCCO_2_TRASFORMAZIONE" | "BLOCCO_3_QUALITA" = "BLOCCO_1_FORZA";
-            if (nextWeek >= 5 && nextWeek <= 8) {
-              currentMacroBlock = "BLOCCO_2_TRASFORMAZIONE";
-            } else if (nextWeek >= 9 && nextWeek <= 12) {
-              currentMacroBlock = "BLOCCO_3_QUALITA";
-            }
+              // 1. Calcolo del Macro-Blocco (1-16: Forza, 17-32: Trasformazione, 33-48: Qualità)
+              let currentMacroBlock: "BLOCCO_1_FORZA" | "BLOCCO_2_TRASFORMAZIONE" | "BLOCCO_3_QUALITA" = "BLOCCO_1_FORZA";
+              if (nextWeek >= 17 && nextWeek <= 32) {
+                currentMacroBlock = "BLOCCO_2_TRASFORMAZIONE";
+              } else if (nextWeek >= 33) {
+                currentMacroBlock = "BLOCCO_3_QUALITA";
+              }
 
-            // 2. Calcolo della Micro-Fase interna al blocco (1: Accumulo, 2: Tensione, 3: Deload, 4: Intensificazione)
-            const phaseIndex = (((nextWeek - 1) % 4) + 1) as 1 | 2 | 3 | 4;
+              // 2. Calcolo della Fase nel Blocco da 16 Settimane:
+              // W1-W6: Fase 1 (Accumulo) | W7-W9: Fase 2 (Conversione) | W10: Fase 3 (Deload SNC) | W11-W16: Fase 4 (Picco Neurale)
+              const weekInBlock = ((nextWeek - 1) % 16) + 1;
+              let phaseIndex: 1 | 2 | 3 | 4 = 1;
+              if (weekInBlock <= 6) {
+                phaseIndex = 1;
+              } else if (weekInBlock <= 9) {
+                phaseIndex = 2;
+              } else if (weekInBlock === 10) {
+                phaseIndex = 3;
+              } else {
+                phaseIndex = 4;
+              }
 
-            // 3. Applicazione scientifica della fase tramite il motore nativo topgym-engine
-            const progressedDays = applyPhaseToProgram(
-              programDays as any,
-              currentMacroBlock,
-              phaseIndex
-            );
+              // 3. Applicazione scientifica della fase tramite il motore nativo topgym-engine
+              const progressedDays = applyPhaseToProgram(
+                programDays as any,
+                currentMacroBlock,
+                phaseIndex
+              );
 
-            setProgramDays(progressedDays as any);
+              setProgramDays(progressedDays as any);
 
             // 4. Salvataggio persistente su Supabase
             if (targetUserId) {
