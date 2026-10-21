@@ -19,9 +19,11 @@ export function getSupabase(): SupabaseClient | null {
 
   supabaseInstance = createClient(supabaseUrl!, supabaseAnonKey!, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'topgym_supabase_auth',
+      },
   });
 
   return supabaseInstance;
