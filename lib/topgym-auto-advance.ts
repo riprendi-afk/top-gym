@@ -46,7 +46,7 @@ export interface HelmsState {
 export interface EngineState {
   engine: EngineType;
   currentWeek: number;
-  isDeload: boolean;
+  isDeload?: boolean;
   powerBlock?: PowerBlockState;
   bloodVolume?: BloodVolumeState;
   helms?: HelmsState;

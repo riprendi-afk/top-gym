@@ -368,6 +368,28 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isMethodologyModalOpen, setIsMethodologyModalOpen] = useState(false);
+// ======================================================================
+// CALCOLO PUNTO ZERO: Sedute relative alla scheda attiva
+// ======================================================================
+const computeActiveWorkoutCount = (days: any[], history: any[]) => {
+  if (!days || days.length === 0) return 1;
+  if (typeof days[0]?.startingHistoryCount === 'number') {
+    return Math.max(1, ((history?.length || 0) + 1) - days[0].startingHistoryCount);
+  }
+  const activeTitles = days
+    .map((d: any) => (d.title || '').trim().toLowerCase())
+    .filter((t: string) => t.length > 2);
+
+  if (activeTitles.length > 0 && Array.isArray(history)) {
+    const matchingLogs = history.filter((w: any) => {
+      const wTitle = (w.day_name || '').trim().toLowerCase();
+      return activeTitles.some((t: string) => wTitle.includes(t) || t.includes(wTitle));
+    });
+    return matchingLogs.length + 1;
+  }
+  return 1;
+};
+
 // DOPO (SOSTITUISCI CON):
 const [programmingModel, setProgrammingModel] = useState<
   | "TOPGYM_BLOCKS"
@@ -925,6 +947,8 @@ useEffect(() => {
   useProgramRealtime(targetUserId, (updatedProgram) => {
     if (updatedProgram && updatedProgram.days_data && updatedProgram.days_data.length > 0) {
       setProgramDays(updatedProgram.days_data);
+      const detectedEngine = updatedProgram.days_data[0]?.method || updatedProgram.days_data[0]?.programmingModel || updatedProgram.days_data[0]?.engine;
+      if (detectedEngine) setProgrammingModel(detectedEngine as any);
       setSelectedDayCount(clampDayCount(updatedProgram.days_data.length));
       if (updatedProgram.program_name) setProgramName(updatedProgram.program_name);
     }
@@ -940,6 +964,8 @@ useEffect(() => {
         if (!isMounted) return;
         if (data && data.days_data && data.days_data.length > 0) {
           setProgramDays(data.days_data);
+          const detectedEngine = data.days_data[0]?.method || data.days_data[0]?.programmingModel || data.days_data[0]?.engine;
+          if (detectedEngine) setProgrammingModel(detectedEngine as any);
           setSelectedDayCount(clampDayCount(data.days_data.length));
           if (data.program_name) setProgramName(data.program_name);
         } else {
@@ -1714,7 +1740,7 @@ const currentIntensityPreview = useMemo(() => {
       ) {
         const splitSize = programDays.length;
         // Calcoliamo quanti allenamenti ha completato adesso l'atleta (compreso quello appena salvato)
-        const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+        const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
 
         // Se questo allenamento ha chiuso la settimana (es. 3° su 3, o 4° su 4)
         if (updatedHistoryCount % splitSize === 0) {
@@ -1775,7 +1801,7 @@ const currentIntensityPreview = useMemo(() => {
           programDays.length >= 2
         ) {
           const splitSize = programDays.length;
-          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
 
           // Scatta ogni volta che l'atleta chiude l'intera split settimanale
           if (updatedHistoryCount % splitSize === 0) {
@@ -1834,7 +1860,7 @@ const currentIntensityPreview = useMemo(() => {
         programDays.length >= 3
       ) {
         const splitSize = programDays.length;
-        const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+        const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
 
         // Se l'atleta ha completato tutti i giorni della split (es. 4° su 4)
         if (updatedHistoryCount % splitSize === 0) {
@@ -1871,7 +1897,7 @@ const currentIntensityPreview = useMemo(() => {
           programDays.length >= 3
         ) {
           const splitSize = programDays.length;
-          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
 
           // Se l'atleta ha completato tutti i giorni del ciclo (multiplo di 3)
           if (updatedHistoryCount % splitSize === 0) {
@@ -1905,7 +1931,7 @@ const currentIntensityPreview = useMemo(() => {
 
         if (isAdvancedEngine && programDays && programDays.length >= 2) {
           const splitSize = programDays.length;
-          const updatedHistoryCount = (workoutHistory?.length || 0) + 1;
+          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
 
           // Se l'atleta ha completato tutte le sessioni della split settimanale
           if (updatedHistoryCount % splitSize === 0) {
@@ -1938,7 +1964,7 @@ const currentIntensityPreview = useMemo(() => {
                 {
                   engine: programmingModel as any,
                   currentWeek: currentWeek,
-                  isDeload: currentWeek % 4 === 0, // Deload automatico programmato ogni 4 settimane
+                  // Deload autoregolato e gestito internamente da ciascun motore scientifico
                 },
                 formattedLogs as any,
                 programDays as any
