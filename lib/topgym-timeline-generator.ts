@@ -1,8 +1,7 @@
 ﻿// lib/topgym-timeline-generator.ts
 /**
  * GENERATORE DETERMINISTICO TIMELINE E PERIODIZZAZIONE TOP GYM
- * Calcola l'evoluzione settimana per settimana per tutti gli 8 motori scientifici
- * con supporto ad override granulare su TUT, Recupero, Carichi, Serie e Ripetizioni.
+ * Motore scientifico a 8 metodologie per macrocicli di allenamento.
  */
 
 export type SupportedMethod =
@@ -69,31 +68,33 @@ export interface EngineMeta {
 
 export const ENGINE_METADATA: Record<SupportedMethod, EngineMeta> = {
   TOPGYM_CLASSICO: {
-    name: 'TopGym Metodo Classico (16 Settimane per Blocco)',
+    name: 'TopGym Metodo Classico (16 Settimane)',
     defaultWeeks: 16,
-    macrocycleSummary: 'W1-6 Accumulo (5x6), W7-9 Conversione (5x8), W10 Deload SNC (-40% vol), W11-16 Picco (+7%).',
+    macrocycleSummary: 'W1-6 Accumulo (5x6), W7-10 Conversione (5x8), W11 Deload SNC (-40%), W12-15 Picco Neurale (4x3), W16 Test 1RM.',
     phases: [
       { name: 'Accumulo Volumetrico', weeks: 'W1 - W6', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-      { name: 'Conversione Ipertrofica', weeks: 'W7 - W9', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
-      { name: 'Scarico SNC (Deload)', weeks: 'W10', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
-      { name: 'Picco Neurale Massimale', weeks: 'W11 - W16', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' }
+      { name: 'Conversione Ipertrofica', weeks: 'W7 - W10', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+      { name: 'Scarico Fisiologico SNC', weeks: 'W11', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { name: 'Picco Neurale (4 Settimane)', weeks: 'W12 - W15', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+      { name: 'Tapering & Test Massimali', weeks: 'W16', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' }
     ]
   },
   TOPGYM_BLOCKS: {
     name: 'TopGym Metodo Classico (16 Settimane)',
     defaultWeeks: 16,
-    macrocycleSummary: 'Blocco 16w: W1-6 Accumulo, W7-9 Conversione, W10 Deload, W11-16 Picco Neurale.',
+    macrocycleSummary: 'W1-6 Accumulo (5x6), W7-10 Conversione (5x8), W11 Deload SNC, W12-15 Picco Neurale, W16 Test 1RM.',
     phases: [
-      { name: 'Accumulo', weeks: 'W1 - W6', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-      { name: 'Conversione', weeks: 'W7 - W9', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
-      { name: 'Deload SNC', weeks: 'W10', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
-      { name: 'Picco Neurale', weeks: 'W11 - W16', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' }
+      { name: 'Accumulo Volumetrico', weeks: 'W1 - W6', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+      { name: 'Conversione Ipertrofica', weeks: 'W7 - W10', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+      { name: 'Scarico Fisiologico SNC', weeks: 'W11', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' },
+      { name: 'Picco Neurale (4 Settimane)', weeks: 'W12 - W15', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+      { name: 'Tapering & Test Massimali', weeks: 'W16', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' }
     ]
   },
   BIKINI_WAVE: {
     name: 'Bikini Wave System (10 Settimane)',
     defaultWeeks: 10,
-    macrocycleSummary: '3 Onde x 3 settimane (3->4->5 serie fondamentali L) + W10 Deload Glicogenico (2 serie).',
+    macrocycleSummary: '3 Onde x 3 settimane (3->4->5 serie fondamentali) + W10 Deload Glicogenico Pre-Gara.',
     phases: [
       { name: 'Onda 1 (3->4->5 set @ 6 reps)', weeks: 'W1 - W3', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Onda 2 (3->4->5 set @ 5 reps)', weeks: 'W4 - W6', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
@@ -104,7 +105,7 @@ export const ENGINE_METADATA: Record<SupportedMethod, EngineMeta> = {
   POWERBLOCK_HYBRID: {
     name: 'PowerBlock Hybrid (13 Settimane)',
     defaultWeeks: 13,
-    macrocycleSummary: '12 Settimane Triadi Big 3 + AMRAP 90% + Rotazione Day 5 + W13 Supercompensazione.',
+    macrocycleSummary: '12 Settimane Triadi Big 3 + AMRAP 90% (W4, W8, W12) + W13 Supercompensazione.',
     phases: [
       { name: 'Triade 1 (Volume & AMRAP)', weeks: 'W1 - W4', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Triade 2 (Intensificazione)', weeks: 'W5 - W8', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
@@ -115,18 +116,18 @@ export const ENGINE_METADATA: Record<SupportedMethod, EngineMeta> = {
   HELMS_PYRAMID: {
     name: 'Helms Muscle & Strength Pyramid (4 Settimane)',
     defaultWeeks: 4,
-    macrocycleSummary: 'W1-W3 Wave loading composti & double progression isolamento, W4 Deload attivo RPE 6.',
+    macrocycleSummary: 'W1-W3 Wave loading composti & progressione isolamento, W4 Deload attivo RPE 6.',
     phases: [
       { name: 'Wave 1 (Base RPE 7.5)', weeks: 'W1', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Wave 2 (+2.5kg @ RPE 8)', weeks: 'W2', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-      { name: 'Wave 3 (+2.5kg @ RPE 8.5-9)', weeks: 'W3', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+      { name: 'Wave 3 (+5kg @ RPE 8.5-9)', weeks: 'W3', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
       { name: 'Deload Attivo SNC (RPE 6)', weeks: 'W4', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' }
     ]
   },
   BLOOD_VOLUME_OVERLOAD: {
     name: 'Blood Volume Overload (4 Settimane)',
     defaultWeeks: 4,
-    macrocycleSummary: 'W1-W2 Buffer 1-2, W3 Cedimento 1 set/gruppo, W4 Cedimento totale / Deload cellulare.',
+    macrocycleSummary: 'W1-W2 Buffer 1-2, W3 Cedimento concentrico 1 set/gruppo, W4 Scarico cellulare.',
     phases: [
       { name: 'Saturazione Meccanica', weeks: 'W1 - W2', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Overload Cedimento Concentrico', weeks: 'W3', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
@@ -134,9 +135,9 @@ export const ENGINE_METADATA: Record<SupportedMethod, EngineMeta> = {
     ]
   },
   ACETO: {
-    name: 'Chris Aceto Hypertrophy Cycle (6-8 Settimane)',
+    name: 'Chris Aceto Hypertrophy Cycle (6 Settimane)',
     defaultWeeks: 6,
-    macrocycleSummary: 'W1-2 Base, W3-4 Heavy Overload, W5 Stripping Peak, W6 Deload (-20% carico, 2 set).',
+    macrocycleSummary: 'W1-2 Base, W3-4 Heavy Overload (+5%), W5 Stripping Peak, W6 Deload (-20% carico, 2 set).',
     phases: [
       { name: 'Base Volume Acquisition', weeks: 'W1 - W2', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Heavy Absolute Overload', weeks: 'W3 - W4', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
@@ -145,14 +146,14 @@ export const ENGINE_METADATA: Record<SupportedMethod, EngineMeta> = {
     ]
   },
   HARDTOPGYM: {
-    name: 'HardTopGym Microciclo Bosco-Colli (4 Settimane)',
+    name: 'HardTopGym Microciclo Emilio They (4 Settimane)',
     defaultWeeks: 4,
-    macrocycleSummary: 'W1 Setup Neurale, W2 Micro-Overload, W3 Urto They (RIR 0), W4 Scarico Attivo (-30% vol).',
+    macrocycleSummary: 'W1 Setup Neurale, W2 Micro-Overload (+5%), W3 Urto They (RIR 0), W4 Scarico Ormonale (-40% vol).',
     phases: [
-      { name: 'Setup Neurale & Meccanico', weeks: 'W1', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+      { name: 'Setup Neurale & Tensione', weeks: 'W1', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
       { name: 'Micro-Overload Progressivo', weeks: 'W2', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
       { name: 'Urto They & Cedimento RIR 0', weeks: 'W3', color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
-      { name: 'Scarico Attivo Ormonale', weeks: 'W4', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' }
+      { name: 'Scarico Ormonale Attivo', weeks: 'W4', color: 'bg-blue-500/20 text-blue-300 border-blue-500/40' }
     ]
   },
   NOCERINO: {
@@ -194,6 +195,13 @@ export function resolveEngineKey(methodStr?: string): SupportedMethod {
   return 'TOPGYM_CLASSICO';
 }
 
+function adjustWeight(base: string | number | undefined, multiplier: number, addKg: number = 0): string | number {
+  if (base === undefined || base === '' || base === null) return '';
+  const num = typeof base === 'number' ? base : parseFloat(String(base));
+  if (isNaN(num)) return base;
+  return Math.round((num * multiplier + addKg) * 2) / 2;
+}
+
 export function generateMacrocycleTimeline(
   baseDays: any[],
   methodKey: SupportedMethod,
@@ -229,28 +237,32 @@ function projectSingleWeek(
       phaseLabel = 'Accumulo Volumetrico';
       phaseCategory = 'ACCUMULO';
       progressionRule = '5×6 @ RPE 7.5 (Buffer 2-3)';
-    } else if (weekInBlock <= 9) {
+    } else if (weekInBlock <= 10) {
       phaseLabel = 'Conversione Ipertrofica';
       phaseCategory = 'CONVERSIONE';
       progressionRule = '5×8 @ RPE 8.5 (Spinta)';
-    } else if (weekInBlock === 10) {
+    } else if (weekInBlock === 11) {
       phaseLabel = 'Scarico Fisiologico SNC';
       phaseCategory = 'DELOAD';
       progressionRule = 'Volume -40% | Carico -15%';
       isDeload = true;
-    } else {
-      phaseLabel = 'Picco Neurale Massimale';
+    } else if (weekInBlock <= 15) {
+      phaseLabel = 'Picco Neurale (4 Settimane)';
       phaseCategory = 'PICCO';
-      progressionRule = '4×3-4 (+7% carico @ RPE 9.5)';
+      progressionRule = '4×3-4 (+7% carico @ RPE 9-9.5)';
+    } else {
+      phaseLabel = 'Tapering & Test Massimali';
+      phaseCategory = 'OVERLOAD';
+      progressionRule = 'Test 1RM / Supercompensazione';
     }
   }
   // 2. BIKINI WAVE SYSTEM
   else if (methodKey === 'BIKINI_WAVE') {
     isDeload = weekNumber === 10;
     if (isDeload) {
-      phaseLabel = 'Deload Glicogenico';
+      phaseLabel = 'Deload Glicogenico Pre-Gara';
       phaseCategory = 'DELOAD';
-      progressionRule = '2 serie fisse di pompaggio';
+      progressionRule = '2 serie pump a buffer controllato';
     } else {
       let wave = 1;
       if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
@@ -270,10 +282,14 @@ function projectSingleWeek(
       phaseLabel = 'Supercompensazione SNC';
       phaseCategory = 'DELOAD';
       progressionRule = '2 serie al 60% per dissipare fatica';
+    } else if (weekNumber === 4 || weekNumber === 8 || weekNumber === 12) {
+      phaseLabel = `Realizzazione Triade W${weekNumber}`;
+      phaseCategory = 'OVERLOAD';
+      progressionRule = 'Power Day Big 3 + AMRAP Test';
     } else {
       phaseLabel = `Mesociclo Triadico W${weekNumber}`;
-      phaseCategory = weekNumber % 3 === 0 ? 'OVERLOAD' : 'ACCUMULO';
-      progressionRule = 'Power Day Big 3 + AMRAP 90%';
+      phaseCategory = 'ACCUMULO';
+      progressionRule = 'Big 3 Carichi alti + rotazione Day 5';
     }
   }
   // 4. HELMS PYRAMID
@@ -284,10 +300,18 @@ function projectSingleWeek(
       phaseLabel = 'Deload Attivo Helms';
       phaseCategory = 'DELOAD';
       progressionRule = '2 serie con carico W1 @ RPE 6';
+    } else if (wave === 3) {
+      phaseLabel = 'Wave 3 (Picco Intensità)';
+      phaseCategory = 'PICCO';
+      progressionRule = '4x4 (+5kg composti) @ RPE 8.5-9';
+    } else if (wave === 2) {
+      phaseLabel = 'Wave 2 (Progressione)';
+      phaseCategory = 'OVERLOAD';
+      progressionRule = '4x5 (+2.5kg composti) @ RPE 8';
     } else {
-      phaseLabel = `Intensificazione Wave ${wave}/3`;
-      phaseCategory = wave === 3 ? 'OVERLOAD' : 'ACCUMULO';
-      progressionRule = wave === 1 ? '4x6 @ RPE 7.5' : wave === 2 ? '4x5 (+2.5kg) @ RPE 8' : '4x4 (+5kg) @ RPE 9';
+      phaseLabel = 'Wave 1 (Base)';
+      phaseCategory = 'ACCUMULO';
+      progressionRule = '4x6 composti base @ RPE 7.5';
     }
   }
   // 5. BLOOD VOLUME OVERLOAD
@@ -295,9 +319,9 @@ function projectSingleWeek(
     const wave = ((weekNumber - 1) % 4) + 1;
     isDeload = wave === 4;
     if (isDeload) {
-      phaseLabel = 'Scarico Cellulare';
+      phaseLabel = 'Scarico Cellulare & Drenaggio';
       phaseCategory = 'DELOAD';
-      progressionRule = '2 serie a fondo scala per drenaggio';
+      progressionRule = '2 serie fondo scala per drenaggio';
     } else if (wave === 3) {
       phaseLabel = 'Overload Cedimento';
       phaseCategory = 'OVERLOAD';
@@ -305,7 +329,7 @@ function projectSingleWeek(
     } else {
       phaseLabel = 'Saturazione Meccanica';
       phaseCategory = 'ACCUMULO';
-      progressionRule = '3x4-7 reps a Buffer 1-2';
+      progressionRule = '3-4x6-10 reps a Buffer 1-2';
     }
   }
   // 6. CHRIS ACETO
@@ -322,7 +346,7 @@ function projectSingleWeek(
     } else if (weekNumber >= 3) {
       phaseLabel = 'Heavy Absolute Overload';
       phaseCategory = 'OVERLOAD';
-      progressionRule = 'Sovraccarico (+2.5kg/+5kg) 6-8 reps';
+      progressionRule = 'Sovraccarico (+5% carico) 6-8 reps';
     } else {
       phaseLabel = 'Base Volume Acquisition';
       phaseCategory = 'ACCUMULO';
@@ -333,9 +357,9 @@ function projectSingleWeek(
   else if (methodKey === 'HARDTOPGYM') {
     isDeload = weekNumber === 4;
     if (isDeload) {
-      phaseLabel = 'Scarico Attivo SNC';
+      phaseLabel = 'Scarico Ormonale Attivo';
       phaseCategory = 'DELOAD';
-      progressionRule = 'Volume -30%, RIR 3-4 controllato';
+      progressionRule = 'Volume -40%, carichi al 65%, RIR 3-4';
     } else if (weekNumber === 3) {
       phaseLabel = 'Urto They & Intensificazione';
       phaseCategory = 'PICCO';
@@ -345,22 +369,30 @@ function projectSingleWeek(
       phaseCategory = 'OVERLOAD';
       progressionRule = '+5% carico sui fondamentali';
     } else {
-      phaseLabel = 'Setup Neurale';
+      phaseLabel = 'Setup Neurale & Tensione';
       phaseCategory = 'ACCUMULO';
-      progressionRule = 'Controllo tecnico e tensione continua';
+      progressionRule = 'Controllo cadenza 3-0-1-0 e tensione continua';
     }
   }
   // 8. NOCERINO
   else {
     isDeload = weekNumber === 17;
     if (isDeload) {
-      phaseLabel = 'Scarico Connettivale';
+      phaseLabel = 'Scarico Rigenerativo';
       phaseCategory = 'DELOAD';
       progressionRule = 'Taglio volume per recupero tendineo';
+    } else if (weekNumber >= 11) {
+      phaseLabel = `Fase III: Tensione Continua Max (W${weekNumber})`;
+      phaseCategory = 'PICCO';
+      progressionRule = 'Carichi crescenti 6-8 reps @ RPE 9';
+    } else if (weekNumber >= 5) {
+      phaseLabel = `Fase II: Densità Fibre Miste (W${weekNumber})`;
+      phaseCategory = 'OVERLOAD';
+      progressionRule = 'Densità 8-10 reps & isometria intermedia';
     } else {
-      phaseLabel = `Microciclo Miotipico ${weekNumber}`;
-      phaseCategory = weekNumber % 4 === 0 ? 'OVERLOAD' : 'ACCUMULO';
-      progressionRule = 'Tensione continua miotipica Bosco';
+      phaseLabel = `Fase I: Adattamento Connettivale (W${weekNumber})`;
+      phaseCategory = 'ACCUMULO';
+      progressionRule = 'TUT continuo 3-0-2-0, 10-12 reps lente';
     }
   }
 
@@ -472,17 +504,17 @@ function computeExerciseForWeek(
       if (isMetabolic) return { sets: 3, reps: '12', weight: baseWeight, rpe: 8, restSeconds: 60, tut: '2-0-2-0', notes: 'Saturazione metabolica 3x12', stimulus };
       return { sets: 4, reps: '8-10', weight: baseWeight, rpe: 8, restSeconds: 90, tut: '2-0-1-0', notes: 'Tensione meccanica ipertrofica 4x8-10', stimulus };
     }
-    if (weekInBlock <= 9) {
+    if (weekInBlock <= 10) {
       if (isNeuralCompound) return { sets: 5, reps: '8', weight: baseWeight, rpe: 8.5, restSeconds: 120, tut: '2-0-1-0', notes: 'Conversione Ipertrofica 5x8 (spinta al limite buffer)', stimulus };
       if (isMetabolic) return { sets: 3, reps: '12-15', weight: baseWeight, rpe: 8.5, restSeconds: 60, tut: '2-0-2-0', notes: 'Isolamento metabolico ad alta densità', stimulus };
       return { sets: 4, reps: '10-12', weight: baseWeight, rpe: 8.5, restSeconds: 90, tut: '2-0-1-0', notes: 'Densità miotipica 4x10-12', stimulus };
     }
-    if (weekInBlock === 10) {
+    if (weekInBlock === 11) {
       const deloadSets = Math.max(2, Math.round(rawSets * 0.6));
       return {
         sets: deloadSets,
         reps: '6-8',
-        weight: typeof baseWeight === 'number' ? Math.round(baseWeight * 0.85) : baseWeight,
+        weight: adjustWeight(baseWeight, 0.85),
         rpe: 6,
         restSeconds: 90,
         tut: '2-0-2-0',
@@ -490,17 +522,23 @@ function computeExerciseForWeek(
         stimulus
       };
     }
-    if (isNeuralCompound) {
-      const peakWeight = typeof baseWeight === 'number' ? Math.round(baseWeight * 1.07) : baseWeight;
-      return { sets: 4, reps: '3-4', weight: peakWeight, rpe: 9.5, restSeconds: 180, tut: '2-0-X-0', notes: 'Picco Neurale: +7% carico rispetto ad accumulo, 4x3-4', stimulus };
+    if (weekInBlock <= 15) {
+      if (isNeuralCompound) {
+        return { sets: 4, reps: '3-4', weight: adjustWeight(baseWeight, 1.07), rpe: 9.5, restSeconds: 180, tut: '2-0-X-0', notes: 'Picco Neurale: +7% carico rispetto ad accumulo, 4x3-4', stimulus };
+      }
+      return { sets: 3, reps: '6-8', weight: baseWeight, rpe: 9, restSeconds: 120, tut: '2-0-1-0', notes: 'Mantenimento ipertrofico ad alta tensione', stimulus };
     }
-    return { sets: 3, reps: '6-8', weight: baseWeight, rpe: 9, restSeconds: 120, tut: '2-0-1-0', notes: 'Mantenimento ipertrofico ad alta tensione', stimulus };
+    // W16: Test Massimali
+    if (isNeuralCompound) {
+      return { sets: 3, reps: '2-1', weight: adjustWeight(baseWeight, 1.10), rpe: 10, restSeconds: 240, tut: '1-0-X-0', notes: 'Test 1RM: Supercompensazione massimale', stimulus };
+    }
+    return { sets: 2, reps: '8', weight: baseWeight, rpe: 7, restSeconds: 90, tut: '2-0-1-0', notes: 'Attivazione muscolare a volume ridotto', stimulus };
   }
 
   // 2. BIKINI WAVE SYSTEM
   if (methodKey === 'BIKINI_WAVE') {
     if (isDeload) {
-      return { sets: 2, reps: isNeuralCompound ? '6' : '10', weight: baseWeight, rpe: 6, restSeconds: 60, tut: '2-0-2-0', notes: 'W10 Deload: 2 serie fisse a buffer controllato', stimulus };
+      return { sets: 2, reps: isNeuralCompound ? '6' : '10', weight: baseWeight, rpe: 6, restSeconds: 60, tut: '2-0-2-0', notes: 'W10 Deload: 2 serie fisse pump pre-gara', stimulus };
     }
     let wave = 1;
     if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
@@ -509,21 +547,94 @@ function computeExerciseForWeek(
     if (isNeuralCompound) {
       const waveSets = 2 + intraWaveWeek;
       const waveReps = wave === 1 ? '6' : wave === 2 ? '5' : '4';
-      return { sets: waveSets, reps: waveReps, weight: baseWeight, rpe: 7.5 + intraWaveWeek * 0.5, restSeconds: 120, tut: '2-0-1-0', notes: `Onda ${wave} (W${intraWaveWeek}): ${waveSets} serie pesanti`, stimulus };
+      return { sets: waveSets, reps: waveReps, weight: baseWeight, rpe: 7.5 + intraWaveWeek * 0.5, restSeconds: 120, tut: '2-0-1-0', notes: `Onda ${wave} (W${intraWaveWeek}/3): ${waveSets} serie pesanti`, stimulus };
     }
     const modReps = wave === 1 ? '8-12' : wave === 2 ? '6-10' : '6-8';
-    return { sets: 3, reps: modReps, weight: baseWeight, rpe: 8, restSeconds: 75, tut: '2-0-1-0', notes: `Onda ${wave}: Target ${modReps} rep ipertrofiche`, stimulus };
+    return { sets: 3, reps: modReps, weight: baseWeight, rpe: 8, restSeconds: 75, tut: '2-0-1-0', notes: `Onda ${wave}: complementare a target ${modReps} reps`, stimulus };
   }
 
-  // Fallback universale motori
-  return {
-    sets: isDeload ? 2 : rawSets,
-    reps: rawReps,
-    weight: baseWeight,
-    rpe: isDeload ? 6 : 8,
-    restSeconds: 90,
-    tut: '2-0-1-0',
-    notes: isDeload ? 'Scarico rigenerativo' : 'Progressione scientifica',
-    stimulus
-  };
+  // 3. POWERBLOCK HYBRID
+  if (methodKey === 'POWERBLOCK_HYBRID') {
+    if (isDeload) {
+      return { sets: 2, reps: '5', weight: adjustWeight(baseWeight, 0.60), rpe: 6, restSeconds: 90, tut: '2-0-1-0', notes: 'Supercompensazione SNC al 60%', stimulus };
+    }
+    if (weekNumber === 4 || weekNumber === 8 || weekNumber === 12) {
+      const amrapReps = weekNumber === 4 ? 'AMRAP (3+)' : weekNumber === 8 ? 'AMRAP (2+)' : '1RM Test';
+      return { sets: 4, reps: amrapReps, weight: adjustWeight(baseWeight, 1.05), rpe: 9.5, restSeconds: 180, tut: '2-0-X-0', notes: `Test Realizzazione W${weekNumber}`, stimulus };
+    }
+    if (isNeuralCompound) {
+      const mult = weekNumber >= 9 ? 1.08 : weekNumber >= 5 ? 1.04 : 1.0;
+      const r = weekNumber >= 9 ? '2-3' : weekNumber >= 5 ? '4' : '5';
+      return { sets: 4, reps: r, weight: adjustWeight(baseWeight, mult), rpe: 8.5, restSeconds: 150, tut: '2-0-1-0', notes: `Triade W${weekNumber}: Big 3 ad alta intensità`, stimulus };
+    }
+    return { sets: 3, reps: '8-10', weight: baseWeight, rpe: 8, restSeconds: 90, tut: '2-0-1-0', notes: 'Ipertrofia complementare', stimulus };
+  }
+
+  // 4. HELMS PYRAMID
+  if (methodKey === 'HELMS_PYRAMID') {
+    const wave = ((weekNumber - 1) % 4) + 1;
+    if (isDeload) {
+      return { sets: 2, reps: '6', weight: adjustWeight(baseWeight, 0.90), rpe: 6, restSeconds: 90, tut: '2-0-1-0', notes: 'Deload Helms attivo: 2 set RPE 6', stimulus };
+    }
+    if (isNeuralCompound) {
+      const repsTarget = wave === 1 ? '6' : wave === 2 ? '5' : '4';
+      const addedKg = wave === 1 ? 0 : wave === 2 ? 2.5 : 5;
+      const rpeTarget = wave === 1 ? 7.5 : wave === 2 ? 8 : 9;
+      return { sets: 4, reps: repsTarget, weight: adjustWeight(baseWeight, 1.0, addedKg), rpe: rpeTarget, restSeconds: 150, tut: '2-0-1-0', notes: `Wave ${wave}: ${repsTarget} reps @ RPE ${rpeTarget}`, stimulus };
+    }
+    return { sets: 3, reps: '10-12', weight: baseWeight, rpe: 7.5 + wave * 0.5, restSeconds: 90, tut: '2-0-1-0', notes: `Wave ${wave}: progressione volume isolamento`, stimulus };
+  }
+
+  // 5. BLOOD VOLUME OVERLOAD
+  if (methodKey === 'BLOOD_VOLUME_OVERLOAD') {
+    const wave = ((weekNumber - 1) % 4) + 1;
+    if (isDeload) {
+      return { sets: 2, reps: '12-15', weight: adjustWeight(baseWeight, 0.75), rpe: 6, restSeconds: 60, tut: '2-0-2-0', notes: 'Scarico cellulare e drenaggio', stimulus };
+    }
+    if (wave === 3) {
+      return { sets: 4, reps: '6-8', weight: adjustWeight(baseWeight, 1.03), rpe: 10, restSeconds: 90, tut: '2-0-1-0', notes: 'Overload cedimento concentrico (RIR 0)', stimulus };
+    }
+    return { sets: 4, reps: '6-10', weight: baseWeight, rpe: 8, restSeconds: 75, tut: '2-0-1-0', notes: 'Saturazione meccanica, buffer 1-2', stimulus };
+  }
+
+  // 6. CHRIS ACETO
+  if (methodKey === 'ACETO') {
+    if (isDeload) {
+      return { sets: 2, reps: '8-10', weight: adjustWeight(baseWeight, 0.80), rpe: 6, restSeconds: 60, tut: '2-0-2-0', notes: 'Deload volumetrico Aceto: 2 set -20% carico', stimulus };
+    }
+    if (weekNumber === 5) {
+      return { sets: 3, reps: isNeuralCompound ? '6 + drop' : '8 + stripping', weight: baseWeight, rpe: 10, restSeconds: 90, tut: '2-0-1-0', notes: 'Stripping Peak: cedimento concentrico e scalata', stimulus };
+    }
+    if (weekNumber >= 3) {
+      return { sets: 4, reps: isNeuralCompound ? '6-8' : '8-10', weight: adjustWeight(baseWeight, 1.05), rpe: 9, restSeconds: 120, tut: '2-0-1-0', notes: 'Heavy Absolute Overload (+5% carico)', stimulus };
+    }
+    return { sets: 4, reps: '8-10', weight: baseWeight, rpe: 8, restSeconds: 90, tut: '2-0-1-0', notes: 'Base Volume: cadenza esplosiva concentrica', stimulus };
+  }
+
+  // 7. HARDTOPGYM
+  if (methodKey === 'HARDTOPGYM') {
+    if (isDeload) {
+      const deloadSets = Math.max(2, Math.round(rawSets * 0.6));
+      return { sets: deloadSets, reps: '8', weight: adjustWeight(baseWeight, 0.70), rpe: 6, restSeconds: 90, tut: '2-0-2-0', notes: 'Scarico attivo ormonale Emilio They', stimulus };
+    }
+    if (weekNumber === 3) {
+      return { sets: 4, reps: '6', weight: adjustWeight(baseWeight, 1.05), rpe: 10, restSeconds: 150, tut: '3-0-1-0', notes: 'Urto They: cedimento assoluto (RIR 0) Bosco-Colli', stimulus };
+    }
+    if (weekNumber === 2) {
+      return { sets: 4, reps: '6', weight: adjustWeight(baseWeight, 1.05), rpe: 8.5, restSeconds: 120, tut: '3-0-1-0', notes: 'Micro-Overload They: +5% carichi fondamentali', stimulus };
+    }
+    return { sets: 4, reps: '6-8', weight: baseWeight, rpe: 7.5, restSeconds: 120, tut: '3-0-1-0', notes: 'Setup neurale They & controllo tensione continua', stimulus };
+  }
+
+  // 8. NOCERINO
+  if (isDeload) {
+    return { sets: 2, reps: '10', weight: adjustWeight(baseWeight, 0.75), rpe: 6, restSeconds: 90, tut: '2-0-2-0', notes: 'Scarico connettivale e rigenerativo', stimulus };
+  }
+  if (weekNumber >= 11) {
+    return { sets: 4, reps: '6-8', weight: adjustWeight(baseWeight, 1.06), rpe: 9, restSeconds: 90, tut: '2-0-2-0', notes: 'Fase III: Tensione continua max senza punti morti', stimulus };
+  }
+  if (weekNumber >= 5) {
+    return { sets: 4, reps: '8-10', weight: adjustWeight(baseWeight, 1.03), rpe: 8.5, restSeconds: 75, tut: '2-1-2-0', notes: 'Fase II: Densità fibre miste & isometria', stimulus };
+  }
+  return { sets: 4, reps: '10-12', weight: baseWeight, rpe: 7.5, restSeconds: 90, tut: '3-0-2-0', notes: 'Fase I: Adattamento tendineo & TUT continuo lento', stimulus };
 }

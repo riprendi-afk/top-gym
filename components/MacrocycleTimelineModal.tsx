@@ -42,6 +42,12 @@ export default function MacrocycleTimelineModal({
   }, [programDays]);
 
   const [localOverrides, setLocalOverrides] = useState<Record<number, Record<string, ExerciseWeekOverride>>>(initialOverrides);
+
+  // Sincronizzazione istantanea al cambio atleta/scheda
+  React.useEffect(() => {
+    setLocalOverrides(programDays?.[0]?.weekOverrides || {});
+    setSelectedDayIdx(0);
+  }, [athleteId, programDays]);
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

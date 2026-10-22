@@ -5009,6 +5009,7 @@ if (isFinished) {
       
       {/* MODALE MATRICE & TIMELINE MACROCICLO COACH (GLOBALE) */}
       <MacrocycleTimelineModal
+          key={targetUserId || "timeline-modal"}
         isOpen={isTimelineModalOpen}
         onClose={() => setIsTimelineModalOpen(false)}
         athleteName={athletes.find(a => a.id === targetUserId)?.displayName || "Atleta"}
