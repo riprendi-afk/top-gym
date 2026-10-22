@@ -714,14 +714,19 @@ useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const storageKey = `topgym_session_logs_${targetUserId || "athlete"}`;
-      const cached = localStorage.getItem(storageKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setLogs(parsed);
+        const cached = localStorage.getItem(storageKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLogs(parsed);
+          } else {
+            setLogs([]);
+          }
+        } else {
+          // Reset immediato per evitare che il nuovo atleta erediti i log dell'atleta precedente
+          setLogs([]);
         }
-      }
-    } catch (e) {
+      } catch (e) {
       console.error("Errore nel recupero della sessione salvata:", e);
     }
   }, [targetUserId]);
