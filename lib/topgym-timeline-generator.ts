@@ -540,57 +540,87 @@ function computeExerciseForWeek(
     return { sets: 2, reps: '8', weight: baseWeight, rpe: 7, restSeconds: 90, tut: '2-0-1-0', notes: 'Attivazione muscolare a volume ridotto', stimulus };
   }
 
-   // 2. BIKINI WAVE SYSTEM (Wilson & Fitschen - Tabelle 7.4, 7.5, 7.6)
+   // 2. BIKINI WAVE SYSTEM (Wilson & Fitschen - Tabelle 7.4, 7.5, 7.6 - Tutte le 5 Sessioni)
    if (methodKey === 'BIKINI_WAVE') {
      const rawReps = String(ex.reps || '10').trim();
      const noteText = ((ex.notes || '') + ' ' + (ex.name || '')).toUpperCase();
      const currentSets = Number(ex.sets) || rawSets || 3;
+     const nums = (rawReps.match(/\d+/g) || []).map(Number);
+     const firstRep = nums[0] || 10;
+     const maxRep = nums.length > 1 ? nums[1] : firstRep;
 
-     // 1. Riconoscimento Metabolico Pompaggio (H) da Tabelle 7.4, 7.5, 7.6
+     // 1. RICONOSCIMENTO METABOLICO / PUMP (H): 15-30 reps o esercizi pump glutei/spalle
      const isBikiniH =
        noteText.includes('(H)') ||
        noteText.includes('[H]') ||
-       ex.stimulusType === 'METABOLIC' ||
-       rawReps.includes('20') ||
-       rawReps.includes('25') ||
-       rawReps.includes('30') ||
-       rawReps.includes('15-20') ||
-       rawReps.includes('15-25') ||
-       rawReps.includes('20-25') ||
-       rawReps.includes('20-30') ||
+       firstRep >= 15 ||
+       maxRep >= 20 ||
        lower.includes('banded') ||
        lower.includes('kickback') ||
+       lower.includes('slanci') ||
        lower.includes('abductor') ||
+       lower.includes('abduttori') ||
+       lower.includes('abduzioni') ||
        lower.includes('pull-through') ||
-       lower.includes('pressdown') ||
-       lower.includes('single-leg') ||
-       (lower.includes('hack') && rawReps.includes('15'));
+       lower.includes('frog pump') ||
+       lower.includes('single-leg hip thrust') ||
+       (lower.includes('hack') && firstRep >= 15);
 
-     // 2. Riconoscimento Composti Pesanti (L)
-     const isBikiniL =
+     // 2. RICONOSCIMENTO COMPOSTI E SECONDARI PESANTI (L)
+     const isHeavyHipThrust =
+       lower.includes('hip thrust') &&
+       !lower.includes('banded') &&
+       !lower.includes('single') &&
+       (firstRep <= 6 || noteText.includes('(L)') || noteText.includes('[L]'));
+
+     const isPrimaryBig =
        !isBikiniH &&
-       (noteText.includes('(L)') ||
-         noteText.includes('[L]') ||
-         ex.stimulusType === 'NEURAL' ||
-         lower.includes('deadlift') ||
+       (lower.includes('deadlift') ||
          lower.includes('stacco') ||
-         (lower.includes('squat') && !lower.includes('hack')) ||
-         lower.includes('overhead press') ||
-         lower.includes('lento') ||
-         lower.includes('pendlay') ||
+         (lower.includes('squat') && !lower.includes('hack') && !lower.includes('bulgarian') && !lower.includes('bulgaro') && !lower.includes('goblet') && !lower.includes('sumo')) ||
+         (lower.includes('overhead press') && !lower.includes('db') && !lower.includes('manubri')) ||
+         (lower.includes('military') && !lower.includes('manubri')) ||
+         (lower.includes('lento') && !lower.includes('manubri')) ||
+         lower.includes('rdl') ||
+         lower.includes('rumeni') ||
+         isHeavyHipThrust);
+
+     const isSecondaryL =
+       !isBikiniH &&
+       !isPrimaryBig &&
+       (lower.includes('pendlay') ||
+         lower.includes('rematore') ||
+         lower.includes('barbell row') ||
+         lower.includes('bent-over') ||
+         lower.includes('t-bar') ||
          lower.includes('pull-up') ||
+         lower.includes('chin-up') ||
          lower.includes('trazioni') ||
          lower.includes('bulgarian') ||
          lower.includes('bulgaro') ||
-         lower.includes('rdl') ||
-         (lower.includes('hip thrust') && !lower.includes('banded') && !lower.includes('single') && !rawReps.includes('10-12')));
+         rawReps === '4-8' ||
+         rawReps === '6-8' ||
+         rawReps === '5-7' ||
+         rawReps === '4-6');
 
+     const isAccessoryL =
+       !isBikiniH &&
+       !isPrimaryBig &&
+       !isSecondaryL &&
+       (noteText.includes('(L)') ||
+         noteText.includes('[L]') ||
+         rawReps === '6-10' ||
+         firstRep <= 6 ||
+         lower.includes('sumo leg press') ||
+         lower.includes('pressa sumo'));
+
+     const isBikiniL = isPrimaryBig || isSecondaryL || isAccessoryL;
      const bikiniCategory: 'L' | 'M' | 'H' = isBikiniH ? 'H' : isBikiniL ? 'L' : 'M';
 
+     // W10: DELOAD FISIOLOGICO PRE-GARA
      if (isDeload) {
-       const deloadSets = bikiniCategory === 'L' ? Math.max(2, currentSets - 1) : 2;
        return {
-         sets: deloadSets,
+         sets: 2,
          reps: ex.reps,
          weight: baseWeight,
          rpe: 6,
@@ -606,25 +636,10 @@ function computeExerciseForWeek(
      else if (weekNumber >= 7 && weekNumber <= 9) wave = 3;
      const intraWaveWeek = ((weekNumber - 1) % 3) + 1;
 
+     // CATEGORIA (L): ONDA DI SERIE (3->4->5 o 2->3->4) E SCALATA REPS TRA LE ONDE
      if (bikiniCategory === 'L') {
-       // Composti pesanti (L): +1 set a settimana dentro l'onda (W1=base, W2=base+1, W3=base+2)
-       const waveSets = currentSets + (intraWaveWeek - 1);
-
-       const isPrimaryBig =
-         lower.includes('deadlift') ||
-         lower.includes('stacco') ||
-         (lower.includes('squat') && !lower.includes('hack') && !lower.includes('bulgarian') && !lower.includes('bulgaro')) ||
-         lower.includes('overhead press') ||
-         lower.includes('lento') ||
-         lower.includes('rdl') ||
-         (lower.includes('hip thrust') && !lower.includes('banded') && !lower.includes('single'));
-
-       const isSecondaryL =
-         lower.includes('pendlay') ||
-         lower.includes('pull-up') ||
-         lower.includes('trazioni') ||
-         lower.includes('bulgarian') ||
-         lower.includes('bulgaro');
+       const baseSetsL = currentSets === 2 ? 2 : 3;
+       const waveSets = baseSetsL + (intraWaveWeek - 1);
 
        let waveReps: string;
        if (isPrimaryBig) {
@@ -648,44 +663,46 @@ function computeExerciseForWeek(
        };
      }
 
+     // CATEGORIA (H): SERIE E REPS FISSE E INTOCCABILI PER TUTTE LE 9 SETTIMANE
      if (bikiniCategory === 'H') {
-       // METABOLIC PUMP (H): SERIE E REPS RIGOROSAMENTE FISSE E INTOCCABILI
+       const pumpReps = firstRep >= 15 ? rawReps : '15-20';
        return {
          sets: currentSets,
-         reps: ex.reps,
+         reps: pumpReps,
          weight: baseWeight,
          rpe: 8.5,
          restSeconds: 45,
          tut: '2-0-2-0',
-         notes: `[Pump H] Tensione continua, reps fisse ${ex.reps}`,
+         notes: `[Pump H] Tensione continua, reps fisse ${pumpReps}`,
          stimulus: 'METABOLIC',
        };
      }
 
-     // MODERATE (M): SERIE COSTANTI NELL'ONDA, SCALATA REPS SOLO TRA LE ONDE
+     // CATEGORIA (M): SERIE COSTANTI, SCALATA REPS GARANTITA TRA LE 3 ONDE
+     const fixedModSets = currentSets > 4 ? 3 : currentSets;
      let modReps = rawReps;
      if (wave === 1) {
-       modReps = rawReps;
+       if (rawReps.includes('10-15') || rawReps.includes('12-15')) modReps = '10-15';
+       else if (rawReps.includes('10-12')) modReps = '10-12';
+       else modReps = '8-12';
      } else if (wave === 2) {
-       if (rawReps.includes('8-12')) modReps = '6-10';
+       if (rawReps.includes('10-15') || rawReps.includes('12-15')) modReps = '8-12';
        else if (rawReps.includes('10-12')) modReps = '8-10';
-       else if (rawReps.includes('10-15')) modReps = '8-12';
-       else modReps = rawReps;
+       else modReps = '6-10';
      } else {
-       if (rawReps.includes('8-12') || rawReps.includes('6-10')) modReps = '6-8';
-       else if (rawReps.includes('10-12') || rawReps.includes('8-10')) modReps = '6-10';
-       else if (rawReps.includes('10-15') || rawReps.includes('8-12')) modReps = '8-10';
-       else modReps = rawReps;
+       if (rawReps.includes('10-15') || rawReps.includes('12-15')) modReps = '8-10';
+       else if (rawReps.includes('10-12')) modReps = '6-10';
+       else modReps = '6-8';
      }
 
      return {
-       sets: currentSets,
+       sets: fixedModSets,
        reps: modReps,
        weight: baseWeight,
        rpe: 8,
        restSeconds: 75,
        tut: '2-0-1-0',
-       notes: `[M - Onda ${wave}] Serie fisse (${currentSets}), reps ${modReps}`,
+       notes: `[M - Onda ${wave}] Serie fisse (${fixedModSets}), reps ${modReps}`,
        stimulus: 'HYPERTROPHIC',
      };
    }
