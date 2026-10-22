@@ -1456,29 +1456,70 @@ const calculatedCurrentPhase: MicroWeek = useMemo(() => {
 
 // 4. Motore Esecutivo: delega al rispettivo engine in lib/
 const dynamicActiveDay = useMemo(() => {
-  if (!activeDay) return null;
-  if (((userRole as any) === "COACH") && activeTab === "builder") return activeDay;
+    if (!activeDay) return null;
+    if (((userRole as any) === "COACH") && activeTab === "builder") return activeDay;
 
-  if (isMasterProgram) {
-    const progressed = applyHardTopGymWeekProgression([activeDay], calculatedCurrentPhase);
-    return progressed?.[0] || activeDay;
-  }
+    let baseDay: any = null;
+    if (isMasterProgram) {
+      const progressed = applyHardTopGymWeekProgression([activeDay], calculatedCurrentPhase);
+      baseDay = progressed?.[0] || activeDay;
+    } else {
+      baseDay = processDynamicWorkout(
+        activeDay as any,
+        calculatedCurrentRealWeek,
+        calculatedCurrentPhase as any,
+        activeBlock,
+      );
+    }
 
-  return processDynamicWorkout(
-    activeDay as any,
+    if (!baseDay) return activeDay;
+
+    // Sincronizzazione deterministica con weekOverrides del Coach
+    const effectiveWeek = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
+    const overridesMap =
+      (activeDay as any)?.weekOverrides?.[effectiveWeek] ||
+      (programDays?.[0] as any)?.weekOverrides?.[effectiveWeek];
+
+    if (overridesMap && Array.isArray(baseDay.exercises)) {
+      const mergedExercises = baseDay.exercises.map((ex: any, exIdx: number) => {
+        const exId = ex.id || `ex_${selectedDayIndex}_${exIdx}`;
+        const ov = overridesMap[exId] || (ex.id ? overridesMap[ex.id] : undefined);
+        if (!ov) return ex;
+
+        return {
+          ...ex,
+          sets: ov.sets !== undefined ? ov.sets : ex.sets,
+          reps: ov.reps !== undefined ? ov.reps : ex.reps,
+          weight: ov.weight !== undefined ? ov.weight : ex.weight,
+          targetWeight: ov.weight !== undefined ? String(ov.weight) : (ex.targetWeight || (ex.weight !== undefined ? String(ex.weight) : '')),
+          rpe: ov.rpe !== undefined ? ov.rpe : ex.rpe,
+          rpeTarget: ov.rpe !== undefined ? String(ov.rpe) : (ex.rpeTarget || (ex.rpe !== undefined ? String(ex.rpe) : '')),
+          restSeconds: ov.restSeconds !== undefined ? ov.restSeconds : ex.restSeconds,
+          tut: ov.tut !== undefined ? ov.tut : ex.tut,
+          notes: ov.notes !== undefined ? ov.notes : ex.notes,
+          isLocked: ov.isLocked ?? ex.isLocked,
+        };
+      });
+
+      return {
+        ...baseDay,
+        exercises: mergedExercises,
+      };
+    }
+
+    return baseDay;
+  }, [
+    activeDay,
+    userRole,
+    activeTab,
+    isMasterProgram,
     calculatedCurrentRealWeek,
-    calculatedCurrentPhase as any,
+    calculatedCurrentPhase,
     activeBlock,
-  );
-}, [
-  activeDay,
-  userRole,
-  activeTab,
-  isMasterProgram,
-  calculatedCurrentRealWeek,
-  calculatedCurrentPhase,
-  activeBlock,
-]);
+    manualWeek,
+    programDays,
+    selectedDayIndex,
+  ]);
 
 const activeRoutine = dynamicActiveDay?.exercises ?? [];
 const currentExercise =
