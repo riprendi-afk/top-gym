@@ -1,4 +1,6 @@
 "use client";
+
+import { getActiveSessionForAthlete, resolveEngineKey } from "@/lib/topgym-timeline-generator";
 import MacrocycleTimelineModal from '@/components/MacrocycleTimelineModal';
 import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
 import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
@@ -1459,66 +1461,26 @@ const dynamicActiveDay = useMemo(() => {
     if (!activeDay) return null;
     if (((userRole as any) === "COACH") && activeTab === "builder") return activeDay;
 
-    let baseDay: any = null;
-    if (isMasterProgram) {
-      const progressed = applyHardTopGymWeekProgression([activeDay], calculatedCurrentPhase);
-      baseDay = progressed?.[0] || activeDay;
-    } else {
-      baseDay = processDynamicWorkout(
-        activeDay as any,
-        calculatedCurrentRealWeek,
-        calculatedCurrentPhase as any,
-        activeBlock,
-      );
-    }
-
-    if (!baseDay) return activeDay;
-
-    // Sincronizzazione deterministica con weekOverrides del Coach
     const effectiveWeek = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
-    const overridesMap =
-      (activeDay as any)?.weekOverrides?.[effectiveWeek] ||
-      (programDays?.[0] as any)?.weekOverrides?.[effectiveWeek];
+    const currentEngine = programmingModel || (activeDay as any)?.method || (activeDay as any)?.programmingModel || "TOPGYM_CLASSICO";
+    const overrides = (activeDay as any)?.weekOverrides || (programDays?.[0] as any)?.weekOverrides || {};
 
-    if (overridesMap && Array.isArray(baseDay.exercises)) {
-      const mergedExercises = baseDay.exercises.map((ex: any, exIdx: number) => {
-        const exId = ex.id || `ex_${selectedDayIndex}_${exIdx}`;
-        const ov = overridesMap[exId] || (ex.id ? overridesMap[ex.id] : undefined);
-        if (!ov) return ex;
-
-        return {
-          ...ex,
-          sets: ov.sets !== undefined ? ov.sets : ex.sets,
-          reps: ov.reps !== undefined ? ov.reps : ex.reps,
-          weight: ov.weight !== undefined ? ov.weight : ex.weight,
-          targetWeight: ov.weight !== undefined ? String(ov.weight) : (ex.targetWeight || (ex.weight !== undefined ? String(ex.weight) : '')),
-          rpe: ov.rpe !== undefined ? ov.rpe : ex.rpe,
-          rpeTarget: ov.rpe !== undefined ? String(ov.rpe) : (ex.rpeTarget || (ex.rpe !== undefined ? String(ex.rpe) : '')),
-          restSeconds: ov.restSeconds !== undefined ? ov.restSeconds : ex.restSeconds,
-          tut: ov.tut !== undefined ? ov.tut : ex.tut,
-          notes: ov.notes !== undefined ? ov.notes : ex.notes,
-          isLocked: ov.isLocked ?? ex.isLocked,
-        };
-      });
-
-      return {
-        ...baseDay,
-        exercises: mergedExercises,
-      };
-    }
-
-    return baseDay;
+    return getActiveSessionForAthlete(
+      activeDay,
+      selectedDayIndex,
+      effectiveWeek,
+      currentEngine,
+      overrides
+    );
   }, [
     activeDay,
     userRole,
     activeTab,
-    isMasterProgram,
-    calculatedCurrentRealWeek,
-    calculatedCurrentPhase,
-    activeBlock,
     manualWeek,
-    programDays,
+    calculatedCurrentRealWeek,
+    programmingModel,
     selectedDayIndex,
+    programDays,
   ]);
 
 const activeRoutine = dynamicActiveDay?.exercises ?? [];

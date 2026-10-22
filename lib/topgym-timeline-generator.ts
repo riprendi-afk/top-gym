@@ -27,6 +27,7 @@ export interface ExerciseWeekOverride {
 }
 
 export interface TimelineExercise {
+  [key: string]: any;
   id: string;
   name: string;
   muscle?: string;
@@ -43,6 +44,7 @@ export interface TimelineExercise {
 }
 
 export interface TimelineDay {
+  [key: string]: any;
   id: string;
   title: string;
   dayNumber: number;
@@ -637,4 +639,37 @@ function computeExerciseForWeek(
     return { sets: 4, reps: '8-10', weight: adjustWeight(baseWeight, 1.03), rpe: 8.5, restSeconds: 75, tut: '2-1-2-0', notes: 'Fase II: Densità fibre miste & isometria', stimulus };
   }
   return { sets: 4, reps: '10-12', weight: baseWeight, rpe: 7.5, restSeconds: 90, tut: '3-0-2-0', notes: 'Fase I: Adattamento tendineo & TUT continuo lento', stimulus };
+}
+
+/**
+ * Risolve la sessione attiva dell'atleta per la settimana corrente (Single Source of Truth).
+ * Preserva tutti i metadati originali dell'esercizio applicando la progressione scientifica o gli override del Coach.
+ */
+export function getActiveSessionForAthlete(
+  activeDay: any,
+  dayIndex: number,
+  currentWeek: number,
+  programmingModel?: string,
+  weekOverrides?: Record<number, Record<string, ExerciseWeekOverride>>
+): any {
+  if (!activeDay) return null;
+  const methodKey = resolveEngineKey(programmingModel || activeDay.method || activeDay.programmingModel);
+  const weekNum = Math.max(1, currentWeek || 1);
+
+  const overridesMap =
+    weekOverrides?.[weekNum] ||
+    (activeDay.weekOverrides?.[weekNum]) ||
+    {};
+
+  const projectedWeek = projectSingleWeek([activeDay], methodKey, weekNum, overridesMap);
+  const projectedDay = projectedWeek.days[0] || activeDay;
+
+  return {
+    ...activeDay,
+    ...projectedDay,
+    isDeload: projectedWeek.isDeload,
+    phaseLabel: projectedWeek.phaseLabel,
+    phaseCategory: projectedWeek.phaseCategory,
+    progressionRule: projectedWeek.progressionRule,
+  };
 }
