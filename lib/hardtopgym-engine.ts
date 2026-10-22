@@ -571,35 +571,53 @@ export function generateHardTopGymProgram(
 // ============================================================================
 export function calculateHardTopGymProgress(
   workoutHistory: any[],
-  athleteId: string | undefined,
-  splitDaysCount: number
-) {
-  const splitSize = Math.max(3, Math.min(6, splitDaysCount || 4));
+  athleteId?: string,
+  splitSize: number = 4,
+  programAssignedAt?: string | Date
+): {
+  splitSize: number;
+  totalCompleted: number;
+  currentWeek: number;
+  workoutInCurrentWeek: number;
+  isDeloadWeek: number;
+  isCycleCompleted: boolean;
+} {
+  const history = Array.isArray(workoutHistory) ? workoutHistory : [];
+  const assignedDate = programAssignedAt ? new Date(programAssignedAt).getTime() : 0;
 
-  const completedWorkouts = Array.isArray(workoutHistory)
-    ? workoutHistory.filter(w => {
-        if (!w) return false;
-        if (!athleteId) return true;
-        return (
-          w.athleteId === athleteId ||
-          w.userId === athleteId ||
-          w.athlete_id === athleteId ||
-          w.user_id === athleteId
-        );
-      })
-    : [];
+  const completedWorkouts = history.filter(w => {
+    if (!w) return false;
+    // Match atleta
+    const matchesAthlete = !athleteId || (
+      w.athleteId === athleteId ||
+      w.userId === athleteId ||
+      w.athlete_id === athleteId ||
+      w.user_id === athleteId
+    );
+    if (!matchesAthlete) return false;
+
+    // Filtro Punto 0: ignora allenamenti fatti prima che questa scheda fosse assegnata
+    if (assignedDate > 0) {
+      const wDate = new Date(w.completedAt || w.date || w.created_at || 0).getTime();
+      if (wDate > 0 && wDate < assignedDate) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const totalCompleted = completedWorkouts.length;
-  const completedWeeks = Math.floor(totalCompleted / splitSize);
-  const currentWeek = (completedWeeks % 4) + 1;
-  const workoutInCurrentWeek = (totalCompleted % splitSize) + 1;
-  const isDeloadWeek = currentWeek === 4;
-  const isCycleCompleted = completedWeeks > 0 && completedWeeks % 4 === 0 && (totalCompleted % splitSize === 0);
+  // Correzione: il microciclo avanza correttamente completando la split
+  const completedWeeks = splitSize > 0 ? Math.floor(totalCompleted / splitSize) : 0;
+  const currentWeek = completedWeeks + 1;
+  const workoutInCurrentWeek = splitSize > 0 ? (totalCompleted % splitSize) + 1 : 1;
+  const isDeloadWeek = currentWeek === 10 ? 1 : 0;
+  const isCycleCompleted = completedWeeks > 0 && splitSize > 0 && completedWeeks % 10 === 0 && (totalCompleted % splitSize === 0);
 
   return {
     splitSize,
     totalCompleted,
-    currentWeek,
+    currentWeek: Math.min(10, currentWeek),
     workoutInCurrentWeek,
     isDeloadWeek,
     isCycleCompleted
