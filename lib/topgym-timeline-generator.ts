@@ -18,12 +18,12 @@ export type SupportedMethod =
 export interface ExerciseWeekOverride {
   sets?: number;
   reps?: string;
-  weight?: string | number;
-  rpe?: string | number;
-  restSeconds?: number;
-  tut?: string;
+  weight?: number;
+  rpe?: number;
   notes?: string;
   isLocked?: boolean;
+  restSeconds?: number;
+  tut?: string;
 }
 
 export interface TimelineExercise {
@@ -258,25 +258,28 @@ function projectSingleWeek(
       progressionRule = 'Test 1RM / Supercompensazione';
     }
   }
-  // 2. BIKINI WAVE SYSTEM
-  else if (methodKey === 'BIKINI_WAVE') {
-    isDeload = weekNumber === 10;
-    if (isDeload) {
-      phaseLabel = 'Deload Glicogenico Pre-Gara';
-      phaseCategory = 'DELOAD';
-      progressionRule = '2 serie pump a buffer controllato';
-    } else {
-      let wave = 1;
-      if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
-      else if (weekNumber >= 7 && weekNumber <= 9) wave = 3;
-      const intraWaveWeek = ((weekNumber - 1) % 3) + 1;
-      phaseLabel = `Onda ${wave} (Microciclo ${intraWaveWeek}/3)`;
-      phaseCategory = intraWaveWeek === 3 ? 'PICCO' : 'ACCUMULO';
-      const sets = 2 + intraWaveWeek;
-      const rep = wave === 1 ? '6' : wave === 2 ? '5' : '4';
-      progressionRule = `${sets} serie x ${rep} reps pesanti`;
-    }
-  }
+   // 2. BIKINI WAVE SYSTEM (Wilson & Fitschen - Macrocycle Timeline)
+   else if (methodKey === 'BIKINI_WAVE') {
+     isDeload = weekNumber === 10;
+     if (isDeload) {
+       phaseLabel = 'W10: Deload Fisiologico Pre-Gara';
+       phaseCategory = 'DELOAD';
+       progressionRule = 'Scarico volume sui composti pesanti (L: 2 set), buffer ampio';
+     } else {
+       let wave = 1;
+       if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
+       else if (weekNumber >= 7 && weekNumber <= 9) wave = 3;
+       const intraWaveWeek = ((weekNumber - 1) % 3) + 1;
+       phaseLabel = `Onda ${wave} (Microciclo ${intraWaveWeek}/3)`;
+       phaseCategory = intraWaveWeek === 3 ? 'PICCO' : 'ACCUMULO';
+       const rep = wave === 1 ? '6' : wave === 2 ? '5' : '4';
+       progressionRule = intraWaveWeek === 1
+         ? `Volume Base (L: 3 set @ ${rep} reps, M/H: fissi) @ RPE 7.5`
+         : intraWaveWeek === 2
+         ? `Aumento Volume (L: 4 set @ ${rep} reps, M/H: fissi) @ RPE 8`
+         : `Picco Volume Onda (L: 5 set @ ${rep} reps, M/H: fissi) @ RPE 8.5`;
+     }
+   }
   // 3. POWERBLOCK HYBRID
   else if (methodKey === 'POWERBLOCK_HYBRID') {
     isDeload = weekNumber === 13;
@@ -537,24 +540,155 @@ function computeExerciseForWeek(
     return { sets: 2, reps: '8', weight: baseWeight, rpe: 7, restSeconds: 90, tut: '2-0-1-0', notes: 'Attivazione muscolare a volume ridotto', stimulus };
   }
 
-  // 2. BIKINI WAVE SYSTEM
-  if (methodKey === 'BIKINI_WAVE') {
-    if (isDeload) {
-      return { sets: 2, reps: isNeuralCompound ? '6' : '10', weight: baseWeight, rpe: 6, restSeconds: 60, tut: '2-0-2-0', notes: 'W10 Deload: 2 serie fisse pump pre-gara', stimulus };
-    }
-    let wave = 1;
-    if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
-    else if (weekNumber >= 7 && weekNumber <= 9) wave = 3;
-    const intraWaveWeek = ((weekNumber - 1) % 3) + 1;
-    if (isNeuralCompound) {
-      const waveSets = 2 + intraWaveWeek;
-      const waveReps = wave === 1 ? '6' : wave === 2 ? '5' : '4';
-      return { sets: waveSets, reps: waveReps, weight: baseWeight, rpe: 7.5 + intraWaveWeek * 0.5, restSeconds: 120, tut: '2-0-1-0', notes: `Onda ${wave} (W${intraWaveWeek}/3): ${waveSets} serie pesanti`, stimulus };
-    }
-    const modReps = wave === 1 ? '8-12' : wave === 2 ? '6-10' : '6-8';
-    return { sets: 3, reps: modReps, weight: baseWeight, rpe: 8, restSeconds: 75, tut: '2-0-1-0', notes: `Onda ${wave}: complementare a target ${modReps} reps`, stimulus };
-  }
+   // 2. BIKINI WAVE SYSTEM (Wilson & Fitschen - Tabelle 7.4, 7.5, 7.6)
+   if (methodKey === 'BIKINI_WAVE') {
+     const rawReps = String(ex.reps || '10').trim();
+     const noteText = ((ex.notes || '') + ' ' + (ex.name || '')).toUpperCase();
+     const currentSets = Number(ex.sets) || rawSets || 3;
 
+     // 1. Riconoscimento Metabolico Pompaggio (H) da Tabelle 7.4, 7.5, 7.6
+     const isBikiniH =
+       noteText.includes('(H)') ||
+       noteText.includes('[H]') ||
+       ex.stimulusType === 'METABOLIC' ||
+       rawReps.includes('20') ||
+       rawReps.includes('25') ||
+       rawReps.includes('30') ||
+       rawReps.includes('15-20') ||
+       rawReps.includes('15-25') ||
+       rawReps.includes('20-25') ||
+       rawReps.includes('20-30') ||
+       lower.includes('banded') ||
+       lower.includes('kickback') ||
+       lower.includes('abductor') ||
+       lower.includes('pull-through') ||
+       lower.includes('pressdown') ||
+       lower.includes('single-leg') ||
+       (lower.includes('hack') && rawReps.includes('15'));
+
+     // 2. Riconoscimento Composti Pesanti (L)
+     const isBikiniL =
+       !isBikiniH &&
+       (noteText.includes('(L)') ||
+         noteText.includes('[L]') ||
+         ex.stimulusType === 'NEURAL' ||
+         lower.includes('deadlift') ||
+         lower.includes('stacco') ||
+         (lower.includes('squat') && !lower.includes('hack')) ||
+         lower.includes('overhead press') ||
+         lower.includes('lento') ||
+         lower.includes('pendlay') ||
+         lower.includes('pull-up') ||
+         lower.includes('trazioni') ||
+         lower.includes('bulgarian') ||
+         lower.includes('bulgaro') ||
+         lower.includes('rdl') ||
+         (lower.includes('hip thrust') && !lower.includes('banded') && !lower.includes('single') && !rawReps.includes('10-12')));
+
+     const bikiniCategory: 'L' | 'M' | 'H' = isBikiniH ? 'H' : isBikiniL ? 'L' : 'M';
+
+     if (isDeload) {
+       const deloadSets = bikiniCategory === 'L' ? Math.max(2, currentSets - 1) : 2;
+       return {
+         sets: deloadSets,
+         reps: ex.reps,
+         weight: baseWeight,
+         rpe: 6,
+         restSeconds: 60,
+         tut: '2-0-2-0',
+         notes: 'W10 Deload Pre-Gara: scarico volume composti L, buffer ampio',
+         stimulus: bikiniCategory === 'L' ? 'NEURAL' : bikiniCategory === 'H' ? 'METABOLIC' : 'HYPERTROPHIC',
+       };
+     }
+
+     let wave = 1;
+     if (weekNumber >= 4 && weekNumber <= 6) wave = 2;
+     else if (weekNumber >= 7 && weekNumber <= 9) wave = 3;
+     const intraWaveWeek = ((weekNumber - 1) % 3) + 1;
+
+     if (bikiniCategory === 'L') {
+       // Composti pesanti (L): +1 set a settimana dentro l'onda (W1=base, W2=base+1, W3=base+2)
+       const waveSets = currentSets + (intraWaveWeek - 1);
+
+       const isPrimaryBig =
+         lower.includes('deadlift') ||
+         lower.includes('stacco') ||
+         (lower.includes('squat') && !lower.includes('hack') && !lower.includes('bulgarian') && !lower.includes('bulgaro')) ||
+         lower.includes('overhead press') ||
+         lower.includes('lento') ||
+         lower.includes('rdl') ||
+         (lower.includes('hip thrust') && !lower.includes('banded') && !lower.includes('single'));
+
+       const isSecondaryL =
+         lower.includes('pendlay') ||
+         lower.includes('pull-up') ||
+         lower.includes('trazioni') ||
+         lower.includes('bulgarian') ||
+         lower.includes('bulgaro');
+
+       let waveReps: string;
+       if (isPrimaryBig) {
+         waveReps = wave === 1 ? '6' : wave === 2 ? '5' : '4';
+       } else if (isSecondaryL) {
+         waveReps = wave === 1 ? '6-8' : wave === 2 ? '5-7' : '4-6';
+       } else {
+         waveReps = wave === 1 ? '6-10' : wave === 2 ? '6-8' : '5-8';
+       }
+
+       const rpeTarget = intraWaveWeek === 1 ? 7.5 : intraWaveWeek === 2 ? 8.0 : 8.5;
+       return {
+         sets: waveSets,
+         reps: waveReps,
+         weight: baseWeight,
+         rpe: rpeTarget,
+         restSeconds: isPrimaryBig ? 150 : 120,
+         tut: '2-0-1-0',
+         notes: `[L - Onda ${wave}] W${intraWaveWeek}/3: ${waveSets}x${waveReps}`,
+         stimulus: 'NEURAL',
+       };
+     }
+
+     if (bikiniCategory === 'H') {
+       // METABOLIC PUMP (H): SERIE E REPS RIGOROSAMENTE FISSE E INTOCCABILI
+       return {
+         sets: currentSets,
+         reps: ex.reps,
+         weight: baseWeight,
+         rpe: 8.5,
+         restSeconds: 45,
+         tut: '2-0-2-0',
+         notes: `[Pump H] Tensione continua, reps fisse ${ex.reps}`,
+         stimulus: 'METABOLIC',
+       };
+     }
+
+     // MODERATE (M): SERIE COSTANTI NELL'ONDA, SCALATA REPS SOLO TRA LE ONDE
+     let modReps = rawReps;
+     if (wave === 1) {
+       modReps = rawReps;
+     } else if (wave === 2) {
+       if (rawReps.includes('8-12')) modReps = '6-10';
+       else if (rawReps.includes('10-12')) modReps = '8-10';
+       else if (rawReps.includes('10-15')) modReps = '8-12';
+       else modReps = rawReps;
+     } else {
+       if (rawReps.includes('8-12') || rawReps.includes('6-10')) modReps = '6-8';
+       else if (rawReps.includes('10-12') || rawReps.includes('8-10')) modReps = '6-10';
+       else if (rawReps.includes('10-15') || rawReps.includes('8-12')) modReps = '8-10';
+       else modReps = rawReps;
+     }
+
+     return {
+       sets: currentSets,
+       reps: modReps,
+       weight: baseWeight,
+       rpe: 8,
+       restSeconds: 75,
+       tut: '2-0-1-0',
+       notes: `[M - Onda ${wave}] Serie fisse (${currentSets}), reps ${modReps}`,
+       stimulus: 'HYPERTROPHIC',
+     };
+   }
   // 3. POWERBLOCK HYBRID
   if (methodKey === 'POWERBLOCK_HYBRID') {
     if (isDeload) {
