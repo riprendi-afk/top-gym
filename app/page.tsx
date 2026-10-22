@@ -1,4 +1,5 @@
 "use client";
+import MacrocycleTimelineModal from '@/components/MacrocycleTimelineModal';
 import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
 import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
 import Over40QuickModal from '@/components/Over40QuickModal';
@@ -368,6 +369,7 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isMethodologyModalOpen, setIsMethodologyModalOpen] = useState(false);
+  const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
 // ======================================================================
 // CALCOLO PUNTO ZERO: Sedute relative alla scheda attiva
 // ======================================================================
@@ -1756,8 +1758,7 @@ const currentIntensityPreview = useMemo(() => {
 
           // Salva la nuova progressione su Supabase per renderla persistente
           if (targetUserId) {
-            saveProgramToSupabase(
-              targetUserId,
+            saveProgramToSupabase(targetUserId,
               programName,
               progressedDays,
             ).catch(console.error);
@@ -3758,6 +3759,7 @@ if (isFinished) {
         {/* TAB 5: COACH DASHBOARD */}
         {activeTab === "coachDashboard" && ((userRole as any) === "COACH") && (
           <CoachDashboard
+              onOpenTimeline={(id) => { setActiveAthleteId(id); setIsTimelineModalOpen(true); }}
             athletes={athletes}
             activeAthleteId={activeAthleteId}
             onSelectAthlete={(id) => setActiveAthleteId(id)}
@@ -3928,7 +3930,8 @@ if (isFinished) {
                     </div>
 
                     {/* MODALE CATALOGO METODOLOGIE */}
-                    <MethodologyPickerModal
+                    
+        <MethodologyPickerModal
                       isOpen={isMethodologyModalOpen}
                       onClose={() => setIsMethodologyModalOpen(false)}
                       currentModel={programmingModel as string}
@@ -5003,7 +5006,26 @@ if (isFinished) {
             </div>
           </div>
         )}
-      </main>
+      
+      {/* MODALE MATRICE & TIMELINE MACROCICLO COACH (GLOBALE) */}
+      <MacrocycleTimelineModal
+        isOpen={isTimelineModalOpen}
+        onClose={() => setIsTimelineModalOpen(false)}
+        athleteName={athletes.find(a => a.id === targetUserId)?.displayName || "Atleta"}
+        athleteId={targetUserId}
+        programDays={programDays}
+        programmingModel={programmingModel as string}
+        onSaveOverrides={async (updatedDays, overrides) => {
+          setProgramDays(updatedDays);
+          if (targetUserId) {
+            await saveProgramToSupabase(
+              targetUserId,
+              programName || "Scheda TOPGYM",
+              updatedDays);
+          }
+        }}
+      />
+</main>
         </div>
 
       <MobileBottomNav
