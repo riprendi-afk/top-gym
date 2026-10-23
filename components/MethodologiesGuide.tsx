@@ -2,313 +2,537 @@
 
 import React, { useState } from 'react';
 import {
-  BookOpen, Sparkles, Zap, Shield, Layers, Award,
-  Flame, Activity, Target
+  BookOpen, Layers, Flame, Zap, Shield, Target,
+  Activity, Calendar, Award, Search,
+  Dumbbell, TrendingUp, Scale, Clock, HeartPulse
 } from 'lucide-react';
 
 export default function MethodologiesGuide() {
-  const [activeModel, setActiveModel] = useState<'BIKINI_WAVE' | 'HARDTOPGYM' | 'POWERBLOCK' | 'HELMS' | 'BLOOD_VOLUME'>('BIKINI_WAVE');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'ALL' | 'TOPGYM' | 'ACETO' | 'HATFIELD' | 'THEY' | 'NOCERINO' | 'WILSON' | 'HELMS' | 'DONNA'>('ALL');
+
+  const categories = [
+    { id: 'ALL', label: 'Tutti i Metodi' },
+    { id: 'TOPGYM', label: 'Metodo TOP GYM Classico' },
+    { id: 'ACETO', label: 'Chris Aceto (Championship)' },
+    { id: 'HATFIELD', label: 'Hatfield & Bompa (DUP)' },
+    { id: 'THEY', label: 'Emilio They (Hard BB)' },
+    { id: 'NOCERINO', label: 'Piero Nocerino (T13)' },
+    { id: 'WILSON', label: 'Wilson & Fitschen' },
+    { id: 'HELMS', label: 'Eric Helms (Pyramid)' },
+    { id: 'DONNA', label: 'Femminile & Posturale' },
+  ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-in fade-in duration-200">
-      {/* HEADER ENCICLOPEDIA */}
+    <div className="space-y-6 animate-in fade-in duration-200 pb-16">
+      {/* HEADER PRINCIPALE */}
       <div className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#E50914]/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_10px_#E50914] animate-pulse"></span>
-              <span className="text-xs font-black uppercase tracking-widest text-[#E50914]">
-                Top Gym • Compendio Tecnico Metodologico
-              </span>
+        <div className="absolute -right-12 -top-12 w-48 h-48 bg-[#E50914]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0">
+              <BookOpen className="w-6 h-6 text-[#E50914]" />
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight uppercase">
-              Metodologie & Linee Guida di Programmazione
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Documentazione scientifica dei motori di periodizzazione integrati nella piattaforma TOP GYM per la gestione del carico, RPE target e modulazione del volume.
-            </p>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                Metodologie di Lavoro & Periodizzazione
+              </h1>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Enciclopedia tecnica, timeline scientifiche e linee guida operative per la programmazione Top Gym.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 self-start md:self-auto bg-black/40 border border-white/10 px-3.5 py-2 rounded-xl">
-            <BookOpen className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-mono font-bold text-zinc-300">5 Motori Attivi</span>
+
+          {/* BARRA DI RICERCA */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Cerca metodo, autore, RIR, RPE..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-black/50 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#E50914]"
+            />
           </div>
         </div>
 
-        {/* TABS SELEZIONE MOTORE */}
-        <div className="flex items-center gap-2 mt-6 overflow-x-auto pb-2 scrollbar-none border-t border-white/5 pt-4">
-          <button
-            type="button"
-            onClick={() => setActiveModel('BIKINI_WAVE')}
-            className={activeModel === 'BIKINI_WAVE' ? 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg shadow-rose-900/40' : 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-pink-300" />
-            <span>Bikini Wave System (Wilson 2014)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveModel('HARDTOPGYM')}
-            className={activeModel === 'HARDTOPGYM' ? 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-gradient-to-r from-[#E50914] to-red-700 text-white shadow-lg shadow-red-900/40' : 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'}
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-300" />
-            <span>Hard TopGym (They / Nocerino)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveModel('POWERBLOCK')}
-            className={activeModel === 'POWERBLOCK' ? 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-900/40' : 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'}
-          >
-            <Shield className="w-3.5 h-3.5 text-indigo-300" />
-            <span>PowerBlock Hybrid</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveModel('HELMS')}
-            className={activeModel === 'HELMS' ? 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40' : 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'}
-          >
-            <Award className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Helms Muscle & Strength Pyramid</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveModel('BLOOD_VOLUME')}
-            className={activeModel === 'BLOOD_VOLUME' ? 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-lg shadow-purple-900/40' : 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'}
-          >
-            <Flame className="w-3.5 h-3.5 text-purple-300" />
-            <span>Blood Volume Overload</span>
-          </button>
+        {/* PILL CATEGORIE */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-none pt-5 mt-2 border-t border-white/5">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setActiveCategory(cat.id as any)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                activeCategory === cat.id
+                  ? 'bg-[#E50914] border-[#E50914] text-white shadow-lg shadow-red-950/40'
+                  : 'bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* DETTAGLIO MODELLO BIKINI WAVE */}
-      {activeModel === 'BIKINI_WAVE' && (
-        <div className="space-y-6">
-          <div className="bg-[#12151B] border border-pink-500/20 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-pink-400">Letteratura Scientifica</span>
-                <h2 className="text-lg font-black text-white">Bikini Wave System (Wilson & Fitschen, 2014)</h2>
-              </div>
-              <span className="px-2.5 py-1 bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-mono font-bold rounded-lg">
-                Frequenza 5gg • Onde L/M/H
+      {/* SEZIONE 1: CHRIS ACETO (CHAMPIONSHIP BODYBUILDING) */}
+      {(activeCategory === 'ALL' || activeCategory === 'ACETO') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Flame className="w-5 h-5" />
               </span>
-            </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Sistema di periodizzazione ondulatoria studiato per massimizzare l'ipertrofia e la densità nei distretti chiave (glutei, catena posteriore, deltoidi) salvaguardando il recupero connettivo tramite modulazione settimanale delle onde e reset ciclico delle serie.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* TABELLA 7.4 */}
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center gap-2 text-pink-400">
-                <Layers className="w-4 h-4" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-white">Tabella 7.4: Wave Loading</h3>
-              </div>
-              <p className="text-[11px] text-zinc-400">
-                La periodizzazione si articola su blocchi a 3 microcicli con volume e intensità oscillanti:
-              </p>
-              <div className="space-y-2 text-xs">
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">Week 1 (Low Volume):</span>
-                  <span className="text-zinc-400 text-[11px]">10-12 serie/gruppo. RPE 7-7.5. Stabilizzazione dello schema motorio e recupero neurale.</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">Week 2 (Medium Volume):</span>
-                  <span className="text-zinc-400 text-[11px]">14-16 serie/gruppo. RPE 8-8.5. Incremento carico del 2.5% e tensione progressiva.</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-pink-300 block">Week 3 (High Volume - Urto):</span>
-                  <span className="text-zinc-400 text-[11px]">18-22 serie/gruppo. RPE 9-10. Picco di affaticamento e stimolo metabolico massimo.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* TABELLA 7.5 */}
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center gap-2 text-rose-400">
-                <Target className="w-4 h-4" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-white">Tabella 7.5: Modulazione RPE & RIR</h3>
-              </div>
-              <p className="text-[11px] text-zinc-400">
-                Gestione del buffer e prossimità al cedimento per prevenire il burnout del SNC:
-              </p>
-              <div className="space-y-2 text-xs">
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">Microciclo L (RIR 2-3):</span>
-                  <span className="text-zinc-400 text-[11px]">Almeno 2-3 ripetizioni in riserva. Enfasi sulla massima velocità della fase concentrica.</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">Microciclo M (RIR 1-2):</span>
-                  <span className="text-zinc-400 text-[11px]">Cedimento tecnico sfiorato. Mantenimento del TUT senza perdita della traiettoria ottimale.</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-rose-300 block">Microciclo H (RIR 0-1):</span>
-                  <span className="text-zinc-400 text-[11px]">Cedimento muscolare concentrico sull'ultima serie degli esercizi primari e accessori.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* TABELLA 7.6 */}
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center gap-2 text-amber-400">
-                <Activity className="w-4 h-4" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-white">Tabella 7.6: Reset 3 Serie & Reps</h3>
-              </div>
-              <p className="text-[11px] text-zinc-400">
-                Meccanismo di de-carico e scalata delle ripetizioni per rilanciare la supercompensazione:
-              </p>
-              <div className="space-y-2 text-xs">
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-amber-300 block">Reset Ciclico a 3 Serie:</span>
-                  <span className="text-zinc-400 text-[11px]">Dopo ogni picco High o fine mesociclo, tutti i target tornano a 3 serie rigide per 7 giorni per smaltire la fatica sistemica.</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">Scalata Ripetizioni:</span>
-                  <span className="text-zinc-400 text-[11px]">Transizione progressiva: 12-15 reps (accumulo metabolico) &rarr; 8-10 reps (ipertrofia meccanica) &rarr; 6-8 reps (forza specifica).</span>
-                </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
-                  <span className="font-bold text-white block">TUT Target Glutei:</span>
-                  <span className="text-zinc-400 text-[11px]">Eccentrica controllata 3s, fermo 2s al picco isometrico in contrazione (Hip Thrust/RDL).</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DETTAGLIO MODELLO HARD TOPGYM */}
-      {activeModel === 'HARDTOPGYM' && (
-        <div className="space-y-6">
-          <div className="bg-[#12151B] border border-red-500/20 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-red-400">Metodo Tradizionale Top Gym</span>
-                <h2 className="text-lg font-black text-white">Hard TopGym: Emilio They & Nocerino (T13)</h2>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Metodo Chris Aceto &bull; Championship Bodybuilding
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Progressione a 6 settimane, modulazione densità e regolazione autoregolata del RIR (Reps In Reserve).
+                </p>
               </div>
-              <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-mono font-bold rounded-lg">
-                Alta Intensità • Periodizzazione ad Urto
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
+              CICLO 6 SETTIMANE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5" /> 1. Struttura del Ciclo
               </span>
-            </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Fusione del Bodybuilding d'urto del Maestro Emilio They con i parametri T13 del Coach Nocerino. Pochi esercizi fondamentali ad altissima intensità di sforzo, serie pesanti-eccentriche, rest-pause programmato e scarichi rigorosi per provocare un adattamento ipertrofico profondo.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 space-y-2">
-              <span className="text-xs font-black text-red-400 uppercase tracking-wider">Fase 1: Urto (W1-W3)</span>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Sovraccarico meccanico brutale su 4 sedute settimanali. Panca, Squat e Stacchi con carichi all'80-85% 1RM portati a vero cedimento concentrico.
-              </p>
-            </div>
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 space-y-2">
-              <span className="text-xs font-black text-amber-400 uppercase tracking-wider">Fase 2: Accumulo (W4-W7)</span>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Espansione del volume con l'introduzione dei parametri T13 Nocerino: TUT compreso tra 40 e 60 secondi, recuperi brevi (60-75s) e superset antagonisti.
-              </p>
-            </div>
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 space-y-2">
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">Fase 3: Intensificazione (W8-W10)</span>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Carichi submassimali all'85-92.5% 1RM, doppie e triple pesanti con rest-pause sui movimenti cardine, seguite da serie di stripping su macchine isotoniche.
-              </p>
-            </div>
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 space-y-2">
-              <span className="text-xs font-black text-blue-400 uppercase tracking-wider">Fase 4: Deload (W11)</span>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Taglio del 50% del volume settimanale, carichi calmierati al 60% 1RM, RPE massimo di 6 per permettere al tessuto connettivo e al SNC di supercompensare.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DETTAGLIO MODELLO POWERBLOCK */}
-      {activeModel === 'POWERBLOCK' && (
-        <div className="bg-[#12151B] border border-indigo-500/20 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-400">Modello Ibrido Forza-Ipertrofia</span>
-              <h2 className="text-lg font-black text-white">PowerBlock Hybrid System</h2>
-            </div>
-            <span className="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-bold rounded-lg">
-              Progressione a Blocchi di Issurin
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <h3 className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Blocco A: Reclutamento Neurale (Compound)</h3>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                Gli esercizi primari (Squat, Panca, Stacco, Military) vengono gestiti a RPE 8-8.5 con schemi piramidali inversi o cluster sets (es. 4x3-5). Il focus è la massima produzione di forza e l'attivazione delle unità motorie ad alta soglia.
+                Progressione sinusoidale di 6 microcicli con carichi pesanti multiarticolari iniziali seguiti da isolamento ad alta densità:
               </p>
+              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
+                <li><b>W1:</b> Volume & Calibrazione baseline (RIR 2)</li>
+                <li><b>W2:</b> Sovraccarico Progressivo (+2.5-5% o +1 rep, RIR 1-2)</li>
+                <li><b>W3:</b> Densità (pause ridotte di 15s, RIR 1)</li>
+                <li><b>W4:</b> Intensificazione (Drop-set sull'ultima serie, RIR 0)</li>
+                <li><b>W5:</b> Picco di sforzo & cedimento concentrico (RIR 0)</li>
+                <li><b>W6:</b> Deload attivo (-40% volume, 2 serie fisse, RIR 3)</li>
+              </ul>
             </div>
+
             <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <h3 className="text-xs font-bold text-blue-300 uppercase tracking-wider">Blocco B: Ipertrofia Funzionale (Accessori)</h3>
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> 2. Regola del Cedimento Selettivo
+              </span>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                I complementari vengono eseguiti a RIR 1-2 con 3-4 serie da 8-12 ripetizioni su manubri e cavi. Recuperi completi sui fondamentali (2-3 minuti), recuperi densi sugli accessori (60-90 secondi).
+                Mai raggiungere il cedimento neuromuscolare nelle serie iniziali degli esercizi composti. Il cedimento è riservato esclusivamente all'ultima serie degli esercizi di rifinitura o tramite stripping controllato.
+              </p>
+              <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/20 text-[11px] text-amber-200 font-mono">
+                <b>Regola d'oro:</b> Stimolare il muscolo a contrarsi contro una resistenza crescente senza esaurire i depositi energetici e il SNC prima della fase finale della sessione.
+              </div>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> 3. Protocollo di Deload (W6)
+              </span>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Alla 6ª settimana scatta il ripristino dei recettori cellulari: le serie scendono a un massimo di 2 per esercizio con carichi al 65-70% dell'1RM, recuperi completi e nessuna tecnica speciale.
+              </p>
+              <p className="text-[11px] text-zinc-400">
+                Consente la supercompensazione delle scorte di glicogeno muscolare e la rigenerazione del tessuto connettivo peri-articolare.
               </p>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* DETTAGLIO MODELLO HELMS */}
-      {activeModel === 'HELMS' && (
-        <div className="bg-[#12151B] border border-emerald-500/20 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Periodizzazione Evidence-Based</span>
-              <h2 className="text-lg font-black text-white">The Muscle and Strength Training Pyramid (Eric Helms)</h2>
+      {/* SEZIONE 2: FREDERICK HATFIELD & TUDOR BOMPA (HOLISTIC TRAINING & DUP) */}
+      {(activeCategory === 'ALL' || activeCategory === 'HATFIELD') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                <Zap className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Hatfield & Tudor Bompa &bull; Holistic Training & DUP Bosco-Colli
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Triplice stimolo cellulare (Neurale, Meccanico, Metabolico) e microciclo ondulato ormonale.
+                </p>
+              </div>
             </div>
-            <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold rounded-lg">
-              W1-W4 a Gradini di RPE
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold">
+              3 COMPARTIMENTI
             </span>
           </div>
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            La gerarchia di Helms impone: Aderenza &rarr; Volume/Intensità/Frequenza (10-20 serie/settimana con frequenza 2x per gruppo) &rarr; Progressione &rarr; Recupero.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-            <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-              <span className="text-emerald-400 font-bold block">W1: Introduzione</span>
-              <span className="text-zinc-400 text-[11px]">RPE 7. Calibrazione dei carichi e verifica della tecnica.</span>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
+                1. Compartimento Neurale (CAT)
+              </span>
+              <p className="text-xs text-zinc-300">
+                <b>Target:</b> Fibre veloci a contrazione rapida (Tipo IIx) e attivazione del sistema piramidale.
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div>&bull; <b>Reps:</b> 2 - 6 ripetizioni</div>
+                <div>&bull; <b>Intensità:</b> 80% - 90% 1RM (Compensatory Acceleration)</div>
+                <div>&bull; <b>Recupero:</b> 150 - 240 secondi</div>
+                <div>&bull; <b>Buffer:</b> RIR 2-3 (Nessun cedimento)</div>
+              </div>
             </div>
-            <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-              <span className="text-emerald-400 font-bold block">W2: Sovraccarico</span>
-              <span className="text-zinc-400 text-[11px]">RPE 8. Aumento reps o aggiunta del 2% del carico.</span>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
+                2. Compartimento Meccanico (MAV)
+              </span>
+              <p className="text-xs text-zinc-300">
+                <b>Target:</b> Tensione meccanica miofibrillare e reclutamento fibre intermedie (Tipo IIa).
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div>&bull; <b>Reps:</b> 6 - 12 ripetizioni</div>
+                <div>&bull; <b>Intensità:</b> 70% - 78% 1RM a tensione continua</div>
+                <div>&bull; <b>Recupero:</b> 90 - 120 secondi</div>
+                <div>&bull; <b>TUT:</b> 2-0-1-0 o 3-0-1-0</div>
+              </div>
             </div>
-            <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-              <span className="text-emerald-400 font-bold block">W3: Picco Stimolo</span>
-              <span className="text-zinc-400 text-[11px]">RPE 9. Massimo impegno muscolare preservando la forma.</span>
-            </div>
-            <div className="bg-black/40 border border-white/5 p-3 rounded-xl">
-              <span className="text-teal-400 font-bold block">W4: Scarico Attivo</span>
-              <span className="text-zinc-400 text-[11px]">RPE 6. Riduzione del 40-50% del volume settimanale.</span>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
+                3. Compartimento Metabolico
+              </span>
+              <p className="text-xs text-zinc-300">
+                <b>Target:</b> Ipertrofia sarcoplasmatica, capillarizzazione e accumulo di metaboliti intracellulari.
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div>&bull; <b>Reps:</b> 12 - 25 ripetizioni o Stripping</div>
+                <div>&bull; <b>Intensità:</b> 50% - 65% 1RM</div>
+                <div>&bull; <b>Recupero:</b> 45 - 60 secondi</div>
+                <div>&bull; <b>Buffer:</b> RIR 0-1 (Cedimento metabolico)</div>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="p-4 rounded-xl bg-sky-950/20 border border-sky-500/20 text-xs text-zinc-300 space-y-2">
+            <h4 className="font-bold text-sky-300 flex items-center gap-1.5 uppercase tracking-wide">
+              <Calendar className="w-4 h-4" /> Periodizzazione Ondulata Mensile (Bosco-Colli)
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px] text-zinc-400 pt-1">
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-white font-bold block">W1: Setup Neurale</span>
+                Baseline tecnica, carichi controllati RIR 2.
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-white font-bold block">W2: Micro-Overload</span>
+                +2.5% carico sui fondamentali, volume costante.
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-white font-bold block">W3: Intensificazione</span>
+                +5% carico complessivo, RIR 1 sui meccanici.
+              </div>
+              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
+                <span className="text-sky-400 font-bold block">W4: Deload SNC</span>
+                -40% volume, rigenerazione e test massimali.
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* DETTAGLIO MODELLO BLOOD VOLUME */}
-      {activeModel === 'BLOOD_VOLUME' && (
-        <div className="bg-[#12151B] border border-purple-500/20 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-purple-400">Stress Metabolico & Longevità</span>
-              <h2 className="text-lg font-black text-white">Blood Volume Overload & Desk Longevity</h2>
+      {/* SEZIONE 3: EMILIO THEY & PIERO NOCERINO */}
+      {(activeCategory === 'ALL' || activeCategory === 'THEY' || activeCategory === 'NOCERINO') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+                <Dumbbell className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Hard Bodybuilding: Emilio They & Piero Nocerino (T13)
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Sobrietà esecutiva, carichi lineari ad alto tonnellaggio e biomeccanica a tensione continua.
+                </p>
+              </div>
             </div>
-            <span className="px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold rounded-lg">
-              Altissimo Afflusso Ematico
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-red-500/15 text-red-300 border border-red-500/30 font-bold">
+              SCUOLA ITALIANA
             </span>
           </div>
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            Protocollo incentrato sul pompaggio intracellulare, occlusione parziale e serie ad alte ripetizioni (15-25 reps). Ottimizzato per atleti che necessitano di recupero articolare, soggetti con postura da scrivania o fasi rigenerative dopo mesocicli pesanti.
-          </p>
-        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2.5">
+              <h3 className="text-xs font-bold text-red-400 uppercase tracking-wide flex items-center gap-2">
+                <Shield className="w-4 h-4" /> I Pilastri di Emilio They (Hard Bodybuilding)
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Il Metodo They rifiuta il volume spazzatura e impone la padronanza assoluta dei carichi submassimali:
+              </p>
+              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
+                <li><b>Piramidale Diretto:</b> Incremento sistematico del carico a ogni serie riducendo le ripetizioni (es. 10 - 8 - 6 - 4).</li>
+                <li><b>Recuperi Completi:</b> 2-3 minuti sui grandi multiarticolari per ripristinare totalmente le scorte di fosfocreatina cellulare.</li>
+                <li><b>Frequenza e Recupero:</b> Massimo 3-4 allenamenti settimanali, enfatizzando il recupero del sistema neuro-muscolare tra le sessioni.</li>
+                <li><b>Esecuzione Impeccabile:</b> Fermo al petto nella panca, squat al parallelo, stacco con catena posteriore attiva senza strappi.</li>
+              </ul>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2.5">
+              <h3 className="text-xs font-bold text-red-400 uppercase tracking-wide flex items-center gap-2">
+                <Target className="w-4 h-4" /> Metodo Piero Nocerino (Tensione Continua & T13)
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                La tensione meccanica costante è il fattore primario dell'ipertrofia sarcomerica:
+              </p>
+              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
+                <li><b>No Lock-Out:</b> Mai bloccare le articolazioni in chiusura (mantenere il muscolo sotto tensione per l'intera durata della serie).</li>
+                <li><b>Progressione a 4 Fasi:</b> Setup Biomeccanico &bull; Sovraccarico a Tensione Costante &bull; Rest-Pause &bull; Saturazione.</li>
+                <li><b>Split Torso / Arti (T16):</b> Alternanza tra tronco (Catena di Spinta/Trazione) e arti per consentire carichi massimi senza cali prestazionali.</li>
+                <li><b>Allungamento Fasciale Sotto Carico:</b> Enfasi sulla fase eccentrica controllata di 3-4 secondi.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SEZIONE 4: METODO TOP GYM CLASSICO (48 MICROCICLI) */}
+      {(activeCategory === 'ALL' || activeCategory === 'TOPGYM') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <Layers className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Metodo TOP GYM Classico &bull; Macrociclo a 3 Blocchi (48 Settimane)
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  La periodizzazione master della palestra: Forza, Trasformazione e Qualità Muscolare.
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
+              TIMELINE ANNUALE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-red-500">
+              <span className="text-xs font-bold text-red-400 uppercase tracking-wide block">
+                Blocco 1: Forza Ipertrofica (W1 - W16)
+              </span>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Costruzione della base neurale e del tonnellaggio. Focus su Squat, Panca, Stacco, Trazioni e Lento Avanti:
+              </p>
+              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
+                <li><b>W1-W6:</b> Accumulo & Volume Base (RIR 2-4)</li>
+                <li><b>W7-W9:</b> Conversione & Aumento Carichi (RIR 1-2)</li>
+                <li><b>W10:</b> Deload Attivo del SNC (-40% volume)</li>
+                <li><b>W11-W16:</b> Picco Neurale & Test Massimali</li>
+              </ul>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-amber-500">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide block">
+                Blocco 2: Trasformazione / Ibrido (W17 - W32)
+              </span>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Transizione dalla forza pura all'ipertrofia sarcomerica densa tramite tecniche di intensità:
+              </p>
+              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
+                <li><b>W17-W22:</b> Volume Ipertrofico & Stripping</li>
+                <li><b>W23-W25:</b> Lavoro Pesante + Back-Off a cedimento</li>
+                <li><b>W26:</b> Deload & Scarico Articolare</li>
+                <li><b>W27-W32:</b> Trasformazione & Densità Massima</li>
+              </ul>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide block">
+                Blocco 3: Qualità Muscolare (W33 - W48)
+              </span>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Definizione, separazione e massimo afflusso ematico con mantenimento dei carichi sui fondamentali:
+              </p>
+              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
+                <li><b>W33-W38:</b> Accumulo ad Alta Densità (10+MAX)</li>
+                <li><b>W39-W41:</b> Rest-Pause su macchine guidate</li>
+                <li><b>W42:</b> Scarico Metabolico</li>
+                <li><b>W43-W48:</b> Pompaggio Massimo & Isometrie Finali</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SEZIONE 5: JACOB WILSON & JEREMY FITSCHEN (2014) */}
+      {(activeCategory === 'ALL' || activeCategory === 'WILSON') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Scale className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Jacob Wilson & Jeremy Fitschen (2014) &bull; Tabelle 7.4 / 7.5 / 7.6
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Wave Loading, modulazione scientifica RPE/RIR e reset dei plateau (T29 - T33).
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold">
+              PEER-REVIEWED
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
+                Tabella 7.4: Wave Loading (PAP)
+              </span>
+              <p className="text-xs text-zinc-300">
+                Sfrutta il potenziamento post-attivazione tramite due onde successive nello stesso esercizio:
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div><b>Onda 1:</b> 5 reps (80%) &bull; 3 reps (85%) &bull; 1 rep (90%)</div>
+                <div><b>Pausa:</b> 3 minuti di recupero completo</div>
+                <div><b>Onda 2:</b> 5 reps (82.5%) &bull; 3 reps (87.5%) &bull; 1 rep (92.5%)</div>
+              </div>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
+                Tabella 7.5: Modulazione RPE / RIR
+              </span>
+              <p className="text-xs text-zinc-300">
+                Correlazione diretta tra ripetizioni in riserva e stimolo allenante ottimale:
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div>&bull; <b>RPE 7 (RIR 3):</b> Recupero attivo / Velocità (CAT)</div>
+                <div>&bull; <b>RPE 8 (RIR 2):</b> Ipertrofia sostenibile senza fatica cronica</div>
+                <div>&bull; <b>RPE 9 (RIR 1):</b> Tensione massima / Reclutamento totale</div>
+                <div>&bull; <b>RPE 10 (RIR 0):</b> Cedimento concentrico reale</div>
+              </div>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
+                Tabella 7.6: Reset Anti-Plateau
+              </span>
+              <p className="text-xs text-zinc-300">
+                Protocollo da applicare quando il carico stagna per più di 2 microcicli consecutivi:
+              </p>
+              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
+                <div>1. Taglio del 10% del carico target</div>
+                <div>2. Reset a 3 serie fisse con aumento di 1 rep</div>
+                <div>3. Risalita a step di +2.5% ogni sessione</div>
+                <div>4. Superamento del vecchio massimale a W4</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SEZIONE 6: ERIC HELMS (THE MUSCLE AND STRENGTH PYRAMID) */}
+      {(activeCategory === 'ALL' || activeCategory === 'HELMS') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <TrendingUp className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Eric Helms &bull; The Muscle & Strength Training Pyramid
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Gerarchia scientifica dei fattori di crescita: volume settimanale, intensità e progressione periodizzata (T27, T31).
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-bold">
+              PIRAMIDE SCIENTIFICA
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
+              <span className="font-bold text-indigo-400 uppercase tracking-wider block">1. Aderenza & Frequenza</span>
+              <p className="text-zinc-400 leading-relaxed text-[11px]">
+                Frequenza minima 2 volte a settimana per gruppo muscolare per massimizzare la sintesi proteica muscolare (MPS).
+              </p>
+            </div>
+            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
+              <span className="font-bold text-indigo-400 uppercase tracking-wide block">2. Volume Settimanale</span>
+              <p className="text-zinc-400 leading-relaxed text-[11px]">
+                Range ottimale compreso tra 10 e 20 serie allenanti per distretto a settimana con effort ad almeno RIR 1-3.
+              </p>
+            </div>
+            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
+              <span className="font-bold text-indigo-400 uppercase tracking-wide block">3. Doppia Progressione</span>
+              <p className="text-zinc-400 leading-relaxed text-[11px]">
+                Fissare un range (es. 8-12 reps). Raggiungere il tetto massimo in tutte le serie prima di incrementare il carico del 2-5%.
+              </p>
+            </div>
+            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
+              <span className="font-bold text-indigo-400 uppercase tracking-wide block">4. Selezione & Recuperi</span>
+              <p className="text-zinc-400 leading-relaxed text-[11px]">
+                Priorità a catene cinematiche stabili, recuperi superiori a 2 minuti sui composti pesanti per prevenire l'affaticamento centrale.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SEZIONE 7: PROTOCOLLI DONNA / BIKINI & SALUTE POSTURALE */}
+      {(activeCategory === 'ALL' || activeCategory === 'DONNA') && (
+        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                <HeartPulse className="w-5 h-5" />
+              </span>
+              <div>
+                <h2 className="text-base font-black uppercase text-white tracking-wider">
+                  Programmazione Femminile (Bikini Wave) & Salute Rachide
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  Specializzazione glutei, salvaguardia circolatoria anti-stasi flebo-linfatica e decompressione del rachide.
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-pink-500/15 text-pink-300 border border-pink-500/30 font-bold">
+              BIKINI & POSTURA
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wide flex items-center gap-2">
+                <Award className="w-4 h-4" /> Principi Bikini Wave & Specializzazione Glutei
+              </h3>
+              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
+                <li><b>Priorità Vettore Orizzontale:</b> Enfatizzare Hip Thrust, Glute Bridge e Kickback al cavo dove la tensione massima è in accorciamento.</li>
+                <li><b>Prevenzione Ipertrofia Quadricipiti:</b> Piede alto e largo alla pressa, box squat guidati e stacco rumeno a ginocchio semiflesso.</li>
+                <li><b>Circolazione & Pompa Venosa:</b> Esercizi per polpacci a fine sessione o camminata inclinata per attivare la soletta di Lejars e ridurre la ritenzione idrica.</li>
+                <li><b>Enfasi Deltoidi Laterali:</b> Lavoro ad alta frequenza (2-3x a settimana) per esaltare la linea a V e la silhouette estetica.</li>
+              </ul>
+            </div>
+
+            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
+              <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wide flex items-center gap-2">
+                <Shield className="w-4 h-4" /> Decompressione del Rachide & Carico Assiale
+              </h3>
+              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
+                <li><b>Monitoraggio Carico Assiale:</b> Alternare squat e stacco pesante con leg press orizzontale o stacco manubri per non sovraccaricare il tratto lombare.</li>
+                <li><b>Core Anti-Rotazionale:</b> Sostituire sit-up aggressivi con Pallof press, dead-bug, bird-dog e plank isometrici a diaframma attivo.</li>
+                <li><b>Trazione Gravitazionale:</b> Appendimenti alla sbarra ed estensioni su panca a 45 gradi con bacino bloccato per distendere le vertebre a fine seduta.</li>
+                <li><b>Scoliosi Sicura:</b> Evitare torsioni con carichi compressivi; preferire macchine a camme con supporto toracico (Seal Row, Chest Press).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );
