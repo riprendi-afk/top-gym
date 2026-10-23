@@ -3447,46 +3447,96 @@ if (isFinished) {
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && ((userRole as any) === "COACH") && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div className="lg:col-span-8 space-y-6">
-              {/* UNICO PULSANTE TEMPLATE SPLIT */}
-              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#E50914]/10 border border-[#E50914]/20 flex items-center justify-center shrink-0">
-                    <Layers className="w-5 h-5 text-[#E50914]" />
+              {/* PANNELLO DI CONTROLLO COACH & REGIA SCHEDA */}
+              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                      <UserCheck className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <h2 className="text-sm font-black uppercase tracking-wider text-white">
+                          Regia Scheda & Assegnazione Programma
+                        </h2>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        Atleta: <b className="text-white">{activeAthlete.displayName}</b> &bull; Gestione centralizzata su Matrice W1–W16
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xs font-black uppercase text-white tracking-wider">
-                      Assegna Scheda da Template Split
-                    </h3>
-                    <p className="text-[11px] text-zinc-400">
-                      PPL, Upper/Lower, Torso/Arti, Bikini Wave o Hard TopGym. Caricamento istantaneo nel builder.
-                    </p>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsTemplateModalOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/30 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shrink-0"
+                  >
+                    <Layers className="w-4 h-4 text-white" />
+                    <span>Scegli Template Split</span>
+                  </button>
+                </div>
+
+                {/* NOME DELLA SCHEDA E TASTO SALVA E ASSEGNA */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                  <div className="sm:col-span-7 space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                      Nome della Scheda
+                    </label>
+                    <input
+                      type="text"
+                      value={programName}
+                      onChange={(e) => setProgramName(e.target.value)}
+                      placeholder="Nome della Scheda..."
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-[#E50914] transition"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-5 sm:self-end">
+                    <button
+                      type="button"
+                      onClick={handleSaveProgramByCoach}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <UserCheck className="w-4 h-4" />
+                      <span>Salva e Assegna ({activeAthlete.displayName})</span>
+                    </button>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsTemplateModalOpen(true)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/30 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shrink-0"
-                >
-                  <Layers className="w-4 h-4 text-white" />
-                  <span>Scegli Template Split</span>
-                </button>
+                {builderSuccessMessage && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs animate-in fade-in">
+                    {builderSuccessMessage}
+                  </div>
+                )}
               </div>
 
-              {/* ============================================================== */}
-              {/* MATRICE TIMELINE MACROCICLO W1-W16: SINGLE SOURCE OF TRUTH    */}
-              {/* ============================================================== */}
+              {/* MODALE SELETTORE TEMPLATE */}
+              <TemplatePickerModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                currentBlock={currentBlock}
+                athleteName={activeAthlete?.displayName || ""}
+                onSelectTemplate={(days, templateName) => {
+                  setProgramDays(days as any);
+                  setProgramName(templateName);
+                  setBuilderSuccessMessage("⚡ Template \"" + templateName + "\" caricato nella Matrice!");
+                  setTimeout(() => setBuilderSuccessMessage(null), 4000);
+                }}
+              />
+
+              {/* MATRICE MACROCICLO W1-W16: SINGLE SOURCE OF TRUTH */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
                     <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                      Matrice Macrociclo Dinamica (W1–W16)
+                      Matrice Macrociclo (W1–W16) &bull; Single Source of Truth
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest hidden sm:inline">
-                      Single Source of Truth
+                      {programDays.length} Giornate Attive
                     </span>
                     <button
                       type="button"
@@ -3521,675 +3571,9 @@ if (isFinished) {
                   }}
                 />
               </div>
-              {/* ============================================================== */}
-              {/* MATRICE TIMELINE W1-W16: SINGLE SOURCE OF TRUTH PROGRAMMAZIONE */}
-              {/* ============================================================== */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                      Matrice Macrociclo Dinamica (W1–W16)
-                    </h3>
-                  </div>
-                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">
-                    Sovrascrittura Automatica Carichi & RPE
-                  </span>
-                </div>
-
-                <MacrocycleTimelineModal
-                  key={(targetUserId || "timeline-inline") + (programmingModel || "")}
-                  inline={true}
-                  isOpen={true}
-                  onClose={() => {}}
-                  athleteName={athletes.find(a => a.id === targetUserId)?.displayName || "Atleta"}
-                  athleteId={targetUserId}
-                  programDays={programDays}
-                  programmingModel={programmingModel as string}
-                  onSaveOverrides={async (updatedDays, overrides) => {
-                    setProgramDays(updatedDays);
-                    if (targetUserId) {
-                      await saveProgramToSupabase(
-                        targetUserId,
-                        programName || "Scheda TOPGYM",
-                        updatedDays
-                      );
-                      setBuilderSuccessMessage("⚡ Matrice Macrociclo salvata e sincronizzata!");
-                      setTimeout(() => setBuilderSuccessMessage(null), 4000);
-                    }
-                  }}
-                />
-              </div>
-
-            {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
-            {isMasterCoach && (
-              <div className="space-y-5">
-                  {/* ============================================================== */}
-                  
-
-                {/* ============================================================== */}
-                {/* ============================================================== */}
-                    
-
-                    {/* MODALE CATALOGO METODOLOGIE */}
-                    
-        <MethodologyPickerModal
-                      isOpen={isMethodologyModalOpen}
-                      onClose={() => setIsMethodologyModalOpen(false)}
-                      currentModel={programmingModel as string}
-                      onSelectModel={(model: any) => {
-                        setProgrammingModel(model);
-                        setIsMethodologyModalOpen(false);
-                      }}
-                    />
-
-                    {/* CASO A: CABINA TOPGYM CLASSICA (NUOVO DESIGN ORDINATO)         */}
-                {/* ============================================================== */}
-                {programmingModel === "TOPGYM_BLOCKS" && (
-                  <>
-                    <TopGymClassicCabina
-                      activeAthlete={activeAthlete}
-                      currentBlock={currentBlock}
-                      setCurrentBlock={(b) => setCurrentBlock(b)}
-                      calculatedCurrentPhase={calculatedCurrentPhase}
-                      setManualWeek={(w) => setManualWeek(w)}
-                      getPhaseDescription={(b, w) => getPhaseDescription(b, w)}
-                      onApplyEngine={handleApplyEngineToCurrentProgram}
-                      onApplyDeload={handleApplyDeloadWeekToProgram}
-                      onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
-                    />
-
-                    {/* MODALE SELETTORE TEMPLATE */}
-                    <TemplatePickerModal
-                      isOpen={isTemplateModalOpen}
-                      onClose={() => setIsTemplateModalOpen(false)}
-                      currentBlock={currentBlock}
-                      athleteName={activeAthlete?.displayName || ""}
-                      onSelectTemplate={(days, templateName) => {
-                        setProgramDays(days as any);
-                        setBuilderSuccessMessage(
-                          `⚡ Template "${templateName}" caricato con successo!`,
-                        );
-                        setTimeout(() => setBuilderSuccessMessage(null), 5000);
-                      }}
-                    />
-                  </>
-                )}
-
-                {/* ============================================================== */}
-                {/* CASO B: LA NUOVA CABINA HARDTOPGYM (SI APRE SOLO SE LA SCEGLI) */}
-                {/* ============================================================== */}
-                {programmingModel === "HARDTOPGYM" && (
-                  <HardTopGymCabina
-                    activeAthlete={activeAthlete}
-                    workoutHistory={workoutHistory}
-                    programDays={programDays}
-                    onApplyProgram={(newDays: any[]) => {
-                      setProgramDays(newDays as any);
-                      setBuilderSuccessMessage(
-                        "⚡ Scheda Metodo HARDTOPGYM applicata con successo!",
-                      );
-                      setTimeout(() => setBuilderSuccessMessage(null), 5000);
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
-{/* ============================================================== */}
-                {/* CASO C: CABINA CHRIS ACETO (CHAMPIONSHIP BODYBUILDING)         */}
-                {/* ============================================================== */}
-                {programmingModel === "ACETO" && (
-                  <AcetoCabina
-                    activeAthlete={activeAthlete}
-                    workoutHistory={workoutHistory}
-                    onApplyProgram={(newDays: any[]) => {
-                      setProgramDays(newDays as any);
-                      setBuilderSuccessMessage(
-                        "🏆 Scheda Metodo CHRIS ACETO applicata con successo!"
-                      );
-                      setTimeout(() => setBuilderSuccessMessage(null), 5000);
-                    }}
-                  />
-                )}
-
-{/* CASO D: CABINA PIERO NOCERINO (4 FASI PROGRESSIVE) */}
-{programmingModel === "NOCERINO" && (
-          <NocerinoCabina
-            workoutHistory={workoutHistory}
-            onApplyProgram={(newDays: any[]) => {
-              setProgramDays(newDays as any);
-              setBuilderSuccessMessage(
-                "🔬 Scheda Metodo PIERO NOCERINO applicata con successo!",
-              );
-              setTimeout(() => setBuilderSuccessMessage(null), 5000);
-            }}
-          />
-        )}
-                
-            {/* SEZIONE GESTIONE SCHEDA - VISIBILE A ENTRAMBI I COACH */}
-              <div className="bg-[#12151B] p-4 sm:p-5 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-3.5">
-                <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3 pb-3 border-b border-white/10">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-sm sm:text-base font-black flex items-center gap-2 text-white uppercase tracking-wider">
-                      <UserCheck className="w-5 h-5 text-[#E50914]" /> Gestione Scheda
-                    </h2>
-                    <span className="text-xs font-mono bg-black/40 text-zinc-300 px-2.5 py-1 rounded-lg border border-white/5">
-                      Atleta: <b className="text-white">{activeAthlete.displayName}</b>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 flex-wrap flex-1 justify-end">
-                    <div className="flex items-center gap-2 flex-1 max-w-sm min-w-[220px]">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0">
-                        Nome Scheda:
-                      </span>
-                      <input
-                        type="text"
-                        value={programName}
-                        onChange={(e) => setProgramName(e.target.value)}
-                        placeholder="Nome della Scheda..."
-                        className="w-full bg-zinc-900/90 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white font-bold outline-none focus:border-[#E50914] transition"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 bg-black/40 px-2.5 py-1 rounded-xl border border-white/5 shrink-0">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                        Giorni:
-                      </span>
-                      <div className="flex gap-1">
-                        {([2, 3, 4, 5, 6] as DayCount[]).map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => handleDayCountChange(num)}
-                            className={`w-7 h-7 flex items-center justify-center text-xs font-black rounded-lg border transition-all ${
-                              selectedDayCount === num
-                                ? "bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50"
-                                : "bg-zinc-800/80 border-white/5 text-zinc-400 hover:text-white cursor-pointer"
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ELENCO GIORNI DEL BUILDER A FISARMONICA (ACCORDION) */}
-              {programDays.map((day) => {
-                const isOpen = openDayId === day.id;
-
-                return (
-                  <div
-                    key={day.id}
-                    className="bg-zinc-900/60 rounded-2xl border border-white/5 overflow-hidden transition-all shadow-lg"
-                  >
-                    {/* INTESTAZIONE GIORNO (CLICCABILE PER APRIRE/CHIUDERE) */}
-                    <div
-                      onClick={() => setOpenDayId(isOpen ? null : day.id)}
-                      className="p-4 sm:p-5 flex justify-between items-center cursor-pointer hover:bg-white/[0.02] transition select-none"
-                    >
-                      <div className="flex items-center gap-3 w-full max-w-md">
-                        <span className="font-black text-white whitespace-nowrap text-sm bg-black/40 px-2.5 py-1 rounded-lg border border-white/5">
-                          Giorno {day.dayNumber}
-                        </span>
-                        <input
-                          type="text"
-                          value={day.title}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) =>
-                            handleRenameDay(day.id, e.target.value)
-                          }
-                          className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-[#E50914] w-full"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-zinc-400 font-mono bg-black/30 px-2.5 py-1 rounded-lg border border-white/5">
-                          {day.exercises.length} esercizi
-                        </span>
-                        <div className="text-zinc-400 p-1">
-                          {isOpen ? (
-                            <ChevronUp className="w-5 h-5 text-white" />
-                          ) : (
-                            <ChevronDown className="w-5 h-5" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* CONTENUTO VISIBILE SOLO SE IL GIORNO È APERTO */}
-                    {isOpen && (
-                      <div className="p-4 sm:p-5 border-t border-white/5 space-y-4 bg-black/20">
-                        {/* LISTA ESERCIZI DEL GIORNO */}
-                        <div className="space-y-2">
-                          {day.exercises.length === 0 ? (
-                            <p className="text-xs text-zinc-500 italic py-2 text-center">
-                              Nessun esercizio inserito in questa giornata.
-                            </p>
-                          ) : (
-                              day.exercises.map((ex) =>
-                                editingExId === ex.id ? (
-                                    <div
-                                      key={ex.id}
-                                      className="p-4 sm:p-5 rounded-2xl border-2 border-red-600/90 bg-[#12151B] shadow-2xl space-y-4 transition-all animate-in fade-in duration-150"
-                                    >
-                                      {/* HEADER INLINE EDITING */}
-                                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-zinc-500 font-mono text-xs select-none">⋮⋮</span>
-                                          <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                            Esercizio
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="bg-[#1F2430] text-zinc-300 border border-white/10 text-[9px] font-mono px-2 py-0.5 rounded font-black tracking-wider uppercase">
-                                            INLINE EDITING
-                                          </span>
-                                          <button
-                                            type="button"
-                                            onClick={handleCancelEdit}
-                                            className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
-                                            title="Annulla"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        </div>
-                                      </div>
-
-                                      {/* RIGA 1: NOME & GRUPPO MUSCOLARE */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                        <div className="sm:col-span-2 space-y-1">
-                                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                                            Nome
-                                          </label>
-                                          <input
-                                            type="text"
-                                            value={builderExName}
-                                            onChange={(e) => {
-                                              setBuilderExName(e.target.value);
-                                              setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                                            }}
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-red-500"
-                                            placeholder="Nome esercizio"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                                            Gruppo muscolare
-                                          </label>
-                                          <select
-                                            value={builderMuscleGroup}
-                                            onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white font-medium focus:outline-none focus:border-red-500"
-                                          >
-                                            {[
-                                              "Petto",
-                                              "Gran Dorsale",
-                                              "Upper Back",
-                                              "Deltoidi Anteriori",
-                                              "Deltoidi Laterali",
-                                              "Deltoidi Posteriori",
-                                              "Tricipiti",
-                                              "Bicipiti",
-                                              "Quadricipiti",
-                                              "Femorali",
-                                              "Glutei",
-                                              "Adduttori",
-                                              "Polpacci",
-                                              "Addome"
-                                            ].map((g) => (
-                                              <option key={g} value={g}>{g}</option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                      </div>
-
-                                      {/* RIGA 2: 6 INPUT ORIZZONTALI */}
-                                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Serie</label>
-                                          <input
-                                            type="number"
-                                            value={builderSets}
-                                            onChange={(e) => setBuilderSets(parseInt(e.target.value) || 1)}
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Reps</label>
-                                          <input
-                                            type="text"
-                                            value={builderReps}
-                                            onChange={(e) => setBuilderReps(e.target.value)}
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Carico</label>
-                                          <input
-                                            type="text"
-                                            value={builderWeight}
-                                            onChange={(e) => setBuilderWeight(e.target.value)}
-                                            placeholder="110kg"
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">Rec</label>
-                                          <input
-                                            type="number"
-                                            value={builderRest}
-                                            onChange={(e) => setBuilderRest(parseInt(e.target.value) || 0)}
-                                            placeholder="120s"
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">RPE</label>
-                                          <input
-                                            type="number"
-                                            step="0.5"
-                                            value={builderRpe}
-                                            onChange={(e) => setBuilderRpe(parseFloat(e.target.value) || 0)}
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block text-center">TUT</label>
-                                          <input
-                                            type="text"
-                                            value={builderTut}
-                                            onChange={(e) => setBuilderTut(e.target.value)}
-                                            placeholder="2-0-1-0"
-                                            className="w-full bg-[#181C24] border border-white/10 rounded-xl px-2 py-2 text-xs text-center text-white font-bold focus:outline-none focus:border-red-500"
-                                          />
-                                        </div>
-                                      </div>
-
-                                      {/* NOTE COACH */}
-                                      <div className="space-y-1">
-                                        <input
-                                          type="text"
-                                          value={builderNotes}
-                                          onChange={(e) => setBuilderNotes(e.target.value)}
-                                          placeholder="Note esecutive, cadenza TUT o accorgimenti..."
-                                          className="w-full bg-[#181C24] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-red-500"
-                                        />
-                                      </div>
-
-                                      {/* BOTTONI AZIONE: ANNULLA & SALVA MODIFICHE BIANCO */}
-                                      <div className="flex items-center justify-end gap-2 pt-1">
-                                        <button
-                                          type="button"
-                                          onClick={handleCancelEdit}
-                                          className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#181C24] hover:bg-zinc-800 border border-white/10 transition cursor-pointer"
-                                        >
-                                          Annulla
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => handleAddOrUpdateExercise(e as any, day.id)}
-                                          className="px-5 py-2 rounded-xl text-xs font-black text-black bg-white hover:bg-zinc-200 transition shadow-lg cursor-pointer"
-                                        >
-                                          Salva Modifiche
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div
-                                      key={ex.id}
-                                      className="p-3.5 sm:p-4 rounded-2xl border flex justify-between items-center text-xs transition-all bg-[#12151B] border-white/5 hover:border-white/15 group"
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <span className="text-zinc-600 group-hover:text-zinc-400 font-mono text-xs select-none mt-0.5">⋮⋮</span>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-bold text-white text-xs">
-                                              {ex.name}
-                                            </span>
-                                            <span
-                                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}
-                                            >
-                                              {ex.executionType}
-                                            </span>
-                                          </div>
-                                          <div className="text-zinc-400 text-[11px]">
-                                            Serie: <span className="text-zinc-200 font-semibold">{ex.sets}</span> &bull; Reps: <span className="text-zinc-200 font-semibold">{ex.reps}</span> &bull; Carico: <span className="text-zinc-200 font-semibold">{ex.targetWeight}kg</span> &bull; Rec: <span className="text-zinc-200 font-semibold">{ex.restSeconds}s</span>{ex.rpeTarget ? ` • RPE: ${ex.rpeTarget}` : ""}{ex.tut ? ` • TUT: ${ex.tut}` : ""}
-                                          </div>
-                                          {ex.notes && (
-                                            <div className="text-[10px] text-zinc-500 italic">
-                                              Note: {ex.notes}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-center gap-1.5 bg-[#181C24] border border-white/5 p-1 rounded-xl">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleStartEditExercise(day.id, ex)}
-                                          className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
-                                          title="Modifica esercizio"
-                                        >
-                                          <Pencil className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (editingExId === ex.id) handleCancelEdit();
-                                            handleRemoveExerciseFromDay(day.id, ex.id);
-                                          }}
-                                          className="p-1.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
-                                          title="Elimina esercizio"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )
-                                )
-                            )}
-                          </div>
-
-                          {/* PULSANTE TRATTEGGIATO + AGGIUNGI ESERCIZIO */}
-                          <details className="group pt-2">
-                            <summary className="list-none border border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-zinc-400 hover:text-white rounded-xl py-3 w-full flex items-center justify-center gap-2 text-xs font-bold transition cursor-pointer select-none">
-                              <span className="text-base font-normal">+</span> Aggiungi Esercizio
-                            </summary>
-
-                            <form
-                              onSubmit={(e) => handleAddOrUpdateExercise(e, day.id)}
-                              className="space-y-3 pt-3 mt-2 border-t border-white/5 bg-[#12151B]/50 p-4 rounded-xl border border-white/5"
-                            >
-                              <div>
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                                  Preset Stimolo Metodo TOPGYM:
-                                </span>
-                                <div className="flex gap-2 flex-wrap">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyTopGymPreset("NEURAL")}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                                  >
-                                    ⚡ Neurale (2-6 reps - Buffer)
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyTopGymPreset("HYPERTROPHIC")}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                                  >
-                                    💪 Meccanico (6-12 reps - Cedimento/Buffer)
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyTopGymPreset("METABOLIC")}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 border border-white/10 transition cursor-pointer"
-                                  >
-                                    🔥 Metabolico (12-20 reps - Isolamento)
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Nome Esercizio"
-                                  value={editingDayId === day.id ? builderExName : (editingDayId ? "" : builderExName)}
-                                  onChange={(e) => {
-                                    setBuilderExName(e.target.value);
-                                    setBuilderMuscleGroup(autoDetectMuscleGroup(e.target.value));
-                                  }}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                <select
-                                  value={builderMuscleGroup}
-                                  onChange={(e) => setBuilderMuscleGroup(e.target.value as MuscleGroup)}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-bold"
-                                >
-                                  {[
-                                              "Petto",
-                                              "Gran Dorsale",
-                                              "Upper Back",
-                                              "Deltoidi Anteriori",
-                                              "Deltoidi Laterali",
-                                              "Deltoidi Posteriori",
-                                              "Tricipiti",
-                                              "Bicipiti",
-                                              "Quadricipiti",
-                                              "Femorali",
-                                              "Glutei",
-                                              "Adduttori",
-                                              "Polpacci",
-                                              "Addome"
-                                            ].map((mg) => (
-                                    <option key={mg} value={mg}>{mg}</option>
-                                  ))}
-                                </select>
-                                <input
-                                  type="number"
-                                  placeholder="Serie"
-                                  value={builderSets}
-                                  onChange={(e) => setBuilderSets(Number(e.target.value))}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Reps"
-                                  value={builderReps}
-                                  onChange={(e) => setBuilderReps(e.target.value)}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                <input
-                                  type="text"
-                                  placeholder="Carico Target"
-                                  value={builderWeight}
-                                  onChange={(e) => setBuilderWeight(e.target.value)}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                              </div>
-
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                <select
-                                  value={builderType}
-                                  onChange={(e) => setBuilderType(e.target.value as ExecutionType)}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                >
-                                  <option value="REGULAR">Tecnica: REGULAR</option>
-                                  <option value="SUPERSET">Tecnica: SUPERSET</option>
-                                  <option value="STRIPPING">Tecnica: STRIPPING (Drop Set)</option>
-                                  <option value="10_PIU_MAX">Tecnica: 10 + MAX</option>
-                                  <option value="REST_PAUSE">Tecnica: REST-PAUSE</option>
-                                  <option value="BACK_OFF">Tecnica: BACK-OFF a Cedimento</option>
-                                  <option value="PARZIALI">Tecnica: RIPETIZIONI PARZIALI</option>
-                                  <option value="ISOMETRIE">Tecnica: ISOMETRIE FINALI</option>
-                                  <option value="CLUSTER">Tecnica: CLUSTER</option>
-                                </select>
-                                <input
-                                  type="text"
-                                  placeholder="TUT"
-                                  value={builderTut}
-                                  onChange={(e) => setBuilderTut(e.target.value)}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                <input
-                                  type="number"
-                                  placeholder="Recupero (sec)"
-                                  value={builderRest}
-                                  onChange={(e) => setBuilderRest(Number(e.target.value))}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                <input
-                                  type="number"
-                                  step="0.5"
-                                  placeholder="RPE Target"
-                                  value={builderRpe}
-                                  onChange={(e) => setBuilderRpe(Number(e.target.value))}
-                                  className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                              </div>
-
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Note del Coach (Metodo TOPGYM)"
-                                  value={editingDayId === day.id ? builderNotes : (editingDayId ? "" : builderNotes)}
-                                  onChange={(e) => setBuilderNotes(e.target.value)}
-                                  className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                                />
-                                {editingExId && editingDayId === day.id ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={handleCancelEdit}
-                                      className="bg-zinc-700 text-xs font-bold px-3 py-1.5 rounded-xl text-white cursor-pointer"
-                                    >
-                                      Annulla
-                                    </button>
-                                    <button
-                                      type="submit"
-                                      className="bg-amber-400 text-xs font-bold px-4 py-1.5 rounded-xl text-black cursor-pointer"
-                                    >
-                                      Aggiorna
-                                    </button>
-                                  </>
-                                ) : (
-                                  <button
-                                    type="submit"
-                                    className="bg-[#E50914] text-xs font-bold px-4 py-1.5 rounded-xl text-white hover:brightness-110 cursor-pointer"
-                                  >
-                                    Aggiungi
-                                  </button>
-                                )}
-                              </div>
-                            </form>
-                          </details>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
-                {builderSuccessMessage && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs">
-                    {builderSuccessMessage}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={handleSaveProgramByCoach}
-                  className="w-full bg-emerald-600 hover:brightness-110 text-white font-black py-4 rounded-xl uppercase tracking-wider transition shadow-xl cursor-pointer"
-                >
-                  Salva e Assegna Scheda Metodo TOPGYM (
-                  {activeAthlete.displayName})
-                </button>
-                </div>
             </div>
-          </div>
-                        {/* COLONNA DESTRA (30% STICKY): ANALISI & TELEMETRIA DEL MESOCICLO */}
+
+            {/* COLONNA DESTRA (30% STICKY): ANALISI & TELEMETRIA DEL MESOCICLO */}
             <div className="lg:col-span-4 space-y-4 sticky top-6">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400">Analisi & Telemetria del Mesociclo</span>
@@ -4531,7 +3915,14 @@ if (isFinished) {
                   </div>
 
                   {currentDay.exercises.map((ex: any, exIdx: number) => {
-                    const plannedSets = isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets;
+                    const weekOverrides = currentDay.weekOverrides || (programDays[0] as any)?.weekOverrides;
+                    const weekOverride = weekOverrides?.[viewWeekSelected]?.[ex.id] 
+                      || weekOverrides?.[String(viewWeekSelected)]?.[ex.id];
+
+                    const plannedSets = weekOverride?.sets ?? (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets);
+                    const plannedReps = weekOverride?.reps ?? ex.reps;
+                    const plannedWeight = weekOverride?.targetWeight ?? ex.targetWeight;
+                    const plannedRpe = weekOverride?.rpeTarget ?? ex.rpeTarget;
 
                     return (
                       <div
