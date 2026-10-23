@@ -3,15 +3,27 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  X, Check, Lock, Unlock, Calendar, Save,
-  RefreshCw, Layers, Dumbbell, Printer, Plus, Trash2, FileText
+  X,
+  Check,
+  Lock,
+  Unlock,
+  Calendar,
+  Save,
+  RefreshCw,
+  Layers,
+  Dumbbell,
+  Printer,
+  Plus,
+  Trash2,
+  FileText
 } from 'lucide-react';
 import {
   ENGINE_METADATA,
   resolveEngineKey,
   generateMacrocycleTimeline,
   ProjectedWeek,
-  ExerciseWeekOverride
+  ExerciseWeekOverride,
+  SupportedMethod
 } from '@/lib/topgym-timeline-generator';
 
 interface MacrocycleTimelineModalProps {
@@ -39,7 +51,8 @@ export default function MacrocycleTimelineModal({
 }: MacrocycleTimelineModalProps) {
   if (!isOpen && !inline) return null;
 
-  const methodKey = resolveEngineKey(programmingModel);
+  const [activeMethodKey, setActiveMethodKey] = useState<SupportedMethod>(resolveEngineKey(programmingModel));
+  const methodKey = activeMethodKey;
   const meta = ENGINE_METADATA[methodKey];
 
   const [localDays, setLocalDays] = useState<any[]>(programDays || []);
@@ -55,6 +68,7 @@ export default function MacrocycleTimelineModal({
     }
   }, [athleteId, programDays]);
 
+  // Ricalcolo istantaneo del macrociclo al cambio metodo o giorni
   const timeline = useMemo<ProjectedWeek[]>(() => {
     if (!localDays || localDays.length === 0) return [];
     return generateMacrocycleTimeline(localDays, methodKey, localOverrides);
@@ -456,7 +470,9 @@ export default function MacrocycleTimelineModal({
         return {
           ...d,
           exercises: updatedExercises,
-          weekOverrides: completeOverrides
+          weekOverrides: completeOverrides,
+          method: activeMethodKey,
+          programmingModel: activeMethodKey
         };
       });
 
