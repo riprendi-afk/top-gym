@@ -15,6 +15,7 @@ import {
 } from '@/lib/topgym-timeline-generator';
 
 interface MacrocycleTimelineModalProps {
+  inline?: boolean;
   isOpen: boolean;
   onClose: () => void;
   athleteName: string;
@@ -25,6 +26,7 @@ interface MacrocycleTimelineModalProps {
 }
 
 export default function MacrocycleTimelineModal({
+  inline = false,
   isOpen,
   onClose,
   athleteName,
@@ -67,7 +69,7 @@ export default function MacrocycleTimelineModal({
     return timeline[0].days[selectedDayIdx].exercises || [];
   }, [timeline, selectedDayIdx]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !inline) return null;
 
   // MOTORE DI STAMPA ISOLATO: Genera HTML puro senza dashboard e attiva il PDF
   const executeIsolatedPrint = (printAllSessions: boolean) => {
