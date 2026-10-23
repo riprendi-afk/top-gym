@@ -66,8 +66,18 @@ export default function MacrocycleTimelineModal({
     if (programDays && programDays.length > 0) {
       setLocalDays(programDays);
       setLocalOverrides(programDays[0]?.weekOverrides || {});
+      const detected = programDays[0]?.method || programDays[0]?.programmingModel || programmingModel;
+      if (detected) {
+        setActiveMethodKey(resolveEngineKey(detected));
+      }
+    } else {
+      setLocalDays([]);
+      setLocalOverrides({});
+      if (programmingModel) {
+        setActiveMethodKey(resolveEngineKey(programmingModel));
+      }
     }
-  }, [athleteId, programDays]);
+  }, [athleteId, programDays, programmingModel]);
 
   // Ricalcolo istantaneo del macrociclo al cambio metodo o giorni
   const timeline = useMemo<ProjectedWeek[]>(() => {

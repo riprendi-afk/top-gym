@@ -1753,6 +1753,7 @@ const currentIntensityPreview = useMemo(() => {
     }
 
     if (result?.success) {
+        setProgramDays(programDaysToSave as any);
       setBuilderSuccessMessage(
         `✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`,
       );
@@ -3563,6 +3564,10 @@ const currentIntensityPreview = useMemo(() => {
                       weekOverrides: overrides || d.weekOverrides || {}
                     }));
                     setProgramDays(daysWithOverrides);
+            const savedMethod = (daysWithOverrides[0] as any)?.method || (daysWithOverrides[0] as any)?.programmingModel;
+            if (savedMethod) {
+              setProgrammingModel(savedMethod as any);
+            }
                     if (targetUserId) {
                       await saveProgramToSupabase(
                         targetUserId,
