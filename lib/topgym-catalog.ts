@@ -1,3 +1,4 @@
+import { HATFIELD_4D_TEMPLATES } from './topgym-hatfield-4d';
 // lib/topgym-catalog.ts
 
 export type Gender = 'MALE' | 'FEMALE';
@@ -2818,6 +2819,7 @@ export function resolveExtendedTopGymTemplate(params: ResolveTemplateParams): st
 // ESPORTAZIONE UNIFICATA CATALOGO COMPLETO (T01 - T33)
 // ============================================================================
 export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
+  ...HATFIELD_4D_TEMPLATES,
   ...Object.values(TOPGYM_TEMPLATES_CATALOG),
   TEMPLATE_T29 as any,
   TEMPLATE_T30 as any,
