@@ -1,4 +1,5 @@
 "use client";
+import { ClipboardList, Printer } from "lucide-react";
 
 import { BookOpen, Layers } from "lucide-react";
 import MethodologiesGuide from "@/components/MethodologiesGuide";
@@ -13,15 +14,13 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useRef,
-} from "react";
+  useRef } from "react";
 import { supabase,
   saveCompletedWorkoutToSupabase,
   getWorkoutHistoryFromSupabase,
   deleteWorkoutHistoryFromSupabase,
   saveProgramToSupabase,
-  getProgramFromSupabase,
-} from "@/lib/store";
+  getProgramFromSupabase } from "@/lib/store";
 import dynamic from 'next/dynamic';
 
 
@@ -554,6 +553,8 @@ useEffect(() => {
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [viewWeekSelected, setViewWeekSelected] = useState<number>(1);
+  const [viewDaySelected, setViewDaySelected] = useState<number>(0);
   const [currentExId, setCurrentExId] = useState("ex1");
 
   const [weight, setWeight] = useState("");
@@ -670,9 +671,7 @@ useEffect(() => {
           executionType: "REGULAR",
           notes:
             (ex.notes ? ex.notes + " - " : "") +
-            "DELOAD: Volume ridotto, carichi submassimali, nessun cedimento.",
-        })),
-      })),
+            "DELOAD: Volume ridotto, carichi submassimali, nessun cedimento." })) })),
     );
     setManualWeek(3); // La fase 3 è sempre lo Scarico/Deload nel nuovo sistema
     setBuilderSuccessMessage(
@@ -762,8 +761,7 @@ useEffect(() => {
           displayName:
             p.username || (p.email ? p.email.split("@")[0] : "Atleta"),
           email: p.email || "",
-          xp: p.xp || 0,
-        }));
+          xp: p.xp || 0 }));
         setAthletes(formatted);
 
         // --- SELEZIONE INTELLIGENTE DELL'UTENTE CONNESSO ---
@@ -807,8 +805,7 @@ useEffect(() => {
     });
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+      data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY")
         setIsRecoveryMode(true);
       setUser(session?.user ?? null);
@@ -900,8 +897,7 @@ useEffect(() => {
         energyLevel: r.energy_level,
         bodyWeight: r.body_weight,
         readinessScore: r.readiness_score,
-        recommendation: r.recommendation,
-      }));
+        recommendation: r.recommendation }));
       setReadinessHistory(formatted);
     } catch (e: any) {
       setReadinessHistory([]);
@@ -930,8 +926,7 @@ useEffect(() => {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-        },
+          table: 'messages' },
         (payload) => {
           const msg = payload.new as any;
           // Se il messaggio NON è stato inviato da me
@@ -940,8 +935,7 @@ useEffect(() => {
             if ('Notification' in window && Notification.permission === 'granted') {
               new Notification(`Top Gym - Messaggio da ${msg.sender_name || 'Utente'}`, {
                 body: msg.message,
-                icon: '/favicon.ico',
-              });
+                icon: '/favicon.ico' });
             }
           }
         }
@@ -985,26 +979,22 @@ useEffect(() => {
               id: `day-1-${timestamp}`,
               dayNumber: 1,
               title: "Spinta (Push)",
-              exercises: [],
-            },
+              exercises: [] },
             {
               id: `day-2-${timestamp}`,
               dayNumber: 2,
               title: "Trazione (Pull)",
-              exercises: [],
-            },
+              exercises: [] },
             {
               id: `day-3-${timestamp}`,
               dayNumber: 3,
               title: "Gambe (Legs)",
-              exercises: [],
-            },
+              exercises: [] },
             {
               id: `day-4-${timestamp}`,
               dayNumber: 4,
               title: "Spalle & Braccia",
-              exercises: [],
-            },
+              exercises: [] },
           ]);
           setSelectedDayCount(4);
           setProgramName(`Scheda TOPGYM - ${targetAthleteName}`);
@@ -1034,15 +1024,13 @@ useEffect(() => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { username: username || email.split("@")[0] } },
-      });
+        options: { data: { username: username || email.split("@")[0] } } });
       if (error) setErrorMessage(error.message);
       else alert("Registrazione completata! Ora puoi accedere.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-      });
+        password });
       if (error) setErrorMessage(error.message);
     }
   };
@@ -1058,8 +1046,7 @@ useEffect(() => {
     setErrorMessage("");
   
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: window.location.origin,
-    });
+      redirectTo: window.location.origin });
   
     setResetLoading(false);
     if (error) {
@@ -1081,8 +1068,7 @@ useEffect(() => {
     setErrorMessage("");
 
     const { error } = await supabase.auth.updateUser({
-      password: newPassword.trim(),
-    });
+      password: newPassword.trim() });
 
     setRecoveryLoading(false);
 
@@ -1130,8 +1116,7 @@ useEffect(() => {
     if (!user?.id || !supabase) return;
 
     await supabase.auth.updateUser({
-      data: { username: username.trim() },
-    });
+      data: { username: username.trim() } });
 
     const { error } = await supabase
       .from("profiles")
@@ -1143,8 +1128,7 @@ useEffect(() => {
           : null,
         training_goal: profileGoal,
         experience_level: profileExperience,
-        physical_notes: profileNotes.trim(),
-      })
+        physical_notes: profileNotes.trim() })
       .eq("id", user.id);
 
     if (error) {
@@ -1262,8 +1246,7 @@ useEffect(() => {
     "7.5": [91, 88, 85, 82, 80, 77, 75, 72, 69, 67],
     "7": [89, 86, 84, 81, 79, 76, 74, 71, 68, 65],
     "6.5": [87, 85, 82, 80, 77, 75, 72, 69, 67, 64],
-    "6": [86, 84, 81, 79, 76, 74, 71, 68, 65, 62],
-  };
+    "6": [86, 84, 81, 79, 76, 74, 71, 68, 65, 62] };
 
   const calculate1RM = (w: number, r: number) =>
     r === 1 ? w : Math.round(w * (1 + r / 30));
@@ -1307,8 +1290,7 @@ useEffect(() => {
           estimated1RM:
             l.estimated1RM ||
             calculateEstimated1RM(w, l.reps, l.rpe) ||
-            calculate1RM(w, l.reps),
-        });
+            calculate1RM(w, l.reps) });
       }
     });
     workoutHistory.forEach((w) => {
@@ -1333,8 +1315,7 @@ useEffect(() => {
                   reps,
                   Number.isFinite(rpeVal) ? rpeVal : undefined,
                 ) ||
-                calculate1RM(weight, reps),
-            });
+                calculate1RM(weight, reps) });
           }
         });
       }
@@ -1463,31 +1444,7 @@ const calculatedCurrentPhase: MicroWeek = useMemo(() => {
 }, [manualWeek, calculatedCurrentRealWeek, isMasterProgram]);
 
 // 4. Motore Esecutivo: delega al rispettivo engine in lib/
-const dynamicActiveDay = useMemo(() => {
-    if (!activeDay) return null;
-    if (((userRole as any) === "COACH") && activeTab === "builder") return activeDay;
-
-    const effectiveWeek = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
-    const currentEngine = programmingModel || (activeDay as any)?.method || (activeDay as any)?.programmingModel || "TOPGYM_CLASSICO";
-    const overrides = (activeDay as any)?.weekOverrides || (programDays?.[0] as any)?.weekOverrides || {};
-
-    return getActiveSessionForAthlete(
-      activeDay,
-      selectedDayIndex,
-      effectiveWeek,
-      currentEngine,
-      overrides
-    );
-  }, [
-    activeDay,
-    userRole,
-    activeTab,
-    manualWeek,
-    calculatedCurrentRealWeek,
-    programmingModel,
-    selectedDayIndex,
-    programDays,
-  ]);
+const dynamicActiveDay = activeDay;
 
 const activeRoutine = dynamicActiveDay?.exercises ?? [];
 const currentExercise =
@@ -1591,8 +1548,7 @@ const currentIntensityPreview = useMemo(() => {
       energyLevel,
       bodyWeight: bodyWeight ? parseFloat(bodyWeight) : undefined,
       readinessScore: totalScore,
-      recommendation: rec,
-    };
+      recommendation: rec };
     setReadinessHistory((prev) => [newReadiness, ...prev]);
     if (supabase && targetUserId) {
       const { error } = await supabase.from("readiness_logs").insert([
@@ -1607,8 +1563,7 @@ const currentIntensityPreview = useMemo(() => {
           energy_level: newReadiness.energyLevel,
           body_weight: newReadiness.bodyWeight,
           readiness_score: newReadiness.readinessScore,
-          recommendation: newReadiness.recommendation,
-        },
+          recommendation: newReadiness.recommendation },
       ]);
       if (error) {
         setReadinessHistory((prev) =>
@@ -1644,8 +1599,7 @@ const currentIntensityPreview = useMemo(() => {
             id: `day-${i}-${makeId()}`,
             dayNumber: i,
             title: `Giorno ${i}`,
-            exercises: [],
-          });
+            exercises: [] });
         }
         return newDays;
       }
@@ -1715,8 +1669,7 @@ const currentIntensityPreview = useMemo(() => {
           dayName: dayName,
           totalVolume: totalVol,
           exercisesCount: activeRoutine.length,
-          logs: sanitizedLogs as any,
-        });
+          logs: sanitizedLogs as any });
     } catch (e: any) {
       result = { success: false, error: e?.message };
     } finally {
@@ -1732,290 +1685,14 @@ const currentIntensityPreview = useMemo(() => {
       if (result?.success) {
       await addXp(50);
       setLogs([]);
-      // Pulisce la memoria locale del telefono
       if (typeof window !== "undefined") {
         try {
-          localStorage.removeItem(
-            `topgym_session_logs_${targetUserId || "athlete"}`,
-          );
+          localStorage.removeItem(`topgym_session_logs_${targetUserId || "athlete"}`);
         } catch {}
       }
 
-      // ======================================================================
-      // AVANZAMENTO AUTOMATICO HARDTOPGYM A CHIUSURA MICROCICLO
-      // ======================================================================
-      if (
-        programmingModel === "HARDTOPGYM" &&
-        programDays &&
-        programDays.length >= 3
-      ) {
-        const splitSize = programDays.length;
-        // Calcoliamo quanti allenamenti ha completato adesso l'atleta (compreso quello appena salvato)
-        const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
-
-        // Se questo allenamento ha chiuso la settimana (es. 3° su 3, o 4° su 4)
-        if (updatedHistoryCount % splitSize === 0) {
-          const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
-          const nextWeek = (completedWeeks % 4) + 1; // Calcola la nuova settimana (1, 2, 3 o 4 Deload)
-
-          // Applica la progressione esecutiva alla scheda attiva
-          const progressedDays = applyHardTopGymWeekProgression(
-            programDays,
-            nextWeek,
-          );
-          setProgramDays(progressedDays as any);
-
-          // Salva la nuova progressione su Supabase per renderla persistente
-          if (targetUserId) {
-            saveProgramToSupabase(targetUserId,
-              programName,
-              progressedDays,
-            ).catch(console.error);
-          }
-
-          // Messaggio di completamento e avanzamento
-          if (nextWeek === 4) {
-            setWorkoutSuccessMessage(
-              "🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda passata in Settimana 4 (Scarico Deload).",
-            );
-          } else {
-            setWorkoutSuccessMessage(
-              `🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek}.`,
-            );
-          }
-        } else {
-          // Se non ha chiuso la settimana, mostra il tuo messaggio classico
-          setWorkoutSuccessMessage(
-            "🎉 Allenamento completato e salvato! +50 XP",
-          );
-        }
-      } else {
-        // Se non è HARDTOPGYM, mostra il tuo messaggio classico originale
-        setWorkoutSuccessMessage(
-          "🎉 Allenamento completato e salvato! +50 XP",
-        );
-      }
-
-// ======================================================================
-      
-        // ======================================================================
-        // AVANZAMENTO AUTOMATICO METODO TOPGYM CLASSIC / BLOCKS (12 SETTIMANE)
-        // ======================================================================
-        const isTopGymClassicModel =
-          programmingModel === "TOPGYM_BLOCKS" ||
-          (!["HARDTOPGYM", "ACETO", "NOCERINO", "POWERBLOCK_HYBRID", "BLOOD_VOLUME_OVERLOAD", "HELMS_PYRAMID", "BIKINI_WAVE"].includes(programmingModel as any));
-
-        if (
-          isTopGymClassicModel &&
-          programDays &&
-          programDays.length >= 2
-        ) {
-          const splitSize = programDays.length;
-          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
-
-          // Scatta ogni volta che l'atleta chiude l'intera split settimanale
-          if (updatedHistoryCount % splitSize === 0) {
-              const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
-              const nextWeek = (completedWeeks % 48) + 1; // Macrociclo a 48 settimane (3 blocchi da 16)
-
-              // 1. Calcolo del Macro-Blocco (1-16: Forza, 17-32: Trasformazione, 33-48: Qualità)
-              let currentMacroBlock: "BLOCCO_1_FORZA" | "BLOCCO_2_TRASFORMAZIONE" | "BLOCCO_3_QUALITA" = "BLOCCO_1_FORZA";
-              if (nextWeek >= 17 && nextWeek <= 32) {
-                currentMacroBlock = "BLOCCO_2_TRASFORMAZIONE";
-              } else if (nextWeek >= 33) {
-                currentMacroBlock = "BLOCCO_3_QUALITA";
-              }
-
-              // 2. Calcolo della Fase nel Blocco da 16 Settimane:
-              // W1-W6: Fase 1 (Accumulo) | W7-W9: Fase 2 (Conversione) | W10: Fase 3 (Deload SNC) | W11-W16: Fase 4 (Picco Neurale)
-              const weekInBlock = ((nextWeek - 1) % 16) + 1;
-              let phaseIndex: 1 | 2 | 3 | 4 = 1;
-              if (weekInBlock <= 6) {
-                phaseIndex = 1;
-              } else if (weekInBlock <= 9) {
-                phaseIndex = 2;
-              } else if (weekInBlock === 10) {
-                phaseIndex = 3;
-              } else {
-                phaseIndex = 4;
-              }
-
-              // 3. Applicazione scientifica della fase tramite il motore nativo topgym-engine
-              const progressedDays = applyPhaseToProgram(
-                programDays as any,
-                currentMacroBlock,
-                phaseIndex
-              );
-
-              setProgramDays(progressedDays as any);
-
-            // 4. Salvataggio persistente su Supabase
-            if (targetUserId) {
-              saveProgramToSupabase(
-                targetUserId,
-                programName,
-                progressedDays as any
-              ).catch((err: unknown) => {
-                console.error("[TOPGYM ENGINE] Errore salvataggio progressione su Supabase:", err);
-              });
-            }
-
-            // 5. Notifica dinamica all'atleta con la fase esatta raggiunta
-            const phaseLabel =
-              phaseIndex === 3 ? "Scarico (Deload)" :
-              phaseIndex === 4 ? "Intensificazione" :
-              phaseIndex === 2 ? (currentMacroBlock === "BLOCCO_1_FORZA" ? "Conversione" : "Tensione Meccanica") :
-              "Accumulo";
-
-            setWorkoutSuccessMessage(
-              `🎉 Allenamento salvato! (+50 XP) ⚡ Microciclo completato: scheda avanzata a Settimana ${nextWeek} (${currentMacroBlock.replace(/_/g, " ")} - ${phaseLabel})!`
-            );
-          }
-        }
-
-        // AVANZAMENTO AUTOMATICO METODO ACETO A CHIUSURA MICROCICLO (6 SETTIMANE)
-      // ======================================================================
-      if (
-        programmingModel === "ACETO" &&
-        programDays &&
-        programDays.length >= 3
-      ) {
-        const splitSize = programDays.length;
-        const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
-
-        // Se l'atleta ha completato tutti i giorni della split (es. 4° su 4)
-        if (updatedHistoryCount % splitSize === 0) {
-          const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
-          const nextWeek = (completedWeeks % 6) + 1; // Progressione a 6 settimane (W1 -> W6)
-
-          // Ricalcola carichi, RIR e serie (taglio a 2 nel Deload W6)
-          const progressedDays = applyAcetoWeekProgression(
-            programDays as any,
-            nextWeek,
-            workoutHistory as any,
-          );
-          setProgramDays(progressedDays as any);
-
-          // Salvataggio persistente su Supabase identico a riga 1660 (HardTopGym)
-          if (targetUserId) {
-            saveProgramToSupabase(
-              targetUserId,
-              programName,
-              progressedDays as any,
-            ).catch((err: unknown) => {
-              console.error("[ACETO ENGINE] Errore salvataggio progressione su Supabase:", err);
-            });
-          }
-        }
-      }
-
-      // ======================================================================
-        // AVANZAMENTO AUTOMATICO METODO NOCERINO A CHIUSURA MICROCICLO (3 GIORNI)
-        // ======================================================================
-        if (
-          programmingModel === "NOCERINO" &&
-          programDays &&
-          programDays.length >= 3
-        ) {
-          const splitSize = programDays.length;
-          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
-
-          // Se l'atleta ha completato tutti i giorni del ciclo (multiplo di 3)
-          if (updatedHistoryCount % splitSize === 0) {
-            const progressedDays = applyNocerinoProgression(
-              programDays as any,
-              updatedHistoryCount,
-            );
-            setProgramDays(progressedDays as any);
-
-            // Salvataggio persistente automatico su Supabase
-            if (targetUserId) {
-              saveProgramToSupabase(
-                targetUserId,
-                programName,
-                progressedDays as any,
-              ).catch((err: unknown) => {
-                console.error("[NOCERINO ENGINE] Errore salvataggio progressione su Supabase:", err);
-              });
-            }
-          }
-        }
-        // ======================================================================
-        // ======================================================================
-        // AVANZAMENTO AUTOMATICO NUOVI MOTORI TOP GYM (HELMS & FITSCHEN T29-T33)
-        // ======================================================================
-        const isAdvancedEngine =
-          programmingModel === "POWERBLOCK_HYBRID" ||
-          programmingModel === "BLOOD_VOLUME_OVERLOAD" ||
-          programmingModel === "HELMS_PYRAMID" ||
-          programmingModel === "BIKINI_WAVE";
-
-        if (isAdvancedEngine && programDays && programDays.length >= 2) {
-          const splitSize = programDays.length;
-          const updatedHistoryCount = computeActiveWorkoutCount(programDays, workoutHistory);
-
-          // Se l'atleta ha completato tutte le sessioni della split settimanale
-          if (updatedHistoryCount % splitSize === 0) {
-            const completedWeeks = Math.floor(updatedHistoryCount / splitSize);
-            const currentWeek = completedWeeks + 1;
-
-            try {
-              // Prepara i log recenti della settimana
-              const recentSessionLogs = (todayLogs || []).map((l: any, idx: number) => ({
-                setIndex: idx + 1,
-                weight: Number(l.weight) || 0,
-                reps: Number(l.reps) || 0,
-                rpe: l.rpe ? Number(l.rpe) : undefined,
-              }));
-
-              const formattedLogs = [
-                {
-                  dayNumber: activeDay?.dayNumber || 1,
-                  exercises: [
-                    {
-                      name: activeDay?.title || "Session",
-                      sets: recentSessionLogs,
-                    },
-                  ],
-                },
-              ];
-
-              // Invocazione del motore scientifico dedicato
-              const advanceResult = autoAdvanceTopGymEngine(
-                {
-                  engine: programmingModel as any,
-                  currentWeek: currentWeek,
-                  // Deload autoregolato e gestito internamente da ciascun motore scientifico
-                },
-                formattedLogs as any,
-                programDays as any
-              );
-
-              if (advanceResult && advanceResult.modifiedDays) {
-                // 1. Aggiorna l'interfaccia con le nuove serie, ripetizioni e carichi
-                setProgramDays(advanceResult.modifiedDays as any);
-
-                // 2. Rende persistente la nuova scheda su Supabase
-                if (targetUserId) {
-                  saveProgramToSupabase(
-                    targetUserId,
-                    programName,
-                    advanceResult.modifiedDays as any
-                  ).catch((err: unknown) => {
-                    console.error(`[${programmingModel}] Errore salvataggio progressione:`, err);
-                  });
-                }
-
-                setWorkoutSuccessMessage(
-                  `🚀 Settimana ${currentWeek} completata! Progressione ${programmingModel} calcolata e applicata!`
-                );
-              }
-            } catch (engineErr) {
-              console.error(`[${programmingModel}] Errore calcolo avanzamento:`, engineErr);
-            }
-          }
-        }
-      // ======================================================================
+      // SCHEDA STATICA: Nessun ricalcolo o sovrascrittura automatica della scheda
+      setWorkoutSuccessMessage("🎉 Allenamento registrato con successo nello storico! (+50 XP)");
 
       await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 5000);
@@ -2067,8 +1744,7 @@ const currentIntensityPreview = useMemo(() => {
       isPeriodized: isMasterCoach,
       assignedByCoach: coachEmail,
       block: isMasterCoach ? currentBlock : null,
-      phase: isMasterCoach ? calculatedCurrentPhase : null,
-    }));
+      phase: isMasterCoach ? calculatedCurrentPhase : null }));
 
     try {
       result = await saveProgramToSupabase(
@@ -2096,8 +1772,7 @@ const currentIntensityPreview = useMemo(() => {
               message: isMasterCoach
                 ? `Il Coach ha assegnato o aggiornato il programma "${programName}".`
                 : `Il Coach ha aggiornato la tua scheda "${programName}".`,
-              type: "program_assigned",
-            },
+              type: "program_assigned" },
           ]);
         } catch {}
       }
@@ -2198,16 +1873,14 @@ const currentIntensityPreview = useMemo(() => {
       date: todayIso(),
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
-        minute: "2-digit",
-      }),
+        minute: "2-digit" }),
       isBodyweight: effectiveCalc.isBodyweight,
       externalLoad: effectiveCalc.externalLoad,
       bodyWeightUsed: effectiveCalc.bodyWeightUsed,
       percentageUsed: effectiveCalc.percentageUsed,
       bodyweightLoad: effectiveCalc.bodyweightLoad,
       effectiveLoad: effectiveCalc.effectiveLoad,
-      effectiveVolume: effectiveCalc.effectiveVolume,
-    };
+      effectiveVolume: effectiveCalc.effectiveVolume };
 
     setLogs((prev) => [newLog, ...prev]);
     void addXp(10);
@@ -2266,11 +1939,9 @@ if (isFinished) {
                       restSeconds: builderRest,
                       executionType: builderType,
                       tut: builderTut,
-                      notes: builderNotes.trim() || undefined,
-                    }
+                      notes: builderNotes.trim() || undefined }
                   : ex,
-              ),
-            };
+              ) };
           }
           return day;
         }),
@@ -2289,8 +1960,7 @@ if (isFinished) {
         restSeconds: builderRest,
         executionType: builderType,
         tut: builderTut,
-        notes: builderNotes.trim() || undefined,
-      };
+        notes: builderNotes.trim() || undefined };
 
       setProgramDays((prevDays) =>
         prevDays.map((day) =>
@@ -2313,8 +1983,7 @@ if (isFinished) {
               ...day,
               exercises: (day.exercises || []).filter(
                 (ex) => ex.id !== exerciseId,
-              ),
-            }
+              ) }
           : day,
       ),
     );
@@ -2398,29 +2067,25 @@ if (isFinished) {
       title: "Club dei 100kg",
       description: "Solleva 100kg o più in un esercizio",
       icon: "???",
-      unlocked: logs.some((l) => l.weight >= 100),
-    },
+      unlocked: logs.some((l) => l.weight >= 100) },
     {
       id: "2",
       title: "PR Breaker",
       description: "Supera il tuo massimale stimato",
       icon: "???",
-      unlocked: logs.length >= 3,
-    },
+      unlocked: logs.length >= 3 },
     {
       id: "3",
       title: "Atleta Consapevole",
       description: "Registra Check di Readiness",
       icon: "???",
-      unlocked: readinessHistory.length >= 1,
-    },
+      unlocked: readinessHistory.length >= 1 },
     {
       id: "4",
       title: "Costanza d'Acciaio",
       description: "Accumula oltre 500 XP",
       icon: "???",
-      unlocked: userXp >= 500,
-    },
+      unlocked: userXp >= 500 },
   ];
 
   // 3. CALCOLO AUTOMATICO SETTIMANA E FASE (BLOCCO 1-2-3)
@@ -2430,23 +2095,19 @@ if (isFinished) {
         case 1:
           return {
             title: "Fase I: Accumulo",
-            desc: "Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica.",
-          };
+            desc: "Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica." };
         case 2:
           return {
             title: "Fase II: Conversione",
-            desc: "Aumento reps/serie e riduzione progressiva del buffer.",
-          };
+            desc: "Aumento reps/serie e riduzione progressiva del buffer." };
         case 3:
           return {
             title: "Fase III: Scarico (Deload)",
-            desc: "Riduzione del volume per dissipare la fatica. Nessun cedimento.",
-          };
+            desc: "Riduzione del volume per dissipare la fatica. Nessun cedimento." };
         case 4:
           return {
             title: "Fase IV: Intensificazione",
-            desc: "Meno volume, aumento carichi. Test massimale a fine ciclo.",
-          };
+            desc: "Meno volume, aumento carichi. Test massimale a fine ciclo." };
       }
     }
     if (block === "BLOCCO_2_TRASFORMAZIONE") {
@@ -2454,23 +2115,19 @@ if (isFinished) {
         case 1:
           return {
             title: "Fase I: Volume & Stripping",
-            desc: "Forza costante sui base. Complementari con 10+MAX.",
-          };
+            desc: "Forza costante sui base. Complementari con 10+MAX." };
         case 2:
           return {
             title: "Fase II: Ibrida",
-            desc: "Lavoro pesante + back-off sui base. Complementari a cedimento.",
-          };
+            desc: "Lavoro pesante + back-off sui base. Complementari a cedimento." };
         case 3:
           return {
             title: "Fase III: Scarico (Deload)",
-            desc: "Riduzione volume, zero tecniche. Carichi submassimali.",
-          };
+            desc: "Riduzione volume, zero tecniche. Carichi submassimali." };
         case 4:
           return {
             title: "Fase IV: Trasformazione",
-            desc: "Aumento intensità . Stripping e saturazione massima.",
-          };
+            desc: "Aumento intensità . Stripping e saturazione massima." };
       }
     }
     if (block === "BLOCCO_3_QUALITA") {
@@ -2478,23 +2135,19 @@ if (isFinished) {
         case 1:
           return {
             title: "Fase I: Accumulo Ipertrofico",
-            desc: "Progressione di volume. Inserimento Back-off, Stripping e 10+MAX.",
-          };
+            desc: "Progressione di volume. Inserimento Back-off, Stripping e 10+MAX." };
         case 2:
           return {
             title: "Fase II: Densità ",
-            desc: "Aggiunta Rest-Pause su macchine guidate e parziali finali.",
-          };
+            desc: "Aggiunta Rest-Pause su macchine guidate e parziali finali." };
         case 3:
           return {
             title: "Fase III: Scarico (Deload)",
-            desc: "-40% Volume, zero tecniche d'intensità . Dissipazione fatica.",
-          };
+            desc: "-40% Volume, zero tecniche d'intensità . Dissipazione fatica." };
         case 4:
           return {
             title: "Fase IV: Massimo Pompaggio",
-            desc: "Taglio volume sui base. Massimo effort metabolico e isometrie.",
-          };
+            desc: "Taglio volume sui base. Massimo effort metabolico e isometrie." };
       }
     }
     return { title: "", desc: "" };
@@ -2889,8 +2542,8 @@ if (isFinished) {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <MessageSquare className="w-4 h-4 text-sky-400" />
-                  <span>Chat & Assistenza</span>
+                  <ClipboardList className="w-4 h-4 text-sky-400" />
+                  <span>Visualizza Scheda</span>
                 </div>
                 {activeTab === "chat" && (
                   <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
@@ -3319,7 +2972,7 @@ if (isFinished) {
     activeTab === "chat" ? "bg-[#E50914] text-white shadow" : "text-zinc-400 hover:text-white"
   }`}
 >
-  <MessageSquare className="w-4 h-4" /> Chat & Assistenza
+  <ClipboardList className="w-4 h-4 text-sky-400" /> Visualizza Scheda
 </button>
 
           {((userRole as any) === "COACH") && (
@@ -4824,15 +4477,190 @@ if (isFinished) {
           />
         )}
 
-{/* TAB CHAT & ASSISTENZA */}
-{activeTab === "chat" && (
-          <div className="p-4 max-w-4xl mx-auto w-full animate-in fade-in duration-200">
-            <ChatBox 
-              roomId={((userRole as any) === "COACH") ? (activeAthlete?.id || "sala-generale") : (targetUserId || "atleta-room")} 
-              userId={((userRole as any) === "COACH") ? "coach-admin" : (targetUserId || "atleta-id")} 
-              userName={((userRole as any) === "COACH") ? "Coach Top Gym" : (activeAthlete?.displayName || "Atleta Top Gym")}
-              chatTitle={((userRole as any) === "COACH") ? `Chat con: ${activeAthlete?.displayName || "Seleziona un atleta"}` : "Chat Privata con il Coach"}
-            />
+{/* TAB VISUALIZZA SCHEDA COMPLETA (W1 - W16) */}
+        {activeTab === "chat" && (
+          <div className="space-y-4 max-w-5xl mx-auto animate-in fade-in duration-200">
+            {/* BARRA SUPERIORE: TITOLO & TASTO STAMPA PDF */}
+            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center shrink-0">
+                  <ClipboardList className="w-5 h-5 text-sky-400" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-white tracking-wide leading-tight">
+                    {programName || "Scheda di Allenamento"}
+                  </h2>
+                  <p className="text-[11px] text-zinc-400 font-mono">
+                    Consultazione Macrociclo &bull; {programDays.length} Giornate
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete?.displayName);
+                  if (printName !== null) {
+                    exportProgramToPDF(printName.trim() || activeAthlete?.displayName, programName, programDays);
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-bold text-xs flex items-center gap-1.5 border border-white/10 transition cursor-pointer shrink-0"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>PDF A4</span>
+              </button>
+            </div>
+
+            {/* SELETTORE SETTIMANA ORIZZONTALE A SCORRIMENTO (W1 - W16) */}
+            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-3 shadow-lg space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  Seleziona Settimana (Microciclo)
+                </span>
+                <span className="text-[10px] font-mono text-sky-400 font-bold">
+                  {viewWeekSelected === 4 || viewWeekSelected === 10 || viewWeekSelected === 16 ? "Fase Scarico / Deload" : "Microciclo Regolare"}
+                </span>
+              </div>
+
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+                {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
+                  const isDeload = wNum === 4 || wNum === 10 || wNum === 16;
+                  const isSelected = viewWeekSelected === wNum;
+                  return (
+                    <button
+                      key={wNum}
+                      type="button"
+                      onClick={() => setViewWeekSelected(wNum)}
+                      className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
+                        isSelected
+                          ? "bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50"
+                          : isDeload
+                          ? "bg-blue-950/30 border-blue-500/30 text-blue-300 hover:bg-blue-900/40"
+                          : "bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <span>W{wNum}</span>
+                      {isDeload && <span className="text-[9px] block text-[9px] opacity-80 leading-none">Deload</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SELETTORE GIORNATA COMPATTO */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {programDays.map((day, idx) => {
+                const isDaySelected = viewDaySelected === idx;
+                return (
+                  <button
+                    key={day.id || idx}
+                    type="button"
+                    onClick={() => setViewDaySelected(idx)}
+                    className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center gap-2 ${
+                      isDaySelected
+                        ? "bg-zinc-800 text-white border-white/20 shadow-sm"
+                        : "bg-black/30 text-zinc-500 border-white/5 hover:text-zinc-300"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isDaySelected ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"}`} />
+                    <span>G{day.dayNumber || idx + 1}: {day.title || `Seduta ${idx + 1}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* DETTAGLIO ESERCIZI DELLA GIORNATA SELEZIONATA (LETTURA PULITA) */}
+            {(() => {
+              const currentDay = programDays[viewDaySelected] || programDays[0];
+              if (!currentDay || !currentDay.exercises || currentDay.exercises.length === 0) {
+                return (
+                  <div className="bg-[#12151B] border border-white/10 rounded-2xl p-8 text-center text-zinc-500 text-xs">
+                    Nessun esercizio inserito in questa giornata.
+                  </div>
+                );
+              }
+
+              // Calcolo modificatore deload visuale su W4/W10/W16
+              const isDeloadWeek = viewWeekSelected === 4 || viewWeekSelected === 10 || viewWeekSelected === 16;
+
+              return (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between px-1 text-[11px] text-zinc-400 font-mono">
+                    <span>Esercizi previsti per <b>Settimana {viewWeekSelected}</b>:</span>
+                    <span>{currentDay.exercises.length} esercizi</span>
+                  </div>
+
+                  {currentDay.exercises.map((ex: any, exIdx: number) => {
+                    const plannedSets = isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets;
+
+                    return (
+                      <div
+                        key={ex.id || exIdx}
+                        className="bg-[#12151B] border border-white/10 rounded-2xl p-3.5 sm:p-4 shadow-lg space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-zinc-500 font-mono text-xs font-bold">
+                                #{exIdx + 1}
+                              </span>
+                              <h3 className="text-sm font-black text-white">
+                                {ex.name}
+                              </h3>
+                              {ex.muscleGroup && (
+                                <span className="text-[9px] px-2 py-0.5 rounded-md bg-black/40 text-zinc-400 border border-white/5 font-mono">
+                                  {ex.muscleGroup}
+                                </span>
+                              )}
+                              {ex.executionType && ex.executionType !== "REGULAR" && (
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase ${getBadgeStyle(ex.executionType)}`}>
+                                  {ex.executionType}
+                                </span>
+                              )}
+                            </div>
+                            {ex.notes && (
+                              <p className="text-[11px] text-zinc-400 italic">
+                                Note: {ex.notes}
+                              </p>
+                            )}
+                          </div>
+
+                          {isDeloadWeek && (
+                            <span className="text-[9px] px-2 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-500/30 font-bold shrink-0">
+                              -40% Set
+                            </span>
+                          )}
+                        </div>
+
+                        {/* GRIGLIA PARAMETRI COMPATTA SMARTPHONE */}
+                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 font-mono text-center">
+                          <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
+                            <span className="text-[9px] text-zinc-500 uppercase block">Serie</span>
+                            <b className="text-white text-xs">{plannedSets}</b>
+                          </div>
+                          <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
+                            <span className="text-[9px] text-zinc-500 uppercase block">Reps</span>
+                            <b className="text-white text-xs">{ex.reps}</b>
+                          </div>
+                          <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
+                            <span className="text-[9px] text-zinc-500 uppercase block">Carico</span>
+                            <b className="text-white text-xs">{ex.targetWeight ? `${ex.targetWeight}kg` : "Auto"}</b>
+                          </div>
+                          <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
+                            <span className="text-[9px] text-zinc-500 uppercase block">Rec</span>
+                            <b className="text-yellow-400 text-xs">{ex.restSeconds || 90}s</b>
+                          </div>
+                          <div className="bg-black/50 p-1.5 rounded-xl border border-white/5 col-span-4 sm:col-span-1">
+                            <span className="text-[9px] text-zinc-500 uppercase block">Target</span>
+                            <b className="text-emerald-400 text-xs">{ex.rpeTarget ? `RPE ${ex.rpeTarget}` : (ex.tut ? `TUT ${ex.tut}` : "RIR 1-2")}</b>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
