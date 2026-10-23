@@ -270,6 +270,8 @@ interface WorkoutDay {
   dayNumber: number;
   title: string;
   exercises: Exercise[];
+  weekOverrides?: any;
+  [key: string]: any;
 }
 
 export interface SetLog {
