@@ -2,29 +2,31 @@
 
 import React, { useState } from 'react';
 import {
-  BookOpen,
-  Layers,
-  Flame,
-  Zap,
-  Shield,
-  Target,
   Activity,
-  Calendar,
   Award,
-  Search,
-  Dumbbell,
-  TrendingUp,
-  Scale,
-  Clock,
-  HeartPulse,
-  Sparkles,
+  BookOpen,
+  Calendar,
   CheckCircle2,
-  SlidersHorizontal,
-  UserCheck,
-  Timer,
   ChevronRight,
+  Clock,
+  Dumbbell,
+  Flame,
+  HeartPulse,
   Info,
-  Percent
+  Layers,
+  Lock,
+  Percent,
+  Scale,
+  Search,
+  Shield,
+  SlidersHorizontal,
+  Sparkles,
+  Target,
+  Timer,
+  TrendingUp,
+  Unlock,
+  UserCheck,
+  Zap
 } from 'lucide-react';
 
 export default function MethodologiesGuide() {
@@ -243,98 +245,119 @@ export default function MethodologiesGuide() {
         )}
 
         {(activeCategory === 'ALL' || activeCategory === 'HATFIELD') && (
-        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                <Zap className="w-5 h-5" />
+          <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+            {/* HEADER HATFIELD */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                  <Zap className="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    Metodo Hatfield & Tudor Bompa &bull; Holistic Training & DUP Bosco-Colli
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Triplice stimolo cellulare integrato nella seduta (Neurale, Meccanico, Metabolico) e microciclo ondulato ormonale.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold self-start sm:self-auto">
+                3 COMPARTIMENTI &bull; DUP
               </span>
-              <div>
-                <h2 className="text-base font-black uppercase text-white tracking-wider">
-                  Hatfield & Tudor Bompa &bull; Holistic Training & DUP Bosco-Colli
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Triplice stimolo cellulare (Neurale, Meccanico, Metabolico) e microciclo ondulato ormonale.
-                </p>
+            </div>
+
+            {/* I 3 COMPARTIMENTI CELLULARI */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                <Target className="w-4 h-4" /> 1. La Triade Cellulare Olistica nella Singola Seduta
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div className="bg-black/40 border border-sky-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-sky-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-sky-400">1. Neurale (CAT)</span>
+                    <span className="text-[9px] font-mono bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded">FIBRE IIx</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    <b>Compensatory Acceleration Training:</b> massima velocità concentrica volontaria per reclutare le unità motrici a soglia più alta.
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Reps:</b> 2 &ndash; 6 ripetizioni</li>
+                    <li>&bull; <b>Intensità:</b> 80% &ndash; 90% 1RM</li>
+                    <li>&bull; <b>Buffer:</b> RIR 2-3 (Nessun cedimento)</li>
+                    <li>&bull; <b>Recupero:</b> 180 &ndash; 240 secondi</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-purple-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-purple-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-purple-400">2. Meccanico (MAV)</span>
+                    <span className="text-[9px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">FIBRE IIa</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    <b>Tensione Continua Miofibrillare:</b> massima tensione meccanica senza interruzioni di carico, TUT controllato (2-0-1-0).
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Reps:</b> 6 &ndash; 12 ripetizioni</li>
+                    <li>&bull; <b>Intensità:</b> 70% &ndash; 78% 1RM</li>
+                    <li>&bull; <b>Buffer:</b> RIR 1-2</li>
+                    <li>&bull; <b>Recupero:</b> 90 &ndash; 120 secondi</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-emerald-400">3. Metabolico (Sarcoplasma)</span>
+                    <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">FIBRE I / CAPILLARI</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    <b>Saturazione & Acidosi:</b> accumulo di ioni H+, pompaggio ematico e deplezione glicogenica terminale.
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Reps:</b> 12 &ndash; 25 ripetizioni o Stripping</li>
+                    <li>&bull; <b>Intensità:</b> 50% &ndash; 65% 1RM</li>
+                    <li>&bull; <b>Buffer:</b> RIR 0-1 (Cedimento positivo)</li>
+                    <li>&bull; <b>Recupero:</b> 45 &ndash; 60 secondi</li>
+                  </ul>
+                </div>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold">
-              3 COMPARTIMENTI
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
-                1. Compartimento Neurale (CAT)
+            {/* IL MICROCICLO ONDULATO MENSILE (BOSCO-COLLI) */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-sky-400" /> 2. Periodizzazione Ondulata Mensile (DUP Bosco-Colli)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 font-mono text-xs">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">W1: Setup Neurale</span>
+                  <span className="text-[10px] text-sky-400 block font-sans">Baseline tecnica a carichi controllati, RIR 2 fisso.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">W2: Micro-Overload</span>
+                  <span className="text-[10px] text-sky-400 block font-sans">+2.5% sui fondamentali neurali, volume costante.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">W3: Intensificazione</span>
+                  <span className="text-[10px] text-sky-400 block font-sans">+5% carico complessivo, RIR 1 sui meccanici.</span>
+                </div>
+                <div className="bg-black/30 border border-sky-500/20 rounded-xl p-3.5 space-y-1">
+                  <span className="text-sky-300 font-bold block">W4: Deload SNC</span>
+                  <span className="text-[10px] text-zinc-400 block font-sans">-40% volume, rigenerazione articolare e test massimale.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* GUIDA MATRICE */}
+            <div className="bg-sky-950/20 border border-sky-500/30 rounded-xl p-4 space-y-1.5 text-xs">
+              <span className="font-bold text-sky-300 uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-400" /> Applicazione nella Matrice Macrociclo
               </span>
-              <p className="text-xs text-zinc-300">
-                <b>Target:</b> Fibre veloci a contrazione rapida (Tipo IIx) e attivazione del sistema piramidale.
+              <p className="text-zinc-300 leading-relaxed">
+                Seleziona <b>Hatfield & Tudor Bompa (DUP)</b> nella Matrice: l'algoritmo ordina in automatico ciascuna sessione con i 3 compartimenti decrescenti (CAT Neurale 2-6 reps &rarr; Tensione 6-12 reps &rarr; Metabolico 12-25 reps) e applica la ciclicità a 4 settimane con scarico programmato a W4, W8 e W12.
               </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div>&bull; <b>Reps:</b> 2 - 6 ripetizioni</div>
-                <div>&bull; <b>Intensità:</b> 80% - 90% 1RM (Compensatory Acceleration)</div>
-                <div>&bull; <b>Recupero:</b> 150 - 240 secondi</div>
-                <div>&bull; <b>Buffer:</b> RIR 2-3 (Nessun cedimento)</div>
-              </div>
             </div>
-
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
-                2. Compartimento Meccanico (MAV)
-              </span>
-              <p className="text-xs text-zinc-300">
-                <b>Target:</b> Tensione meccanica miofibrillare e reclutamento fibre intermedie (Tipo IIa).
-              </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div>&bull; <b>Reps:</b> 6 - 12 ripetizioni</div>
-                <div>&bull; <b>Intensità:</b> 70% - 78% 1RM a tensione continua</div>
-                <div>&bull; <b>Recupero:</b> 90 - 120 secondi</div>
-                <div>&bull; <b>TUT:</b> 2-0-1-0 o 3-0-1-0</div>
-              </div>
-            </div>
-
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide">
-                3. Compartimento Metabolico
-              </span>
-              <p className="text-xs text-zinc-300">
-                <b>Target:</b> Ipertrofia sarcoplasmatica, capillarizzazione e accumulo di metaboliti intracellulari.
-              </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div>&bull; <b>Reps:</b> 12 - 25 ripetizioni o Stripping</div>
-                <div>&bull; <b>Intensità:</b> 50% - 65% 1RM</div>
-                <div>&bull; <b>Recupero:</b> 45 - 60 secondi</div>
-                <div>&bull; <b>Buffer:</b> RIR 0-1 (Cedimento metabolico)</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-sky-950/20 border border-sky-500/20 text-xs text-zinc-300 space-y-2">
-            <h4 className="font-bold text-sky-300 flex items-center gap-1.5 uppercase tracking-wide">
-              <Calendar className="w-4 h-4" /> Periodizzazione Ondulata Mensile (Bosco-Colli)
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px] text-zinc-400 pt-1">
-              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
-                <span className="text-white font-bold block">W1: Setup Neurale</span>
-                Baseline tecnica, carichi controllati RIR 2.
-              </div>
-              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
-                <span className="text-white font-bold block">W2: Micro-Overload</span>
-                +2.5% carico sui fondamentali, volume costante.
-              </div>
-              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
-                <span className="text-white font-bold block">W3: Intensificazione</span>
-                +5% carico complessivo, RIR 1 sui meccanici.
-              </div>
-              <div className="bg-black/40 p-2 rounded-lg border border-white/5">
-                <span className="text-sky-400 font-bold block">W4: Deload SNC</span>
-                -40% volume, rigenerazione e test massimali.
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
       {/* SEZIONE 3: EMILIO THEY & PIERO NOCERINO */}
       {(activeCategory === 'ALL' || activeCategory === 'THEY') && (
@@ -780,174 +803,300 @@ export default function MethodologiesGuide() {
 
       {/* SEZIONE 5: JACOB WILSON & JEREMY FITSCHEN (2014) */}
       {(activeCategory === 'ALL' || activeCategory === 'WILSON') && (
-        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                <Scale className="w-5 h-5" />
-              </span>
-              <div>
-                <h2 className="text-base font-black uppercase text-white tracking-wider">
-                  Jacob Wilson & Jeremy Fitschen (2014) &bull; Tabelle 7.4 / 7.5 / 7.6
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Wave Loading, modulazione scientifica RPE/RIR e reset dei plateau (T29 - T33).
-                </p>
+          <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+            {/* HEADER WILSON */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                  <Scale className="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    Metodo Jacob Wilson & Jeremy Fitschen &bull; Blood Volume Overload (Tabelle 7.4 / 7.5 / 7.6)
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Modulazione scientifica RPE/RIR, gestione dell'overreaching controllato e reset sistematico dei plateau.
+                  </p>
+                </div>
               </div>
-            </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold">
-              PEER-REVIEWED
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
-                Tabella 7.4: Wave Loading (PAP)
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold self-start sm:self-auto">
+                CICLO A 4 SETTIMANE
               </span>
-              <p className="text-xs text-zinc-300">
-                Sfrutta il potenziamento post-attivazione tramite due onde successive nello stesso esercizio:
-              </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div><b>Onda 1:</b> 5 reps (80%) &bull; 3 reps (85%) &bull; 1 rep (90%)</div>
-                <div><b>Pausa:</b> 3 minuti di recupero completo</div>
-                <div><b>Onda 2:</b> 5 reps (82.5%) &bull; 3 reps (87.5%) &bull; 1 rep (92.5%)</div>
-              </div>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
-                Tabella 7.5: Modulazione RPE / RIR
-              </span>
-              <p className="text-xs text-zinc-300">
-                Correlazione diretta tra ripetizioni in riserva e stimolo allenante ottimale:
-              </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div>&bull; <b>RPE 7 (RIR 3):</b> Recupero attivo / Velocità (CAT)</div>
-                <div>&bull; <b>RPE 8 (RIR 2):</b> Ipertrofia sostenibile senza fatica cronica</div>
-                <div>&bull; <b>RPE 9 (RIR 1):</b> Tensione massima / Reclutamento totale</div>
-                <div>&bull; <b>RPE 10 (RIR 0):</b> Cedimento concentrico reale</div>
+            {/* STRUTTURA DEL CICLO A 4 SETTIMANE */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                <Calendar className="w-4 h-4" /> 1. La Progressione a 4 Microcicli (Blood Volume Overload)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-black/40 border border-purple-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-purple-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-purple-400">W1 &ndash; W2: Saturazione</span>
+                    <span className="text-[9px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">RIR 1-2</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Volume di lavoro elevato, carichi stabili al 75-80% 1RM, buffer costante di 1-2 ripetizioni. Focus sulla fase eccentrica frenata in 3 secondi.
+                  </p>
+                </div>
+
+                <div className="bg-black/40 border border-red-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-red-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-red-400">W3: Overload Concentrico</span>
+                    <span className="text-[9px] font-mono bg-red-500/20 text-red-300 px-2 py-0.5 rounded">RIR 0 (CEDIMENTO)</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Picco di overreaching: esattamente 1 serie a cedimento concentrico assoluto per gruppo muscolare, supportata da Rest-Pause o drop-set.
+                  </p>
+                </div>
+
+                <div className="bg-black/40 border border-blue-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-blue-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-blue-400">W4: Scarico Cellulare</span>
+                    <span className="text-[9px] font-mono bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">RIR 3-4</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Deload attivo programmato: taglio del 40% del volume, carichi -15%, nessun cedimento per massimizzare la supercompensazione proteica.
+                  </p>
+                </div>
+
+                <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-emerald-400">Ripetizione Ciclo</span>
+                    <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">+2.5-5% 1RM</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Al termine di W4, il nuovo ciclo riparte con un carico base incrementato di 2.5-5kg sui fondamentali grazie al reset dei recettori cellulari.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide block">
-                Tabella 7.6: Reset Anti-Plateau
-              </span>
-              <p className="text-xs text-zinc-300">
-                Protocollo da applicare quando il carico stagna per più di 2 microcicli consecutivi:
-              </p>
-              <div className="text-[11px] font-mono text-zinc-400 bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1">
-                <div>1. Taglio del 10% del carico target</div>
-                <div>2. Reset a 3 serie fisse con aumento di 1 rep</div>
-                <div>3. Risalita a step di +2.5% ogni sessione</div>
-                <div>4. Superamento del vecchio massimale a W4</div>
+            {/* TABELLE 7.4 / 7.5 / 7.6 */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Percent className="w-4 h-4 text-purple-400" /> 2. Sintesi delle Tabelle Scientifiche Wilson & Fitschen (2014)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1.5">
+                  <b className="text-purple-300 block">Tabella 7.4: Wave Loading</b>
+                  <p className="text-zinc-400 text-[11px]">
+                    Alternanza di serie pesanti (3-5 reps) e serie ipertrofiche (8-10 reps) per sfruttare la PAP (Potenziazione Post-Attivazione).
+                  </p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1.5">
+                  <b className="text-purple-300 block">Tabella 7.5: Modulazione RPE/RIR</b>
+                  <p className="text-zinc-400 text-[11px]">
+                    Uso sistematico del buffer controllato: mai più di 1 serie a cedimento a seduta per distretto per preservare la sintesi proteica mitocondriale.
+                  </p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1.5">
+                  <b className="text-purple-300 block">Tabella 7.6: Frequenza di Recupero</b>
+                  <p className="text-zinc-400 text-[11px]">
+                    Finestra temporale ottimale tra stimoli sullo stesso muscolo fissata a 48-72 ore per atleti intermedi e avanzati.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
+
+            {/* GUIDA MATRICE */}
+            <div className="bg-purple-950/20 border border-purple-500/30 rounded-xl p-4 space-y-1.5 text-xs">
+              <span className="font-bold text-purple-300 uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" /> Applicazione nella Matrice Macrociclo
+              </span>
+              <p className="text-zinc-300 leading-relaxed">
+                Seleziona <b>Jacob Wilson (Blood Volume Overload)</b> nella Matrice: il generatore imposta la scansione a blocchi di 4 microcicli (W1-2 Saturazione, W3 Overload concentrico a cedimento, W4 Deload cellulare) estendendola linearmente su tutte le 16 settimane.
+              </p>
+            </div>
+          </section>
+        )}
 
       {/* SEZIONE 6: ERIC HELMS (THE MUSCLE AND STRENGTH PYRAMID) */}
       {(activeCategory === 'ALL' || activeCategory === 'HELMS') && (
-        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                <TrendingUp className="w-5 h-5" />
+          <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+            {/* HEADER HELMS */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                  <TrendingUp className="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    Metodo Eric Helms &bull; The Muscle & Strength Training Pyramid
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Gerarchia scientifica dei fattori di crescita: volume settimanale, intensità controllata e linear/wave progression.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-bold self-start sm:self-auto">
+                PIRAMIDE SCIENTIFICA
               </span>
-              <div>
-                <h2 className="text-base font-black uppercase text-white tracking-wider">
-                  Eric Helms &bull; The Muscle & Strength Training Pyramid
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Gerarchia scientifica dei fattori di crescita: volume settimanale, intensità e progressione periodizzata (T27, T31).
-                </p>
+            </div>
+
+            {/* I 5 LIVELLI DELLA PIRAMIDE DI HELMS */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                <Layers className="w-4 h-4" /> 1. La Gerarchia della Piramide dell'Allenamento
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 block">1. Aderenza</span>
+                  <p className="text-[10px] text-zinc-400">Sostenibilità del programma a lungo termine: volume e frequenza realistici per l'atleta.</p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 block">2. Volume / Int. / Freq.</span>
+                  <p className="text-[10px] text-zinc-400">10-20 serie settimanali per gruppo muscolare, intensità RPE 7-9, multifrequenza 2-3x.</p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 block">3. Progressione</span>
+                  <p className="text-[10px] text-zinc-400">Ondulazione dei carichi (Wave Loading) e sovraccarico sistematico senza mai fallire le serie.</p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 block">4. Esercizi</span>
+                  <p className="text-[10px] text-zinc-400">Multiarticolari primari con ROM completo come pilastro, completati da macchine e cavi.</p>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-1">
+                  <span className="text-xs font-bold text-indigo-300 block">5. Recuperi</span>
+                  <p className="text-[10px] text-zinc-400">2-3 minuti sui grandi composti pesanti, 60-90 secondi sugli esercizi di isolamento.</p>
+                </div>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-bold">
-              PIRAMIDE SCIENTIFICA
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
-              <span className="font-bold text-indigo-400 uppercase tracking-wider block">1. Aderenza & Frequenza</span>
-              <p className="text-zinc-400 leading-relaxed text-[11px]">
-                Frequenza minima 2 volte a settimana per gruppo muscolare per massimizzare la sintesi proteica muscolare (MPS).
+            {/* IL CICLO ONDULATO HELMS (W1 - W4) */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-indigo-400" /> 2. Il Ciclo a 4 Settimane (Wave Loading & Deload)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Wave 1: Base</span>
+                  <span className="text-[10px] text-indigo-400 block font-sans">RPE 7.5 (Buffer 2-3) &bull; Carichi di riferimento stabili.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Wave 2: Overload</span>
+                  <span className="text-[10px] text-indigo-400 block font-sans">RPE 8.0 &bull; +2.5kg sui composti, volume costante.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Wave 3: Picco</span>
+                  <span className="text-[10px] text-indigo-400 block font-sans">RPE 9.0 (Buffer 1) &bull; Massima espressione del mesociclo.</span>
+                </div>
+                <div className="bg-black/30 border border-indigo-500/20 rounded-xl p-3.5 space-y-1">
+                  <span className="text-indigo-300 font-bold block">Wave 4: Deload</span>
+                  <span className="text-[10px] text-zinc-400 block font-sans">RPE 6.0 &bull; Carichi -10%, volume tagliato di 1/3.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* GUIDA MATRICE */}
+            <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-4 space-y-1.5 text-xs">
+              <span className="font-bold text-indigo-300 uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" /> Applicazione nella Matrice Macrociclo
+              </span>
+              <p className="text-zinc-300 leading-relaxed">
+                Seleziona <b>Eric Helms (Muscle & Strength Pyramid)</b> nella Matrice: l'algoritmo imposterà la progressione RPE 7.5 &rarr; 8.0 &rarr; 9.0 con deload a RPE 6 ogni 4 settimane, modulando i carichi in percentuale sull'1RM dell'atleta.
               </p>
             </div>
-            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
-              <span className="font-bold text-indigo-400 uppercase tracking-wide block">2. Volume Settimanale</span>
-              <p className="text-zinc-400 leading-relaxed text-[11px]">
-                Range ottimale compreso tra 10 e 20 serie allenanti per distretto a settimana con effort ad almeno RIR 1-3.
-              </p>
-            </div>
-            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
-              <span className="font-bold text-indigo-400 uppercase tracking-wide block">3. Doppia Progressione</span>
-              <p className="text-zinc-400 leading-relaxed text-[11px]">
-                Fissare un range (es. 8-12 reps). Raggiungere il tetto massimo in tutte le serie prima di incrementare il carico del 2-5%.
-              </p>
-            </div>
-            <div className="bg-black/40 border border-white/5 p-3.5 rounded-xl space-y-1.5">
-              <span className="font-bold text-indigo-400 uppercase tracking-wide block">4. Selezione & Recuperi</span>
-              <p className="text-zinc-400 leading-relaxed text-[11px]">
-                Priorità a catene cinematiche stabili, recuperi superiori a 2 minuti sui composti pesanti per prevenire l'affaticamento centrale.
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
       {/* SEZIONE 7: PROTOCOLLI DONNA / BIKINI & SALUTE POSTURALE */}
       {(activeCategory === 'ALL' || activeCategory === 'DONNA') && (
-        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
-                <HeartPulse className="w-5 h-5" />
+          <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+            {/* HEADER DONNA */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-pink-500/15 text-pink-400 border border-pink-500/30">
+                  <HeartPulse className="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    Metodo Bikini Wave System &bull; Programmazione Femminile & Salute Rachide
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Ipertrofia glutei senza ingrossare i quadricipiti, V-Shape per vita sottile, salvaguardia circolatoria PHA e decompressione.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-pink-500/15 text-pink-300 border border-pink-500/30 font-bold self-start sm:self-auto">
+                BIKINI WAVE &bull; 10 SETTIMANE
               </span>
-              <div>
-                <h2 className="text-base font-black uppercase text-white tracking-wider">
-                  Programmazione Femminile (Bikini Wave) & Salute Rachide
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Specializzazione glutei, salvaguardia circolatoria anti-stasi flebo-linfatica e decompressione del rachide.
-                </p>
+            </div>
+
+            {/* I 3 PILASTRI METODOLOGICI FEMMINILI */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-pink-400 flex items-center gap-2">
+                <Target className="w-4 h-4" /> 1. I Tre Principi Fisiologici Fondamentali
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <div className="bg-black/40 border border-pink-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-pink-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-pink-400">1. Glutei P.O.F.</span>
+                    <span className="text-[9px] font-mono bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded">ISOLAMENTO</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Priorità al grande e medio gluteo minimizzando il lavoro sul quadricipite: Hip Thrust pesanti (accorciamento), Stacchi Rumeni manubri (allungamento) e Slanci ai cavi (metabolico).
+                  </p>
+                </div>
+
+                <div className="bg-black/40 border border-blue-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-blue-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-blue-400">2. Metodo PHA Anti-Stasi</span>
+                    <span className="text-[9px] font-mono bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">CIRCOLAZIONE</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Peripheral Heart Action: alternanza di esercizi Upper Body (deltoidi, dorso) e Lower Body per prevenire ristagno ematico, infiammazione ed edema periferico negli arti inferiori.
+                  </p>
+                </div>
+
+                <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-emerald-400">3. Decompressione Rachide</span>
+                    <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">POSTURA</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Limitazione dei carichi assiali compressivi diretti sulla colonna, attivazione dei muscoli posturali (core, lombari su panca inclinata) e pompa venosa surale (polpacci) a fine seduta.
+                  </p>
+                </div>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-pink-500/15 text-pink-300 border border-pink-500/30 font-bold">
-              BIKINI & POSTURA
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wide flex items-center gap-2">
-                <Award className="w-4 h-4" /> Principi Bikini Wave & Specializzazione Glutei
+            {/* IL MACROCICLO A 10 SETTIMANE: 3 ONDE + DELOAD */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-pink-400" /> 2. La Timeline a 10 Settimane (Sistema a 3 Onde + Deload)
               </h3>
-              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
-                <li><b>Priorità Vettore Orizzontale:</b> Enfatizzare Hip Thrust, Glute Bridge e Kickback al cavo dove la tensione massima è in accorciamento.</li>
-                <li><b>Prevenzione Ipertrofia Quadricipiti:</b> Piede alto e largo alla pressa, box squat guidati e stacco rumeno a ginocchio semiflesso.</li>
-                <li><b>Circolazione & Pompa Venosa:</b> Esercizi per polpacci a fine sessione o camminata inclinata per attivare la soletta di Lejars e ridurre la ritenzione idrica.</li>
-                <li><b>Enfasi Deltoidi Laterali:</b> Lavoro ad alta frequenza (2-3x a settimana) per esaltare la linea a V e la silhouette estetica.</li>
-              </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Onda 1 (W1 &ndash; W3)</span>
+                  <span className="text-[10px] text-pink-400 block font-sans">Progressione volume: 3 &rarr; 4 &rarr; 5 serie sui fondamentali @ 6 reps.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Onda 2 (W4 &ndash; W6)</span>
+                  <span className="text-[10px] text-pink-400 block font-sans">Carico +2.5-5%: 3 &rarr; 4 &rarr; 5 serie @ 5 reps pesanti.</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-1">
+                  <span className="text-white font-bold block">Onda 3 (W7 &ndash; W9)</span>
+                  <span className="text-[10px] text-pink-400 block font-sans">Intensificazione: 3 &rarr; 4 &rarr; 5 serie con stripping terminale.</span>
+                </div>
+                <div className="bg-black/30 border border-pink-500/20 rounded-xl p-3.5 space-y-1">
+                  <span className="text-pink-300 font-bold block">W10: Deload Glicogenico</span>
+                  <span className="text-[10px] text-zinc-400 block font-sans">Scarico attivo pre-gara o rigenerativo: -40% serie, carichi leggeri.</span>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2">
-              <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wide flex items-center gap-2">
-                <Shield className="w-4 h-4" /> Decompressione del Rachide & Carico Assiale
-              </h3>
-              <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-4">
-                <li><b>Monitoraggio Carico Assiale:</b> Alternare squat e stacco pesante con leg press orizzontale o stacco manubri per non sovraccaricare il tratto lombare.</li>
-                <li><b>Core Anti-Rotazionale:</b> Sostituire sit-up aggressivi con Pallof press, dead-bug, bird-dog e plank isometrici a diaframma attivo.</li>
-                <li><b>Trazione Gravitazionale:</b> Appendimenti alla sbarra ed estensioni su panca a 45 gradi con bacino bloccato per distendere le vertebre a fine seduta.</li>
-                <li><b>Scoliosi Sicura:</b> Evitare torsioni con carichi compressivi; preferire macchine a camme con supporto toracico (Seal Row, Chest Press).</li>
-              </ul>
+            {/* GUIDA MATRICE */}
+            <div className="bg-pink-950/20 border border-pink-500/30 rounded-xl p-4 space-y-1.5 text-xs">
+              <span className="font-bold text-pink-300 uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-pink-400" /> Applicazione nella Matrice Macrociclo
+              </span>
+              <p className="text-zinc-300 leading-relaxed">
+                Seleziona <b>Bikini Wave System (10 Settimane)</b> nella testata della Matrice: l'algoritmo organizza l'espansione volumetrica delle 3 onde (3 &rarr; 4 &rarr; 5 serie per esercizio fondamentale) e posiziona automaticamente il deload rigenerativo e la supercompensazione a W10.
+              </p>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
     </div>
   );
 }
