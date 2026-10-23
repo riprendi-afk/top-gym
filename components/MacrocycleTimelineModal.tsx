@@ -15,6 +15,7 @@ import {
 } from '@/lib/topgym-timeline-generator';
 
 interface MacrocycleTimelineModalProps {
+  readOnly?: boolean;
   inline?: boolean;
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +27,7 @@ interface MacrocycleTimelineModalProps {
 }
 
 export default function MacrocycleTimelineModal({
+  readOnly = false,
   inline = false,
   isOpen,
   onClose,

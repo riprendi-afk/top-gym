@@ -2,10 +2,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Dumbbell, Gauge, TrendingUp, MoreHorizontal, Trophy, 
-  Target, Medal, Settings, Users, UserCheck, X, ChevronRight, Lock, MessageSquare
-} from 'lucide-react';
+import { ClipboardList, Dumbbell, Gauge, TrendingUp, MoreHorizontal, Trophy, 
+  Target, Medal, Settings, Users, UserCheck, X, ChevronRight, Lock, MessageSquare } from 'lucide-react';
 
 
 interface MobileBottomNavProps {
@@ -38,12 +36,12 @@ export default function MobileBottomNav({
         <div className="flex items-center justify-around">
           
          {/* VISTA ATLETA */}
-         {userRole === 'ATHLETE' && (
+          {userRole === 'ATHLETE' && (
             <>
               <button
                 type="button"
                 onClick={() => handleSelectTab('workout')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
                   activeTab === 'workout' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -53,8 +51,19 @@ export default function MobileBottomNav({
 
               <button
                 type="button"
+                onClick={() => handleSelectTab('chat')}
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                  activeTab === 'chat' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <ClipboardList className={`w-5 h-5 ${activeTab === 'chat' ? 'stroke-[2.5]' : ''}`} />
+                <span className="text-[10px] font-bold mt-1 tracking-tight">Scheda</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleSelectTab('readiness')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
                   activeTab === 'readiness' ? 'text-green-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -62,22 +71,10 @@ export default function MobileBottomNav({
                 <span className="text-[10px] font-bold mt-1 tracking-tight">Readiness</span>
               </button>
 
-              {/* NUOVO TAB CHAT PER L'ATLETA */}
-              <button
-                type="button"
-                onClick={() => handleSelectTab('chat')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-                  activeTab === 'chat' ? 'text-indigo-400' : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <MessageSquare className={`w-5 h-5 ${activeTab === 'chat' ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[10px] font-bold mt-1 tracking-tight">Chat</span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => handleSelectTab('analytics')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
                   activeTab === 'analytics' ? 'text-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -88,7 +85,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => setIsMoreOpen(true)}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
                   isMoreActive ? 'text-yellow-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >

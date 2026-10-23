@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { ClipboardList, Printer } from "lucide-react";
 
 import { BookOpen, Layers } from "lucide-react";
@@ -3950,16 +3950,28 @@ if (isFinished) {
                   </div>
 
                   {currentDay.exercises.map((ex: any, exIdx: number) => {
-                    const weekOverrides = currentDay.weekOverrides || (programDays[0] as any)?.weekOverrides;
-                    const weekOverride = weekOverrides?.[viewWeekSelected]?.[ex.id] 
-                      || weekOverrides?.[String(viewWeekSelected)]?.[ex.id];
+                    const weekOverrides = currentDay.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
+                    const weekOverride = weekOverrides?.[viewWeekSelected]?.[ex.id] || weekOverrides?.[String(viewWeekSelected)]?.[ex.id];
 
-                    const plannedSets = weekOverride?.sets ?? (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets);
-                    const plannedReps = weekOverride?.reps ?? ex.reps;
-                    const plannedWeight = weekOverride?.targetWeight ?? ex.targetWeight;
-                    const plannedRpe = weekOverride?.rpeTarget ?? ex.rpeTarget;
+                    const plannedSets = (weekOverride?.sets !== undefined && weekOverride?.sets !== null && weekOverride?.sets !== "")
+                      ? Number(weekOverride.sets)
+                      : (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets);
 
-                    return (
+                    const plannedReps = (weekOverride?.reps !== undefined && weekOverride?.reps !== null && weekOverride?.reps !== "")
+                      ? String(weekOverride.reps)
+                      : String(ex.reps || "6");
+
+                    const plannedWeight = (weekOverride?.targetWeight !== undefined && weekOverride?.targetWeight !== null && weekOverride?.targetWeight !== "")
+                      ? String(weekOverride.targetWeight)
+                      : (ex.targetWeight ? String(ex.targetWeight) : "");
+
+                    const plannedRest = (weekOverride?.restSeconds !== undefined && weekOverride?.restSeconds !== null && weekOverride?.restSeconds !== "")
+                      ? Number(weekOverride.restSeconds)
+                      : (ex.restSeconds || 90);
+
+                    const plannedRpe = weekOverride?.rpeTarget || ex.rpeTarget;
+                    const plannedNotes = weekOverride?.notes || ex.notes;
+return (
                       <div
                         key={ex.id || exIdx}
                         className="bg-[#12151B] border border-white/10 rounded-2xl p-3.5 sm:p-4 shadow-lg space-y-2.5"
@@ -3986,7 +3998,7 @@ if (isFinished) {
                             </div>
                             {ex.notes && (
                               <p className="text-[11px] text-zinc-400 italic">
-                                Note: {ex.notes}
+                                Note: {plannedNotes}
                               </p>
                             )}
                           </div>
@@ -4014,7 +4026,7 @@ if (isFinished) {
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
                             <span className="text-[9px] text-zinc-500 uppercase block">Rec</span>
-                            <b className="text-yellow-400 text-xs">{ex.restSeconds || 90}s</b>
+                            <b className="text-yellow-400 text-xs">{plannedRest}s</b>
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5 col-span-4 sm:col-span-1">
                             <span className="text-[9px] text-zinc-500 uppercase block">Target</span>
