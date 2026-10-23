@@ -2768,6 +2768,24 @@ if (isFinished) {
 
               <button
                 type="button"
+                onClick={() => setActiveTab("methodologies")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "methodologies"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  <span>Metodologie & Linee Guida</span>
+                </div>
+                {activeTab === "methodologies" && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab("analytics")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                   activeTab === "analytics"
