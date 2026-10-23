@@ -4,7 +4,7 @@ import { ClipboardList, Printer } from "lucide-react";
 import { BookOpen, Layers } from "lucide-react";
 import MethodologiesGuide from "@/components/MethodologiesGuide";
 
-import { getActiveSessionForAthlete, resolveEngineKey } from "@/lib/topgym-timeline-generator";
+import { getActiveSessionForAthlete, resolveEngineKey, ENGINE_METADATA } from "@/lib/topgym-timeline-generator";
 import MacrocycleTimelineModal from '@/components/MacrocycleTimelineModal';
 import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
 import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
@@ -1889,24 +1889,10 @@ const currentIntensityPreview = useMemo(() => {
     setLogs((prev) => [newLog, ...prev]);
     void addXp(10);
     if (currentExercise?.restSeconds)
-      startRestTimer(currentExercise.restSeconds);
-// ✅ SOSTITUISCI SOLO setWeight('') E setReps('') CON QUESTO:
-const setsDone = logs.filter(l => l.exerciseName === exName && l.date === todayIso()).length + 1;
-const isFinished = currentExercise ? setsDone >= currentExercise.sets : false;
+        startRestTimer(currentExercise.restSeconds);
 
-if (isFinished) {
-  const curIdx = activeRoutine.findIndex((item: any) => item.id === currentExId);
-  if (curIdx !== -1 && curIdx < activeRoutine.length - 1) {
-    const nextEx = activeRoutine[curIdx + 1];
-    setCurrentExId(nextEx.id);
-    setWeight(nextEx.targetWeight && nextEx.targetWeight !== '0' ? String(nextEx.targetWeight) : '');
-    setReps(nextEx.reps?.includes('-') ? nextEx.reps.split('-')[0] : (nextEx.reps || '8'));
-  } else {
-    setWeight('');
-    setReps('');
-  }
-}
-// Se non è finito, NON azzeriamo: peso e reps restano pre-compilati per la serie successiva
+      // Registrazione serie libera al 100%: nessun auto-switch forzato né blocco numerico.
+      // L'atleta rimane sull'esercizio corrente e carico/reps restano pronti per la serie successiva.
   };
   
 
