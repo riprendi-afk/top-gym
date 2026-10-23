@@ -2732,19 +2732,24 @@ if (isFinished) {
             </div>
 
             {/* NAVIGAZIONE PRINCIPALE */}
-            <nav className="space-y-1">
+            <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-270px)] pr-1 scrollbar-none">
               {((userRole as any) === "COACH") && (
                 <button
                   type="button"
                   onClick={() => setActiveTab("coachDashboard")}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                     activeTab === "coachDashboard"
                       ? "bg-white/10 text-white border border-white/15 shadow-sm"
                       : "text-zinc-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <Users className="w-4 h-4 text-indigo-400" />
-                  <span>Atleti</span>
+                  <div className="flex items-center gap-3">
+                    <Users className="w-4 h-4 text-indigo-400" />
+                    <span>Atleti</span>
+                  </div>
+                  {activeTab === "coachDashboard" && (
+                    <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                  )}
                 </button>
               )}
 
@@ -2786,10 +2791,46 @@ if (isFinished) {
 
               <button
                 type="button"
+                onClick={() => setActiveTab("workout")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "workout"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Dumbbell className="w-4 h-4 text-[#E50914]" />
+                  <span>Scheda Atleta</span>
+                </div>
+                {activeTab === "workout" && (
+                  <span className="w-2 h-2 rounded-full bg-[#E50914] animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("readiness")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "readiness"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Gauge className="w-4 h-4 text-green-400" />
+                  <span>Check Readiness</span>
+                </div>
+                {activeTab === "readiness" && (
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab("analytics")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
                   activeTab === "analytics"
-                    ? "bg-white/10 text-white border border-white/15 shadow-sm"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
                     : "text-zinc-400 hover:text-white hover:bg-white/5"
                 }`}
               >
@@ -2804,80 +2845,93 @@ if (isFinished) {
 
               <button
                 type="button"
-                onClick={() => setActiveTab("settings")}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
-                  activeTab === "settings"
-                    ? "bg-white/10 text-white border border-white/15 shadow-sm"
+                onClick={() => setActiveTab("records")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "records"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
                     : "text-zinc-400 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <Settings className="w-4 h-4 text-zinc-300" />
-                <span>Impostazioni</span>
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <span>Record Personali</span>
+                </div>
+                {activeTab === "records" && (
+                  <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                )}
               </button>
 
-              {/* MENU A TENDINA COMPATTO PER ALTRI MODULI */}
-              <details className="group pt-2">
-                <summary className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 cursor-pointer list-none transition">
-                  <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-bold">Altri Moduli</span>
-                  <span className="text-[9px] text-zinc-500 transition-transform group-open:rotate-180">▼</span>
-                </summary>
-                <div className="pl-3 pr-1 pt-1.5 space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("readiness")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "readiness" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Check Readiness
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("workout")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "workout" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Scheda Atleta
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("records")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "records" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Record Personali
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("goals")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "goals" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Obiettivi
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("chat")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "chat" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Chat & Assistenza
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("leaderboard")}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                      activeTab === "leaderboard" ? "text-[#E50914] font-bold" : "text-zinc-400 hover:text-white"
-                    }`}
-                  >
-                    Classifica
-                  </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("goals")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "goals"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Target className="w-4 h-4 text-rose-400" />
+                  <span>Obiettivi</span>
                 </div>
-              </details>
+                {activeTab === "goals" && (
+                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "chat"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="w-4 h-4 text-sky-400" />
+                  <span>Chat & Assistenza</span>
+                </div>
+                {activeTab === "chat" && (
+                  <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("leaderboard")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "leaderboard"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Medal className="w-4 h-4 text-amber-400" />
+                  <span>Classifica</span>
+                </div>
+                {activeTab === "leaderboard" && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-[#181C24] text-white border border-white/15 shadow-sm"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="w-4 h-4 text-zinc-300" />
+                  <span>Impostazioni</span>
+                </div>
+                {activeTab === "settings" && (
+                  <span className="w-2 h-2 rounded-full bg-zinc-300 animate-pulse"></span>
+                )}
+              </button>
             </nav>
           </div>
 
