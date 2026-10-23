@@ -2439,9 +2439,39 @@ if (isFinished) {
                   <BookOpen className="w-4 h-4 text-amber-400" />
                   <span>Metodologie & Linee Guida</span>
                 </div>
-                {activeTab === "methodologies" && (
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                )}
+                {/* TAB COACH: METODOLOGIE & LINEE GUIDA */}
+          {activeTab === "methodologies" && (
+            <div className="space-y-6">
+              {/* CABINA DI REGIA PERIODIZZAZIONE TOP GYM CLASSICO */}
+              <TopGymClassicCabina
+                activeAthlete={activeAthlete}
+                currentBlock={currentBlock}
+                setCurrentBlock={(b) => setCurrentBlock(b)}
+                calculatedCurrentPhase={calculatedCurrentPhase}
+                setManualWeek={(w) => setManualWeek(w)}
+                getPhaseDescription={(b, w) => getPhaseDescription(b, w)}
+                onApplyEngine={handleApplyEngineToCurrentProgram}
+                onApplyDeload={handleApplyDeloadWeekToProgram}
+                onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+              />
+
+              <TemplatePickerModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                currentBlock={currentBlock}
+                athleteName={activeAthlete?.displayName || ""}
+                onSelectTemplate={(days, templateName) => {
+                  setProgramDays(days as any);
+                  setProgramName(templateName);
+                  setBuilderSuccessMessage("⚡ Template \"" + templateName + "\" caricato!");
+                  setTimeout(() => setBuilderSuccessMessage(null), 4000);
+                }}
+              />
+
+              {/* ENCICLOPEDIA E LINEE GUIDA SCIENTIFICHE */}
+              <MethodologiesGuide />
+            </div>
+          )}
               </button>
 
               <button
@@ -3558,12 +3588,16 @@ if (isFinished) {
                   programDays={programDays}
                   programmingModel={programmingModel as string}
                   onSaveOverrides={async (updatedDays, overrides) => {
-                    setProgramDays(updatedDays);
+                    const daysWithOverrides = updatedDays.map((d: any) => ({
+                      ...d,
+                      weekOverrides: overrides || d.weekOverrides || {}
+                    }));
+                    setProgramDays(daysWithOverrides);
                     if (targetUserId) {
                       await saveProgramToSupabase(
                         targetUserId,
                         programName || "Scheda TOPGYM",
-                        updatedDays
+                        daysWithOverrides
                       );
                       setBuilderSuccessMessage("⚡ Matrice Macrociclo salvata e sincronizzata!");
                       setTimeout(() => setBuilderSuccessMessage(null), 4000);
@@ -3971,11 +4005,11 @@ if (isFinished) {
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
                             <span className="text-[9px] text-zinc-500 uppercase block">Reps</span>
-                            <b className="text-white text-xs">{ex.reps}</b>
+                            <b className="text-white text-xs">{plannedReps}</b>
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
                             <span className="text-[9px] text-zinc-500 uppercase block">Carico</span>
-                            <b className="text-white text-xs">{ex.targetWeight ? `${ex.targetWeight}kg` : "Auto"}</b>
+                            <b className="text-white text-xs">{plannedWeight ? `${plannedWeight}kg` : "Auto"}</b>
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5">
                             <span className="text-[9px] text-zinc-500 uppercase block">Rec</span>
@@ -3983,7 +4017,7 @@ if (isFinished) {
                           </div>
                           <div className="bg-black/50 p-1.5 rounded-xl border border-white/5 col-span-4 sm:col-span-1">
                             <span className="text-[9px] text-zinc-500 uppercase block">Target</span>
-                            <b className="text-emerald-400 text-xs">{ex.rpeTarget ? `RPE ${ex.rpeTarget}` : (ex.tut ? `TUT ${ex.tut}` : "RIR 1-2")}</b>
+                            <b className="text-emerald-400 text-xs">{plannedRpe ? `RPE ${plannedRpe}` : (ex.tut ? `TUT ${ex.tut}` : "RIR 1-2")}</b>
                           </div>
                         </div>
                       </div>
@@ -4230,12 +4264,17 @@ if (isFinished) {
         programDays={programDays}
         programmingModel={programmingModel as string}
         onSaveOverrides={async (updatedDays, overrides) => {
-          setProgramDays(updatedDays);
+          const daysWithOverrides = updatedDays.map((d: any) => ({
+            ...d,
+            weekOverrides: overrides || d.weekOverrides || {}
+          }));
+          setProgramDays(daysWithOverrides);
           if (targetUserId) {
             await saveProgramToSupabase(
               targetUserId,
               programName || "Scheda TOPGYM",
-              updatedDays);
+              daysWithOverrides
+            );
           }
         }}
       />
