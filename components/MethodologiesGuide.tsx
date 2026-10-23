@@ -2,9 +2,24 @@
 
 import React, { useState } from 'react';
 import {
-  BookOpen, Layers, Flame, Zap, Shield, Target,
-  Activity, Calendar, Award, Search,
-  Dumbbell, TrendingUp, Scale, Clock, HeartPulse
+  BookOpen,
+  Layers,
+  Flame,
+  Zap,
+  Shield,
+  Target,
+  Activity,
+  Calendar,
+  Award,
+  Search,
+  Dumbbell,
+  TrendingUp,
+  Scale,
+  Clock,
+  HeartPulse,
+  Sparkles,
+  CheckCircle2,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function MethodologiesGuide() {
@@ -295,74 +310,184 @@ export default function MethodologiesGuide() {
 
       {/* SEZIONE 4: METODO TOP GYM CLASSICO (48 MICROCICLI) */}
       {(activeCategory === 'ALL' || activeCategory === 'TOPGYM') && (
-        <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Layers className="w-5 h-5" />
+          <section className="bg-[#12151B] border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+            {/* INTESTAZIONE SEZIONE */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <span className="p-2.5 rounded-xl bg-[#E50914]/15 text-[#E50914] border border-[#E50914]/30">
+                  <Layers className="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    Metodo TOP GYM Classico &bull; Manuale Operativo Costruzione Schede
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Linee guida scientifiche per la creazione dei template e la programmazione a 16 e 48 settimane nella Matrice.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold self-start sm:self-auto">
+                MASTER SYSTEM &bull; 48 SETTIMANE
               </span>
-              <div>
-                <h2 className="text-base font-black uppercase text-white tracking-wider">
-                  Metodo TOP GYM Classico &bull; Macrociclo a 3 Blocchi (48 Settimane)
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  La periodizzazione master della palestra: Forza, Trasformazione e Qualità Muscolare.
-                </p>
+            </div>
+
+            {/* 1. ARCHITETTURA DELLA SEDUTA: LA TRIADE DEGLI STIMOLI TOP GYM */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                <Shield className="w-4 h-4" /> 1. Come Costruire la Singola Seduta (La Sequenza degli Stimoli)
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Ogni seduta di allenamento nel Metodo Classico non è un elenco casuale di esercizi, ma segue rigorosamente l'ordine neuromuscolare decrescente:
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                <div className="bg-black/40 border border-blue-500/30 rounded-xl p-3.5 space-y-2 border-t-2 border-t-blue-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-blue-400">1. Stimolo Neurale</span>
+                    <span className="text-[9px] font-mono bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">FONDAMENTALE</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300">
+                    <b>Esercizio Base Multiarticolare:</b> Squat, Panca Piana, Stacco da Terra, Trazioni Sovraccaricate, Lento Avanti con Bilanciere.
+                  </p>
+                  <ul className="text-[10px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Serie & Reps:</b> 5x6 (W1-6) &rarr; 5x8 (W7-10)</li>
+                    <li>&bull; <b>Buffer Target:</b> RPE 7.5 &ndash; 8.5 (2-3 RIR)</li>
+                    <li>&bull; <b>Recupero:</b> 120 &ndash; 180 secondi</li>
+                    <li>&bull; <b>TUT:</b> 2-0-1-0 (massima velocità concentrica)</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-purple-500/30 rounded-xl p-3.5 space-y-2 border-t-2 border-t-purple-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-purple-400">2. Tensione Meccanica</span>
+                    <span className="text-[9px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">IPERTROFICO</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300">
+                    <b>Multiarticolari Secondari o Macchine:</b> Spinte Panca 30&deg;, Hack Squat, Rematore con Manubri/Pulley, Dip alle Parallele.
+                  </p>
+                  <ul className="text-[10px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Serie & Reps:</b> 4 serie da 8-10 ripetizioni</li>
+                    <li>&bull; <b>Intensità:</b> RPE 8.5 &ndash; 9 (1-2 RIR)</li>
+                    <li>&bull; <b>Recupero:</b> 90 &ndash; 120 secondi</li>
+                    <li>&bull; <b>TUT:</b> 2-0-1-0 controllato sull'eccentrica</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-emerald-500/30 rounded-xl p-3.5 space-y-2 border-t-2 border-t-emerald-500">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase text-emerald-400">3. Stress Metabolico</span>
+                    <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">ISOLAMENTO</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300">
+                    <b>Isolamento ai Cavi o Macchine Guidate:</b> Croci ai Cavi, Leg Extension, Alzate Laterali, Pushdown Tricipiti, Curl Cavi.
+                  </p>
+                  <ul className="text-[10px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>Serie & Reps:</b> 3-4 serie da 12-15 ripetizioni</li>
+                    <li>&bull; <b>Intensità:</b> Cedimento tecnico positivo (RPE 9-10)</li>
+                    <li>&bull; <b>Recupero:</b> 45 &ndash; 60 secondi</li>
+                    <li>&bull; <b>Tecniche:</b> Stripping, Rest-Pause, 10+MAX</li>
+                  </ul>
+                </div>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
-              TIMELINE ANNUALE
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-red-500">
-              <span className="text-xs font-bold text-red-400 uppercase tracking-wide block">
-                Blocco 1: Forza Ipertrofica (W1 - W16)
-              </span>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                Costruzione della base neurale e del tonnellaggio. Focus su Squat, Panca, Stacco, Trazioni e Lento Avanti:
-              </p>
-              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
-                <li><b>W1-W6:</b> Accumulo & Volume Base (RIR 2-4)</li>
-                <li><b>W7-W9:</b> Conversione & Aumento Carichi (RIR 1-2)</li>
-                <li><b>W10:</b> Deload Attivo del SNC (-40% volume)</li>
-                <li><b>W11-W16:</b> Picco Neurale & Test Massimali</li>
-              </ul>
+            {/* 2. VOLUME SETTIMANALE OTTIMALE (SET TARGET PER DISTRETTO) */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Target className="w-4 h-4 text-[#E50914]" /> 2. Volumi Target Settimanali (Serie Allenanti per Gruppo Muscolare)
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Petto & Dorso</span>
+                  <div className="text-base font-black text-white mt-0.5">14 &ndash; 18 Serie</div>
+                  <span className="text-[9px] text-zinc-500 font-mono">5 Neurali + 8 Ipertrofiche + 4 Metaboliche</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Cosce (Quad & Femorali)</span>
+                  <div className="text-base font-black text-white mt-0.5">16 &ndash; 20 Serie</div>
+                  <span className="text-[9px] text-zinc-500 font-mono">5 Neurali + 8 Hack/Pressa + 4 Leg Curl/Ext</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Deltoidi (Spalle)</span>
+                  <div className="text-base font-black text-white mt-0.5">12 &ndash; 16 Serie</div>
+                  <span className="text-[9px] text-zinc-500 font-mono">Focus laterale/posteriore ad alta densità</span>
+                </div>
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Braccia (Bicipiti/Tricipiti)</span>
+                  <div className="text-base font-black text-white mt-0.5">8 &ndash; 12 Serie Dirette</div>
+                  <span className="text-[9px] text-zinc-500 font-mono">Completamento post-trazioni/spinte</span>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-amber-500">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide block">
-                Blocco 2: Trasformazione / Ibrido (W17 - W32)
-              </span>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                Transizione dalla forza pura all'ipertrofia sarcomerica densa tramite tecniche di intensità:
-              </p>
-              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
-                <li><b>W17-W22:</b> Volume Ipertrofico & Stripping</li>
-                <li><b>W23-W25:</b> Lavoro Pesante + Back-Off a cedimento</li>
-                <li><b>W26:</b> Deload & Scarico Articolare</li>
-                <li><b>W27-W32:</b> Trasformazione & Densità Massima</li>
-              </ul>
+            {/* 3. IL MACROCICLO A 3 BLOCCHI (48 SETTIMANE) */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-emerald-400" /> 3. La Timeline Annuale a 3 Blocchi (48 Settimane)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-[#E50914]">
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wide block">
+                    Blocco 1: Forza Ipertrofica (W1 - W16)
+                  </span>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Costruzione del tonnellaggio e della capacità di reclutamento neurale:
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>W1-W6:</b> Accumulo Volumetrico (5x6 @ RPE 7.5, buffer 2-3)</li>
+                    <li>&bull; <b>W7-W10:</b> Conversione Ipertrofica (5x8 @ RPE 8.5)</li>
+                    <li>&bull; <b>W11:</b> Scarico Fisiologico SNC (-40% volume)</li>
+                    <li>&bull; <b>W12-W15:</b> Picco Neurale (4x3-4 @ RPE 9.5)</li>
+                    <li>&bull; <b>W16:</b> Tapering & Test Massimali (1RM)</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-amber-500">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wide block">
+                    Blocco 2: Trasformazione / Ibrido (W17 - W32)
+                  </span>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Conversione della forza massimale in densità e tensione continua:
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>W17-W22:</b> Volume Ipertrofico con Stripping terminale</li>
+                    <li>&bull; <b>W23-W25:</b> Heavy Duty + Back-Off a cedimento</li>
+                    <li>&bull; <b>W26:</b> Deload & Scarico Articolare attivo</li>
+                    <li>&bull; <b>W27-W32:</b> Densità Massima e recuperi ridotti</li>
+                  </ul>
+                </div>
+
+                <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide block">
+                    Blocco 3: Qualità Muscolare (W33 - W48)
+                  </span>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Massima separazione, vascolarizzazione e saturazione glicogenica:
+                  </p>
+                  <ul className="text-[11px] text-zinc-400 space-y-1 font-mono">
+                    <li>&bull; <b>W33-W38:</b> Accumulo ad Alta Densità (Metodo 10+MAX)</li>
+                    <li>&bull; <b>W39-W41:</b> Rest-Pause intensivo su macchine</li>
+                    <li>&bull; <b>W42:</b> Scarico Fisiologico Metabolico</li>
+                    <li>&bull; <b>W43-W48:</b> Pompaggio terminale e Isometrie di picco</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-2 border-t-2 border-t-emerald-500">
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide block">
-                Blocco 3: Qualità Muscolare (W33 - W48)
+            {/* 4. GUIDA PRATICA: COME USARE LA MATRICE PER QUESTO METODO */}
+            <div className="bg-gradient-to-r from-red-950/20 via-black/40 to-black/40 border border-[#E50914]/30 rounded-xl p-4 space-y-2">
+              <span className="text-xs font-black uppercase text-white tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#E50914]" /> Istruzioni Operative per il Coach nella Matrice
               </span>
               <p className="text-xs text-zinc-300 leading-relaxed">
-                Definizione, separazione e massimo afflusso ematico con mantenimento dei carichi sui fondamentali:
+                1. <b>Carica il Template Split:</b> Seleziona una delle split del catalogo (es. 4 giorni A/B/C/D).<br/>
+                2. <b>Apri la Matrice Macrociclo:</b> Nel selettore in alto seleziona <i>TopGym Metodo Classico (16 Settimane)</i>.<br/>
+                3. <b>Verifica la Progressione Automatica:</b> L'algoritmo imposterà automaticamente W1-6 a 5x6 con buffer, W7-10 a 5x8, il deload a W11 e il picco a W12-15.<br/>
+                4. <b>Personalizzazione & Salvataggio:</b> Modifica carichi o note se desiderato e clicca su <b>"SALVA TUTTE LE SETTIMANE"</b> per serializzare l'intero piano su Supabase. L'atleta vedrà subito il microciclo perfettamente sincronizzato.
               </p>
-              <ul className="text-[11px] text-zinc-400 space-y-1 list-disc pl-4 font-mono">
-                <li><b>W33-W38:</b> Accumulo ad Alta Densità (10+MAX)</li>
-                <li><b>W39-W41:</b> Rest-Pause su macchine guidate</li>
-                <li><b>W42:</b> Scarico Metabolico</li>
-                <li><b>W43-W48:</b> Pompaggio Massimo & Isometrie Finali</li>
-              </ul>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
       {/* SEZIONE 5: JACOB WILSON & JEREMY FITSCHEN (2014) */}
       {(activeCategory === 'ALL' || activeCategory === 'WILSON') && (
