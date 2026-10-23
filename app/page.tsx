@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, Layers } from "lucide-react";
 import MethodologiesGuide from "@/components/MethodologiesGuide";
 
 import { getActiveSessionForAthlete, resolveEngineKey } from "@/lib/topgym-timeline-generator";
@@ -3784,6 +3784,31 @@ if (isFinished) {
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && ((userRole as any) === "COACH") && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div className="lg:col-span-8 space-y-6">
+              {/* UNICO PULSANTE TEMPLATE SPLIT */}
+              <div className="bg-[#12151B] border border-white/10 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#E50914]/10 border border-[#E50914]/20 flex items-center justify-center shrink-0">
+                    <Layers className="w-5 h-5 text-[#E50914]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase text-white tracking-wider">
+                      Assegna Scheda da Template Split
+                    </h3>
+                    <p className="text-[11px] text-zinc-400">
+                      PPL, Upper/Lower, Torso/Arti, Bikini Wave o Hard TopGym. Caricamento istantaneo nel builder.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/30 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shrink-0"
+                >
+                  <Layers className="w-4 h-4 text-white" />
+                  <span>Scegli Template Split</span>
+                </button>
+              </div>
             {/* CABINA DI REGIA PERIODIZZAZIONE - VISIBILE ESCLUSIVAMENTE AL MASTER COACH */}
             {isMasterCoach && (
               <div className="space-y-5">
