@@ -1415,7 +1415,7 @@ const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" | null = useMemo(() => {
 }, [activeDay, programDays]);
 
 // Flag di retrocompatibilità
-const isMasterProgram = trainingMethod === "HARDTOPGYM";
+const isMasterProgram = false;
 
 // 2. Calcolo Automatico del Macro-Blocco Annuale (47 Settimane Totali)
 const activeBlock: MacroBlock = useMemo(() => {
@@ -1691,8 +1691,8 @@ const currentIntensityPreview = useMemo(() => {
         } catch {}
       }
 
-      // SCHEDA STATICA: Nessun ricalcolo o sovrascrittura automatica della scheda
-      setWorkoutSuccessMessage("🎉 Allenamento registrato con successo nello storico! (+50 XP)");
+      // NESSUN AUTO-AVANZAMENTO: La scheda e i carichi rimangono rigorosamente invariati
+      setWorkoutSuccessMessage("🎉 Allenamento completato e registrato con successo nello storico! (+50 XP)");
 
       await loadHistory(targetUserId);
       setTimeout(() => setWorkoutSuccessMessage(null), 5000);
@@ -3069,42 +3069,7 @@ if (isFinished) {
               </div>
             )}
 
-{/* BANNER METODO TOPGYM - VISIBILE SOLO SE ATTIVO IL BLOCCO CLASSICO */}
-{trainingMethod === "TOPGYM_CLASSICO" && (
-              <div className="bg-gradient-to-r from-red-950/40 via-[#12151B] to-[#12151B] border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 backdrop-blur-md shadow-xl animate-in fade-in duration-200">
-                <div>
-                  <span className="text-[10px] text-[#E50914] font-black uppercase tracking-wider block">
-                    Metodo TOPGYM -{" "}
-                    {currentBlock === "BLOCCO_1_FORZA"
-                      ? "Blocco 1: Forza Ipertrofica"
-                      : currentBlock === "BLOCCO_2_TRASFORMAZIONE"
-                        ? "Blocco 2: Trasformazione"
-                        : "Blocco 3: Qualità  Muscolare"}
-                  </span>
-                  <h4 className="text-sm font-bold text-white mt-0.5">
-                    {
-                      getPhaseDescription(currentBlock, calculatedCurrentPhase)
-                        .title
-                    }
-                  </h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {
-                      getPhaseDescription(currentBlock, calculatedCurrentPhase)
-                        .desc
-                    }
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-mono font-bold bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 text-yellow-400 block">
-                    Settimana Reale: {calculatedCurrentRealWeek} (Fase
-                    Automatica {calculatedCurrentPhase})
-                  </span>
-                  <span className="text-[10px] text-zinc-500 mt-1 block">
-                    {workoutHistory.length} allenamenti completati nello storico
-                  </span>
-                </div>
-              </div>
-            )}
+
 
 <div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
@@ -3145,34 +3110,7 @@ if (isFinished) {
                 })}
               </div>
 
-              {/* BANNER PROMEMORIA FASE & SETTIMANA ATLETA (ULTRA-COMPATTO) */}
-              {trainingMethod === "HARDTOPGYM" && (
-                <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-[#12151B] border border-white/10 shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-white">
-                      {isMasterProgram ? "HARDTOPGYM" : "TOPGYM Classico"}
-                    </span>
-                    <span className="text-[10px] font-mono text-yellow-500 bg-black/40 px-1.5 py-0.5 rounded border border-white/5">
-                      Set {isMasterProgram ? String(calculatedCurrentPhase) : String(calculatedCurrentRealWeek)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 justify-between sm:justify-end w-full sm:w-auto">
-                    <span className="text-[10px] font-bold text-zinc-300 truncate">
-                      {isMasterProgram 
-                        ? (calculatedCurrentPhase === 1 ? "1: Setup Neurale" : (calculatedCurrentPhase === 2 ? "2: Micro-Overload" : (calculatedCurrentPhase === 3 ? "3: Intensificazione (+5%)" : "4: Scarico (Deload SNC)")))
-                        : (calculatedCurrentPhase === 1 ? "I: Accumulo Volume" : (calculatedCurrentPhase === 2 ? "II: Conversione" : (calculatedCurrentPhase === 3 ? "III: Scarico" : "IV: Picco")))}
-                    </span>
-                    
-                    {((isMasterProgram && calculatedCurrentPhase === 4) || (!isMasterProgram && calculatedCurrentPhase === 3)) && (
-                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        Deload
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
+              
 
               {/* BARRA DI PROGRESSO GLOBALE ALLENAMENTO */}
               {(() => {
@@ -3209,7 +3147,7 @@ if (isFinished) {
                       isSelected={isSelected}
                       onSelect={() => setCurrentExId(isSelected ? '' : ex.id)}
                       todayLogs={todayLogs}
-                      isMasterProgram={isMasterProgram}
+                      isMasterProgram={false}
                       isBw={isBw}
                       getBadgeStyle={getBadgeStyle}
                       estimated1RMPreview={estimated1RMPreview}
