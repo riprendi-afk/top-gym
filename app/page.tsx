@@ -49,15 +49,10 @@ import { useProgramRealtime } from "@/lib/useProgramRealtime";
 import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { exportProgramToPDF } from "@/lib/lib/exportPdf";
-import { autoAdvanceTopGymEngine } from "@/lib/topgym-auto-advance";
 
 // ==========================================
 // LAZY LOADING: Moduli Pesanti (Scaricati solo quando servono)
 // ==========================================
-const AcetoCabina = dynamic(() => import("@/components/AcetoCabina"), { ssr: false });
-const NocerinoCabina = dynamic(() => import("@/components/NocerinoCabina"), { ssr: false });
-const HardTopGymCabina = dynamic(() => import("@/components/HardTopGymCabina"), { ssr: false });
-const TopGymClassicCabina = dynamic(() => import("@/components/TopGymClassicCabina"), { ssr: false });
 const AnalyticsDashboard = dynamic(() => import("@/components/AnalyticsDashboard"), { ssr: false });
 const WorkoutWizardModal = dynamic(() => import("@/components/WorkoutWizardModal"), { ssr: false });
 const CoachDashboard = dynamic(() => import("@/components/CoachDashboard"), { ssr: false });
@@ -2430,18 +2425,7 @@ const currentIntensityPreview = useMemo(() => {
                 {/* TAB COACH: METODOLOGIE & LINEE GUIDA */}
           {activeTab === "methodologies" && (
             <div className="space-y-6">
-              {/* CABINA DI REGIA PERIODIZZAZIONE TOP GYM CLASSICO */}
-              <TopGymClassicCabina
-                activeAthlete={activeAthlete}
-                currentBlock={currentBlock}
-                setCurrentBlock={(b) => setCurrentBlock(b)}
-                calculatedCurrentPhase={calculatedCurrentPhase}
-                setManualWeek={(w) => setManualWeek(w)}
-                getPhaseDescription={(b, w) => getPhaseDescription(b, w)}
-                onApplyEngine={handleApplyEngineToCurrentProgram}
-                onApplyDeload={handleApplyDeloadWeekToProgram}
-                onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
-              />
+              
 
               {/* MODALE SELETTORE TEMPLATE */}
               <TemplatePickerModal
