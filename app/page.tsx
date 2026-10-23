@@ -35,7 +35,6 @@ import {
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
 import ChatBox from "@/components/ChatBox";
 import { RestTimerBar } from '@/components/RestTimerBar';
-import { applyNocerinoProgression } from "@/lib/nocerino-engine";
 import { computeEffectiveLoad, findBodyweightConfig } from "@/lib/lib/bodyweight";
 import NotificationBell from "@/components/NotificationBell";
 import PersonalRecords from "@/components/PersonalRecords";
@@ -44,9 +43,7 @@ import { processDynamicWorkout, applyPhaseToProgram } from "@/lib/topgym-engine"
 import { detectAthleteGender } from "@/lib/topgym-templates";
 import { resolveMuscleTarget } from "@/lib/topgym-volume";
 import MobileBottomNav from "@/components/MobileBottomNav";
-import { applyHardTopGymWeekProgression } from "@/lib/hardtopgym-engine";
 import { useProgramRealtime } from "@/lib/useProgramRealtime";
-import { applyAcetoWeekProgression } from "@/lib/Aceto-engine";
 import { ExerciseCard } from '@/components/ExerciseCard';
 import { exportProgramToPDF } from "@/lib/lib/exportPdf";
 
@@ -3912,7 +3909,10 @@ const currentIntensityPreview = useMemo(() => {
               }
 
               // Calcolo modificatore deload visuale su W4/W10/W16
-              const isDeloadWeek = viewWeekSelected === 4 || viewWeekSelected === 10 || viewWeekSelected === 16;
+              // Calcolo dinamico dello stato di deload: legge prioritariamente dagli override della matrice o dalla fase
+                const currentDayOverrides = currentDay?.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
+                const currentWeekData = currentDayOverrides?.[viewWeekSelected] || currentDayOverrides?.[String(viewWeekSelected)] || {};
+                const isDeloadWeek = Object.values(currentWeekData).some((ov: any) => ov?.isDeload === true);
 
               return (
                 <div className="space-y-2.5">
@@ -3927,7 +3927,7 @@ const currentIntensityPreview = useMemo(() => {
 
                     const plannedSets = (weekOverride?.sets !== undefined && weekOverride?.sets !== null && weekOverride?.sets !== "")
                       ? Number(weekOverride.sets)
-                      : (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : Number(ex.sets) || 4);
+                      : (weekOverride?.isDeload ? Math.max(2, Math.round(Number(ex.sets || 4) * 0.6)) : Number(ex.sets) || 4);
 
                     const plannedReps = (weekOverride?.reps !== undefined && weekOverride?.reps !== null && weekOverride?.reps !== "")
                       ? String(weekOverride.reps)
