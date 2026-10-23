@@ -1,5 +1,8 @@
 "use client";
 
+import { BookOpen } from "lucide-react";
+import MethodologiesGuide from "@/components/MethodologiesGuide";
+
 import { getActiveSessionForAthlete, resolveEngineKey } from "@/lib/topgym-timeline-generator";
 import MacrocycleTimelineModal from '@/components/MacrocycleTimelineModal';
 import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
@@ -441,6 +444,7 @@ const [isMasterCoach, setIsMasterCoach] = useState<boolean>(() => {
 
 // Tab attivo persistente (Mantiene tutti i tipi originali intatti)
 const [activeTab, setActiveTab] = useState<
+    | "methodologies"
   | "workout"
   | "readiness"
   | "analytics"
@@ -1217,7 +1221,7 @@ useEffect(() => {
     } else {
       setUserRole("ATHLETE");
       setIsMasterCoach(false); // <-- Reset di sicurezza quando si torna ad Atleta
-      if (activeTab === "builder" || activeTab === "coachDashboard")
+      if (activeTab === "builder" || activeTab === "coachDashboard" || activeTab === "methodologies")
         setActiveTab("workout");
     }
   };
@@ -2989,7 +2993,7 @@ if (isFinished) {
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">TOP GYM /</span>
               <span className="text-xs font-black uppercase tracking-wider text-white">
-                {activeTab === "builder" ? "PROGRAM BUILDER" : activeTab === "coachDashboard" ? "GESTIONE ATLETI" : activeTab.toUpperCase()}
+                {activeTab === "builder" ? "PROGRAM BUILDER" : activeTab === "coachDashboard" ? "GESTIONE ATLETI" : activeTab === "methodologies" ? "METODOLOGIE & LINEE GUIDA" : activeTab.toUpperCase()}
               </span>
             </div>
 
@@ -4765,7 +4769,12 @@ if (isFinished) {
           </div>
         )}
 
-{/* TAB 7: ANALYTICS & STORICO COMPLETO */}
+{/* TAB COACH: METODOLOGIE & LINEE GUIDA */}
+          {activeTab === "methodologies" && (
+            <MethodologiesGuide />
+          )}
+
+          {/* TAB 7: ANALYTICS & STORICO COMPLETO */}
 {activeTab === "analytics" && (
           <AnalyticsDashboard
             logs={logs}
