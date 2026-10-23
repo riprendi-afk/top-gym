@@ -41,7 +41,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => handleSelectTab('workout')}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'workout' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -52,7 +52,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => handleSelectTab('chat')}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'chat' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -63,7 +63,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => handleSelectTab('readiness')}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'readiness' ? 'text-green-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -74,7 +74,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => handleSelectTab('analytics')}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'analytics' ? 'text-blue-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -85,7 +85,7 @@ export default function MobileBottomNav({
               <button
                 type="button"
                 onClick={() => setIsMoreOpen(true)}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   isMoreActive ? 'text-yellow-400' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >

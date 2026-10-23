@@ -1742,11 +1742,13 @@ const currentIntensityPreview = useMemo(() => {
     // 2. Firmiamo ogni giornata della scheda con i metadati del Metodo TOPGYM
     // Questi dati viaggiano dentro il JSON di Supabase senza toccare le tabelle del DB
     const programDaysToSave = programDays.map((day) => ({
-      ...day,
-      isPeriodized: isMasterCoach,
-      assignedByCoach: coachEmail,
-      block: isMasterCoach ? currentBlock : null,
-      phase: isMasterCoach ? calculatedCurrentPhase : null }));
+        ...day,
+        isPeriodized: isMasterCoach,
+        assignedByCoach: coachEmail,
+        block: isMasterCoach ? currentBlock : null,
+        phase: isMasterCoach ? calculatedCurrentPhase : null,
+        weekOverrides: (day as any).weekOverrides || (programDays[0] as any)?.weekOverrides || {}
+      }));
 
     try {
       result = await saveProgramToSupabase(
@@ -3955,7 +3957,7 @@ if (isFinished) {
 
                     const plannedSets = (weekOverride?.sets !== undefined && weekOverride?.sets !== null && weekOverride?.sets !== "")
                       ? Number(weekOverride.sets)
-                      : (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : ex.sets);
+                      : (isDeloadWeek ? Math.max(2, Math.round(ex.sets * 0.6)) : Number(ex.sets) || 4);
 
                     const plannedReps = (weekOverride?.reps !== undefined && weekOverride?.reps !== null && weekOverride?.reps !== "")
                       ? String(weekOverride.reps)
@@ -3967,7 +3969,7 @@ if (isFinished) {
 
                     const plannedRest = (weekOverride?.restSeconds !== undefined && weekOverride?.restSeconds !== null && weekOverride?.restSeconds !== "")
                       ? Number(weekOverride.restSeconds)
-                      : (ex.restSeconds || 90);
+                      : Number(ex.restSeconds) || 90;
 
                     const plannedRpe = weekOverride?.rpeTarget || ex.rpeTarget;
                     const plannedNotes = weekOverride?.notes || ex.notes;

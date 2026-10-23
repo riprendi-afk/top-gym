@@ -404,12 +404,66 @@ export default function MacrocycleTimelineModal({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (onSaveOverrides) {
-        const updatedDays = localDays.map(d => ({
+      // 1. Raccogliamo tutti i dati generati da timeline (W1-W16)
+      const completeOverrides: Record<number, Record<string, any>> = {};
+
+      if (timeline && timeline.length > 0) {
+        timeline.forEach((w: any) => {
+          const wNum = w.weekNumber;
+          if (!completeOverrides[wNum]) completeOverrides[wNum] = {};
+          (w.days || []).forEach((d: any) => {
+            (d.exercises || []).forEach((ex: any) => {
+              if (ex.id) {
+                completeOverrides[wNum][ex.id] = {
+                  sets: Number(ex.sets) || 1,
+                  reps: String(ex.reps || "6"),
+                  targetWeight: String(ex.targetWeight || "0"),
+                  restSeconds: Number(ex.restSeconds) || 90,
+                  rpeTarget: ex.rpeTarget || "RPE 8",
+                  notes: ex.notes || ""
+                };
+              }
+            });
+          });
+        });
+      }
+
+      // 2. Fondiamo eventuali modifiche manuali digitate dal coach
+      if (localOverrides) {
+        Object.keys(localOverrides).forEach(wKey => {
+          const wNum = Number(wKey);
+          if (!completeOverrides[wNum]) completeOverrides[wNum] = {};
+          Object.assign(completeOverrides[wNum], localOverrides[wNum]);
+        });
+      }
+
+      // 3. Aggiorniamo anche localDays (base della scheda W1) per riflettere le serie reali
+      const updatedDays = localDays.map((d: any, dIdx: number) => {
+        const w1Day = timeline?.[0]?.days?.[dIdx];
+        const updatedExercises = (d.exercises || []).map((ex: any) => {
+          const w1Ex = w1Day?.exercises?.find((e: any) => e.id === ex.id);
+          const overrideW1 = completeOverrides?.[1]?.[ex.id];
+          return {
+            ...ex,
+            sets: overrideW1?.sets ?? (w1Ex ? Number(w1Ex.sets) : ex.sets),
+            reps: overrideW1?.reps ?? (w1Ex ? String(w1Ex.reps) : ex.reps),
+            targetWeight: overrideW1?.targetWeight ?? (w1Ex ? String(w1Ex.targetWeight) : ex.targetWeight),
+            restSeconds: overrideW1?.restSeconds ?? (w1Ex ? Number(w1Ex.restSeconds) : ex.restSeconds),
+            notes: overrideW1?.notes ?? (w1Ex ? String(w1Ex.notes) : ex.notes)
+          };
+        });
+
+        return {
           ...d,
-          weekOverrides: localOverrides
-        }));
-        await onSaveOverrides(updatedDays, localOverrides);
+          exercises: updatedExercises,
+          weekOverrides: completeOverrides
+        };
+      });
+
+      setLocalDays(updatedDays);
+
+      if (onSaveOverrides) {
+        await onSaveOverrides(updatedDays, completeOverrides);
       }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
