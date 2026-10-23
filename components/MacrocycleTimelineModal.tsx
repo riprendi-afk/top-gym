@@ -35,6 +35,8 @@ export default function MacrocycleTimelineModal({
   programmingModel,
   onSaveOverrides
 }: MacrocycleTimelineModalProps) {
+  if (!isOpen && !inline) return null;
+
   const methodKey = resolveEngineKey(programmingModel);
   const meta = ENGINE_METADATA[methodKey];
 
@@ -69,7 +71,7 @@ export default function MacrocycleTimelineModal({
     return timeline[0].days[selectedDayIdx].exercises || [];
   }, [timeline, selectedDayIdx]);
 
-  if (!isOpen && !inline) return null;
+  
 
   // MOTORE DI STAMPA ISOLATO: Genera HTML puro senza dashboard e attiva il PDF
   const executeIsolatedPrint = (printAllSessions: boolean) => {
@@ -419,8 +421,8 @@ export default function MacrocycleTimelineModal({
   const currentSessionTitle = dayList[selectedDayIdx]?.title || `Sessione ${selectedDayIdx + 1}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md">
-      <div className="bg-[#0F1218] border border-white/10 rounded-2xl w-full max-w-[98vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className={inline ? "w-full my-4" : "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md"}>
+      <div className={inline ? "bg-[#0F1218] border border-white/10 rounded-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" : "bg-[#0F1218] border border-white/10 rounded-2xl w-full max-w-[98vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden"}>
 
         {/* HEADER MODALE */}
         <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 bg-[#151922]">

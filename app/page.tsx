@@ -3807,6 +3807,55 @@ if (isFinished) {
                   <span>Scegli Template Split</span>
                 </button>
               </div>
+
+              {/* ============================================================== */}
+              {/* MATRICE TIMELINE MACROCICLO W1-W16: SINGLE SOURCE OF TRUTH    */}
+              {/* ============================================================== */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                      Matrice Macrociclo Dinamica (W1–W16)
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest hidden sm:inline">
+                      Single Source of Truth
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsTimelineModalOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-bold transition cursor-pointer"
+                    >
+                      Schermo Intero
+                    </button>
+                  </div>
+                </div>
+
+                <MacrocycleTimelineModal
+                  key={(targetUserId || "timeline-inline") + (programmingModel || "")}
+                  inline={true}
+                  isOpen={true}
+                  onClose={() => {}}
+                  athleteName={athletes.find((a: any) => a.id === targetUserId)?.displayName || "Atleta"}
+                  athleteId={targetUserId}
+                  programDays={programDays}
+                  programmingModel={programmingModel as string}
+                  onSaveOverrides={async (updatedDays, overrides) => {
+                    setProgramDays(updatedDays);
+                    if (targetUserId) {
+                      await saveProgramToSupabase(
+                        targetUserId,
+                        programName || "Scheda TOPGYM",
+                        updatedDays
+                      );
+                      setBuilderSuccessMessage("⚡ Matrice Macrociclo salvata e sincronizzata!");
+                      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+                    }
+                  }}
+                />
+              </div>
               {/* ============================================================== */}
               {/* MATRICE TIMELINE W1-W16: SINGLE SOURCE OF TRUTH PROGRAMMAZIONE */}
               {/* ============================================================== */}
