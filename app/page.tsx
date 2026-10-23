@@ -2455,6 +2455,7 @@ if (isFinished) {
                 onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
               />
 
+              {/* MODALE SELETTORE TEMPLATE */}
               <TemplatePickerModal
                 isOpen={isTemplateModalOpen}
                 onClose={() => setIsTemplateModalOpen(false)}
@@ -3477,7 +3478,7 @@ if (isFinished) {
         {/* TAB 6: BUILDER COACH METODO TOPGYM */}
         {activeTab === "builder" && ((userRole as any) === "COACH") && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"><div className="lg:col-span-8 space-y-6">
-              {/* PANNELLO DI CONTROLLO COACH & REGIA SCHEDA */}
+              {/* PANNELLO DI REGIA COACH: UNICA SORGENTE DI VERITA' */}
               <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
                   <div className="flex items-center gap-3">
@@ -3507,7 +3508,7 @@ if (isFinished) {
                   </button>
                 </div>
 
-                {/* NOME DELLA SCHEDA E TASTO SALVA E ASSEGNA */}
+                {/* NOME DELLA SCHEDA E TASTO MASTER SALVA E ASSEGNA */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                   <div className="sm:col-span-7 space-y-1">
                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
