@@ -408,9 +408,7 @@ const [programmingModel, setProgrammingModel] = useState<
   | "BIKINI_WAVE"
 >("TOPGYM_BLOCKS");
 
-// over40 modal removed
-  // wizard modal removed
-
+  
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
       if (Notification.permission === "default") {
