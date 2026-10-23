@@ -15,7 +15,8 @@ import {
   Printer,
   Plus,
   Trash2,
-  FileText
+  FileText,
+  Pencil
 } from 'lucide-react';
 import {
   ENGINE_METADATA,
@@ -404,6 +405,19 @@ export default function MacrocycleTimelineModal({
     });
   };
 
+  const handleEditExercise = (exIdx: number, currentName: string) => {
+    const newName = prompt("Modifica o sostituisci questo esercizio:", currentName);
+    if (!newName || !newName.trim() || newName.trim() === currentName) return;
+
+    setLocalDays(prev => {
+      const copy = JSON.parse(JSON.stringify(prev));
+      if (copy[selectedDayIdx]?.exercises?.[exIdx]) {
+        copy[selectedDayIdx].exercises[exIdx].name = newName.trim();
+      }
+      return copy;
+    });
+  };
+
   const handleRemoveExercise = (exIdx: number, exName: string) => {
     if (!confirm(`Vuoi rimuovere "${exName}" da questa sessione?`)) return;
     setLocalDays(prev => {
@@ -698,8 +712,16 @@ export default function MacrocycleTimelineModal({
                         </div>
 
                         <button
-                          type="button"
-                          onClick={() => handleRemoveExercise(exIdx, baseEx.name)}
+                            type="button"
+                            onClick={() => handleEditExercise(exIdx, baseEx.name)}
+                            className="text-zinc-500 hover:text-amber-400 p-1 rounded transition shrink-0"
+                            title="Modifica o sostituisci esercizio"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExercise(exIdx, baseEx.name)}
                           className="text-zinc-600 hover:text-rose-400 p-1 rounded transition shrink-0"
                           title="Rimuovi esercizio"
                         >
