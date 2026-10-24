@@ -35,11 +35,11 @@ import {
 import { subscribeUserToPush, sendPushNotification } from "@/lib/push";
 import ChatBox from "@/components/ChatBox";
 import { RestTimerBar } from '@/components/RestTimerBar';
+import ActiveWorkoutSession from '@/components/ActiveWorkoutSession';
 import { computeEffectiveLoad, findBodyweightConfig } from "@/lib/lib/bodyweight";
 import NotificationBell from "@/components/NotificationBell";
 import PersonalRecords from "@/components/PersonalRecords";
 import AthleteGoals from "@/components/AthleteGoals";
-import { processDynamicWorkout, applyPhaseToProgram } from "@/lib/topgym-engine";
 import { detectAthleteGender } from "@/lib/topgym-templates";
 import { resolveMuscleTarget } from "@/lib/topgym-volume";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -51,10 +51,8 @@ import { exportProgramToPDF } from "@/lib/lib/exportPdf";
 // LAZY LOADING: Moduli Pesanti (Scaricati solo quando servono)
 // ==========================================
 const AnalyticsDashboard = dynamic(() => import("@/components/AnalyticsDashboard"), { ssr: false });
-const WorkoutWizardModal = dynamic(() => import("@/components/WorkoutWizardModal"), { ssr: false });
 const CoachDashboard = dynamic(() => import("@/components/CoachDashboard"), { ssr: false });
 const TemplatePickerModal = dynamic(() => import("@/components/TemplatePickerModal"), { ssr: false });
-const MethodologyPickerModal = dynamic(() => import("@/components/MethodologyPickerModal"), { ssr: false });
 
 export type DayCount = 2 | 3 | 4 | 5 | 6;
 export type UserRole = "ATHLETE" | "COACH";
@@ -365,29 +363,8 @@ const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [showPushBanner, setShowPushBanner] = useState(false);
   const [showDeniedModal, setShowDeniedModal] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isMethodologyModalOpen, setIsMethodologyModalOpen] = useState(false);
-  const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-// ======================================================================
-// CALCOLO PUNTO ZERO: Sedute relative alla scheda attiva
-// ======================================================================
-const computeActiveWorkoutCount = (days: any[], history: any[]) => {
-  if (!days || days.length === 0) return 1;
-  if (typeof days[0]?.startingHistoryCount === 'number') {
-    return Math.max(1, ((history?.length || 0) + 1) - days[0].startingHistoryCount);
-  }
-  const activeTitles = days
-    .map((d: any) => (d.title || '').trim().toLowerCase())
-    .filter((t: string) => t.length > 2);
-
-  if (activeTitles.length > 0 && Array.isArray(history)) {
-    const matchingLogs = history.filter((w: any) => {
-      const wTitle = (w.day_name || '').trim().toLowerCase();
-      return activeTitles.some((t: string) => wTitle.includes(t) || t.includes(wTitle));
-    });
-    return matchingLogs.length + 1;
-  }
-  return 1;
-};
+    const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
+// [RIMOSSO] Calcolo dinamico punto zero
 
 // DOPO (SOSTITUISCI CON):
 const [programmingModel, setProgrammingModel] = useState<
@@ -556,143 +533,6 @@ useEffect(() => {
   const [rpe, setRpe] = useState("8");
   const [logs, setLogs] = useState<SetLog[]>([]);
 
-  // State Builder
-  const [builderExName, setBuilderExName] = useState("");
-  const [builderMuscleGroup, setBuilderMuscleGroup] =
-    useState<MuscleGroup>("Petto");
-  const [builderStimulus, setBuilderStimulus] =
-    useState<TopGymStimulus>("HYPERTROPHIC");
-  const [builderSets, setBuilderSets] = useState(3);
-  const [builderReps, setBuilderReps] = useState("8-10");
-  const [builderWeight, setBuilderWeight] = useState("0");
-  const [builderRpe, setBuilderRpe] = useState(8);
-  const [builderRest, setBuilderRest] = useState(90);
-  const [builderType, setBuilderType] = useState<ExecutionType>("REGULAR");
-  const [builderTut, setBuilderTut] = useState("2-0-1-0");
-  const [builderNotes, setBuilderNotes] = useState("");
-  const [editingDayId, setEditingDayId] = useState<string | null>(null);
-  const [editingExId, setEditingExId] = useState<string | null>(null);
-  const [openDayId, setOpenDayId] = useState<string | null>(null);
-
-  const handleApplyTopGymPreset = (stimulus: TopGymStimulus) => {
-    setBuilderStimulus(stimulus);
-    if (stimulus === "NEURAL") {
-      setBuilderSets(4);
-      setBuilderReps("4-6");
-      setBuilderRpe(7.5); // Corrisponde a Buffer 2-3
-      setBuilderRest(180);
-      setBuilderType("REGULAR");
-      setBuilderTut("2-0-X-1"); // 1" di fermo in contrazione
-      setBuilderNotes(
-        "Metodo TOPGYM: Spinta esplosiva sui fondamentali, rigoroso BUFFER (RIR 2-4). Mai a cedimento per non bruciare il SNC.",
-      );
-    } else if (stimulus === "HYPERTROPHIC") {
-      setBuilderSets(3);
-      setBuilderReps("8-12");
-      setBuilderRpe(8.5); // Corrisponde a Buffer 1-2
-      setBuilderRest(90);
-      setBuilderType("REGULAR");
-      setBuilderTut("2-0-1-0");
-      setBuilderNotes(
-        "Metodo TOPGYM: Tensione meccanica. Buffer 1-2 nelle prime serie, cedimento consentito solo all'ultima serie o back-off.",
-      );
-    } else {
-      setBuilderSets(3);
-      setBuilderReps("12-20");
-      setBuilderRpe(10);
-      setBuilderRest(60);
-      setBuilderType("STRIPPING"); // Tecnica base per il metabolico
-      setBuilderTut("2-0-1-1");
-      setBuilderNotes(
-        "Metodo TOPGYM: Isolamento. Ricerca del cedimento concentrico reale e tecniche di intensità .",
-      );
-    }
-  };
-
-  const handleStartEditExercise = (dayId: string, ex: Exercise) => {
-    setEditingDayId(dayId);
-    setEditingExId(ex.id);
-    setBuilderExName(ex.name);
-    const detectedMG = autoDetectMuscleGroup(ex.name);
-    const valid14 = [
-      "Petto", "Gran Dorsale", "Upper Back", "Deltoidi Anteriori", "Deltoidi Laterali", 
-      "Deltoidi Posteriori", "Tricipiti", "Bicipiti", "Quadricipiti", "Femorali", 
-      "Glutei", "Adduttori", "Polpacci", "Addome"
-    ];
-    const isInvalid = !valid14.includes(ex.muscleGroup as any);
-    const isCorruptedPetto = ex.muscleGroup === "Petto" && detectedMG !== "Petto";
-    const healedMG = (isInvalid || isCorruptedPetto) ? detectedMG : (ex.muscleGroup || detectedMG);
-    setBuilderMuscleGroup(healedMG as MuscleGroup);
-    setBuilderStimulus(ex.stimulusType || "HYPERTROPHIC");
-    setBuilderSets(ex.sets);
-    setBuilderReps(ex.reps);
-    setBuilderWeight(ex.targetWeight);
-    setBuilderRpe(ex.rpeTarget);
-    setBuilderRest(ex.restSeconds);
-    setBuilderType(ex.executionType);
-    setBuilderTut(ex.tut);
-    setBuilderNotes(ex.notes || "");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingDayId(null);
-    setEditingExId(null);
-    setBuilderExName("");
-    setBuilderNotes("");
-    setBuilderSets(3);
-    setBuilderReps("8-10");
-    setBuilderWeight("0");
-    setBuilderRpe(8);
-    setBuilderRest(90);
-    setBuilderType("REGULAR");
-    setBuilderTut("2-0-1-0");
-  };
-
-  const handleApplyDeloadWeekToProgram = () => {
-    if (
-      !window.confirm(
-        "Vuoi convertire la scheda in SETTIMANA DI SCARICO (-40% volume, carichi submassimali, nessuna tecnica d'intensità )?",
-      )
-    )
-      return;
-    setProgramDays((prevDays) =>
-      prevDays.map((day) => ({
-        ...day,
-        exercises: day.exercises.map((ex) => ({
-          ...ex,
-          sets: Math.max(2, Math.round(ex.sets * 0.6)),
-          rpeTarget: 6.5,
-          executionType: "REGULAR",
-          notes:
-            (ex.notes ? ex.notes + " - " : "") +
-            "DELOAD: Volume ridotto, carichi submassimali, nessun cedimento." })) })),
-    );
-    setManualWeek(3); // La fase 3 è sempre lo Scarico/Deload nel nuovo sistema
-    setBuilderSuccessMessage(
-      "✅ Scheda convertita in Settimana di Scarico (Fase III)!",
-    );
-    setTimeout(() => setBuilderSuccessMessage(null), 4000);
-  };
-
-  const handleApplyEngineToCurrentProgram = () => {
-    if (
-      !window.confirm(
-        `Vuoi aggiornare tutti gli esercizi della scheda con le regole del ${currentBlock} - Fase ${calculatedCurrentPhase}?`,
-      )
-    )
-      return;
-    const updated = applyPhaseToProgram(
-      programDays as any,
-      currentBlock,
-      calculatedCurrentPhase,
-    );
-    setProgramDays(updated as any);
-    setBuilderSuccessMessage(
-      `⚡ Scheda aggiornata con successo alle regole del ${currentBlock} - Fase ${calculatedCurrentPhase}! Ora puoi visionarla o modificarla.`,
-    );
-    setTimeout(() => setBuilderSuccessMessage(null), 5000);
-  };
-
   const displayUserName =
     user?.user_metadata?.username ||
     (user?.email ? user.email.split("@")[0] : "Atleta");
@@ -703,42 +543,7 @@ useEffect(() => {
     [athletes, targetUserId],
   );
 
-  // 1. Ripristina le serie memorizzate sul telefono quando apri l'app o cambi atleta
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const storageKey = `topgym_session_logs_${targetUserId || "athlete"}`;
-        const cached = localStorage.getItem(storageKey);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setLogs(parsed);
-          } else {
-            setLogs([]);
-          }
-        } else {
-          // Reset immediato per evitare che il nuovo atleta erediti i log dell'atleta precedente
-          setLogs([]);
-        }
-      } catch (e) {
-      console.error("Errore nel recupero della sessione salvata:", e);
-    }
-  }, [targetUserId]);
-
-  // 2. Salva in tempo reale su memoria locale ogni serie registrata o rimossa
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const storageKey = `topgym_session_logs_${targetUserId || "athlete"}`;
-      if (logs.length > 0) {
-        localStorage.setItem(storageKey, JSON.stringify(logs));
-      } else {
-        localStorage.removeItem(storageKey);
-      }
-    } catch (e) {
-      console.error("Errore nel salvataggio locale della sessione:", e);
-    }
-  }, [logs, targetUserId]);
+  // [PULITO] Persistenza sessione delegata interamente ad ActiveWorkoutSession
 
   useEffect(() => {
     if (!supabase) return;
@@ -1231,143 +1036,6 @@ useEffect(() => {
     setPinError(true);
   };
 
-  const RPE_PERCENT_1RM_TABLE: Record<string, number[]> = {
-    "10": [100, 96, 92, 89, 86, 84, 81, 79, 76, 74],
-    "9.5": [98, 94, 91, 88, 85, 82, 80, 77, 75, 72],
-    "9": [96, 92, 89, 86, 84, 81, 79, 76, 74, 71],
-    "8.5": [94, 91, 88, 85, 82, 80, 77, 75, 72, 69],
-    "8": [92, 89, 86, 84, 81, 79, 76, 74, 71, 68],
-    "7.5": [91, 88, 85, 82, 80, 77, 75, 72, 69, 67],
-    "7": [89, 86, 84, 81, 79, 76, 74, 71, 68, 65],
-    "6.5": [87, 85, 82, 80, 77, 75, 72, 69, 67, 64],
-    "6": [86, 84, 81, 79, 76, 74, 71, 68, 65, 62] };
-
-  const calculate1RM = (w: number, r: number) =>
-    r === 1 ? w : Math.round(w * (1 + r / 30));
-
-  const calculateEstimated1RM = useCallback(
-    (weight: number, reps: number, rpe?: number): number | null => {
-      if (
-        !Number.isFinite(weight) ||
-        weight <= 0 ||
-        !Number.isFinite(reps) ||
-        reps <= 0
-      )
-        return null;
-      if (rpe !== undefined && Number.isFinite(rpe) && reps <= 10) {
-        const row = RPE_PERCENT_1RM_TABLE[String(rpe)];
-        if (row) {
-          const pct = row[Math.round(reps) - 1];
-          if (pct > 0) return Math.round(weight / (pct / 100));
-        }
-      }
-      return calculate1RM(weight, reps);
-    },
-    [],
-  );
-
-  const allLoggedSets = useMemo(() => {
-    const items: {
-      exerciseName: string;
-      weight: number;
-      estimated1RM: number;
-    }[] = [];
-    logs.forEach((l) => {
-      const w =
-        l.effectiveLoad !== null && l.effectiveLoad !== undefined
-          ? l.effectiveLoad
-          : l.weight;
-      if (w > 0 && l.reps > 0) {
-        items.push({
-          exerciseName: l.exerciseName,
-          weight: w,
-          estimated1RM:
-            l.estimated1RM ||
-            calculateEstimated1RM(w, l.reps, l.rpe) ||
-            calculate1RM(w, l.reps) });
-      }
-    });
-    workoutHistory.forEach((w) => {
-      if (Array.isArray(w.logs)) {
-        w.logs.forEach((l: any) => {
-          const weight =
-            Number(
-              l.effectiveLoad !== null && l.effectiveLoad !== undefined
-                ? l.effectiveLoad
-                : l.weight,
-            ) || 0;
-          const reps = Number(l?.reps) || 0;
-          const rpeVal = Number(l?.rpe);
-          if (weight > 0 && reps > 0) {
-            items.push({
-              exerciseName: l.exerciseName || "",
-              weight,
-              estimated1RM:
-                Number(l.estimated1RM) ||
-                calculateEstimated1RM(
-                  weight,
-                  reps,
-                  Number.isFinite(rpeVal) ? rpeVal : undefined,
-                ) ||
-                calculate1RM(weight, reps) });
-          }
-        });
-      }
-    });
-    return items;
-  }, [logs, workoutHistory, calculateEstimated1RM]);
-
-  const best1RMByExercise = useMemo(() => {
-    const map = new Map<string, number>();
-    allLoggedSets.forEach(({ exerciseName, estimated1RM }) => {
-      if (!exerciseName) return;
-      if (estimated1RM > (map.get(exerciseName) || 0))
-        map.set(exerciseName, estimated1RM);
-    });
-    return map;
-  }, [allLoggedSets]);
-
-  const getIntensityInfo = useCallback(
-    (exerciseName: string, weight: number) => {
-      const best1RM = best1RMByExercise.get(exerciseName);
-      if (!best1RM || best1RM <= 0 || !weight) return null;
-      const pct = Math.round((weight / best1RM) * 100);
-      let label = "Attivazione";
-      let colorClasses = "bg-zinc-800 text-zinc-300 border-zinc-700";
-      if (pct >= 90) {
-        label = "Picco Massimale";
-        colorClasses = "bg-red-950 text-red-300 border-red-800";
-      } else if (pct >= 75) {
-        label = "Forza";
-        colorClasses = "bg-amber-950 text-amber-300 border-amber-800";
-      } else if (pct >= 55) {
-        label = "Ipertrofia";
-        colorClasses = "bg-emerald-950 text-emerald-300 border-emerald-800";
-      }
-      return { pct, label, colorClasses };
-    },
-    [best1RMByExercise],
-  );
-
-  const estimated1RMPreview = useMemo(() => {
-    const w = parseFloat(weight);
-    const r = parseInt(reps, 10);
-    const rpeVal = parseFloat(rpe);
-    if (!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0)
-      return null;
-    return calculateEstimated1RM(
-      w,
-      r,
-      Number.isFinite(rpeVal) ? rpeVal : undefined,
-    );
-  }, [weight, reps, rpe, calculateEstimated1RM]);
-
-  const rpeTablePreviewPct = useMemo(() => {
-    const r = Math.min(10, Math.max(1, parseInt(reps, 10) || 1));
-    const row = RPE_PERCENT_1RM_TABLE[rpe];
-    return row ? row[r - 1] : null;
-  }, [rpe, reps]);
-
   const activeAthlete =
     athletes.find((a) => a.id === activeAthleteId) ||
     (athletes.length > 0
@@ -1375,83 +1043,7 @@ useEffect(() => {
       : { id: "default", displayName: "Atleta", email: "", xp: 0 });
   const activeDay = programDays[selectedDayIndex] ?? programDays[0];
 
-  const handleSafeFinish = () => {
-    handleFinishAndSaveWorkout();
-  };
-
-  // 1. Calcolo Settimana Reale
-  const calculatedCurrentRealWeek = useMemo(() => {
-    const daysInRoutine = Math.max(1, programDays.length || 4);
-    const activeCount = Math.max(0, computeActiveWorkoutCount(programDays, workoutHistory) - 1);
-    return Math.floor(activeCount / daysInRoutine) + 1;
-  }, [programDays, workoutHistory]);
-
-// 1. Identificazione esplicita del Metodo attivo sulla scheda (Zero Errori TypeScript)
-const trainingMethod: "HARDTOPGYM" | "TOPGYM_CLASSICO" | null = useMemo(() => {
-  const day = activeDay as any;
-  const list = (programDays || []) as any[];
-  const found = list.find((d: any) => d?.method || d?.programType);
-  const methodFound =
-    day?.method ||
-    day?.programType ||
-    found?.method ||
-    found?.programType;
-
-  if (methodFound === "HARDTOPGYM" || day?.isPeriodized === true) {
-    return "HARDTOPGYM";
-  }
-  if (methodFound === "TOPGYM_CLASSICO" || methodFound === "TOPGYM_BLOCKS") {
-    return "TOPGYM_CLASSICO";
-  }
-
-  // Scheda standard/neutra: nessun metodo speciale
-  return null;
-}, [activeDay, programDays]);
-
-// Flag di retrocompatibilità
-const isMasterProgram = false;
-
-// 2. Calcolo Automatico del Macro-Blocco Annuale (47 Settimane Totali)
-const activeBlock: MacroBlock = useMemo(() => {
-  const w = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
-  if (w <= 16) return "BLOCCO_1_FORZA";
-  if (w <= 32) return "BLOCCO_2_TRASFORMAZIONE";
-  return "BLOCCO_3_QUALITA";
-}, [manualWeek, calculatedCurrentRealWeek]);
-
-// 3. Calcolo Automatico della Fase Operativa (47 Settimane Classico vs 4 Settimane HardTopGym)
-const calculatedCurrentPhase: MicroWeek = useMemo(() => {
-  const w = manualWeek !== null ? manualWeek : calculatedCurrentRealWeek;
-
-  // SE È HARDTOPGYM: Microciclo mensile ormonale da 4 settimane (Bosco-Colli)
-  if (isMasterProgram) {
-    return (((Math.max(1, w) - 1) % 4) + 1) as MicroWeek;
-  }
-
-  // SE È METODO CLASSICO: Timeline Reale delle 47 Settimane
-  const weekInBlock = ((w - 1) % 16) + 1;
-
-  if (weekInBlock <= 6) return 1;  // W1-W6: Accumulo & Volume Base
-  if (weekInBlock <= 9) return 2;  // W7-W9: Sovraccarico & Intensificazione
-  if (weekInBlock === 10) return 3; // W10: Deload / Scarico Attivo del SNC
-  return 4;                        // W11-W16: Picco Neurale / Consolidamento
-}, [manualWeek, calculatedCurrentRealWeek, isMasterProgram]);
-
-// 4. Motore Esecutivo: delega al rispettivo engine in lib/
-const dynamicActiveDay = activeDay;
-
-const activeRoutine = dynamicActiveDay?.exercises ?? [];
-const currentExercise =
-  activeRoutine.find((e: any) => e.id === currentExId) || activeRoutine[0];
-
-const currentIntensityPreview = useMemo(() => {
-  if (!currentExercise) return null;
-  const w = parseFloat(weight);
-  if (!Number.isFinite(w) || w <= 0) return null;
-  return getIntensityInfo(currentExercise.name, w);
-}, [currentExercise, weight, getIntensityInfo]);
-
-  // Recupera il peso più recente della Readiness
+  // Recupera il peso più recente della Readiness (utilizzato da ActiveWorkoutSession)
   const sessionBodyWeight = useMemo(() => {
     const todayLog = readinessHistory.find(
       (r) => r.date === todayIso() && r.bodyWeight && r.bodyWeight > 0,
@@ -1462,46 +1054,6 @@ const currentIntensityPreview = useMemo(() => {
     );
     return latestValid?.bodyWeight || null;
   }, [readinessHistory]);
-
-  const currentBodyweightConfig = useMemo(() => {
-    if (!currentExercise) return null;
-    return findBodyweightConfig(currentExercise.name);
-  }, [currentExercise]);
-
-  const lastLoggedSet = useMemo(() => {
-    if (!currentExercise) return null;
-    const fromToday = logs.find((l) => l.exerciseName === currentExercise.name);
-    if (fromToday) return fromToday;
-
-    for (const w of workoutHistory) {
-      if (Array.isArray(w.logs)) {
-        const found = w.logs.find(
-          (l: any) => l.exerciseName === currentExercise.name,
-        );
-        if (found) return found;
-      }
-    }
-    return null;
-  }, [currentExercise, logs, workoutHistory]);
-
-  const handleAutoFillLastLog = () => {
-    if (lastLoggedSet) {
-      setWeight(
-        (lastLoggedSet.externalLoad !== undefined
-          ? lastLoggedSet.externalLoad
-          : lastLoggedSet.weight
-        ).toString(),
-      );
-      setReps(lastLoggedSet.reps.toString());
-      setRpe(lastLoggedSet.rpe.toString());
-    }
-  };
-
-  const adjustWeight = (delta: number) => {
-    const current = parseFloat(weight) || 0;
-    const updated = Math.max(0, current + delta);
-    setWeight(updated.toString());
-  };
 
   const computeReadiness = useCallback(() => {
     const sleepFactor = sleepQuality * 10 * 0.35;
@@ -1662,7 +1214,7 @@ const currentIntensityPreview = useMemo(() => {
           userId: targetUserId,
           dayName: dayName,
           totalVolume: totalVol,
-          exercisesCount: activeRoutine.length,
+          exercisesCount: (activeDay?.exercises || []).length,
           logs: sanitizedLogs as any });
     } catch (e: any) {
       result = { success: false, error: e?.message };
@@ -1737,8 +1289,6 @@ const currentIntensityPreview = useMemo(() => {
         ...day,
         isPeriodized: isMasterCoach,
         assignedByCoach: coachEmail,
-        block: isMasterCoach ? currentBlock : null,
-        phase: isMasterCoach ? calculatedCurrentPhase : null,
         weekOverrides: (day as any).weekOverrides || (programDays[0] as any)?.weekOverrides || {}
       }));
 
@@ -1800,183 +1350,6 @@ const currentIntensityPreview = useMemo(() => {
   };
 
 
-
-  // --- FUNZIONI RAPIDE WORKOUT ERGONOMICO (THUMB-ZONE) ---
-  const handleQuickWeightAdjust = (delta: number) => {
-    const current = parseFloat(weight) || 0;
-    const next = Math.max(0, current + delta);
-    // Arrotonda pulito a massimo 2 decimali (es. 12.5 o 12.25)
-    setWeight(
-      next % 1 === 0 ? next.toString() : parseFloat(next.toFixed(2)).toString(),
-    );
-  };
-
-  const handleQuickRepsAdjust = (delta: number) => {
-    const current = parseInt(reps, 10) || 0;
-    const next = Math.max(1, current + delta);
-    setReps(next.toString());
-  };
-
-  const handleCopyLastSet = () => {
-    const exName = currentExercise?.name;
-    if (!exName) return;
-    const lastLog = logs.find((l) => l.exerciseName === exName);
-    if (lastLog) {
-      setWeight(String(lastLog.weight));
-      setReps(String(lastLog.reps));
-      if (lastLog.rpe) setRpe(String(lastLog.rpe));
-    }
-  };
-
-  const handleLogSet = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    const numWeight = parseFloat(weight);
-    const numReps = parseInt(reps, 10);
-    const numRpe = parseFloat(rpe);
-
-    if (isNaN(numWeight) || numWeight < 0 || isNaN(numReps) || numReps <= 0)
-      return;
-
-    const exName = currentExercise?.name || "Esercizio";
-    const effectiveCalc = computeEffectiveLoad(
-      exName,
-      numWeight,
-      numReps,
-      sessionBodyWeight,
-    );
-    const calc1RMWeight =
-      effectiveCalc.effectiveLoad !== null
-        ? effectiveCalc.effectiveLoad
-        : numWeight;
-    const estimated1RM =
-      calculateEstimated1RM(calc1RMWeight, numReps, numRpe) ||
-      calculate1RM(calc1RMWeight, numReps);
-
-
-    // Cast esplicito a MuscleGroup così TypeScript non segnala errori di tipo
-    const targetGroup =
-      currentExercise?.muscleGroup || resolveMuscleTarget(exName);
-
-    const newLog: SetLog = {
-      id: makeId(),
-      exerciseId: currentExercise?.id || currentExId,
-      exerciseName: exName,
-      muscleGroup: (targetGroup as MuscleGroup) || undefined, // Salvato in modo permanente
-      weight: numWeight,
-      reps: numReps,
-      rpe: numRpe,
-      estimated1RM,
-      volume: numWeight * numReps,
-      date: todayIso(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit" }),
-      isBodyweight: effectiveCalc.isBodyweight,
-      externalLoad: effectiveCalc.externalLoad,
-      bodyWeightUsed: effectiveCalc.bodyWeightUsed,
-      percentageUsed: effectiveCalc.percentageUsed,
-      bodyweightLoad: effectiveCalc.bodyweightLoad,
-      effectiveLoad: effectiveCalc.effectiveLoad,
-      effectiveVolume: effectiveCalc.effectiveVolume };
-
-    setLogs((prev) => [newLog, ...prev]);
-    void addXp(10);
-    if (currentExercise?.restSeconds)
-        startRestTimer(currentExercise.restSeconds);
-
-      // Registrazione serie libera al 100%: nessun auto-switch forzato né blocco numerico.
-      // L'atleta rimane sull'esercizio corrente e carico/reps restano pronti per la serie successiva.
-  };
-  
-
-  const handleDeleteLog = (logId: string) => {
-    setLogs((prev) => prev.filter((l) => l.id !== logId));
-  };
-
-  const handleAddOrUpdateExercise = (
-    e: React.SyntheticEvent,
-    dayId: string,
-  ) => {
-    e.preventDefault();
-    if (!builderExName.trim()) return;
-
-    if (editingExId && editingDayId === dayId) {
-      setProgramDays((prevDays) =>
-        prevDays.map((day) => {
-          if (day.id === dayId) {
-            return {
-              ...day,
-              exercises: day.exercises.map((ex) =>
-                ex.id === editingExId
-                  ? {
-                      ...ex,
-                      name: builderExName.trim(),
-                      muscleGroup:
-                        builderMuscleGroup ||
-                        autoDetectMuscleGroup(builderExName),
-                      stimulusType: builderStimulus,
-                      sets: builderSets,
-                      reps: builderReps,
-                      targetWeight: builderWeight,
-                      rpeTarget: builderRpe,
-                      restSeconds: builderRest,
-                      executionType: builderType,
-                      tut: builderTut,
-                      notes: builderNotes.trim() || undefined }
-                  : ex,
-              ) };
-          }
-          return day;
-        }),
-      );
-      handleCancelEdit();
-    } else {
-      const newEx: Exercise = {
-        id: crypto.randomUUID(),
-        name: builderExName.trim(),
-        muscleGroup: builderMuscleGroup || autoDetectMuscleGroup(builderExName),
-        stimulusType: builderStimulus,
-        sets: builderSets,
-        reps: builderReps,
-        targetWeight: builderWeight,
-        rpeTarget: builderRpe,
-        restSeconds: builderRest,
-        executionType: builderType,
-        tut: builderTut,
-        notes: builderNotes.trim() || undefined };
-
-      setProgramDays((prevDays) =>
-        prevDays.map((day) =>
-          day.id === dayId
-            ? { ...day, exercises: [...(day.exercises || []), newEx] }
-            : day,
-        ),
-      );
-
-      setBuilderExName("");
-      setBuilderNotes("");
-    }
-  };
-
-  const handleRemoveExerciseFromDay = (dayId: string, exerciseId: string) => {
-    setProgramDays((prevDays) =>
-      prevDays.map((day) =>
-        day.id === dayId
-          ? {
-              ...day,
-              exercises: (day.exercises || []).filter(
-                (ex) => ex.id !== exerciseId,
-              ) }
-          : day,
-      ),
-    );
-  };
-
-  const handleRenameDay = (dayId: string, title: string) => {
-    setProgramDays((prevDays) =>
-      prevDays.map((day) => (day.id === dayId ? { ...day, title } : day)),
-    );
-  };
 
   const getBadgeStyle = (type: ExecutionType) => {
     switch (type) {
@@ -2050,13 +1423,13 @@ const currentIntensityPreview = useMemo(() => {
       title: "Club dei 100kg",
       description: "Solleva 100kg o più in un esercizio",
       icon: "???",
-      unlocked: logs.some((l) => l.weight >= 100) },
+      unlocked: workoutHistory.some((w: any) => Array.isArray(w.logs) && w.logs.some((l: any) => Number(l.weight) >= 100)) },
     {
       id: "2",
       title: "PR Breaker",
       description: "Supera il tuo massimale stimato",
       icon: "???",
-      unlocked: logs.length >= 3 },
+      unlocked: workoutHistory.some((w: any) => Array.isArray(w.logs) && w.logs.length >= 3) },
     {
       id: "3",
       title: "Atleta Consapevole",
@@ -2071,70 +1444,7 @@ const currentIntensityPreview = useMemo(() => {
       unlocked: userXp >= 500 },
   ];
 
-  // 3. CALCOLO AUTOMATICO SETTIMANA E FASE (BLOCCO 1-2-3)
-  const getPhaseDescription = (block: MacroBlock, phase: MicroWeek) => {
-    if (block === "BLOCCO_1_FORZA") {
-      switch (phase) {
-        case 1:
-          return {
-            title: "Fase I: Accumulo",
-            desc: "Progressione su serie. Buffer (RIR 2-4) per perfezionare la tecnica." };
-        case 2:
-          return {
-            title: "Fase II: Conversione",
-            desc: "Aumento reps/serie e riduzione progressiva del buffer." };
-        case 3:
-          return {
-            title: "Fase III: Scarico (Deload)",
-            desc: "Riduzione del volume per dissipare la fatica. Nessun cedimento." };
-        case 4:
-          return {
-            title: "Fase IV: Intensificazione",
-            desc: "Meno volume, aumento carichi. Test massimale a fine ciclo." };
-      }
-    }
-    if (block === "BLOCCO_2_TRASFORMAZIONE") {
-      switch (phase) {
-        case 1:
-          return {
-            title: "Fase I: Volume & Stripping",
-            desc: "Forza costante sui base. Complementari con 10+MAX." };
-        case 2:
-          return {
-            title: "Fase II: Ibrida",
-            desc: "Lavoro pesante + back-off sui base. Complementari a cedimento." };
-        case 3:
-          return {
-            title: "Fase III: Scarico (Deload)",
-            desc: "Riduzione volume, zero tecniche. Carichi submassimali." };
-        case 4:
-          return {
-            title: "Fase IV: Trasformazione",
-            desc: "Aumento intensità . Stripping e saturazione massima." };
-      }
-    }
-    if (block === "BLOCCO_3_QUALITA") {
-      switch (phase) {
-        case 1:
-          return {
-            title: "Fase I: Accumulo Ipertrofico",
-            desc: "Progressione di volume. Inserimento Back-off, Stripping e 10+MAX." };
-        case 2:
-          return {
-            title: "Fase II: Densità ",
-            desc: "Aggiunta Rest-Pause su macchine guidate e parziali finali." };
-        case 3:
-          return {
-            title: "Fase III: Scarico (Deload)",
-            desc: "-40% Volume, zero tecniche d'intensità . Dissipazione fatica." };
-        case 4:
-          return {
-            title: "Fase IV: Massimo Pompaggio",
-            desc: "Taglio volume sui base. Massimo effort metabolico e isometrie." };
-      }
-    }
-    return { title: "", desc: "" };
-  };
+  // [RIMOSSO] getPhaseDescription
 
   if (isRecoveryMode) {
     return (
@@ -2422,27 +1732,8 @@ const currentIntensityPreview = useMemo(() => {
                 </div>
                 {/* TAB COACH: METODOLOGIE & LINEE GUIDA */}
           {activeTab === "methodologies" && (
-            <div className="space-y-6">
-              
-
-              {/* MODALE SELETTORE TEMPLATE */}
-              <TemplatePickerModal
-                isOpen={isTemplateModalOpen}
-                onClose={() => setIsTemplateModalOpen(false)}
-                currentBlock={currentBlock}
-                athleteName={activeAthlete?.displayName || ""}
-                onSelectTemplate={(days, templateName) => {
-                  setProgramDays(days as any);
-                  setProgramName(templateName);
-                  setBuilderSuccessMessage("⚡ Template \"" + templateName + "\" caricato!");
-                  setTimeout(() => setBuilderSuccessMessage(null), 4000);
-                }}
-              />
-
-              {/* ENCICLOPEDIA E LINEE GUIDA SCIENTIFICHE */}
-              <MethodologiesGuide />
-            </div>
-          )}
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  )}
               </button>
 
               <button
@@ -3074,115 +2365,22 @@ const currentIntensityPreview = useMemo(() => {
 
 
 
-<div className="bg-[#12151B] p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
-              <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <Dumbbell className="text-[#E50914]" /> Scheda: {programName}
-                </h2>
-              </div>
-
-{/* SELETTORE GIORNI ORIZZONTALE (Scrollabile per risparmiare spazio) */}
-<div className="flex gap-2 mb-4 overflow-x-auto scrollbar-none pb-1 snap-x w-full">
-                {programDays.map((day, index) => {
-                  const rawTitle = day.title || (day as Record<string, any>).dayName || '';
-                  const cleanTitle = rawTitle.replace(/^Giorno\s*\d+\s*[:\-\.]?\s*/i, '').trim();
-                  const isSelected = selectedDayIndex === index;
-
-                  return (
-                    <button
-                      key={day.id || index}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDayIndex(index);
-                        if (day.exercises && day.exercises.length > 0) {
-                          setCurrentExId(day.exercises[0].id);
-                        }
-                      }}
-                      className={`shrink-0 snap-start px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
-                        isSelected
-                          ? 'bg-[#E50914] border-[#E50914] text-white shadow-md'
-                          : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                      }`}
-                    >
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] ${isSelected ? 'bg-black/30' : 'bg-white/5'}`}>
-                        G{day.dayNumber || index + 1}
-                      </span>
-                      <span>{cleanTitle.length > 18 ? cleanTitle.substring(0, 18) + '...' : cleanTitle}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              
-
-              {/* BARRA DI PROGRESSO GLOBALE ALLENAMENTO */}
-              {(() => {
-                const totalWorkoutSets = activeRoutine.reduce((acc: number, ex: any) => acc + (ex.sets || 0), 0);
-                const workoutProgressPct = totalWorkoutSets > 0 ? Math.min(100, Math.round((todayLogs.length / totalWorkoutSets) * 100)) : 0;
-                return (
-                  <div className="mb-5 bg-black/40 p-3 rounded-xl border border-white/5">
-                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-1.5">
-                        <TrendingUp className="w-3.5 h-3.5" /> Avanzamento Sessione
-                      </span>
-                      <span className="text-[12px] font-black text-white">{workoutProgressPct}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
-                      <div 
-                        className="h-full bg-gradient-to-r from-orange-500 to-[#E50914] transition-all duration-700 ease-out" 
-                        style={{ width: `${workoutProgressPct}%` }} 
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
-
-{/* LISTA ESERCIZI CON LOGGER INTEGRATO A FISARMONICA */}
-<div className="grid gap-3 md:grid-cols-2">
-                {activeRoutine.map((ex: any) => {
-                  const isSelected = currentExId === ex.id;
-                  const isBw = !!findBodyweightConfig(ex.name);
-
-                  return (
-                    <ExerciseCard
-                      key={ex.id}
-                      ex={ex}
-                      isSelected={isSelected}
-                      onSelect={() => setCurrentExId(isSelected ? '' : ex.id)}
-                      todayLogs={todayLogs}
-                      isMasterProgram={false}
-                      isBw={isBw}
-                      getBadgeStyle={getBadgeStyle}
-                      estimated1RMPreview={estimated1RMPreview}
-                      currentIntensityPreview={currentIntensityPreview}
-                      lastLoggedSet={lastLoggedSet}
-                      handleAutoFillLastLog={handleAutoFillLastLog}
-                      currentBodyweightConfig={currentBodyweightConfig}
-                      sessionBodyWeight={sessionBodyWeight}
-                      weight={weight}
-                      setWeight={setWeight}
-                      adjustWeight={adjustWeight}
-                      reps={reps}
-                      setReps={setReps}
-                      rpe={rpe}
-                      setRpe={setRpe}
-                      handleLogSet={handleLogSet}
-                      handleDeleteLog={handleDeleteLog}
-                      getIntensityInfo={getIntensityInfo}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* BARRA INFERIORE FLUTTUANTE CON TIMER ISOLATO */}
-            <RestTimerBar
-              todayLogsCount={todayLogs.length}
-              onFinishWorkout={handleSafeFinish}
-              isSavingWorkout={isSavingWorkout}
-            />
-        </div>
-      )}
+<ActiveWorkoutSession
+                programDays={programDays}
+                programName={programName}
+                athleteId={targetUserId}
+                athleteName={targetAthleteName}
+                sessionBodyWeight={sessionBodyWeight}
+                workoutHistory={workoutHistory}
+                onWorkoutSaved={async () => {
+                  await addXp(50);
+                  await loadHistory(targetUserId);
+                  setWorkoutSuccessMessage("🎉 Allenamento completato e registrato con successo nello storico! (+50 XP)");
+                  setTimeout(() => setWorkoutSuccessMessage(null), 5000);
+                }}
+              />
+          </div>
+        )}
 
         {/* TAB 2: RECORD PERSONALI */}
         {activeTab === "records" && (
@@ -3209,13 +2407,10 @@ const currentIntensityPreview = useMemo(() => {
               {((userRole as any) === "ATHLETE") && (
                 <div>
                   <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                    <Gauge className="text-green-400" /> Check-in Giornaliero
-                    dello Stato di Forma
+                    <Gauge className="text-green-400" /> Check-in Giornaliero dello Stato di Forma
                   </h2>
                   <p className="text-xs text-zinc-400 mt-1">
-                    Valuta le tue variabili biologiche per calcolare il
-                    punteggio di recupero e ricevere indicazioni sul volume o
-                    intensità .
+                    Valuta le tue variabili biologiche per calcolare il punteggio di recupero e ricevere indicazioni sul volume o intensità.
                   </p>
                 </div>
               )}

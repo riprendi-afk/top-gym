@@ -1,7 +1,7 @@
 ﻿// lib/topgym-templates.ts
 // MATRICE DEI TEMPLATE E SPLIT SETTIMANALI (7 MASCHILI · 7 FEMMINILI) · METODO TOP GYM
 
-import { EngineWorkoutDay, MacroBlock, TopGymStimulus, ExecutionType } from './topgym-engine';
+import { EngineWorkoutDay, MacroBlock, TopGymStimulus, ExecutionType } from './workout-types';
 
 export type AthleteGender = 'MALE' | 'FEMALE';
 

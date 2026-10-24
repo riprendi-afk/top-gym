@@ -1,3 +1,4 @@
+import { TOPGYM_OVER40_TEMPLATES } from './over40-templates';
 import { HATFIELD_4D_TEMPLATES } from './topgym-hatfield-4d';
 // lib/topgym-catalog.ts
 
@@ -2819,6 +2820,7 @@ export function resolveExtendedTopGymTemplate(params: ResolveTemplateParams): st
 // ESPORTAZIONE UNIFICATA CATALOGO COMPLETO (T01 - T33)
 // ============================================================================
 export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
+  ...TOPGYM_OVER40_TEMPLATES,
   ...HATFIELD_4D_TEMPLATES,
   ...Object.values(TOPGYM_TEMPLATES_CATALOG),
   TEMPLATE_T29 as any,

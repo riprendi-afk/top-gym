@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Activity, ShieldAlert, CheckCircle2, Calendar, Layers } from 'lucide-react';
-import { EngineWorkoutDay } from '@/lib/topgym-engine';
+import { EngineWorkoutDay } from '@/lib/workout-types';
 import { AthleteGender } from '@/lib/topgym-templates';
 import { 
   calculateWeeklyVolumeRadar, 
