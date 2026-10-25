@@ -359,7 +359,8 @@ export default function ActiveWorkoutSession({
     : 0;
 
   return (
-    <div className="space-y-4">
+    /* pb-32 sm:pb-16 garantisce che l'ultimo pulsante sia sempre completamente visibile e cliccabile sopra la barra mobile */
+    <div className="space-y-4 pb-32 sm:pb-16">
       
       {/* BOX PRINCIPALE */}
       <div className="bg-[#12151B] p-4 sm:p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
@@ -410,7 +411,7 @@ export default function ActiveWorkoutSession({
           </div>
         </div>
 
-        {/* 2. SELETTORE GIORNATE RIGOROSAMENTE SINTETICO: SOLO G1, G2, G3... */}
+        {/* 2. SELETTORE GIORNATE: SOLO G1, G2, G3... */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Giornata:</span>
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5 snap-x flex-1">
@@ -505,25 +506,25 @@ export default function ActiveWorkoutSession({
 
       </div>
 
-      {/* PULSANTE TERMINA ALLENAMENTO INDIPENDENTE A FINE SCHEDA */}
-      <div className="pt-2">
+      {/* PULSANTE TERMINA ALLENAMENTO INDIPENDENTE (CON MARGINE AGGIUNTO) */}
+      <div className="pt-3">
         <button
           type="button"
           onClick={() => setShowConfirmModal(true)}
-          className="w-full py-4 bg-[#E50914] hover:bg-red-600 text-white font-black text-sm rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-red-950/30 active:scale-[0.98] transition-all cursor-pointer"
+          className="w-full py-4 bg-[#E50914] hover:bg-red-600 text-white font-black text-sm rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-red-950/40 active:scale-[0.98] transition-all cursor-pointer"
         >
           <Check className="w-5 h-5 stroke-[3]" /> Termina Sessione & Salva
         </button>
       </div>
 
-      {/* FLOATING REST TIMER */}
+      {/* FLOATING REST TIMER: POSIZIONATO A bottom-20 SU MOBILE CON z-[70] PER ESSERE SEMPRE PERFETTAMENTE VISIBILE SOPRA LA BARRA BOTTOM */}
       {isTimerActive && restTimeLeft > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-[#E50914]/50 shadow-[0_0_30px_rgba(229,9,20,0.35)] backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[70] bg-[#0c0e12]/95 border border-[#E50914]/60 shadow-[0_10px_35px_rgba(229,9,20,0.45)] backdrop-blur-xl px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl flex items-center justify-between gap-3 sm:gap-4 max-w-[92vw] w-auto whitespace-nowrap animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center gap-2.5">
-            <Clock className="w-5 h-5 text-[#E50914] animate-pulse" />
-            <div className="flex flex-col">
+            <Clock className="w-5 h-5 text-[#E50914] animate-pulse shrink-0" />
+            <div className="flex flex-col leading-tight">
               <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Recupero</span>
-              <span className="text-base font-black font-mono text-white tracking-widest">
+              <span className="text-base sm:text-lg font-black font-mono text-white tracking-widest">
                 {Math.floor(restTimeLeft / 60)}:{(restTimeLeft % 60).toString().padStart(2, '0')}
               </span>
             </div>
@@ -552,7 +553,7 @@ export default function ActiveWorkoutSession({
 
       {/* MODALE DI CONFERMA SALVATAGGIO */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#12151B] border border-white/10 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3 text-white">
               <div className="p-2.5 bg-red-950/50 border border-red-500/30 rounded-xl text-[#E50914]">
