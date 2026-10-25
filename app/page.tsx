@@ -2735,20 +2735,20 @@ useEffect(() => {
                       {programDays.length} Giornate Attive
                     </span>
                     <button
-                      type="button"
-                      onClick={() => setIsTimelineModalOpen(true)}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-bold transition cursor-pointer"
-                    >
-                      Schermo Intero
-                    </button>
+                        type="button"
+                        onClick={() => setIsTimelineModalOpen(!isTimelineModalOpen)}
+                        className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        {isTimelineModalOpen ? "Riduci Schermo" : "Schermo Intero"}
+                      </button>
                   </div>
                 </div>
 
                 <MacrocycleTimelineModal
                   key={(targetUserId || "timeline-inline") + (programmingModel || "")}
-                  inline={true}
+                  inline={!isTimelineModalOpen}
                   isOpen={true}
-                  onClose={() => {}}
+                  onClose={() => setIsTimelineModalOpen(false)}
                   athleteName={athletes.find((a: any) => a.id === targetUserId)?.displayName || activeAthlete?.displayName || "Atleta"}
                   athleteId={targetUserId}
                   programDays={programDays}
@@ -3483,31 +3483,7 @@ return (
           </div>
         )}
       
-      {/* MODALE MATRICE & TIMELINE MACROCICLO COACH (GLOBALE) */}
-      <MacrocycleTimelineModal
-          key={targetUserId || "timeline-modal"}
-        isOpen={isTimelineModalOpen}
-        onClose={() => setIsTimelineModalOpen(false)}
-        athleteName={athletes.find(a => a.id === targetUserId)?.displayName || "Atleta"}
-        athleteId={targetUserId}
-        programDays={programDays}
-        programmingModel={programmingModel as string}
-        onSaveOverrides={async (updatedDays, overrides) => {
-          const daysWithOverrides = updatedDays.map((d: any) => ({
-            ...d,
-            weekOverrides: overrides || d.weekOverrides || {}
-          }));
-          setProgramDays(daysWithOverrides);
-          if (targetUserId) {
-            await saveProgramToSupabase(
-              targetUserId,
-              programName || "Scheda TOPGYM",
-              daysWithOverrides
-            );
-          }
-        }}
-      />
-</main>
+      </main>
         </div>
 
       <MobileBottomNav
