@@ -197,6 +197,11 @@ export default function ActiveWorkoutSession({
     const currentEx = activeExercises.find((e: any) => e.id === currentExId);
     if (!currentEx) return;
 
+    // Tetto massimo statico a 5 serie per esercizio
+    const MAX_SETS_LIMIT = 5;
+    const exTodayCount = todayLogs.filter((l: any) => l.exerciseName === currentEx.name).length;
+    if (exTodayCount >= MAX_SETS_LIMIT) return;
+
     // Normalizzazione sicura virgole decimali iOS
     const cleanW = String(weight).replace(',', '.');
     const numWeight = parseFloat(cleanW) || 0;
