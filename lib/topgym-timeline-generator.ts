@@ -478,28 +478,48 @@ function computeExerciseForWeek(
   const rawReps = String(ex.reps || '8-10');
   const baseWeight = ex.weight || ex.targetWeight || '';
 
-  const isNeuralCompound =
-    lower.includes('squat') ||
-    lower.includes('panca') ||
-    lower.includes('bench') ||
-    lower.includes('deadlift') ||
-    lower.includes('stacco') ||
-    lower.includes('military') ||
-    lower.includes('overhead') ||
-    lower.includes('hip thrust') ||
-    lower.includes('pendlay') ||
-    ex.stimulusType === 'NEURAL';
+  const explicitStimulus = String(ex.stimulus || ex.stimulusType || '').toUpperCase().trim();
+  let stimulus: string;
+  let isNeuralCompound: boolean;
+  let isMetabolic: boolean;
 
-  const isMetabolic =
-    lower.includes('alzate') ||
-    lower.includes('curl') ||
-    lower.includes('pushdown') ||
-    lower.includes('croci') ||
-    lower.includes('cavi') ||
-    lower.includes('polpacci') ||
-    ex.stimulusType === 'METABOLIC';
+  if (explicitStimulus === 'NEURAL') {
+    stimulus = 'NEURAL';
+    isNeuralCompound = true;
+    isMetabolic = false;
+  } else if (explicitStimulus === 'METABOLIC') {
+    stimulus = 'METABOLIC';
+    isNeuralCompound = false;
+    isMetabolic = true;
+  } else if (explicitStimulus === 'HYPERTROPHIC') {
+    stimulus = 'HYPERTROPHIC';
+    isNeuralCompound = false;
+    isMetabolic = false;
+  } else {
+    // Retrocompatibilita assoluta per tutte le schede gia assegnate
+    isNeuralCompound =
+      lower.includes('squat') ||
+      lower.includes('panca') ||
+      lower.includes('bench') ||
+      lower.includes('deadlift') ||
+      lower.includes('stacco') ||
+      lower.includes('military') ||
+      lower.includes('overhead') ||
+      lower.includes('hip thrust') ||
+      lower.includes('pendlay') ||
+      ex.stimulusType === 'NEURAL';
 
-  const stimulus = isNeuralCompound ? 'NEURAL' : isMetabolic ? 'METABOLIC' : 'HYPERTROPHIC';
+    isMetabolic =
+      lower.includes('alzate') ||
+      lower.includes('curl') ||
+      lower.includes('pushdown') ||
+      lower.includes('croci') ||
+      lower.includes('cavi') ||
+      lower.includes('polpacci') ||
+      ex.stimulusType === 'METABOLIC';
+
+    stimulus = isNeuralCompound ? 'NEURAL' : isMetabolic ? 'METABOLIC' : 'HYPERTROPHIC';
+  }
 
   // 1. TOPGYM CLASSICO
   if (methodKey === 'TOPGYM_CLASSICO' || methodKey === 'TOPGYM_BLOCKS') {
@@ -615,7 +635,12 @@ function computeExerciseForWeek(
          lower.includes('pressa sumo'));
 
      const isBikiniL = isPrimaryBig || isSecondaryL || isAccessoryL;
-     const bikiniCategory: 'L' | 'M' | 'H' = isBikiniH ? 'H' : isBikiniL ? 'L' : 'M';
+     const defaultBikiniCat: 'L' | 'M' | 'H' = isBikiniH ? 'H' : isBikiniL ? 'L' : 'M';
+      const bikiniCategory: 'L' | 'M' | 'H' =
+        explicitStimulus === 'NEURAL' ? 'L' :
+        explicitStimulus === 'METABOLIC' ? 'H' :
+        explicitStimulus === 'HYPERTROPHIC' ? 'M' :
+        defaultBikiniCat;
 
      // W10: DELOAD FISIOLOGICO PRE-GARA
      if (isDeload) {

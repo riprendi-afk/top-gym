@@ -458,6 +458,42 @@ export default function MacrocycleTimelineModal({
     });
   };
 
+  const handleChangeStimulus = (exIdx: number, newStimulus: 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC') => {
+    const currentEx = localDays[selectedDayIdx]?.exercises?.[exIdx];
+    if (!currentEx) return;
+    const exId = currentEx.id;
+
+    // 1. Aggiorna lo stimolo dell'esercizio nel giorno locale
+    setLocalDays(prev => {
+      const copy = JSON.parse(JSON.stringify(prev));
+      if (copy[selectedDayIdx]?.exercises?.[exIdx]) {
+        copy[selectedDayIdx].exercises[exIdx].stimulus = newStimulus;
+        copy[selectedDayIdx].exercises[exIdx].stimulusType = newStimulus;
+      }
+      return copy;
+    });
+
+    // 2. Resetta gli override salvati per ricalcolare le 16 settimane con la nuova formula
+    if (exId) {
+      setLocalOverrides(prev => {
+        const next = { ...prev };
+        let changed = false;
+        Object.keys(next).forEach(wKey => {
+          const wNum = Number(wKey);
+          if (next[wNum] && next[wNum][exId]) {
+            if (!next[wNum][exId]?.isLocked) {
+              const weekMap = { ...next[wNum] };
+              delete weekMap[exId];
+              next[wNum] = weekMap;
+              changed = true;
+            }
+          }
+        });
+        return changed ? next : prev;
+      });
+    }
+  };
+
   const handleEditExercise = (exIdx: number, currentName: string) => {
     const newName = prompt("Modifica o sostituisci questo esercizio:", currentName);
     if (!newName || !newName.trim() || newName.trim() === currentName) return;
@@ -800,9 +836,22 @@ export default function MacrocycleTimelineModal({
                               <span className="text-[10px] text-zinc-400 font-mono">
                                 {baseEx.muscle}
                               </span>
-                              <span className="text-[8px] font-mono px-1 rounded uppercase font-bold bg-white/5 text-zinc-300">
-                                {baseEx.stimulus || 'TARGET'}
-                              </span>
+                              <select
+                                value={(baseEx.stimulus || 'HYPERTROPHIC').toUpperCase()}
+                                onChange={(e) => handleChangeStimulus(exIdx, e.target.value as 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC')}
+                                className={`text-[8.5px] font-mono font-bold uppercase rounded px-1.5 py-0.5 border cursor-pointer transition-colors focus:outline-none ${
+                                  (baseEx.stimulus || '').toUpperCase() === 'NEURAL'
+                                    ? 'bg-amber-950/60 text-amber-300 border-amber-600/50 hover:border-amber-400'
+                                    : (baseEx.stimulus || '').toUpperCase() === 'METABOLIC'
+                                    ? 'bg-cyan-950/60 text-cyan-300 border-cyan-600/50 hover:border-cyan-400'
+                                    : 'bg-emerald-950/60 text-emerald-300 border-emerald-600/50 hover:border-emerald-400'
+                                }`}
+                                title="Modifica stimolo e ricalcola all'istante l'intera progressione a 16 settimane"
+                              >
+                                <option value="NEURAL" className="bg-zinc-900 text-amber-300">⚡ NEURAL</option>
+                                <option value="HYPERTROPHIC" className="bg-zinc-900 text-emerald-300">🧱 HYPERTROPHIC</option>
+                                <option value="METABOLIC" className="bg-zinc-900 text-cyan-300">🔥 METABOLIC</option>
+                              </select>
                             </div>
                           </div>
                         </div>
