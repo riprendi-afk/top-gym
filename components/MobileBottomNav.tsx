@@ -1,10 +1,21 @@
-// components/MobileBottomNav.tsx
+﻿// components/MobileBottomNav.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { ClipboardList, Dumbbell, Gauge, TrendingUp, MoreHorizontal, Trophy, 
-  Target, Medal, Settings, Users, UserCheck, X, ChevronRight, Lock, MessageSquare } from 'lucide-react';
-
+import { 
+  Dumbbell, 
+  Gauge, 
+  TrendingUp, 
+  MoreHorizontal, 
+  Trophy, 
+  Target, 
+  Medal, 
+  Settings, 
+  Users, 
+  UserCheck, 
+  X, 
+  ChevronRight 
+} from 'lucide-react';
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -34,8 +45,8 @@ export default function MobileBottomNav({
       {/* 1. BOTTOM BAR FISSA IN BASSO (VISIBILE SOLO SU SMARTPHONE / TABLET PICCOLI) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#12151B]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 pb-safe shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
         <div className="flex items-center justify-around">
-          
-         {/* VISTA ATLETA */}
+
+          {/* VISTA ATLETA */}
           {userRole === 'ATHLETE' && (
             <>
               <button
@@ -47,6 +58,17 @@ export default function MobileBottomNav({
               >
                 <Gauge className={`w-5 h-5 ${activeTab === 'readiness' ? 'stroke-[2.5]' : ''}`} />
                 <span className="text-[10px] font-bold mt-1 tracking-tight">Readiness</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectTab('workout')}
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
+                  activeTab === 'workout' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Dumbbell className={`w-5 h-5 ${activeTab === 'workout' ? 'stroke-[2.5]' : ''}`} />
+                <span className="text-[10px] font-bold mt-1 tracking-tight">Workout</span>
               </button>
 
               <button
@@ -127,11 +149,11 @@ export default function MobileBottomNav({
 
       {/* 2. CASSETTO "ALTRO" MODALE (SLIDE-UP DAL BASSO) */}
       {isMoreOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200"
           onClick={() => setIsMoreOpen(false)}
         >
-          <div 
+          <div
             className="bg-[#12151B] border-t border-white/10 rounded-t-3xl p-5 space-y-4 max-h-[80vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
@@ -139,8 +161,8 @@ export default function MobileBottomNav({
               <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
                 <MoreHorizontal className="text-[#E50914] w-4 h-4" /> Menu & Funzioni
               </h3>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsMoreOpen(false)}
                 className="p-1 rounded-lg text-zinc-400 hover:text-white"
               >
