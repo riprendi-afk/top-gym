@@ -522,6 +522,7 @@ useEffect(() => {
   };
   
   const [programDays, setProgramDays] = useState<WorkoutDay[]>([]);
+  const programCacheRef = useRef<Record<string, { days_data: WorkoutDay[]; program_name: string; programmingModel: any }>>({});
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [viewWeekSelected, setViewWeekSelected] = useState<number>(1);
@@ -760,60 +761,70 @@ useEffect(() => {
   useEffect(() => {
     if (!supabase || !targetUserId) return;
     let isMounted = true;
-    setProgramDays([]);
+    const currentTargetId = targetUserId;
     setSelectedDayIndex(0);
-    getProgramFromSupabase(targetUserId)
+
+    // Se la scheda dell'atleta è già presente nella cache in memoria, caricala all'istante (0ms)
+    if (programCacheRef.current[currentTargetId]) {
+      const cached = programCacheRef.current[currentTargetId];
+      setProgramDays(cached.days_data);
+      if (cached.programmingModel) setProgrammingModel(cached.programmingModel as any);
+      setSelectedDayCount(clampDayCount(cached.days_data.length));
+      if (cached.program_name) setProgramName(cached.program_name);
+    }
+
+    // Sincronizzazione / Fetch da Supabase con protezione da Race Condition
+    getProgramFromSupabase(currentTargetId)
       .then((data) => {
-        if (!isMounted) return;
+        // Se nel frattempo l'atleta selezionato è cambiato, ignora la risposta obsoleta
+        if (!isMounted || currentTargetId !== targetUserId) return;
+
         if (data && data.days_data && data.days_data.length > 0) {
-          setProgramDays(data.days_data);
           const detectedEngine = data.days_data[0]?.method || data.days_data[0]?.programmingModel || data.days_data[0]?.engine;
+          
+          programCacheRef.current[currentTargetId] = {
+            days_data: data.days_data,
+            program_name: data.program_name || '',
+            programmingModel: detectedEngine
+          };
+
+          setProgramDays(data.days_data);
           if (detectedEngine) setProgrammingModel(detectedEngine as any);
           setSelectedDayCount(clampDayCount(data.days_data.length));
           if (data.program_name) setProgramName(data.program_name);
         } else {
+          // Schema predefinito per atleti senza scheda attiva
           const timestamp = Date.now();
-          setProgramDays([
-            {
-              id: `day-1-${timestamp}`,
-              dayNumber: 1,
-              title: "Spinta (Push)",
-              exercises: [] },
-            {
-              id: `day-2-${timestamp}`,
-              dayNumber: 2,
-              title: "Trazione (Pull)",
-              exercises: [] },
-            {
-              id: `day-3-${timestamp}`,
-              dayNumber: 3,
-              title: "Gambe (Legs)",
-              exercises: [] },
-            {
-              id: `day-4-${timestamp}`,
-              dayNumber: 4,
-              title: "Spalle & Braccia",
-              exercises: [] },
-          ]);
+          const fallbackDays = [
+            { id: `day-1-${timestamp}`, dayNumber: 1, title: "Spinta (Push)", exercises: [] },
+            { id: `day-2-${timestamp}`, dayNumber: 2, title: "Trazione (Pull)", exercises: [] },
+            { id: `day-3-${timestamp}`, dayNumber: 3, title: "Gambe (Legs)", exercises: [] },
+            { id: `day-4-${timestamp}`, dayNumber: 4, title: "Spalle & Braccia", exercises: [] },
+          ];
+          const fallbackName = `Scheda TOPGYM - ${targetAthleteName}`;
+          
+          programCacheRef.current[currentTargetId] = {
+            days_data: fallbackDays as any,
+            program_name: fallbackName,
+            programmingModel: undefined
+          };
+
+          setProgramDays(fallbackDays as any);
           setSelectedDayCount(4);
-          setProgramName(`Scheda TOPGYM - ${targetAthleteName}`);
+          setProgramName(fallbackName);
         }
       })
-      .catch(() => {
-        if (isMounted) setProgramDays([]);
+      .catch((err) => {
+        console.error("Errore fetch scheda atleta:", err);
       });
-    loadHistory(targetUserId);
-    loadReadinessHistory(targetUserId);
+
+    loadHistory(currentTargetId);
+    loadReadinessHistory(currentTargetId);
+
     return () => {
       isMounted = false;
     };
-  }, [
-    targetUserId,
-    userRole,
-    targetAthleteName,
-    loadHistory,
-    loadReadinessHistory,
-  ]);
+  }, [targetUserId, userRole, targetAthleteName, loadHistory, loadReadinessHistory]);
 
   const handleAuth = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -1273,6 +1284,13 @@ useEffect(() => {
   };
 
   const handleSaveProgramByCoach = async () => {
+    if (targetUserId) {
+      programCacheRef.current[targetUserId] = {
+        days_data: programDays,
+        program_name: programName,
+        programmingModel
+      };
+    }
     const targetId = activeAthleteId || "default-user";
     let result: { success?: boolean; error?: string } = {};
 
@@ -2745,7 +2763,7 @@ useEffect(() => {
                 </div>
 
                 <MacrocycleTimelineModal
-                  key={(targetUserId || "timeline-inline") + (programmingModel || "")}
+                  key={targetUserId || "timeline-inline"}
                   inline={!isTimelineModalOpen}
                   isOpen={true}
                   onClose={() => setIsTimelineModalOpen(false)}

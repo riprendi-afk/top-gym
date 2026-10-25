@@ -70,6 +70,7 @@ export default function MacrocycleTimelineModal({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
+    setSelectedDayIdx(0);
     if (programDays && programDays.length > 0) {
       setLocalDays(programDays);
       setLocalOverrides(programDays[0]?.weekOverrides || {});
