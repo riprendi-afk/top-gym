@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useMemo, useState } from 'react';
 import { 
@@ -13,7 +13,8 @@ import {
   Repeat, 
   Clock, 
   Zap, 
-  History 
+  History,
+  Target 
 } from 'lucide-react';
 import type { Exercise, SetLog, ExecutionType } from '@/app/page';
 
@@ -27,6 +28,17 @@ export function calculateEstimated1RM(weight: number, reps: number, rpe: number 
   if (effectiveReps <= 1) return Math.round(w);
   const e1rm = w * (1 + effectiveReps / 30);
   return Math.round(e1rm * 10) / 10;
+}
+
+export interface PlannedWeekTargets {
+  sets: number;
+  reps: string;
+  targetWeight: string;
+  restSeconds: number;
+  rpeTarget?: string;
+  tut?: string;
+  notes?: string;
+  isDeload?: boolean;
 }
 
 export interface ExerciseCardProps {
@@ -53,9 +65,8 @@ export interface ExerciseCardProps {
   handleLogSet: (e: React.SyntheticEvent) => void;
   handleDeleteLog: (id: string) => void;
   getIntensityInfo?: (exName: string, weight: number) => { pct: number; label: string; colorClasses: string } | null;
+  plannedTargets?: PlannedWeekTargets;
 }
-
-export const MAX_SETS_PER_EXERCISE = 5;
 
 export function ExerciseCard({
   ex, 
@@ -76,10 +87,21 @@ export function ExerciseCard({
   setRpe, 
   handleLogSet, 
   handleDeleteLog,
+  plannedTargets,
 }: ExerciseCardProps) {
   const [showNotes, setShowNotes] = useState(false);
   const exerciseLogs = useMemo(() => todayLogs.filter(l => l.exerciseName === ex.name), [todayLogs, ex.name]);
-  const isFinished = exerciseLogs.length >= MAX_SETS_PER_EXERCISE;
+
+  // Target dinamici assegnati dalla settimana selezionata
+  const targetSets = plannedTargets?.sets ?? (typeof ex.sets === 'number' && ex.sets > 0 ? ex.sets : 3);
+  const targetReps = plannedTargets?.reps ?? (ex.reps ? String(ex.reps) : '8');
+  const targetLoad = plannedTargets?.targetWeight ?? (ex.targetWeight ? String(ex.targetWeight) : '');
+  const targetRest = plannedTargets?.restSeconds ?? (ex.restSeconds || 90);
+  const targetRpe = plannedTargets?.rpeTarget || (ex as any)?.rpeTarget;
+  const targetNotes = plannedTargets?.notes || ex.notes;
+  const isDeload = plannedTargets?.isDeload;
+
+  const isExerciseCompleted = exerciseLogs.length >= targetSets;
 
   const firstSetE1RM = useMemo(() => {
     if (exerciseLogs.length === 0) return null;
@@ -114,7 +136,7 @@ export function ExerciseCard({
         <div className="w-full">
           <div className="flex justify-between items-center w-full">
             <span className="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-              {exerciseLogs.length > 0 && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+              {isExerciseCompleted && <CheckCircle className="w-4 h-4 text-emerald-500" />}
               {ex.name}
             </span>
             <div className="text-zinc-500">
@@ -133,12 +155,17 @@ export function ExerciseCard({
                 BW
               </span>
             )}
+            {isDeload && (
+              <span className="text-[8px] text-sky-400 font-bold uppercase border border-sky-500/20 bg-sky-950/40 rounded px-1.5 py-0.5">
+                Deload
+              </span>
+            )}
 
-            {/* TRACKER 5 PALLINI STATICI */}
+            {/* TRACKER PALLINI DINAMICO */}
             {!isSelected && (
               <div className="flex items-center gap-1.5 ml-2">
                 <div className="flex gap-1">
-                  {Array.from({ length: MAX_SETS_PER_EXERCISE }).map((_, idx) => (
+                  {Array.from({ length: targetSets }).map((_, idx) => (
                     <div 
                       key={idx} 
                       className={`w-2.5 h-1.5 rounded-full ${
@@ -149,11 +176,9 @@ export function ExerciseCard({
                     />
                   ))}
                 </div>
-                {exerciseLogs.length > 0 && (
-                  <span className="text-[10px] font-bold text-emerald-400 font-mono">
-                    {exerciseLogs.length}/{MAX_SETS_PER_EXERCISE}
-                  </span>
-                )}
+                <span className="text-[10px] font-bold text-zinc-400 font-mono">
+                  {exerciseLogs.length}/{targetSets}
+                </span>
               </div>
             )}
           </div>
@@ -162,54 +187,46 @@ export function ExerciseCard({
 
       {/* DETTAGLI & LOGGER */}
       {isSelected && (
-        <div onClick={(e) => e.stopPropagation()} className="mt-3 pt-3 border-t border-white/5 space-y-4 cursor-default">
+        <div onClick={(e) => e.stopPropagation()} className="mt-3 pt-3 border-t border-white/5 space-y-3.5 cursor-default">
           
-          {/* TRACKER 5 SERIE STATICO */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400">
-              <span>Slot Serie Disponibili</span>
-              <span className="text-white font-mono">{exerciseLogs.length} di {MAX_SETS_PER_EXERCISE} completate</span>
-            </div>
-            <div className="flex gap-1.5 w-full">
-              {Array.from({ length: MAX_SETS_PER_EXERCISE }).map((_, idx) => {
-                const isCompleted = idx < exerciseLogs.length;
-                const isCurrent = idx === exerciseLogs.length;
-                return (
-                  <div 
-                    key={idx} 
-                    className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                      isCompleted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-                      isCurrent ? 'bg-[#E50914] animate-pulse shadow-[0_0_8px_rgba(229,9,20,0.5)]' : 
-                      'bg-zinc-800'
-                    }`} 
-                    title={`Serie ${idx + 1}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* CRUSCOTTO NEUTRO: TUT E RECUPERO SENZA CARICHI/REPS PRECOMPILATI */}
-          <div className="flex items-center justify-between bg-black/40 px-3 py-2.5 rounded-xl border border-white/5">
-            <span className="text-[11px] font-black uppercase tracking-wider text-zinc-300">
-              {exerciseLogs.length < MAX_SETS_PER_EXERCISE 
-                ? `Compilazione: Serie ${exerciseLogs.length + 1} di ${MAX_SETS_PER_EXERCISE}`
-                : 'Tutte le 5 serie completate'}
-            </span>
-            <div className="flex items-center gap-3 font-mono text-[11px] text-zinc-400">
-              {ex.tut && (
-                <span className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-amber-400"/> TUT: <b className="text-white">{ex.tut}</b>
-                </span>
-              )}
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-blue-400"/> Rec: <b className="text-white">{ex.restSeconds || 90}s</b>
+          {/* CRUSCOTTO PARAMETRI TARGET DELLA SETTIMANA ATTIVA */}
+          <div className="bg-black/40 p-2.5 rounded-xl border border-white/5 space-y-1.5">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-400 px-0.5">
+              <span className="flex items-center gap-1 text-sky-400">
+                <Target className="w-3 h-3" /> Obiettivi Settimana
               </span>
+              <span className="text-zinc-500 font-mono">Avanzamento: {exerciseLogs.length}/{targetSets}</span>
             </div>
+
+            <div className="grid grid-cols-4 gap-1.5 font-mono text-center">
+              <div className="bg-zinc-900/80 p-1.5 rounded-lg border border-white/5">
+                <span className="text-[8px] text-zinc-500 uppercase block">Serie Target</span>
+                <b className="text-white text-xs">{targetSets}</b>
+              </div>
+              <div className="bg-zinc-900/80 p-1.5 rounded-lg border border-white/5">
+                <span className="text-[8px] text-zinc-500 uppercase block">Reps Target</span>
+                <b className="text-white text-xs">{targetReps}</b>
+              </div>
+              <div className="bg-zinc-900/80 p-1.5 rounded-lg border border-white/5">
+                <span className="text-[8px] text-zinc-500 uppercase block">Carico Target</span>
+                <b className="text-white text-xs">{targetLoad ? `${targetLoad}kg` : 'Libero'}</b>
+              </div>
+              <div className="bg-zinc-900/80 p-1.5 rounded-lg border border-white/5">
+                <span className="text-[8px] text-zinc-500 uppercase block">Recupero</span>
+                <b className="text-yellow-400 text-xs">{targetRest}s</b>
+              </div>
+            </div>
+
+            {(targetRpe || ex.tut) && (
+              <div className="flex items-center justify-between px-1 text-[10px] text-zinc-400 font-mono pt-0.5">
+                {targetRpe && <span>Intensità: <b className="text-emerald-400">RPE {targetRpe}</b></span>}
+                {ex.tut && <span>TUT: <b className="text-amber-400">{ex.tut}</b></span>}
+              </div>
+            )}
           </div>
 
           {/* NOTE DEL COACH */}
-          {ex.notes && (
+          {targetNotes && (
             <div className="bg-blue-950/20 p-2 rounded-lg border border-blue-900/30 text-[10px] text-zinc-400">
               <div 
                 className="flex justify-between items-center cursor-pointer" 
@@ -224,14 +241,33 @@ export function ExerciseCard({
               </div>
               {showNotes && (
                 <div className="mt-2 text-zinc-300 leading-relaxed border-t border-blue-900/30 pt-2">
-                  {ex.notes}
+                  {targetNotes}
                 </div>
               )}
             </div>
           )}
 
+          {/* TRACKER SERIE DINAMICO */}
+          <div className="flex gap-1.5 w-full pt-1">
+            {Array.from({ length: targetSets }).map((_, idx) => {
+              const isCompleted = idx < exerciseLogs.length;
+              const isCurrent = idx === exerciseLogs.length;
+              return (
+                <div 
+                  key={idx} 
+                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                    isCompleted ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
+                    isCurrent ? 'bg-[#E50914] animate-pulse shadow-[0_0_8px_rgba(229,9,20,0.5)]' : 
+                    'bg-zinc-800'
+                  }`} 
+                  title={`Serie ${idx + 1} di ${targetSets}`}
+                />
+              );
+            })}
+          </div>
+
           {/* COPIA RAPIDA SERIE PRECEDENTE OGGI */}
-          {lastLoggedSet && exerciseLogs.length < MAX_SETS_PER_EXERCISE && (
+          {lastLoggedSet && !isExerciseCompleted && (
             <div className="flex items-center justify-between bg-zinc-900/60 p-2 rounded-lg border border-white/5">
               <span className="text-[10px] text-zinc-400 flex items-center gap-1">
                 <History className="w-3 h-3 text-zinc-500"/>
@@ -247,15 +283,15 @@ export function ExerciseCard({
             </div>
           )}
 
-          {/* FORM INSERIMENTO LIBERO STATICO */}
-          {exerciseLogs.length < MAX_SETS_PER_EXERCISE ? (
+          {/* FORM INSERIMENTO DINAMICO */}
+          {!isExerciseCompleted ? (
             <form onSubmit={handleLogSet} className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 
                 {/* Box Carico */}
                 <div className="bg-black/30 p-2 rounded-xl border border-white/5">
                   <div className="flex justify-between items-center mb-1 px-1">
-                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Carico (Kg)</span>
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Carico Eseguito</span>
                     <Dumbbell className="w-3.5 h-3.5 text-zinc-500" />
                   </div>
                   <input 
@@ -370,13 +406,13 @@ export function ExerciseCard({
                 type="submit" 
                 className="w-full py-3.5 bg-[#E50914] hover:bg-red-600 text-white font-black text-xs rounded-xl uppercase tracking-widest flex justify-center items-center gap-2 active:scale-[0.98] transition-transform shadow-lg cursor-pointer"
               >
-                <Plus className="w-5 h-5 stroke-[3]" /> Registra Serie {exerciseLogs.length + 1} di {MAX_SETS_PER_EXERCISE}
+                <Plus className="w-5 h-5 stroke-[3]" /> Registra Serie {exerciseLogs.length + 1} di {targetSets}
               </button>
             </form>
           ) : (
             <div className="w-full py-3.5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
-              Tutte le {MAX_SETS_PER_EXERCISE} serie completate per questo esercizio
+              Tutte le {targetSets} serie previste per questa settimana completate!
             </div>
           )}
 

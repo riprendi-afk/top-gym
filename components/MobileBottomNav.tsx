@@ -40,28 +40,6 @@ export default function MobileBottomNav({
             <>
               <button
                 type="button"
-                onClick={() => handleSelectTab('workout')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-                  activeTab === 'workout' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Dumbbell className={`w-5 h-5 ${activeTab === 'workout' ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[10px] font-bold mt-1 tracking-tight">Workout</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectTab('chat')}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-                  activeTab === 'chat' ? 'text-[#E50914]' : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <ClipboardList className={`w-5 h-5 ${activeTab === 'chat' ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[10px] font-bold mt-1 tracking-tight">Scheda</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => handleSelectTab('readiness')}
                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
                   activeTab === 'readiness' ? 'text-green-400' : 'text-zinc-400 hover:text-zinc-200'

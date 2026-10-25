@@ -1,17 +1,15 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Dumbbell, 
   TrendingUp, 
   CheckCircle, 
   Clock, 
-  RotateCcw, 
   Check, 
-  X, 
   AlertCircle 
 } from 'lucide-react';
-import { ExerciseCard } from './ExerciseCard';
+import { ExerciseCard, PlannedWeekTargets } from './ExerciseCard';
 import { saveCompletedWorkoutToSupabase } from '@/lib/store';
 import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
 import type { ExecutionType, SetLog } from '@/app/page';
@@ -36,16 +34,15 @@ export default function ActiveWorkoutSession({
   onWorkoutSaved,
 }: ActiveWorkoutSessionProps) {
 
-  // 1. SANITIZZAZIONE RIGOROSA E STATICA DEI GIORNI E DEGLI ESERCIZI
+  // 1. STATO SETTIMANA SELEZIONATA (W1 - W16) & GIORNATA ATTIVA
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
+
+  // 2. SANITIZZAZIONE GIORNI (SOLO SIGLE COMPATTE G1, G2, G3...)
   const sanitizedDays = useMemo(() => {
     if (!Array.isArray(programDays) || programDays.length === 0) return [];
     
     return programDays.map((d, dIdx) => {
-      const rawTitle = d?.title || d?.dayName || `Giorno ${dIdx + 1}`;
-      const cleanTitle = String(rawTitle).includes('undefined')
-        ? `Giorno ${dIdx + 1}`
-        : String(rawTitle).replace(/^Giorno\s*\d+\s*[:\-\.]?\s*/i, '').trim();
-
       const exercises = Array.isArray(d?.exercises) ? d.exercises.map((ex: any, exIdx: number) => {
         const rawWeight = String(ex?.targetWeight ?? '').trim();
         const cleanWeight = (rawWeight === 'undefined' || rawWeight === 'NaN' || rawWeight === 'null') ? '' : rawWeight;
@@ -72,22 +69,30 @@ export default function ActiveWorkoutSession({
         ...d,
         id: d?.id || `day-${dIdx}`,
         dayNumber: d?.dayNumber || dIdx + 1,
-        title: cleanTitle || `Giorno ${dIdx + 1}`,
+        title: `G${d?.dayNumber || dIdx + 1}`,
         exercises,
+        weekOverrides: d?.weekOverrides || {},
       };
     });
   }, [programDays]);
 
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const activeDay = sanitizedDays[selectedDayIndex] || sanitizedDays[0];
   const activeExercises = activeDay?.exercises || [];
+
+  // Calcolo dinamico dello stato di Deload della settimana
+  const isDeloadWeek = useMemo(() => {
+    if (selectedWeek === 4 || selectedWeek === 10 || selectedWeek === 16) return true;
+    const currentDayOverrides = activeDay?.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
+    const currentWeekData = currentDayOverrides?.[selectedWeek] || currentDayOverrides?.[String(selectedWeek)] || {};
+    return Object.values(currentWeekData).some((ov: any) => ov?.isDeload === true);
+  }, [selectedWeek, activeDay, programDays]);
 
   const [currentExId, setCurrentExId] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [reps, setReps] = useState<string>('8');
   const [rpe, setRpe] = useState<string>('8');
 
-  // Gestione Logs locali con salvataggio sicuro anti-crash iOS
+  // Logs locali sicuri
   const [todayLogs, setTodayLogs] = useState<SetLog[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -95,10 +100,9 @@ export default function ActiveWorkoutSession({
 
   // Timer di Recupero
   const [restTimeLeft, setRestTimeLeft] = useState<number>(0);
-  const [restTotalTime, setRestTotalTime] = useState<number>(90);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
 
-  // Ripristino Logs da LocalStorage al caricamento (Safe per Safari)
+  // Ripristino Logs da LocalStorage
   useEffect(() => {
     if (typeof window === 'undefined' || !athleteId) return;
     try {
@@ -111,7 +115,6 @@ export default function ActiveWorkoutSession({
     } catch {}
   }, [athleteId]);
 
-  // Persistenza sicura dei Logs
   const saveLogsSafely = (logs: SetLog[]) => {
     setTodayLogs(logs);
     if (typeof window === 'undefined' || !athleteId) return;
@@ -120,7 +123,39 @@ export default function ActiveWorkoutSession({
     } catch {}
   };
 
-  // 2. SINCRONIZZAZIONE AUTOMATICA DEGLI INPUT QUANDO SI APRE UN ESERCIZIO
+  // Helper per estrarre i target della settimana per il dato esercizio
+  const getPlannedTargetsForEx = (ex: any): PlannedWeekTargets => {
+    const weekOverrides = activeDay?.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
+    const weekOv = weekOverrides?.[selectedWeek]?.[ex.id] || weekOverrides?.[String(selectedWeek)]?.[ex.id];
+
+    const plannedSets = (weekOv?.sets !== undefined && weekOv?.sets !== null && weekOv?.sets !== '')
+      ? Number(weekOv.sets)
+      : (weekOv?.isDeload ? Math.max(2, Math.round(Number(ex.sets || 3) * 0.6)) : Number(ex.sets) || 3);
+
+    const plannedReps = (weekOv?.reps !== undefined && weekOv?.reps !== null && weekOv?.reps !== '')
+      ? String(weekOv.reps)
+      : String(ex.reps || '8');
+
+    const plannedWeight = (weekOv?.targetWeight !== undefined && weekOv?.targetWeight !== null && weekOv?.targetWeight !== '')
+      ? String(weekOv.targetWeight)
+      : (ex.targetWeight ? String(ex.targetWeight) : '');
+
+    const plannedRest = (weekOv?.restSeconds !== undefined && weekOv?.restSeconds !== null && weekOv?.restSeconds !== '')
+      ? Number(weekOv.restSeconds)
+      : Number(ex.restSeconds) || 90;
+
+    return {
+      sets: plannedSets,
+      reps: plannedReps,
+      targetWeight: plannedWeight,
+      restSeconds: plannedRest,
+      rpeTarget: weekOv?.rpeTarget || ex.rpeTarget,
+      tut: ex.tut,
+      notes: weekOv?.notes || ex.notes,
+      isDeload: weekOv?.isDeload || isDeloadWeek,
+    };
+  };
+
   const handleSelectExercise = (ex: any) => {
     if (currentExId === ex.id) {
       setCurrentExId('');
@@ -128,7 +163,7 @@ export default function ActiveWorkoutSession({
     }
     setCurrentExId(ex.id);
 
-    // 1) Ultima serie eseguita oggi
+    // 1) Se serie già eseguite oggi, usa l'ultima serie
     const exTodayLogs = todayLogs.filter((l: any) => l.exerciseName === ex.name);
     if (exTodayLogs.length > 0) {
       const last = exTodayLogs[0];
@@ -138,26 +173,11 @@ export default function ActiveWorkoutSession({
       return;
     }
 
-    // 2) Ultima serie registrata nello storico precedente
-    let pastLog: any = null;
-    for (const w of workoutHistory) {
-      if (Array.isArray(w.logs)) {
-        const found = w.logs.find((l: any) => l.exerciseName === ex.name);
-        if (found) { pastLog = found; break; }
-      }
-    }
-    if (pastLog) {
-      setWeight(String(pastLog.externalLoad ?? pastLog.weight ?? ''));
-      setReps(String(pastLog.reps ?? '8'));
-      setRpe(String(pastLog.rpe ?? '8'));
-      return;
-    }
-
-    // 3) Valore target assegnato dalla Matrice
-    setWeight(ex.targetWeight || '');
-    const parsedReps = parseInt(String(ex.reps), 10);
-    setReps(!isNaN(parsedReps) && parsedReps > 0 ? String(parsedReps) : '8');
-    setRpe('8');
+    // 2) Altrimenti precompila coi target della settimana selezionata
+    const targets = getPlannedTargetsForEx(ex);
+    setWeight(targets.targetWeight || '');
+    setReps(targets.reps || '8');
+    setRpe(targets.rpeTarget || '8');
   };
 
   const adjustWeight = (delta: number) => {
@@ -194,15 +214,14 @@ export default function ActiveWorkoutSession({
   // Registrazione Serie
   const handleLogSet = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    const currentEx = activeExercises.find((e: any) => e.id === currentExId);
+    const currentEx = activeExercises.find((exItem: any) => exItem.id === currentExId);
     if (!currentEx) return;
 
-    // Tetto massimo statico a 5 serie per esercizio
-    const MAX_SETS_LIMIT = 5;
+    // Tetto dinamico basato esattamente sulle serie previste per questa settimana
+    const targets = getPlannedTargetsForEx(currentEx);
     const exTodayCount = todayLogs.filter((l: any) => l.exerciseName === currentEx.name).length;
-    if (exTodayCount >= MAX_SETS_LIMIT) return;
+    if (exTodayCount >= targets.sets) return;
 
-    // Normalizzazione sicura virgole decimali iOS
     const cleanW = String(weight).replace(',', '.');
     const numWeight = parseFloat(cleanW) || 0;
     const numReps = parseInt(String(reps), 10) || 0;
@@ -241,9 +260,8 @@ export default function ActiveWorkoutSession({
     const updated = [newLog, ...todayLogs];
     saveLogsSafely(updated);
 
-    // Avvio Timer
-    const rest = currentEx.restSeconds || 90;
-    setRestTotalTime(rest);
+    // Avvio Timer col tempo di recupero della settimana
+    const rest = targets.restSeconds || 90;
     setRestTimeLeft(rest);
     setIsTimerActive(true);
     triggerVibrate(50);
@@ -254,7 +272,6 @@ export default function ActiveWorkoutSession({
     saveLogsSafely(updated);
   };
 
-  // Helper parsing numerico anti-virgola iOS per Supabase
   const parseSafeNumber = (val: any): number => {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
     if (!val) return 0;
@@ -263,10 +280,9 @@ export default function ActiveWorkoutSession({
     return isNaN(num) ? 0 : num;
   };
 
-  // SALVATAGGIO SEDUTA SU SUPABASE (100% Compatibile con iOS PWA Standalone)
   const executeSaveWorkout = async () => {
     if (!athleteId) {
-      setStatusMessage('⚠️ Errore: Atleta non identificato.');
+      setStatusMessage('⚠ Errore: Atleta non identificato.');
       return;
     }
 
@@ -293,19 +309,18 @@ export default function ActiveWorkoutSession({
     try {
       const res = await saveCompletedWorkoutToSupabase({
         userId: athleteId,
-        dayName: activeDay?.title || 'Allenamento TOPGYM',
+        dayName: `G${activeDay?.dayNumber || selectedDayIndex + 1} (W${selectedWeek})`,
         totalVolume: totalVol,
         exercisesCount: activeExercises.length,
         logs: sanitizedLogs as any,
       });
 
       if (!res?.success) {
-        setStatusMessage('⚠️ Errore durante il salvataggio: ' + (res?.error || 'Verifica la connessione.'));
+        setStatusMessage('⚠ Errore durante il salvataggio: ' + (res?.error || 'Verifica la connessione.'));
         setIsSaving(false);
         return;
       }
 
-      // Successo
       setShowConfirmModal(false);
       setTodayLogs([]);
       if (typeof window !== 'undefined') {
@@ -315,7 +330,7 @@ export default function ActiveWorkoutSession({
       triggerVibrate([100, 50, 100]);
       await onWorkoutSaved();
     } catch (err: any) {
-      setStatusMessage('⚠️ Eccezione salvataggio: ' + (err?.message || 'Riprova.'));
+      setStatusMessage('⚠ Eccezione salvataggio: ' + (err?.message || 'Riprova.'));
     } finally {
       setIsSaving(false);
     }
@@ -331,9 +346,13 @@ export default function ActiveWorkoutSession({
     }
   };
 
+  // Calcolo totale serie previste per questa giornata nella settimana scelta
   const totalWorkoutSets = useMemo(() => {
-    return activeExercises.reduce((acc: number, ex: any) => acc + (ex.sets || 0), 0);
-  }, [activeExercises]);
+    return activeExercises.reduce((acc: number, ex: any) => {
+      const tg = getPlannedTargetsForEx(ex);
+      return acc + tg.sets;
+    }, 0);
+  }, [activeExercises, selectedWeek, activeDay]);
 
   const workoutProgressPct = totalWorkoutSets > 0 
     ? Math.min(100, Math.round((todayLogs.length / totalWorkoutSets) * 100)) 
@@ -343,10 +362,10 @@ export default function ActiveWorkoutSession({
     <div className="space-y-4">
       
       {/* BOX PRINCIPALE */}
-      <div className="bg-[#12151B] p-4 sm:p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
+      <div className="bg-[#12151B] p-4 sm:p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md space-y-4">
         
         {/* HEADER SCHEDA */}
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <h2 className="text-xl font-black text-white flex items-center gap-2">
             <Dumbbell className="text-[#E50914] w-6 h-6" /> Scheda: {programName || 'TOP GYM'}
           </h2>
@@ -355,46 +374,79 @@ export default function ActiveWorkoutSession({
           </span>
         </div>
 
-        {/* SELETTORE GIORNI ORIZZONTALE */}
-        <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-none pb-1 snap-x w-full">
-          {sanitizedDays.map((day, index) => {
-            const isSelected = selectedDayIndex === index;
-            return (
-              <button
-                key={day.id || index}
-                type="button"
-                onClick={() => {
-                  setSelectedDayIndex(index);
-                  if (day.exercises && day.exercises.length > 0) {
-                    handleSelectExercise(day.exercises[0]);
-                  } else {
+        {/* 1. SELETTORE SETTIMANA ORIZZONTALE (W1 - W16) */}
+        <div className="bg-black/40 border border-white/5 rounded-xl p-2.5 space-y-1.5">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+              Settimana (Microciclo)
+            </span>
+            <span className="text-[10px] font-mono text-sky-400 font-bold">
+              {isDeloadWeek ? 'Fase Scarico / Deload' : `Microciclo W${selectedWeek}`}
+            </span>
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+            {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
+              const isDeload = wNum === 4 || wNum === 10 || wNum === 16;
+              const isSelected = selectedWeek === wNum;
+              return (
+                <button
+                  key={wNum}
+                  type="button"
+                  onClick={() => setSelectedWeek(wNum)}
+                  className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50'
+                      : isDeload
+                      ? 'bg-blue-950/30 border-blue-500/30 text-blue-300 hover:bg-blue-900/40'
+                      : 'bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span>W{wNum}</span>
+                  {isDeload && <span className="text-[8px] block opacity-80 leading-none">Deload</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. SELETTORE GIORNATE RIGOROSAMENTE SINTETICO: SOLO G1, G2, G3... */}
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Giornata:</span>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5 snap-x flex-1">
+            {sanitizedDays.map((day, index) => {
+              const isSelected = selectedDayIndex === index;
+              const label = `G${day.dayNumber || index + 1}`;
+              return (
+                <button
+                  key={day.id || index}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDayIndex(index);
                     setCurrentExId('');
-                  }
-                }}
-                className={`shrink-0 snap-start px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-[#E50914] border-[#E50914] text-white shadow-md'
-                    : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
-                }`}
-              >
-                <span className={`px-1.5 py-0.5 rounded text-[10px] ${isSelected ? 'bg-black/30' : 'bg-white/5'}`}>
-                  G{day.dayNumber || index + 1}
-                </span>
-                <span>{day.title.length > 18 ? day.title.substring(0, 18) + '...' : day.title}</span>
-              </button>
-            );
-          })}
+                  }}
+                  className={`shrink-0 snap-start px-4 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer font-mono ${
+                    isSelected
+                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/40 scale-105'
+                      : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* BARRA AVANZAMENTO */}
-        <div className="mb-5 bg-black/40 p-3 rounded-xl border border-white/5">
-          <div className="flex justify-between items-end mb-2">
-            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" /> Avanzamento Sessione
+        <div className="bg-black/40 p-2.5 rounded-xl border border-white/5">
+          <div className="flex justify-between items-end mb-1.5">
+            <span className="text-[9px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" /> Avanzamento Seduta
             </span>
-            <span className="text-[12px] font-black text-white">{workoutProgressPct}%</span>
+            <span className="text-[11px] font-black text-white">{workoutProgressPct}%</span>
           </div>
-          <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+          <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
             <div
               className="h-full bg-gradient-to-r from-orange-500 to-[#E50914] transition-all duration-700 ease-out"
               style={{ width: `${workoutProgressPct}%` }}
@@ -402,7 +454,7 @@ export default function ActiveWorkoutSession({
           </div>
         </div>
 
-        {/* LISTA ESERCIZI (RENDERIZZATA ATTRAVERSO ExerciseCard) */}
+        {/* LISTA ESERCIZI */}
         {activeExercises.length === 0 ? (
           <div className="text-center py-12 text-zinc-500 text-sm">
             Nessun esercizio presente in questa giornata.
@@ -414,6 +466,8 @@ export default function ActiveWorkoutSession({
               const isBw = !!findBodyweightConfig(ex.name);
               const exTodayLogs = todayLogs.filter(l => l.exerciseName === ex.name);
               const lastLog = exTodayLogs.length > 0 ? exTodayLogs[0] : null;
+
+              const plannedTargets = getPlannedTargetsForEx(ex);
 
               return (
                 <ExerciseCard
@@ -442,6 +496,7 @@ export default function ActiveWorkoutSession({
                   setRpe={setRpe}
                   handleLogSet={handleLogSet}
                   handleDeleteLog={handleDeleteLog}
+                  plannedTargets={plannedTargets}
                 />
               );
             })}
@@ -461,7 +516,7 @@ export default function ActiveWorkoutSession({
         </button>
       </div>
 
-      {/* FLOATING REST TIMER (VISIBILE ESCLUSIVAMENTE QUANDO IL RECUPERO È ATTIVO) */}
+      {/* FLOATING REST TIMER */}
       {isTimerActive && restTimeLeft > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-[#E50914]/50 shadow-[0_0_30px_rgba(229,9,20,0.35)] backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center gap-2.5">
@@ -479,7 +534,7 @@ export default function ActiveWorkoutSession({
               type="button"
               onClick={() => setRestTimeLeft(prev => prev + 30)}
               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-lg text-[10px] font-black text-zinc-300 hover:text-white active:scale-95 transition-all cursor-pointer"
-              title="Aggiungi 30 secondi di recupero"
+              title="Aggiungi 30 secondi"
             >
               +30s
             </button>
@@ -487,7 +542,7 @@ export default function ActiveWorkoutSession({
               type="button"
               onClick={() => { setIsTimerActive(false); setRestTimeLeft(0); }}
               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-rose-950/40 border border-white/10 hover:border-rose-500/30 rounded-lg text-[10px] font-black text-zinc-400 hover:text-rose-400 active:scale-95 transition-all cursor-pointer"
-              title="Interrompi recupero"
+              title="Salta recupero"
             >
               Salta
             </button>
@@ -495,7 +550,7 @@ export default function ActiveWorkoutSession({
         </div>
       )}
 
-      {/* MODALE DI CONFERMA SALVATAGGIO IN-APP (RISOLVE IL BLOCCO DI WINDOW.CONFIRM SU IPHONE / SAFARI) */}
+      {/* MODALE DI CONFERMA SALVATAGGIO */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#12151B] border border-white/10 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
