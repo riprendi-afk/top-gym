@@ -108,7 +108,7 @@ export default function MacrocycleTimelineModal({
 
   
 
-  // MOTORE DI STAMPA ISOLATO: Genera HTML puro senza dashboard e attiva il PDF
+  // MOTORE DI STAMPA ISOLATO: Suddivisione a blocchi (W1-W8 e W9-W16) per leggibilità ottimale A4
   const executeIsolatedPrint = (printAllSessions: boolean) => {
     const sessionsToPrint = printAllSessions
       ? (timeline[0]?.days || []).map((_, idx) => idx)
@@ -116,6 +116,16 @@ export default function MacrocycleTimelineModal({
 
     const totalWeeks = timeline.length;
     const modelTitle = meta?.name || programmingModel || 'Top Gym Macrocycle';
+
+    // Raggruppamento delle settimane in blocchi di massimo 8 (W1-W8, W9-W16)
+    const CHUNK_SIZE = 8;
+    const weekChunks: ProjectedWeek[][] = [];
+    for (let i = 0; i < timeline.length; i += CHUNK_SIZE) {
+      weekChunks.push(timeline.slice(i, i + CHUNK_SIZE));
+    }
+
+    const totalSheets = sessionsToPrint.length * (weekChunks.length || 1);
+    let currentSheetIndex = 0;
 
     let html = `
       <!DOCTYPE html>
@@ -137,8 +147,8 @@ export default function MacrocycleTimelineModal({
           body {
             background: #fff;
             color: #000;
-            font-size: 8pt;
-            padding: 2mm;
+            font-size: 8.5pt;
+            padding: 1mm;
           }
           .sheet {
             page-break-after: always;
@@ -153,18 +163,18 @@ export default function MacrocycleTimelineModal({
             justify-content: space-between;
             align-items: flex-end;
             border-bottom: 2px solid #000;
-            padding-bottom: 5px;
-            margin-bottom: 8px;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
           }
           .title-area h1 {
-            font-size: 15pt;
+            font-size: 14pt;
             font-weight: 900;
             letter-spacing: 0.5px;
             text-transform: uppercase;
           }
           .title-area .subtitle {
             font-size: 9pt;
-            color: #333;
+            color: #222;
             font-weight: 600;
             margin-top: 2px;
           }
@@ -172,15 +182,16 @@ export default function MacrocycleTimelineModal({
             text-align: right;
             font-size: 7.5pt;
             color: #444;
+            line-height: 1.3;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7pt;
+            font-size: 8pt;
           }
           th, td {
-            border: 1px solid #777;
-            padding: 3px 2px;
+            border: 1px solid #666;
+            padding: 5px 3px;
             text-align: center;
             vertical-align: middle;
           }
@@ -190,127 +201,151 @@ export default function MacrocycleTimelineModal({
           }
           .th-exercise {
             text-align: left;
-            padding-left: 6px;
-            min-width: 160px;
-            max-width: 180px;
+            padding-left: 8px;
+            width: 22%;
+            min-width: 180px;
             background-color: #e8e8e8;
           }
           .ex-title {
-            font-weight: 800;
-            font-size: 8pt;
+            font-weight: 900;
+            font-size: 9.5pt;
             color: #000;
+            line-height: 1.2;
           }
           .ex-sub {
-            font-size: 6.5pt;
-            color: #555;
+            font-size: 7.5pt;
+            color: #444;
+            margin-top: 2px;
           }
           .cell-primary {
-            font-weight: 800;
-            font-size: 8pt;
+            font-weight: 900;
+            font-size: 10pt;
+            color: #000;
+            letter-spacing: 0.2px;
           }
           .cell-details {
-            font-size: 6.5pt;
-            color: #333;
-            margin-top: 1px;
+            font-size: 7.5pt;
+            color: #222;
+            margin-top: 2px;
+            font-weight: 600;
           }
           .cell-notes {
-            font-size: 5.5pt;
-            color: #666;
-            border-top: 0.5px solid #ccc;
-            margin-top: 1px;
-            padding-top: 1px;
+            font-size: 6.5pt;
+            color: #555;
+            border-top: 0.5px solid #bbb;
+            margin-top: 2px;
+            padding-top: 2px;
+            font-style: italic;
           }
           .col-deload {
-            background-color: #f0f7ff;
+            background-color: #eaf3ff;
           }
           .col-peak {
             background-color: #fff0f0;
+          }
+          .th-week-title {
+            font-size: 9.5pt;
+            font-weight: 900;
+          }
+          .th-week-phase {
+            font-size: 6.5pt;
+            font-weight: 600;
+            color: #555;
           }
           .footer-note {
             display: flex;
             justify-content: space-between;
             margin-top: 6px;
-            font-size: 6.5pt;
-            color: #666;
+            font-size: 7pt;
+            color: #555;
           }
         </style>
       </head>
       <body>
     `;
 
-    sessionsToPrint.forEach((dayIdx, pageIndex) => {
+    sessionsToPrint.forEach((dayIdx) => {
       const sessionTitle = dayList[dayIdx]?.title || `Sessione ${dayIdx + 1}`;
       const currentExercises = timeline[0]?.days[dayIdx]?.exercises || [];
 
-      html += `
-        <div class="sheet">
-          <div class="header-box">
-            <div class="title-area">
-              <h1>TOP GYM • ${athleteName}</h1>
-              <div class="subtitle">${modelTitle} — <b>${sessionTitle}</b> (${totalWeeks} Settimane Complete)</div>
-            </div>
-            <div class="meta-area">
-              <div><b>A.S.D. TOP GYM</b> • Coach Marco Di Girolamo</div>
-              <div>Data emissione: ${new Date().toLocaleDateString('it-IT')} • Sessione ${pageIndex + 1} di ${sessionsToPrint.length}</div>
-            </div>
-          </div>
+      weekChunks.forEach((chunk, chunkIdx) => {
+        currentSheetIndex++;
+        const startWeek = chunk[0]?.weekNumber || 1;
+        const endWeek = chunk[chunk.length - 1]?.weekNumber || chunk.length;
+        const chunkLabel = weekChunks.length > 1
+          ? ` • Parte ${chunkIdx + 1} (Settimane W${startWeek}–W${endWeek})`
+          : ` (${totalWeeks} Settimane)`;
 
-          <table>
-            <thead>
-              <tr>
-                <th class="th-exercise">Esercizio & Target</th>
-                ${timeline.map(w => {
-                  const isDeload = w.isDeload;
-                  const isPeak = w.phaseType === 'PICCO';
-                  const phaseLabelClean = (w.phaseLabel || '').replace(/^W\d+:\s*/, '');
+        html += `
+          <div class="sheet">
+            <div class="header-box">
+              <div class="title-area">
+                <h1>TOP GYM • ${athleteName}</h1>
+                <div class="subtitle">${modelTitle} — <b>${sessionTitle}</b>${chunkLabel}</div>
+              </div>
+              <div class="meta-area">
+                <div><b>A.S.D. TOP GYM</b> • Coach Marco Di Girolamo</div>
+                <div>Data emissione: ${new Date().toLocaleDateString('it-IT')} • Foglio ${currentSheetIndex} di ${totalSheets}</div>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th class="th-exercise">Esercizio & Target</th>
+                  ${chunk.map(w => {
+                    const isDeload = w.isDeload;
+                    const isPeak = w.phaseType === 'PICCO';
+                    const phaseLabelClean = (w.phaseLabel || '').replace(/^W\d+:\s*/, '');
+                    return `
+                      <th class="${isDeload ? 'col-deload' : isPeak ? 'col-peak' : ''}">
+                        <div class="th-week-title">W${w.weekNumber}</div>
+                        <div class="th-week-phase">${phaseLabelClean}</div>
+                      </th>
+                    `;
+                  }).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${currentExercises.map((baseEx, exIdx) => {
                   return `
-                    <th class="${isDeload ? 'col-deload' : isPeak ? 'col-peak' : ''}">
-                      <div style="font-size: 8pt;"><b>W{w.weekNumber}</b></div>
-                      <div style="font-size: 5.5pt; font-weight: normal; color: #555;">${phaseLabelClean}</div>
-                    </th>
+                    <tr>
+                      <td class="th-exercise">
+                        <div class="ex-title">${baseEx.name}</div>
+                        <div class="ex-sub">${baseEx.muscle || ''} • ${baseEx.stimulus || 'TARGET'}</div>
+                      </td>
+                      ${chunk.map(w => {
+                        const ex = w.days[dayIdx]?.exercises[exIdx];
+                        if (!ex) return '<td>-</td>';
+
+                        const setsReps = `${ex.sets}x${ex.reps}`;
+                        const details = [
+                          ex.weight ? `${ex.weight}kg` : null,
+                          ex.rpe ? `@${ex.rpe}` : null,
+                          ex.restSeconds ? `Rec: ${ex.restSeconds}s` : null
+                        ].filter(Boolean).join(' • ');
+
+                        return `
+                          <td class="${w.isDeload ? 'col-deload' : ''}">
+                            <div class="cell-primary">${setsReps}</div>
+                            ${details ? `<div class="cell-details">${details}</div>` : ''}
+                            ${ex.notes ? `<div class="cell-notes">${ex.notes}</div>` : ''}
+                          </td>
+                        `;
+                      }).join('')}
+                    </tr>
                   `;
                 }).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${currentExercises.map((baseEx, exIdx) => {
-                return `
-                  <tr>
-                    <td class="th-exercise">
-                      <div class="ex-title">${baseEx.name}</div>
-                      <div class="ex-sub">${baseEx.muscle || ''} • ${baseEx.stimulus || 'TARGET'}</div>
-                    </td>
-                    ${timeline.map(w => {
-                      const ex = w.days[dayIdx]?.exercises[exIdx];
-                      if (!ex) return '<td>-</td>';
+              </tbody>
+            </table>
 
-                      const setsReps = `${ex.sets}x${ex.reps}`;
-                      const details = [
-                        ex.weight ? `${ex.weight}kg` : null,
-                        ex.rpe ? `@${ex.rpe}` : null,
-                        ex.restSeconds ? `Rec: ${ex.restSeconds}s` : null
-                      ].filter(Boolean).join(' • ');
-
-                      return `
-                        <td class="${w.isDeload ? 'col-deload' : ''}">
-                          <div class="cell-primary">${setsReps}</div>
-                          ${details ? `<div class="cell-details">${details}</div>` : ''}
-                          ${ex.notes ? `<div class="cell-notes">${ex.notes}</div>` : ''}
-                        </td>
-                      `;
-                    }).join('')}
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-
-          <div class="footer-note">
-            <span>Periodizzazione Scientifica Centralizzata • TOP GYM Cloud Matrix</span>
-            <span>Documento Tecnico di Allenamento — Foglio ${pageIndex + 1} / ${sessionsToPrint.length}</span>
+            <div class="footer-note">
+              <span>Periodizzazione Scientifica Centralizzata • TOP GYM Cloud Matrix</span>
+              <span>Documento Tecnico di Allenamento — Foglio ${currentSheetIndex} di ${totalSheets}</span>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      });
     });
 
     html += `
