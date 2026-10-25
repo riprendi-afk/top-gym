@@ -46,7 +46,7 @@ export function detectAthleteGender(displayName?: string): AthleteGender {
 // ============================================================================
 
 // --- 1.1 UOMO B1: BASE 4 GIORNI (Petto-Spalle-Bic / Quad-Dorso-Tric) ---
-const M_B1_SPLIT_BASE: EngineWorkoutDay[] = [
+export const M_B1_SPLIT_BASE: EngineWorkoutDay[] = [
   {
     id: 'b1_base_d1',
     dayNumber: 1,
@@ -195,7 +195,7 @@ const M_B1_SPLIT_PPL_3D: EngineWorkoutDay[] = [
 ];
 
 // --- 1.4 UOMO B2-B3: ANTAGONISTI BASE 4 GIORNI ---
-const M_B2_SPLIT_ANTAGONISTI: EngineWorkoutDay[] = [
+export const M_B2_SPLIT_ANTAGONISTI: EngineWorkoutDay[] = [
   {
     id: 'b2_antag_d1',
     dayNumber: 1,

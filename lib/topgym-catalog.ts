@@ -1,3 +1,4 @@
+import { M_B1_SPLIT_BASE, M_B2_SPLIT_ANTAGONISTI } from './topgym-templates';
 import { TOPGYM_OVER40_TEMPLATES } from './over40-templates';
 import { HATFIELD_4D_TEMPLATES } from './topgym-hatfield-4d';
 // lib/topgym-catalog.ts
@@ -2819,6 +2820,27 @@ export function resolveExtendedTopGymTemplate(params: ResolveTemplateParams): st
 // ============================================================================
 // ESPORTAZIONE UNIFICATA CATALOGO COMPLETO (T01 - T33)
 // ============================================================================
+
+export const TEMPLATE_T34: TemplateMeta = {
+  id: 'T34',
+  title: 'Top Gym Classico 4 Giorni (Petto-Spalle-Bic / Gambe-Dorso-Tric)',
+  group: 'INTERMEDIO',
+  daysCount: 4,
+  primaryEngine: 'TOPGYM_BLOCKS',
+  description: 'Split primaria del Metodo TOP GYM a 4 sedute. Massima freschezza neurale su Panca e Squat: Petto-Spalle-Bicipiti e Gambe-Dorso-Tricipiti a frequenza modulata.',
+  generateSessions: () => generateSessionsFromTemplateDays(M_B1_SPLIT_BASE),
+};
+
+export const TEMPLATE_T35: TemplateMeta = {
+  id: 'T35',
+  title: 'Top Gym Antagonisti 4 Giorni (Petto-Dorso-Tric / Gambe-Spalle-Bic)',
+  group: 'AVANZATO',
+  daysCount: 4,
+  primaryEngine: 'TOPGYM_BLOCKS',
+  description: 'Split fondamentale ad accoppiamento antagonista TOP GYM. Spinta e trazione coordinate per massimo stimolo vascolare: Petto-Dorso-Tricipiti e Gambe-Spalle-Bicipiti.',
+  generateSessions: () => generateSessionsFromTemplateDays(M_B2_SPLIT_ANTAGONISTI),
+};
+
 export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
   ...TOPGYM_OVER40_TEMPLATES,
   ...HATFIELD_4D_TEMPLATES,
@@ -2828,6 +2850,8 @@ export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
   TEMPLATE_T31 as any,
   TEMPLATE_T32 as any,
   TEMPLATE_T33 as any,
+  TEMPLATE_T34,
+  TEMPLATE_T35,
 ];
 
 // Garanzia retrocompatibilita': assegna generateSessions a tutti i template privi di esso
