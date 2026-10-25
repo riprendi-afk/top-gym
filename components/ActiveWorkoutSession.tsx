@@ -450,51 +450,50 @@ export default function ActiveWorkoutSession({
 
       </div>
 
-      {/* FLOATING ACTION BAR CON TIMER & TERMINA ALLENAMENTO */}
-      <div className="sticky bottom-4 z-40 bg-zinc-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-2xl flex items-center justify-between gap-3">
-        
-        {/* TIMER DI RECUPERO */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Clock className={`w-5 h-5 ${isTimerActive ? 'text-[#E50914] animate-pulse' : 'text-zinc-500'}`} />
+      {/* PULSANTE TERMINA ALLENAMENTO INDIPENDENTE A FINE SCHEDA */}
+      <div className="pt-2">
+        <button
+          type="button"
+          onClick={() => setShowConfirmModal(true)}
+          className="w-full py-4 bg-[#E50914] hover:bg-red-600 text-white font-black text-sm rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-red-950/30 active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <Check className="w-5 h-5 stroke-[3]" /> Termina Sessione & Salva
+        </button>
+      </div>
+
+      {/* FLOATING REST TIMER (VISIBILE ESCLUSIVAMENTE QUANDO IL RECUPERO È ATTIVO) */}
+      {isTimerActive && restTimeLeft > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/95 border border-[#E50914]/50 shadow-[0_0_30px_rgba(229,9,20,0.35)] backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-5 h-5 text-[#E50914] animate-pulse" />
             <div className="flex flex-col">
-              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Recupero</span>
-              <span className="text-sm font-black font-mono text-white">
-                {isTimerActive ? `${Math.floor(restTimeLeft / 60)}:${(restTimeLeft % 60).toString().padStart(2, '0')}` : '0:00'}
+              <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Recupero</span>
+              <span className="text-base font-black font-mono text-white tracking-widest">
+                {Math.floor(restTimeLeft / 60)}:{(restTimeLeft % 60).toString().padStart(2, '0')}
               </span>
             </div>
           </div>
 
-          {isTimerActive && (
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setRestTimeLeft(prev => prev + 30)}
-                className="px-2 py-1 bg-zinc-900 border border-white/10 rounded text-[10px] font-black text-zinc-300 hover:text-white"
-              >
-                +30s
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIsTimerActive(false); setRestTimeLeft(0); }}
-                className="px-2 py-1 bg-zinc-900 border border-white/10 rounded text-[10px] font-black text-zinc-400 hover:text-rose-400"
-              >
-                Salta
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+            <button
+              type="button"
+              onClick={() => setRestTimeLeft(prev => prev + 30)}
+              className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-lg text-[10px] font-black text-zinc-300 hover:text-white active:scale-95 transition-all cursor-pointer"
+              title="Aggiungi 30 secondi di recupero"
+            >
+              +30s
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsTimerActive(false); setRestTimeLeft(0); }}
+              className="px-2.5 py-1.5 bg-zinc-900 hover:bg-rose-950/40 border border-white/10 hover:border-rose-500/30 rounded-lg text-[10px] font-black text-zinc-400 hover:text-rose-400 active:scale-95 transition-all cursor-pointer"
+              title="Interrompi recupero"
+            >
+              Salta
+            </button>
+          </div>
         </div>
-
-        {/* PULSANTE TERMINA ALLENAMENTO (Apre il Modale In-App sicuro iOS) */}
-        <button
-          type="button"
-          onClick={() => setShowConfirmModal(true)}
-          className="px-4 py-2.5 bg-[#E50914] hover:bg-red-600 text-white font-black text-xs rounded-xl uppercase tracking-wider flex items-center gap-2 shadow-lg active:scale-95 transition-all"
-        >
-          <Check className="w-4 h-4 stroke-[3]" /> Termina Allenamento
-        </button>
-
-      </div>
+      )}
 
       {/* MODALE DI CONFERMA SALVATAGGIO IN-APP (RISOLVE IL BLOCCO DI WINDOW.CONFIRM SU IPHONE / SAFARI) */}
       {showConfirmModal && (
