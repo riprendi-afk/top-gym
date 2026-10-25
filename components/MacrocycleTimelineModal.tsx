@@ -4,6 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
+  UserCheck,
   Check,
   Lock,
   Unlock,
@@ -28,6 +29,9 @@ import {
 } from '@/lib/topgym-timeline-generator';
 
 interface MacrocycleTimelineModalProps {
+  programName?: string;
+  onProgramNameChange?: (name: string) => void;
+  onOpenTemplatePicker?: () => void;
   readOnly?: boolean;
   inline?: boolean;
   isOpen: boolean;
@@ -40,6 +44,9 @@ interface MacrocycleTimelineModalProps {
 }
 
 export default function MacrocycleTimelineModal({
+  programName = '',
+  onProgramNameChange,
+  onOpenTemplatePicker,
   readOnly = false,
   inline = false,
   isOpen,
@@ -257,7 +264,7 @@ export default function MacrocycleTimelineModal({
                   const phaseLabelClean = (w.phaseLabel || '').replace(/^W\d+:\s*/, '');
                   return `
                     <th class="${isDeload ? 'col-deload' : isPeak ? 'col-peak' : ''}">
-                      <div style="font-size: 8pt;"><b>W${w.weekNumber}</b></div>
+                      <div style="font-size: 8pt;"><b>W{w.weekNumber}</b></div>
                       <div style="font-size: 5.5pt; font-weight: normal; color: #555;">${phaseLabelClean}</div>
                     </th>
                   `;
@@ -543,70 +550,113 @@ export default function MacrocycleTimelineModal({
             </div>
           </div>
 
-          {/* PULSANTI DI AZIONE */}
-          <div className="flex items-center gap-2.5 flex-wrap">
+          {/* BARRA COMANDI UNIFICATA TOP GYM (REGIA + MATRICE) */}
+            <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto">
 
-            {/* STAMPA COMPLETA TUTTE LE SETTIMANE & TUTTE LE SESSIONI */}
-            <button
-              type="button"
-              onClick={() => executeIsolatedPrint(true)}
-              className="px-3.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white transition cursor-pointer shadow-md border border-white/10"
-              title="Stampa l'intero Macrociclo (Tutte le Sessioni x Tutte le Settimane)"
-            >
-              <Printer className="w-4 h-4 text-emerald-400" />
-              <span>Stampa Macrociclo Completo (PDF)</span>
-            </button>
+              {/* INPUT NOME SCHEDA */}
+              {onProgramNameChange && (
+                <div className="flex items-center gap-1.5 bg-black/60 border border-white/10 rounded-xl px-2.5 py-1.5 focus-within:border-emerald-500 transition">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                    Nome:
+                  </span>
+                  <input
+                    type="text"
+                    value={programName}
+                    onChange={(e) => onProgramNameChange(e.target.value)}
+                    placeholder="Nome Scheda..."
+                    className="bg-transparent text-xs text-white font-bold outline-none w-48 sm:w-64 placeholder:text-zinc-600"
+                    title="Nome della Scheda assegnata"
+                  />
+                </div>
+              )}
 
-            {/* STAMPA SOLO SESSIONE ATTIVA */}
-            <button
-              type="button"
-              onClick={() => executeIsolatedPrint(false)}
-              className="px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 transition cursor-pointer border border-white/5"
-              title="Stampa solo la sessione correntemente aperta"
-            >
-              <FileText className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Solo {currentSessionTitle}</span>
-            </button>
+              {/* SCEGLI TEMPLATE SPLIT */}
+              {onOpenTemplatePicker && (
+                <button
+                  type="button"
+                  onClick={onOpenTemplatePicker}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/40 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shrink-0"
+                  title="Apri catalogo template split completi"
+                >
+                  <Layers className="w-4 h-4 text-white" />
+                  <span>Scegli Template Split</span>
+                </button>
+              )}
 
-            {/* AGGIUNGI ESERCIZIO */}
-            <button
-              type="button"
-              onClick={handleAddExercise}
-              className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white transition cursor-pointer shadow-md"
-              title="Aggiungi esercizio a questa sessione"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Esercizio</span>
-            </button>
+              {/* UNICO TASTO MASTER: SALVA E ASSEGNA ALL'ATLETA */}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer shadow-lg shadow-emerald-950/40 ${
+                  saveSuccess
+                    ? 'bg-emerald-400 text-black shadow-emerald-500/50 scale-105'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
+                }`}
+                title="Salva tutte le 16 settimane, assegna la scheda e invia la notifica push all'atleta"
+              >
+                {saveSuccess ? (
+                  <Check className="w-4 h-4 text-black" />
+                ) : isSaving ? (
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <UserCheck className="w-4 h-4 text-white" />
+                )}
+                <span>
+                  {saveSuccess
+                    ? 'Scheda Assegnata!'
+                    : isSaving
+                    ? 'Assegnazione in corso...'
+                    : `Salva e Assegna (${athleteName})`}
+                </span>
+              </button>
 
-            {/* SALVA OVERRIDE */}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer shadow-lg ${
-                saveSuccess
-                  ? 'bg-emerald-500 text-black shadow-emerald-950/50'
-                  : 'bg-[#E50914] hover:bg-red-700 text-white shadow-red-950/60 active:scale-95'
-              }`}
-            >
-              {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-              {saveSuccess ? 'Matrice Salvata!' : isSaving ? 'Salvataggio...' : 'Salva Tutte'}
-            </button>
+              {/* STAMPA COMPLETA TUTTE LE SETTIMANE */}
+              <button
+                type="button"
+                onClick={() => executeIsolatedPrint(true)}
+                className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white transition cursor-pointer shadow-md border border-white/10"
+                title="Stampa l'intero Macrociclo (PDF)"
+              >
+                <Printer className="w-4 h-4 text-emerald-400" />
+                <span className="hidden sm:inline">Stampa Macrociclo (PDF)</span>
+              </button>
 
-            {/* CHIUDI */}
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition"
-              title="Chiudi"
-            >
-              <X className="w-5 h-5" />
-            </button>
+              {/* STAMPA SOLO SESSIONE ATTIVA */}
+              <button
+                type="button"
+                onClick={() => executeIsolatedPrint(false)}
+                className="px-2.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 transition cursor-pointer border border-white/5"
+                title="Stampa solo la sessione correntemente aperta"
+              >
+                <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="hidden sm:inline">Solo {currentSessionTitle}</span>
+              </button>
+
+              {/* AGGIUNGI ESERCIZIO */}
+              <button
+                type="button"
+                onClick={handleAddExercise}
+                className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white transition cursor-pointer shadow-md"
+                title="Aggiungi esercizio a questa sessione"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Esercizio</span>
+              </button>
+
+              {/* CHIUDI */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition"
+                title="Chiudi"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* BARRA SELEZIONE GIORNO / SESSIONE */}
+          {/* BARRA SELEZIONE GIORNO / SESSIONE */}
         <div className="px-4 py-2.5 bg-[#12151B] border-b border-white/5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
             <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400 mr-2 flex items-center gap-1">
@@ -631,7 +681,7 @@ export default function MacrocycleTimelineModal({
 
           <div className="text-[11px] text-zinc-400 font-mono hidden sm:flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Macro W1 - W${timeline.length} Modificabile in Tempo Reale</span>
+            <span>Macro W1 - W{timeline.length} Modificabile in Tempo Reale</span>
           </div>
         </div>
 

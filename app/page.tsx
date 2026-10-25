@@ -2749,27 +2749,71 @@ useEffect(() => {
                   inline={true}
                   isOpen={true}
                   onClose={() => {}}
-                  athleteName={athletes.find((a: any) => a.id === targetUserId)?.displayName || "Atleta"}
+                  athleteName={athletes.find((a: any) => a.id === targetUserId)?.displayName || activeAthlete?.displayName || "Atleta"}
                   athleteId={targetUserId}
                   programDays={programDays}
                   programmingModel={programmingModel as string}
+                  programName={programName}
+                  onProgramNameChange={setProgramName}
+                  onOpenTemplatePicker={() => setIsTemplateModalOpen(true)}
                   onSaveOverrides={async (updatedDays, overrides) => {
+                    const coachEmail = isMasterCoach
+                      ? "riprendi@gmail.com"
+                      : "maggiopaolo34@gmail.com";
+
                     const daysWithOverrides = updatedDays.map((d: any) => ({
                       ...d,
+                      isPeriodized: isMasterCoach,
+                      assignedByCoach: coachEmail,
                       weekOverrides: overrides || d.weekOverrides || {}
                     }));
+
                     setProgramDays(daysWithOverrides);
-            const savedMethod = (daysWithOverrides[0] as any)?.method || (daysWithOverrides[0] as any)?.programmingModel;
-            if (savedMethod) {
-              setProgrammingModel(savedMethod as any);
-            }
-                    if (targetUserId) {
+
+                    const savedMethod = (daysWithOverrides[0] as any)?.method || (daysWithOverrides[0] as any)?.programmingModel;
+                    if (savedMethod) {
+                      setProgrammingModel(savedMethod as any);
+                    }
+
+                    const targetId = activeAthleteId || targetUserId || "default-user";
+                    if (targetId) {
                       await saveProgramToSupabase(
-                        targetUserId,
+                        targetId,
                         programName || "Scheda TOPGYM",
                         daysWithOverrides
                       );
-                      setBuilderSuccessMessage("⚡ Matrice Macrociclo salvata e sincronizzata!");
+
+                      if (supabase && targetId && targetId !== "default-user") {
+                        try {
+                          await supabase.from("notifications").insert([
+                            {
+                              user_id: targetId,
+                              title: isMasterCoach
+                                ? "Nuova Scheda Metodo TOPGYM!"
+                                : "Nuova Scheda di Allenamento",
+                              message: isMasterCoach
+                                ? `Il Coach ha assegnato o aggiornato il programma "${programName}".`
+                                : `Il Coach ha aggiornato la tua scheda "${programName}".`,
+                              type: "program_assigned"
+                            }
+                          ]);
+                        } catch {}
+
+                        try {
+                          await sendPushNotification(
+                            targetId,
+                            isMasterCoach
+                              ? "Nuova Scheda Metodo TOPGYM! 💪"
+                              : "Nuova Scheda Assegnata! 💪",
+                            isMasterCoach
+                              ? `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || "Nuova scheda"}).`
+                              : `Il Coach ha aggiornato la tua scheda di allenamento (${programName || "Nuova scheda"}).`,
+                            "/"
+                          );
+                        } catch {}
+                      }
+
+                      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete?.displayName || "Atleta"}!`);
                       setTimeout(() => setBuilderSuccessMessage(null), 4000);
                     }
                   }}
