@@ -7,7 +7,6 @@ import MethodologiesGuide from "@/components/MethodologiesGuide";
 import { getActiveSessionForAthlete, resolveEngineKey, ENGINE_METADATA } from "@/lib/topgym-timeline-generator";
 import MacrocycleTimelineModal from '@/components/MacrocycleTimelineModal';
 import { calculatePlannedWeeklySets } from "@/lib/topgym-volume";
-import WeeklyVolumeRadar from "@/components/WeeklyVolumeRadar";
 
 import React, {
   useState,
