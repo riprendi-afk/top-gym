@@ -347,40 +347,26 @@ export default function ActiveWorkoutSession({
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
               Settimana (Microciclo)
             </span>
-            <span className="text-[10px] font-mono text-zinc-300 font-bold">
+            <span className="text-[10px] font-mono text-sky-400 font-bold">
               Microciclo W{selectedWeek}
-              {selectedWeek < athleteCurrentWeek && " • Completato"}
-              {selectedWeek === athleteCurrentWeek && " • In Corso"}
-              {selectedWeek > athleteCurrentWeek && " • Programmato"}
             </span>
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
             {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
-              const isCompleted = wNum < athleteCurrentWeek;
-              const isCurrent = wNum === athleteCurrentWeek;
               const isSelected = selectedWeek === wNum;
               return (
                 <button
                   key={wNum}
                   type="button"
                   onClick={() => setSelectedWeek(wNum)}
-                  className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer flex flex-col items-center min-w-[48px] ${
+                  className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
                     isSelected
-                      ? 'ring-2 ring-white/40 shadow-md shadow-red-950/50 '
-                      : ''
-                  } ${
-                    isCurrent
-                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md'
-                      : isCompleted
-                      ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/40'
-                      : 'bg-black/40 border-white/5 text-zinc-600 opacity-60 hover:opacity-100 hover:text-zinc-400'
+                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50'
+                      : 'bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <span>W{wNum}</span>
-                  <span className="text-[7px] uppercase tracking-wider font-sans mt-0.5 font-bold">
-                    {isCurrent ? "Attiva" : isCompleted ? "Fatta" : "Bloccata"}
-                  </span>
                 </button>
               );
             })}
