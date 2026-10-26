@@ -3101,40 +3101,109 @@ useEffect(() => {
             </div>
 
             {/* SELETTORE SETTIMANA ORIZZONTALE A SCORRIMENTO (W1 - W16) */}
-            <div className="bg-[#12151B] border border-white/10 rounded-2xl p-3 shadow-lg space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                  Seleziona Settimana (Microciclo)
-                </span>
-                <span className="text-[10px] font-mono text-sky-400 font-bold">
-                  {viewWeekSelected === 4 || viewWeekSelected === 10 || viewWeekSelected === 16 ? "Fase Scarico / Deload" : "Microciclo Regolare"}
-                </span>
-              </div>
+            {(() => {
+              const athleteCurrentWeek = Number(programDays?.[0]?.currentWeek) || 1;
+              const handleConfirmWeek = async (targetWeek: number) => {
+                if (!programDays || programDays.length === 0 || !targetUserId) return;
+                if (targetWeek < 1 || targetWeek > 16) return;
 
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
-                {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
-                  const isDeload = wNum === 4 || wNum === 10 || wNum === 16;
-                  const isSelected = viewWeekSelected === wNum;
-                  return (
-                    <button
-                      key={wNum}
-                      type="button"
-                      onClick={() => setViewWeekSelected(wNum)}
-                      className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
-                        isSelected
-                          ? "bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50"
-                          : isDeload
-                          ? "bg-blue-950/30 border-blue-500/30 text-blue-300 hover:bg-blue-900/40"
-                          : "bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5"
-                      }`}
-                    >
-                      <span>W{wNum}</span>
-                      {isDeload && <span className="text-[9px] block text-[9px] opacity-80 leading-none">Deload</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                const updatedDays = programDays.map((day: any, idx: number) => {
+                  if (idx === 0) return { ...day, currentWeek: targetWeek };
+                  return day;
+                });
+
+                setProgramDays(updatedDays);
+                setViewWeekSelected(targetWeek);
+
+                if (typeof saveProgramToSupabase === 'function') {
+                  await saveProgramToSupabase(targetUserId, programName || 'Scheda Atleta', updatedDays);
+                }
+              };
+
+              return (
+                <div className="bg-[#12151B] border border-white/10 rounded-2xl p-3 shadow-lg space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                      Progressione Microcicli
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400 font-bold">
+                      Visualizzando: <b className="text-white">W{viewWeekSelected}</b>
+                      {viewWeekSelected < athleteCurrentWeek && " • Completato"}
+                      {viewWeekSelected === athleteCurrentWeek && " • In Corso"}
+                      {viewWeekSelected > athleteCurrentWeek && " • Programmato"}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+                    {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
+                      const isCompleted = wNum < athleteCurrentWeek;
+                      const isCurrent = wNum === athleteCurrentWeek;
+                      const isFuture = wNum > athleteCurrentWeek;
+                      const isSelected = viewWeekSelected === wNum;
+
+                      return (
+                        <button
+                          key={wNum}
+                          type="button"
+                          onClick={() => setViewWeekSelected(wNum)}
+                          className={`shrink-0 snap-start px-3 py-2 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer flex flex-col items-center min-w-[52px] ${
+                            isSelected ? "ring-2 ring-white/40 shadow-lg " : ""
+                          } ${
+                            isCurrent
+                              ? "bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/60"
+                              : isCompleted
+                              ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/40"
+                              : "bg-black/40 border-white/5 text-zinc-600 opacity-60 hover:opacity-100 hover:text-zinc-400"
+                          }`}
+                        >
+                          <span className="text-xs">W{wNum}</span>
+                          <span className="text-[8px] uppercase tracking-wider font-sans mt-0.5 font-bold">
+                            {isCurrent ? "Attiva" : isCompleted ? "Fatta" : "Bloccata"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* PULSANTE DI CONFERMA MANUALE MICROCICLO */}
+                  <div className="pt-2 flex items-center justify-between border-t border-white/5">
+                    <div className="text-[11px] text-zinc-400 font-mono">
+                      Stato Atleta: <span className="text-white font-bold">Microciclo W{athleteCurrentWeek}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {athleteCurrentWeek > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Vuoi davvero ripristinare il Microciclo a W${athleteCurrentWeek - 1}?`)) {
+                              handleConfirmWeek(athleteCurrentWeek - 1);
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-all cursor-pointer"
+                        >
+                          ↩ Ripristina W{athleteCurrentWeek - 1}
+                        </button>
+                      )}
+                      {athleteCurrentWeek <= 16 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Confermare il completamento del Microciclo W${athleteCurrentWeek} e passare a W${athleteCurrentWeek + 1}?`)) {
+                              handleConfirmWeek(athleteCurrentWeek + 1);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>✓ Conferma W{athleteCurrentWeek}</span>
+                          {athleteCurrentWeek < 16 && <span className="text-[10px] opacity-80">→ Sblocca W{athleteCurrentWeek + 1}</span>}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* SELETTORE GIORNATA COMPATTO */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -3173,7 +3242,7 @@ useEffect(() => {
               // Calcolo dinamico dello stato di deload: legge prioritariamente dagli override della matrice o dalla fase
                 const currentDayOverrides = currentDay?.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
                 const currentWeekData = currentDayOverrides?.[viewWeekSelected] || currentDayOverrides?.[String(viewWeekSelected)] || {};
-                const isDeloadWeek = Object.values(currentWeekData).some((ov: any) => ov?.isDeload === true);
+                const isDeloadWeek = false;
 
               return (
                 <div className="space-y-2.5">

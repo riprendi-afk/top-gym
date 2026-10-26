@@ -12,6 +12,7 @@ import {
 import { ExerciseCard, PlannedWeekTargets } from './ExerciseCard';
 import { saveCompletedWorkoutToSupabase } from '@/lib/store';
 import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
+import { sanitizeProgramDays } from '@/lib/sanitization';
 import type { ExecutionType, SetLog } from '@/app/page';
 
 interface ActiveWorkoutSessionProps {
@@ -38,54 +39,19 @@ export default function ActiveWorkoutSession({
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
 
-  // 2. SANITIZZAZIONE GIORNI (SOLO SIGLE COMPATTE G1, G2, G3...)
+  // 2. SANITIZZAZIONE GIORNI
   const sanitizedDays = useMemo(() => {
-    if (!Array.isArray(programDays) || programDays.length === 0) return [];
-    
-    return programDays.map((d, dIdx) => {
-      const exercises = Array.isArray(d?.exercises) ? d.exercises.map((ex: any, exIdx: number) => {
-        const rawWeight = String(ex?.targetWeight ?? '').trim();
-        const cleanWeight = (rawWeight === 'undefined' || rawWeight === 'NaN' || rawWeight === 'null') ? '' : rawWeight;
-        const rawReps = String(ex?.reps ?? '8').trim();
-        const cleanReps = rawReps.includes('undefined') ? '8' : rawReps;
-        const cleanSets = (typeof ex?.sets === 'number' && ex.sets > 0) ? ex.sets : (parseInt(String(ex?.sets), 10) || 3);
-        const cleanRest = parseInt(String(ex?.restSeconds), 10) || 90;
-
-        return {
-          ...ex,
-          id: ex?.id || `ex-${dIdx}-${exIdx}`,
-          name: String(ex?.name || 'Esercizio').trim(),
-          sets: cleanSets,
-          reps: cleanReps,
-          targetWeight: cleanWeight,
-          restSeconds: cleanRest,
-          executionType: (ex?.executionType || 'REGULAR') as ExecutionType,
-          tut: (ex?.tut && !String(ex.tut).includes('undefined')) ? String(ex.tut) : '2-0-1-0',
-          notes: (ex?.notes && !String(ex.notes).includes('undefined')) ? String(ex.notes) : '',
-        };
-      }) : [];
-
-      return {
-        ...d,
-        id: d?.id || `day-${dIdx}`,
-        dayNumber: d?.dayNumber || dIdx + 1,
-        title: `G${d?.dayNumber || dIdx + 1}`,
-        exercises,
-        weekOverrides: d?.weekOverrides || {},
-      };
-    });
+    return sanitizeProgramDays(programDays);
   }, [programDays]);
 
   const activeDay = sanitizedDays[selectedDayIndex] || sanitizedDays[0];
   const activeExercises = activeDay?.exercises || [];
 
   // Calcolo dinamico dello stato di Deload della settimana
-  const isDeloadWeek = useMemo(() => {
-    if (selectedWeek === 4 || selectedWeek === 10 || selectedWeek === 16) return true;
-    const currentDayOverrides = activeDay?.weekOverrides || (programDays && (programDays[0] as any)?.weekOverrides) || {};
-    const currentWeekData = currentDayOverrides?.[selectedWeek] || currentDayOverrides?.[String(selectedWeek)] || {};
-    return Object.values(currentWeekData).some((ov: any) => ov?.isDeload === true);
-  }, [selectedWeek, activeDay, programDays]);
+  const athleteCurrentWeek = useMemo(() => {
+    return Number(programDays?.[0]?.currentWeek) || 1;
+  }, [programDays]);
+  const isDeloadWeek = false;
 
   const [currentExId, setCurrentExId] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
@@ -240,7 +206,7 @@ export default function ActiveWorkoutSession({
       id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       exerciseId: currentEx.id,
       exerciseName: currentEx.name,
-      muscleGroup: (currentEx.muscleGroup as any) || undefined,
+      muscleGroup: (currentEx as any).muscleGroup || undefined,
       weight: numWeight,
       reps: numReps,
       rpe: numRpe,
@@ -381,30 +347,40 @@ export default function ActiveWorkoutSession({
             <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
               Settimana (Microciclo)
             </span>
-            <span className="text-[10px] font-mono text-sky-400 font-bold">
-              {isDeloadWeek ? 'Fase Scarico / Deload' : `Microciclo W${selectedWeek}`}
+            <span className="text-[10px] font-mono text-zinc-300 font-bold">
+              Microciclo W{selectedWeek}
+              {selectedWeek < athleteCurrentWeek && " • Completato"}
+              {selectedWeek === athleteCurrentWeek && " • In Corso"}
+              {selectedWeek > athleteCurrentWeek && " • Programmato"}
             </span>
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
             {Array.from({ length: 16 }, (_, i) => i + 1).map((wNum) => {
-              const isDeload = wNum === 4 || wNum === 10 || wNum === 16;
+              const isCompleted = wNum < athleteCurrentWeek;
+              const isCurrent = wNum === athleteCurrentWeek;
               const isSelected = selectedWeek === wNum;
               return (
                 <button
                   key={wNum}
                   type="button"
                   onClick={() => setSelectedWeek(wNum)}
-                  className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer ${
+                  className={`shrink-0 snap-start px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all border cursor-pointer flex flex-col items-center min-w-[48px] ${
                     isSelected
-                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md shadow-red-950/50'
-                      : isDeload
-                      ? 'bg-blue-950/30 border-blue-500/30 text-blue-300 hover:bg-blue-900/40'
-                      : 'bg-black/40 border-white/5 text-zinc-400 hover:text-white hover:bg-white/5'
+                      ? 'ring-2 ring-white/40 shadow-md shadow-red-950/50 '
+                      : ''
+                  } ${
+                    isCurrent
+                      ? 'bg-[#E50914] border-[#E50914] text-white shadow-md'
+                      : isCompleted
+                      ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/40'
+                      : 'bg-black/40 border-white/5 text-zinc-600 opacity-60 hover:opacity-100 hover:text-zinc-400'
                   }`}
                 >
                   <span>W{wNum}</span>
-                  {isDeload && <span className="text-[8px] block opacity-80 leading-none">Deload</span>}
+                  <span className="text-[7px] uppercase tracking-wider font-sans mt-0.5 font-bold">
+                    {isCurrent ? "Attiva" : isCompleted ? "Fatta" : "Bloccata"}
+                  </span>
                 </button>
               );
             })}
