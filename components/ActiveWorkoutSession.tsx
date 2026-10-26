@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Dumbbell, 
   TrendingUp, 
@@ -24,6 +24,72 @@ interface ActiveWorkoutSessionProps {
   workoutHistory?: any[];
   onWorkoutSaved: () => Promise<void> | void;
 }
+
+
+// ==================== TOPGYM AUDIO & WAKE ENGINE ====================
+let topgymAudioCtx: AudioContext | null = null;
+
+function getTopGymAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return null;
+    if (!topgymAudioCtx || topgymAudioCtx.state === 'closed') {
+      topgymAudioCtx = new Ctx();
+    }
+    if (topgymAudioCtx.state === 'suspended') {
+      topgymAudioCtx.resume().catch(() => {});
+    }
+    return topgymAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function unlockTopGymAudio() {
+  const ctx = getTopGymAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+}
+
+function playLoudWorkoutBeep() {
+  try {
+    const ctx = getTopGymAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const t = ctx.currentTime;
+    // Sequenza acustica ad alto impatto: 880Hz -> 880Hz -> 1760Hz
+    const bursts = [
+      { freq: 880, start: 0, dur: 0.12 },
+      { freq: 880, start: 0.18, dur: 0.12 },
+      { freq: 1760, start: 0.36, dur: 0.40 }
+    ];
+
+    bursts.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle'; // Frequenza armonica penetrante
+      osc.frequency.setValueAtTime(freq, t + start);
+
+      gain.gain.setValueAtTime(1.0, t + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + start + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t + start);
+      osc.stop(t + start + dur);
+    });
+  } catch (err) {
+    console.error('Audio beep error:', err);
+  }
+}
+// ===================================================================
 
 export default function ActiveWorkoutSession({
   programDays,
@@ -64,9 +130,59 @@ export default function ActiveWorkoutSession({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Timer di Recupero
+  // Timer di Recupero Persistente su Timestamp
   const [restTimeLeft, setRestTimeLeft] = useState<number>(0);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
+  const timerEndTimeRef = useRef<number | null>(null);
+  const wakeLockRef = useRef<any>(null);
+
+  const stopRestTimer = useCallback(() => {
+    timerEndTimeRef.current = null;
+    if (typeof window !== 'undefined') {
+      try { localStorage.removeItem('topgym_active_rest_end'); } catch {}
+    }
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch(() => {});
+      wakeLockRef.current = null;
+    }
+    setIsTimerActive(false);
+    setRestTimeLeft(0);
+  }, []);
+
+  const startRestTimer = useCallback((seconds: number) => {
+    if (seconds <= 0) return;
+    const targetEnd = Date.now() + seconds * 1000;
+    timerEndTimeRef.current = targetEnd;
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('topgym_active_rest_end', String(targetEnd)); } catch {}
+    }
+    setRestTimeLeft(seconds);
+    setIsTimerActive(true);
+    unlockTopGymAudio();
+    if (typeof triggerVibrate === 'function') triggerVibrate(50);
+
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      (navigator as any).wakeLock.request('screen').then((lock: any) => {
+        wakeLockRef.current = lock;
+      }).catch(() => {});
+    }
+  }, []);
+
+  const addThirtySeconds = useCallback(() => {
+    const now = Date.now();
+    const currentEnd = (timerEndTimeRef.current && timerEndTimeRef.current > now)
+      ? timerEndTimeRef.current
+      : now + restTimeLeft * 1000;
+    const newEnd = currentEnd + 30 * 1000;
+    timerEndTimeRef.current = newEnd;
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('topgym_active_rest_end', String(newEnd)); } catch {}
+    }
+    const rem = Math.max(0, Math.ceil((newEnd - now) / 1000));
+    setRestTimeLeft(rem);
+    setIsTimerActive(true);
+    unlockTopGymAudio();
+  }, [restTimeLeft]);
 
   // Ripristino Logs da LocalStorage
   useEffect(() => {
@@ -158,24 +274,76 @@ export default function ActiveWorkoutSession({
     }
   };
 
-  // Timer countdown
+  // Timer countdown assoluto: resiliente a standby, sospensione mobile e tab-switch
   useEffect(() => {
-    let interval: any = null;
-    if (isTimerActive && restTimeLeft > 0) {
-      interval = setInterval(() => {
-        setRestTimeLeft((prev: number) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setIsTimerActive(false);
-            triggerVibrate([200, 100, 200]);
-            return 0;
+    // Ripristino all'avvio / mount
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('topgym_active_rest_end');
+        if (saved) {
+          const end = Number(saved);
+          const now = Date.now();
+          if (end > now) {
+            timerEndTimeRef.current = end;
+            setRestTimeLeft(Math.ceil((end - now) / 1000));
+            setIsTimerActive(true);
+          } else {
+            localStorage.removeItem('topgym_active_rest_end');
           }
-          return prev - 1;
-        });
-      }, 1000);
+        }
+      } catch {}
     }
-    return () => clearInterval(interval);
-  }, [isTimerActive, restTimeLeft]);
+  }, []);
+
+  useEffect(() => {
+    if (!isTimerActive) return;
+
+    const syncTime = () => {
+      const end = timerEndTimeRef.current;
+      if (!end) {
+        setIsTimerActive(false);
+        setRestTimeLeft(0);
+        return;
+      }
+      const now = Date.now();
+      const diff = Math.ceil((end - now) / 1000);
+
+      if (diff <= 0) {
+        timerEndTimeRef.current = null;
+        if (typeof window !== 'undefined') {
+          try { localStorage.removeItem('topgym_active_rest_end'); } catch {}
+        }
+        if (wakeLockRef.current) {
+          wakeLockRef.current.release().catch(() => {});
+          wakeLockRef.current = null;
+        }
+        setIsTimerActive(false);
+        setRestTimeLeft(0);
+        playLoudWorkoutBeep();
+        if (typeof triggerVibrate === 'function') {
+          triggerVibrate([300, 150, 300, 150, 500]);
+        }
+      } else {
+        setRestTimeLeft(diff);
+      }
+    };
+
+    syncTime();
+    const intervalId = setInterval(syncTime, 500);
+
+    const onWake = () => {
+      if (document.visibilityState === 'visible') syncTime();
+    };
+
+    document.addEventListener('visibilitychange', onWake);
+    window.addEventListener('focus', syncTime);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onWake);
+      window.removeEventListener('focus', syncTime);
+    };
+  }, [isTimerActive]);
 
   // Registrazione Serie
   const handleLogSet = (e: React.SyntheticEvent) => {
@@ -228,9 +396,7 @@ export default function ActiveWorkoutSession({
 
     // Avvio Timer col tempo di recupero della settimana
     const rest = targets.restSeconds || 90;
-    setRestTimeLeft(rest);
-    setIsTimerActive(true);
-    triggerVibrate(50);
+    startRestTimer(rest);
   };
 
   const handleDeleteLog = (logId: string) => {
@@ -495,7 +661,7 @@ export default function ActiveWorkoutSession({
           <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
             <button
               type="button"
-              onClick={() => setRestTimeLeft(prev => prev + 30)}
+              onClick={addThirtySeconds}
               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-lg text-[10px] font-black text-zinc-300 hover:text-white active:scale-95 transition-all cursor-pointer"
               title="Aggiungi 30 secondi"
             >
@@ -503,7 +669,7 @@ export default function ActiveWorkoutSession({
             </button>
             <button
               type="button"
-              onClick={() => { setIsTimerActive(false); setRestTimeLeft(0); }}
+              onClick={stopRestTimer}
               className="px-2.5 py-1.5 bg-zinc-900 hover:bg-rose-950/40 border border-white/10 hover:border-rose-500/30 rounded-lg text-[10px] font-black text-zinc-400 hover:text-rose-400 active:scale-95 transition-all cursor-pointer"
               title="Salta recupero"
             >
