@@ -779,9 +779,7 @@ const F_B2_SPLIT_METABOLIC_LISS: EngineWorkoutDay[] = [
 // ============================================================================
 
 export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
-  // --------------------------------------------------------------------------
   // GIORNO 1 - SESSIONE A
-  // --------------------------------------------------------------------------
   {
     id: 't60_d1',
     dayNumber: 1,
@@ -799,7 +797,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 150,
         executionType: 'REGULAR',
         tut: '2-0-X-0',
-        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 150s) | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s (scarico volume composti L, buffer ampio)'
+        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 150s) | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s'
       },
       {
         id: 't60_d1_ex2',
@@ -883,7 +881,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Tensione continua, reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-20 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x10 @6 Rec: 60s'
       },
       {
         id: 't60_d1_ex8',
@@ -897,14 +895,11 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-0',
-        notes: '[Pump H] Tensione continua, reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-20 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x10 @6 Rec: 60s'
       }
     ]
   },
-
-  // --------------------------------------------------------------------------
   // GIORNO 2 - SESSIONE B
-  // --------------------------------------------------------------------------
   {
     id: 't60_d2',
     dayNumber: 2,
@@ -922,7 +917,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 120,
         executionType: 'REGULAR',
         tut: '2-0-X-1',
-        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 120s) | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s'
+        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 120s) | W10 Deload: 2x4-6 @6 Rec: 60s'
       },
       {
         id: 't60_d2_ex2',
@@ -936,7 +931,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 75,
         executionType: 'REGULAR',
         tut: '2-0-1-0',
-        notes: '[M-Onda 1-3] W1-W3: 3x8-12 @8 | W4-W6: 3x6-10 @8 | W7-W9: 4x6-8 @8 (Rec: 75s) | W10 Deload Pre-Gara: 2x6-12 @6 Rec: 60s'
+        notes: '[M-Onda 1-3] W1-W3: 3x8-12 @8 | W4-W6: 3x6-10 @8 | W7-W9: 4x6-8 @8 (Rec: 75s) | W10 Deload: 2x6-12 @6 Rec: 60s'
       },
       {
         id: 't60_d2_ex3',
@@ -950,7 +945,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Tensione continua, reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-20 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x6-10 @6 Rec: 60s'
       },
       {
         id: 't60_d2_ex4',
@@ -964,7 +959,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 75,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[M-Onda 1-3] W1-W3: 3x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 4x8-10 @8 (Rec: 75s) | W10 Deload Pre-Gara: 2x8-15 @6 Rec: 60s'
+        notes: '[M-Onda 1-3] W1-W3: 3x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 4x8-10 @8 (Rec: 75s) | W10 Deload: 2x8-15 @6 Rec: 60s'
       },
       {
         id: 't60_d2_ex5',
@@ -978,7 +973,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 75,
         executionType: 'REGULAR',
         tut: '3-0-1-0',
-        notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 (Rec: 75s) | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s'
+        notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 (Rec: 75s) | W10 Deload: 2x10-15 @6 Rec: 60s'
       },
       {
         id: 't60_d2_ex6',
@@ -992,14 +987,11 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 75,
         executionType: 'REGULAR',
         tut: '2-0-1-0',
-        notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 (Rec: 75s) | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s'
+        notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 (Rec: 75s) | W10 Deload: 2x10-15 @6 Rec: 60s'
       }
     ]
   },
-
-  // --------------------------------------------------------------------------
   // GIORNO 3 - SESSIONE C
-  // --------------------------------------------------------------------------
   {
     id: 't60_d3',
     dayNumber: 3,
@@ -1017,7 +1009,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 150,
         executionType: 'REGULAR',
         tut: '2-0-X-0',
-        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 150s) | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s'
+        notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 (Rec: 150s) | W10 Deload: 2x4-6 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex2',
@@ -1031,7 +1023,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 75,
         executionType: 'REGULAR',
         tut: '3-0-1-0',
-        notes: '[M-Onda 1-3] W1: 2x6-10 @8 | W2: 3x6-10 @8 | W3: 4x6-10 @8 | W4: 2x6-8 @8 | W5: 3x6-8 @8 | W6: 4x6-8 @8 | W7: 2x5-7 @8 | W8: 3x5-7 @8 | W9: 4x5-7 @8 (Rec: 75s) | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s'
+        notes: '[M-Onda 1-3] W1: 2x6-10 @8 | W2: 3x6-10 @8 | W3: 4x6-10 @8 | W4: 2x6-8 @8 | W5: 3x6-8 @8 | W6: 4x6-8 @8 | W7: 2x5-7 @8 | W8: 3x5-7 @8 | W9: 4x5-7 @8 (Rec: 75s) | W10 Deload: 2x4-6 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex3',
@@ -1045,7 +1037,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 120,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 (Rec: 120s) | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s'
+        notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 (Rec: 120s) | W10 Deload: 2x6-10 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex4',
@@ -1059,7 +1051,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 120,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 (Rec: 120s) | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s'
+        notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 (Rec: 120s) | W10 Deload: 2x6-10 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex5',
@@ -1073,7 +1065,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '1-0-1-0',
-        notes: '[Pump H] Tensione continua, reps fisse 15-25 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x15-25 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-25 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x15-25 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex6',
@@ -1087,7 +1079,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '1-0-1-1',
-        notes: '[Pump H] Tensione continua, reps fisse 20-30 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 20-30 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x20-30 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex7',
@@ -1101,7 +1093,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '1-0-1-1',
-        notes: '[Pump H] Tensione continua, reps fisse 20-30 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 20-30 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x20-30 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex8',
@@ -1115,7 +1107,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Tensione continua, reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-20 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x10 @6 Rec: 60s'
       },
       {
         id: 't60_d3_ex9',
@@ -1129,14 +1121,11 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-0',
-        notes: '[Pump H] Tensione continua, reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s'
+        notes: '[Pump H] Tensione continua 15-20 reps W1-W9 @8.5 Rec: 45s | W10 Deload: 2x10 @6 Rec: 60s'
       }
     ]
   },
-
-  // --------------------------------------------------------------------------
   // GIORNO 4 - SESSIONE D
-  // --------------------------------------------------------------------------
   {
     id: 't60_d4',
     dayNumber: 4,
@@ -1154,7 +1143,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-12 @6 Rec: 60s'
+        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x6-12 @6 Rec: 60s'
       },
       {
         id: 't60_d4_ex2',
@@ -1168,7 +1157,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-0',
-        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s'
+        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x6-10 @6 Rec: 60s'
       },
       {
         id: 't60_d4_ex3',
@@ -1182,7 +1171,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x8-12 @6 Rec: 60s'
+        notes: '[Pump H] Reps 15-20: W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x8-12 @6 Rec: 60s'
       },
       {
         id: 't60_d4_ex4',
@@ -1196,7 +1185,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Reps 20-30: W1-W3: 3x | W4-W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s'
+        notes: '[Pump H] Reps 20-30: W1-W3: 3x | W4-W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x20-30 @6 Rec: 60s'
       },
       {
         id: 't60_d4_ex5',
@@ -1210,7 +1199,7 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Reps 15-20: W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s'
+        notes: '[Pump H] Reps 15-20: W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x20-30 @6 Rec: 60s'
       },
       {
         id: 't60_d4_ex6',
@@ -1224,39 +1213,32 @@ export const F_B2_SPLIT_T60: EngineWorkoutDay[] = [
         restSeconds: 45,
         executionType: 'REGULAR',
         tut: '2-0-1-1',
-        notes: '[Pump H] Reps 20-25: W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-25 @6 Rec: 60s'
+        notes: '[Pump H] Reps 20-25: W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload: 2x20-25 @6 Rec: 60s'
       }
     ]
   },
-
-  // --------------------------------------------------------------------------
-  // GIORNO 5 - SESSIONE E (Slot vuoto predisposto per la tua compilazione)
-  // --------------------------------------------------------------------------
+  // GIORNO 5 - SESSIONE E (Pronto per la tua compilazione)
   {
     id: 't60_d5',
     dayNumber: 5,
     title: 'G5: Sessione E · [Da personalizzare]',
-    exercises: [
-      // Inserisci qui gli esercizi del 5° giorno:
-      // {
-      //   id: 't60_d5_ex1',
-      //   name: 'Nome Esercizio',
-      //   muscleGroup: 'Gruppo Muscolare',
-      //   stimulusType: 'HYPERTROPHIC',
-      //   sets: 3,
-      //   reps: '8-10',
-      //   targetWeight: '0',
-      //   rpeTarget: 8.0,
-      //   restSeconds: 90,
-      //   executionType: 'REGULAR',
-      //   tut: '2-0-1-0',
-      //   notes: 'Progressione...'
-      // }
-    ]
+    exercises: []
   }
 ];
 
 export const TOP_GYM_SPLIT_TEMPLATES: TopGymSplitTemplate[] = [
+  {
+    id: 't60',
+    name: 'Bikini Wave System (10 Settimane) · Marina',
+    block: 'BLOCCO_2_TRASFORMAZIONE',
+    gender: 'FEMALE',
+    daysCount: 5,
+    type: 'ALTERNATIVE_2',
+    description: 'Programma Bikini Wave System a 5 sessioni con progressione scientifica a onde (L/M/H), focus glutei, dorso e deltoidi.',
+    focus: 'Glutei · Dorso · Deltoidi · Addome (Wave System)',
+    days: F_B2_SPLIT_T60,
+  },
+
   // --- UOMO (7 TEMPLATE) ---
   {
     id: 'b1_base',
@@ -1414,17 +1396,7 @@ export const TOP_GYM_SPLIT_TEMPLATES: TopGymSplitTemplate[] = [
     focus: 'Circolazione, Densità Senza Infiammazione & Glutei',
     days: F_B2_SPLIT_METABOLIC_LISS
   }
-  {
-    id: 't60',
-    name: 'Bikini Wave System (10 Settimane) · Marina',
-    block: 'BLOCCO_2_TRASFORMAZIONE',
-    gender: 'FEMALE',
-    daysCount: 5,
-    type: 'ALTERNATIVE_2',
-    description: 'Programma Bikini Wave System a 5 sessioni con progressione scientifica a onde (L/M/H), focus glutei, dorso e deltoidi.',
-    focus: 'Glutei · Dorso · Deltoidi · Addome (Wave System)',
-    days: F_B2_SPLIT_T60,
-  },
+  
 ];
 
 /**
