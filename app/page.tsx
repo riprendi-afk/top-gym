@@ -1283,31 +1283,40 @@ useEffect(() => {
   };
 
   const handleSaveProgramByCoach = async () => {
-    if (targetUserId) {
-      programCacheRef.current[targetUserId] = {
+    // 1. Individuiamo l'ID dell'atleta selezionato (cercando in entrambe le variabili)
+    const targetId = activeAthleteId || targetUserId;
+
+    // 2. Controllo di sicurezza: se non c'è un atleta valido, blocchiamo l'operazione
+    if (!targetId || targetId === "default-user") {
+      setBuilderSuccessMessage("⚠️ Seleziona un atleta valido prima di salvare la scheda!");
+      setTimeout(() => setBuilderSuccessMessage(null), 4000);
+      return;
+    }
+
+    // 3. Aggiorniamo la cache locale per una navigazione immediata
+    if (programCacheRef.current) {
+      programCacheRef.current[targetId] = {
         days_data: programDays,
         program_name: programName,
         programmingModel
       };
     }
-    const targetId = activeAthleteId || "default-user";
+
+    // 4. Firma ufficiale del Coach
+    const coachEmail = "riprendi@gmail.com";
+
+    // 5. Applichiamo i metadati a ogni giornata della scheda
+    const programDaysToSave = programDays.map((day) => ({
+      ...day,
+      isPeriodized: isMasterCoach,
+      assignedByCoach: coachEmail,
+      weekOverrides: (day as any).weekOverrides || (programDays[0] as any)?.weekOverrides || {}
+    }));
+
     let result: { success?: boolean; error?: string } = {};
 
-    
-
-// 1. Definiamo la firma del Coach
-const coachEmail = "riprendi@gmail.com";
-
-    // 2. Firmiamo ogni giornata della scheda con i metadati del Metodo TOPGYM
-    // Questi dati viaggiano dentro il JSON di Supabase senza toccare le tabelle del DB
-    const programDaysToSave = programDays.map((day) => ({
-        ...day,
-        isPeriodized: isMasterCoach,
-        assignedByCoach: coachEmail,
-        weekOverrides: (day as any).weekOverrides || (programDays[0] as any)?.weekOverrides || {}
-      }));
-
     try {
+      // 6. Salvataggio su Supabase associato all'ID univoco dell'atleta
       result = await saveProgramToSupabase(
         targetId,
         programName,
@@ -1317,12 +1326,16 @@ const coachEmail = "riprendi@gmail.com";
       result = { success: false, error: e?.message };
     }
 
+    // 7. Gestione dell'esito, delle notifiche interne e delle notifiche push
     if (result?.success) {
-        setProgramDays(programDaysToSave as any);
+      setProgramDays(programDaysToSave as any);
+      
+      const athleteName = activeAthlete?.displayName || "l'atleta";
       setBuilderSuccessMessage(
-        `✅ Scheda salvata e assegnata con successo a ${activeAthlete.displayName}!`,
+        `✅ Scheda salvata e assegnata con successo a ${athleteName}!`,
       );
 
+      // Inserimento della notifica nel database
       if (supabase && targetId) {
         try {
           await supabase.from("notifications").insert([
@@ -1334,24 +1347,28 @@ const coachEmail = "riprendi@gmail.com";
               message: isMasterCoach
                 ? `Il Coach ha assegnato o aggiornato il programma "${programName}".`
                 : `Il Coach ha aggiornato la tua scheda "${programName}".`,
-              type: "program_assigned" },
+              type: "program_assigned"
+            },
           ]);
-        } catch {}
+        } catch (err) {
+          console.error("Errore salvataggio notifica DB:", err);
+        }
       }
 
-      if (targetId && targetId !== "default-user") {
-        try {
-          await sendPushNotification(
-            targetId,
-            isMasterCoach
-              ? "Nuova Scheda Metodo TOPGYM! ???"
-              : "Nuova Scheda Assegnata! ???",
-            isMasterCoach
-              ? `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || "Nuova scheda"}).`
-              : `Il Coach ha aggiornato la tua scheda di allenamento (${programName || "Nuova scheda"}).`,
-            "/",
-          );
-        } catch {}
+      // Invio della notifica Push sullo smartphone dell'atleta
+      try {
+        await sendPushNotification(
+          targetId,
+          isMasterCoach
+            ? "Nuova Scheda Metodo TOPGYM! 🏋️"
+            : "Nuova Scheda Assegnata! 🏋️",
+          isMasterCoach
+            ? `Il Coach ha aggiornato il tuo programma Metodo TOPGYM (${programName || "Nuova scheda"}).`
+            : `Il Coach ha aggiornato la tua scheda di allenamento (${programName || "Nuova scheda"}).`,
+          "/",
+        );
+      } catch (err) {
+        console.error("Errore invio push notification:", err);
       }
 
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
