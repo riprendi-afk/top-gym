@@ -1295,10 +1295,8 @@ useEffect(() => {
 
     
 
-    // 1. Definiamo la firma in base al Coach connesso
-    const coachEmail = isMasterCoach
-      ? "riprendi@gmail.com"
-      : "maggiopaolo34@gmail.com";
+// 1. Definiamo la firma del Coach
+const coachEmail = "riprendi@gmail.com";
 
     // 2. Firmiamo ogni giornata della scheda con i metadati del Metodo TOPGYM
     // Questi dati viaggiano dentro il JSON di Supabase senza toccare le tabelle del DB
