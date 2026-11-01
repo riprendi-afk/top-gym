@@ -2841,7 +2841,166 @@ export const TEMPLATE_T35: TemplateMeta = {
   generateSessions: () => generateSessionsFromTemplateDays(M_B2_SPLIT_ANTAGONISTI),
 };
 
+
+// ============================================================================
+// TEMPLATE T60: FEMMINILE - BIKINI WAVE SYSTEM (10 SETTIMANE) · 5 GIORNI
+// Target: Schiena Bassa (L), Glutei (M/H), Deltoidi (L/M/H), Spinta e Addome
+// Periodizzazione: Onde W1-W9 (L/M/H) · Deload Pre-Gara W10
+// ============================================================================
+export const TEMPLATE_T60 = {
+  id: 'T60',
+  title: 'Bikini Wave System (10 Settimane) · Marina',
+  gender: 'female',
+  level: 'intermediate',
+  profile: 'bikini',
+  daysPerWeek: 5,
+  daysCount: 5,
+  goal: 'tonificazione_glutei',
+  primaryEngine: 'BIKINI_WAVE' as any,
+  description: 'Programma Bikini Wave System a 5 sessioni con progressione scientifica a onde (L/M/H), focus glutei, dorso e deltoidi. Sessioni A-D strutturate, Sessione E modulabile.',
+  days: [
+    // ------------------------------------------------------------------------
+    // GIORNO 1 - SESSIONE A
+    // ------------------------------------------------------------------------
+    {
+      dayNumber: 1,
+      title: 'Sessione A: Schiena Bassa (L) + Glutei Ipertrofici (M) + Addome',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Heavy Posterior Chain & Dorso (Low Reps - L)',
+          exercises: [
+            { name: 'Stacco sumo', sets: 3, reps: '4-6', restSeconds: 150, notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s' },
+            { name: 'Rematore con bilanciere', sets: 3, reps: '4-8', restSeconds: 120, notes: '[L-Onda 1-3] W1: 3x6-8 @7.5 | W2: 4x6-8 @8 | W3: 5x6-8 @8.5 | W4: 3x5-7 @7.5 | W5: 4x5-7 @8 | W6: 5x5-7 @8.5 | W7: 3x4-6 @7.5 | W8: 4x4-6 @8 | W9: 5x4-6 @8.5 | W10 Deload Pre-Gara: 2x4-8 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Glute & Back Hypertrophy (Moderate Reps - M)',
+          exercises: [
+            { name: 'Lat machine maniglie', sets: 3, reps: '6-10', restSeconds: 75, notes: '[M-Onda 1-3] W1-W2: 3x8-10 @8 | W3: 4x8-10 @8 | W4-W5: 3x6-10 @8 | W6: 4x6-10 @8 | W7: 3x6-8 @8 | W8-W9: 4x6-8 @8 | W10 Deload Pre-Gara: 2x6-12 @6 Rec: 60s' },
+            { name: 'Hip thrust', sets: 3, reps: '6-12', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 3x10-12 @8 | W4-W6: 3x8-10 @8 | W7-W9: 3x6-8 @8 | W10 Deload Pre-Gara: 2x8-12 @6 Rec: 60s' },
+            { name: 'Affondi multipower', sets: 3, reps: '6-10', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 3x10 @8 | W4-W6: 3x8 @8 | W7-W9: 3x6 @8 | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s' },
+            { name: 'Hyperextension', sets: 3, reps: '8-15', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 3x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'CORE_CARDIO',
+          name: 'Core Conditioning (Pump H)',
+          exercises: [
+            { name: 'Crunch su panca', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] Reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s' },
+            { name: 'Sollevamento gambe su panca', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] Reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s' }
+          ]
+        }
+      ]
+    },
+
+    // ------------------------------------------------------------------------
+    // GIORNO 2 - SESSIONE B
+    // ------------------------------------------------------------------------
+    {
+      dayNumber: 2,
+      title: 'Sessione B: Deltoidi (L/M) + Dorso Superiore + Spinta',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Overhead Press & Spinta (Low Reps - L)',
+          exercises: [
+            { name: 'Spinte panca 70 multipower', sets: 3, reps: '4-6', restSeconds: 120, notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Spinta & Braccia Ipertrofia (Moderate Reps - M)',
+          exercises: [
+            { name: 'Push up su ginocchia', sets: 3, reps: '6-12', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 3x8-12 @8 | W4-W6: 3x6-10 @8 | W7-W9: 4x6-8 @8 | W10 Deload Pre-Gara: 2x6-12 @6 Rec: 60s' },
+            { name: 'Pushdown', sets: 3, reps: '8-15', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 3x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 4x8-10 @8 | W10 Deload Pre-Gara: 2x8-15 @6 Rec: 60s' },
+            { name: 'Estensioni tricipiti sopra la testa al cavo', sets: 2, reps: '8-15', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s' },
+            { name: 'Standing EZ-Bar Curl', sets: 2, reps: '8-15', restSeconds: 75, notes: '[M-Onda 1-3] W1-W3: 2x10-15 @8 | W4-W6: 3x8-12 @8 | W7-W9: 3x8-10 @8 | W10 Deload Pre-Gara: 2x10-15 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Deltoidi Isolamento (High Reps - H)',
+          exercises: [
+            { name: 'Alzate laterali seduta', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] Reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s' }
+          ]
+        }
+      ]
+    },
+
+    // ------------------------------------------------------------------------
+    // GIORNO 3 - SESSIONE C
+    // ------------------------------------------------------------------------
+    {
+      dayNumber: 3,
+      title: 'Sessione C: Lower Body (L) + Glute Pump (High Reps)',
+      segments: [
+        {
+          type: 'NEURALE',
+          name: 'Heavy Legs (Low Reps - L)',
+          exercises: [
+            { name: 'Squat al multipower', sets: 3, reps: '4-6', restSeconds: 150, notes: '[L-Onda 1-3] W1: 3x6 @7.5 | W2: 4x6 @8 | W3: 5x6 @8.5 | W4: 3x5 @7.5 | W5: 4x5 @8 | W6: 5x5 @8.5 | W7: 3x4 @7.5 | W8: 4x4 @8 | W9: 5x4 @8.5 | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s' },
+            { name: 'Leg extension', sets: 2, reps: '5-10', restSeconds: 120, notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s' },
+            { name: 'Leg Curl', sets: 2, reps: '5-10', restSeconds: 120, notes: '[L-Onda 1-3] W1: 2x6-10 @7.5 | W2: 3x6-10 @8 | W3: 4x6-10 @8.5 | W4: 2x6-8 @7.5 | W5: 3x6-8 @8 | W6: 4x6-8 @8.5 | W7: 2x5-8 @7.5 | W8: 3x5-8 @8 | W9: 4x5-8 @8.5 | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'MECCANICO',
+          name: 'Posterior Chain (Moderate Reps - M)',
+          exercises: [
+            { name: 'Stacco rumeno con manubri', sets: 2, reps: '5-10', restSeconds: 75, notes: '[M-Onda 1-3] W1: 2x6-10 @8 | W2: 3x6-10 @8 | W3: 4x6-10 @8 | W4: 2x6-8 @8 | W5: 3x6-8 @8 | W6: 4x6-8 @8 | W7: 2x5-7 @8 | W8: 3x5-7 @8 | W9: 4x5-7 @8 | W10 Deload Pre-Gara: 2x4-6 @6 Rec: 60s' }
+          ]
+        },
+        {
+          type: 'METABOLICO',
+          name: 'Glute Metabolic Pumping & Core (High Reps - H)',
+          exercises: [
+            { name: 'Swing / Cable pull through', sets: 3, reps: '15-25', restSeconds: 45, notes: '[Pump H] Reps fisse 15-25 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x15-25 @6 Rec: 60s' },
+            { name: 'Banded Hip Thrust', sets: 3, reps: '20-30', restSeconds: 45, notes: '[Pump H] Reps fisse 20-30 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s' },
+            { name: 'Machine Hip Abductor', sets: 3, reps: '20-30', restSeconds: 45, notes: '[Pump H] Reps fisse 20-30 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s' },
+            { name: 'Crunch su panca', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] Reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s' },
+            { name: 'Sollevamento gambe su panca', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] Reps fisse 15-20 W1-W9 @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x10 @6 Rec: 60s' }
+          ]
+        }
+      ]
+    },
+
+    // ------------------------------------------------------------------------
+    // GIORNO 4 - SESSIONE D
+    // ------------------------------------------------------------------------
+    {
+      dayNumber: 4,
+      title: 'Sessione D: Deltoidi Pompaggio (H) + Dorso (H) + Glute Finisher',
+      segments: [
+        {
+          type: 'METABOLICO',
+          name: 'Upper Body Pump & Delts (High Reps - H)',
+          exercises: [
+            { name: 'Pulley', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-12 @6 Rec: 60s' },
+            { name: 'Lat pulldown', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x6-10 @6 Rec: 60s' },
+            { name: 'Pulldown a braccia tese sbarra dritta', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] W1-W2: 3x | W3: 4x | W4-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x8-12 @6 Rec: 60s' },
+            { name: 'Alzate laterali con manubri', sets: 3, reps: '20-30', restSeconds: 45, notes: '[Pump H] W1-W3: 3x | W4-W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s' },
+            { name: 'Facepull', sets: 3, reps: '15-20', restSeconds: 45, notes: '[Pump H] W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-30 @6 Rec: 60s' },
+            { name: 'Deltoidi posteriori macchinario', sets: 3, reps: '20-25', restSeconds: 45, notes: '[Pump H] W1-W5: 3x | W6: 4x | W7: 3x | W8-W9: 4x @8.5 Rec: 45s | W10 Deload Pre-Gara: 2x20-25 @6 Rec: 60s' }
+          ]
+        }
+      ]
+    },
+
+    // ------------------------------------------------------------------------
+    // GIORNO 5 - SESSIONE E (Slot vuoto predisposto per personalizzazione)
+    // ------------------------------------------------------------------------
+    {
+      dayNumber: 5,
+      title: 'Sessione E: [Personalizzata / Da compilare]',
+      segments: []
+    }
+  ]
+};
+
 export const ALL_TOPGYM_TEMPLATES: TemplateMeta[] = [
+  TEMPLATE_T60 as any,
   ...TOPGYM_OVER40_TEMPLATES,
   ...HATFIELD_4D_TEMPLATES,
   ...Object.values(TOPGYM_TEMPLATES_CATALOG),
