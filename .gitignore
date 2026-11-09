@@ -42,3 +42,14 @@ next-env.d.ts
 
 !lib/
 !lib/*
+
+# File di backup e patch temporanee
+backup_*.json
+*.backup.json
+*.bak
+*.patch
+*.pre_*
+
+# Cartelle locali temporanee
+app/test-*/
+.vscode/
