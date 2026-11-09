@@ -106,8 +106,6 @@ export default function MacrocycleTimelineModal({
     return timeline[0].days[selectedDayIdx].exercises || [];
   }, [timeline, selectedDayIdx]);
 
-  
-
   // MOTORE DI STAMPA ISOLATO: Suddivisione a blocchi (W1-W8 e W9-W16) per leggibilità ottimale A4
   const executeIsolatedPrint = (printAllSessions: boolean) => {
     const sessionsToPrint = printAllSessions
@@ -117,7 +115,6 @@ export default function MacrocycleTimelineModal({
     const totalWeeks = timeline.length;
     const modelTitle = meta?.name || programmingModel || 'Top Gym Macrocycle';
 
-    // Raggruppamento delle settimane in blocchi di massimo 8 (W1-W8, W9-W16)
     const CHUNK_SIZE = 8;
     const weekChunks: ProjectedWeek[][] = [];
     for (let i = 0; i < timeline.length; i += CHUNK_SIZE) {
@@ -353,7 +350,6 @@ export default function MacrocycleTimelineModal({
       </html>
     `;
 
-    // Crea un iframe invisibile temporaneo per stampare ESCLUSIVAMENTE la matrice
     const printFrame = document.createElement('iframe');
     printFrame.setAttribute('id', 'topgym-isolated-matrix-printer');
     printFrame.style.position = 'fixed';
@@ -463,7 +459,6 @@ export default function MacrocycleTimelineModal({
     if (!currentEx) return;
     const exId = currentEx.id;
 
-    // 1. Aggiorna lo stimolo dell'esercizio nel giorno locale
     setLocalDays(prev => {
       const copy = JSON.parse(JSON.stringify(prev));
       if (copy[selectedDayIdx]?.exercises?.[exIdx]) {
@@ -473,7 +468,6 @@ export default function MacrocycleTimelineModal({
       return copy;
     });
 
-    // 2. Resetta gli override salvati per ricalcolare le 16 settimane con la nuova formula
     if (exId) {
       setLocalOverrides(prev => {
         const next = { ...prev };
@@ -521,7 +515,6 @@ export default function MacrocycleTimelineModal({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // 1. Raccogliamo tutti i dati generati da timeline (W1-W16)
       const completeOverrides: Record<number, Record<string, any>> = {};
 
       if (timeline && timeline.length > 0) {
@@ -534,7 +527,8 @@ export default function MacrocycleTimelineModal({
                 completeOverrides[wNum][ex.id] = {
                   sets: Number(ex.sets) || 1,
                   reps: String(ex.reps || "6"),
-                  targetWeight: String(ex.targetWeight || "0"),
+                  targetWeight: String(ex.targetWeight || ex.weight || "0"),
+                  weight: String(ex.weight || ex.targetWeight || "0"),
                   restSeconds: Number(ex.restSeconds) || 90,
                   rpeTarget: ex.rpeTarget || "RPE 8",
                   notes: ex.notes || ""
@@ -545,7 +539,6 @@ export default function MacrocycleTimelineModal({
         });
       }
 
-      // 2. Fondiamo eventuali modifiche manuali digitate dal coach
       if (localOverrides) {
         Object.keys(localOverrides).forEach(wKey => {
           const wNum = Number(wKey);
@@ -554,7 +547,6 @@ export default function MacrocycleTimelineModal({
         });
       }
 
-      // 3. Aggiorniamo anche localDays (base della scheda W1) per riflettere le serie reali
       const updatedDays = localDays.map((d: any, dIdx: number) => {
         const w1Day = timeline?.[0]?.days?.[dIdx];
         const updatedExercises = (d.exercises || []).map((ex: any) => {
@@ -564,7 +556,8 @@ export default function MacrocycleTimelineModal({
             ...ex,
             sets: overrideW1?.sets ?? (w1Ex ? Number(w1Ex.sets) : ex.sets),
             reps: overrideW1?.reps ?? (w1Ex ? String(w1Ex.reps) : ex.reps),
-            targetWeight: overrideW1?.targetWeight ?? (w1Ex ? String(w1Ex.targetWeight) : ex.targetWeight),
+            targetWeight: overrideW1?.targetWeight ?? (w1Ex ? String(w1Ex.targetWeight) : (ex.targetWeight || ex.weight || "0")),
+            weight: overrideW1?.weight ?? (w1Ex ? String(w1Ex.weight) : (ex.weight || ex.targetWeight || "0")),
             restSeconds: overrideW1?.restSeconds ?? (w1Ex ? Number(w1Ex.restSeconds) : ex.restSeconds),
             notes: overrideW1?.notes ?? (w1Ex ? String(w1Ex.notes) : ex.notes)
           };
@@ -596,25 +589,25 @@ export default function MacrocycleTimelineModal({
   const currentSessionTitle = dayList[selectedDayIdx]?.title || `Sessione ${selectedDayIdx + 1}`;
 
   return (
-    <div className={inline ? "w-full my-4" : "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md"}>
-      <div className={inline ? "bg-[#0F1218] border border-white/10 rounded-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" : "bg-[#0F1218] border border-white/10 rounded-2xl w-full max-w-[98vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden"}>
+    <div className={inline ? "w-full my-2" : "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md"}>
+      <div className={inline ? "bg-[#10131A] border-2 border-zinc-700/80 rounded-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" : "bg-[#10131A] border-2 border-zinc-700/80 rounded-2xl w-full max-w-[98vw] h-[94vh] flex flex-col shadow-2xl overflow-hidden"}>
 
-        {/* HEADER MODALE */}
-        <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 bg-[#151922]">
+        {/* HEADER MODALE AD ALTO CONTRASTO */}
+        <div className="p-3.5 border-b-2 border-zinc-700/70 flex flex-wrap items-center justify-between gap-3 bg-[#181C26]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="p-2 bg-[#E50914] text-white rounded-xl shadow-lg shadow-red-900/40">
+              <span className="p-2 bg-[#E50914] text-white rounded-xl shadow-lg shadow-red-900/50">
                 <Calendar className="w-5 h-5" />
               </span>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                  Matrice Macrociclo: <span className="text-[#E50914]">{athleteName}</span>
+                <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  Matrice Macrociclo: <span className="text-red-500 font-extrabold">{athleteName}</span>
                 </h2>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] font-bold text-white bg-white/10 px-2 py-0.5 rounded font-mono">
+                  <span className="text-[11px] font-bold text-white bg-zinc-700/70 border border-zinc-500/50 px-2 py-0.5 rounded font-mono">
                     {meta?.name || programmingModel}
                   </span>
-                  <span className="text-xs text-zinc-400 hidden md:inline">
+                  <span className="text-xs text-zinc-300 font-medium hidden md:inline">
                     • {timeline.length} Microcicli ({meta?.macrocycleSummary || ''})
                   </span>
                 </div>
@@ -622,116 +615,107 @@ export default function MacrocycleTimelineModal({
             </div>
           </div>
 
-          {/* BARRA COMANDI UNIFICATA TOP GYM (REGIA + MATRICE) */}
-            <div className="flex items-center gap-2.5 flex-wrap w-full lg:w-auto">
+          {/* BARRA COMANDI UNIFICATA */}
+          <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
 
-              {/* INPUT NOME SCHEDA */}
-              {onProgramNameChange && (
-                <div className="flex items-center gap-1.5 bg-black/60 border border-white/10 rounded-xl px-2.5 py-1.5 focus-within:border-emerald-500 transition">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
-                    Nome:
-                  </span>
-                  <input
-                    type="text"
-                    value={programName}
-                    onChange={(e) => onProgramNameChange(e.target.value)}
-                    placeholder="Nome Scheda..."
-                    className="bg-transparent text-xs text-white font-bold outline-none w-48 sm:w-64 placeholder:text-zinc-600"
-                    title="Nome della Scheda assegnata"
-                  />
-                </div>
-              )}
-
-              {/* SCEGLI TEMPLATE SPLIT */}
-              {onOpenTemplatePicker && (
-                <button
-                  type="button"
-                  onClick={onOpenTemplatePicker}
-                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/40 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 shrink-0"
-                  title="Apri catalogo template split completi"
-                >
-                  <Layers className="w-4 h-4 text-white" />
-                  <span>Scegli Template Split</span>
-                </button>
-              )}
-
-              {/* UNICO TASTO MASTER: SALVA E ASSEGNA ALL'ATLETA */}
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition cursor-pointer shadow-lg shadow-emerald-950/40 ${
-                  saveSuccess
-                    ? 'bg-emerald-400 text-black shadow-emerald-500/50 scale-105'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
-                }`}
-                title="Salva tutte le 16 settimane, assegna la scheda e invia la notifica push all'atleta"
-              >
-                {saveSuccess ? (
-                  <Check className="w-4 h-4 text-black" />
-                ) : isSaving ? (
-                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <UserCheck className="w-4 h-4 text-white" />
-                )}
-                <span>
-                  {saveSuccess
-                    ? 'Scheda Assegnata!'
-                    : isSaving
-                    ? 'Assegnazione in corso...'
-                    : `Salva e Assegna (${athleteName})`}
+            {/* INPUT NOME SCHEDA */}
+            {onProgramNameChange && (
+              <div className="flex items-center gap-1.5 bg-[#0C0E14] border border-zinc-600 rounded-xl px-3 py-1.5 focus-within:border-emerald-500 transition shadow-inner">
+                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider whitespace-nowrap">
+                  Nome:
                 </span>
-              </button>
+                <input
+                  type="text"
+                  value={programName}
+                  onChange={(e) => onProgramNameChange(e.target.value)}
+                  placeholder="Nome Scheda..."
+                  className="bg-transparent text-xs text-white font-bold outline-none w-44 sm:w-56 placeholder:text-zinc-500"
+                  title="Nome della Scheda assegnata"
+                />
+              </div>
+            )}
 
-              {/* STAMPA COMPLETA TUTTE LE SETTIMANE */}
+            {/* SCEGLI TEMPLATE SPLIT */}
+            {onOpenTemplatePicker && (
               <button
                 type="button"
-                onClick={() => executeIsolatedPrint(true)}
-                className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white transition cursor-pointer shadow-md border border-white/10"
-                title="Stampa l'intero Macrociclo (PDF)"
+                onClick={onOpenTemplatePicker}
+                className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-red-950/40 flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0"
+                title="Apri catalogo template split completi"
               >
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <span className="hidden sm:inline">Stampa Macrociclo (PDF)</span>
+                <Layers className="w-4 h-4 text-white" />
+                <span>Template Split</span>
               </button>
+            )}
 
-              {/* STAMPA SOLO SESSIONE ATTIVA */}
-              <button
-                type="button"
-                onClick={() => executeIsolatedPrint(false)}
-                className="px-2.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 transition cursor-pointer border border-white/5"
-                title="Stampa solo la sessione correntemente aperta"
-              >
-                <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="hidden sm:inline">Solo {currentSessionTitle}</span>
-              </button>
+            {/* TASTO MASTER: SALVA E ASSEGNA ALL'ATLETA */}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer shadow-lg ${
+                saveSuccess
+                  ? 'bg-emerald-400 text-black shadow-emerald-500/50 scale-105'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40 active:scale-95'
+              }`}
+              title="Salva tutte le 16 settimane, assegna la scheda e invia la notifica push all'atleta"
+            >
+              {saveSuccess ? (
+                <Check className="w-4 h-4 text-black" />
+              ) : isSaving ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <UserCheck className="w-4 h-4 text-white" />
+              )}
+              <span>
+                {saveSuccess
+                  ? 'Assegnata!'
+                  : isSaving
+                  ? 'Salvataggio...'
+                  : `Salva e Assegna`}
+              </span>
+            </button>
 
-              {/* AGGIUNGI ESERCIZIO */}
-              <button
-                type="button"
-                onClick={handleAddExercise}
-                className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white transition cursor-pointer shadow-md"
-                title="Aggiungi esercizio a questa sessione"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Esercizio</span>
-              </button>
+            {/* STAMPA COMPLETA TUTTE LE SETTIMANE */}
+            <button
+              type="button"
+              onClick={() => executeIsolatedPrint(true)}
+              className="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-600 transition cursor-pointer shadow-sm"
+              title="Stampa l'intero Macrociclo (PDF)"
+            >
+              <Printer className="w-4 h-4 text-emerald-400" />
+              <span className="hidden sm:inline">Stampa PDF</span>
+            </button>
 
-              {/* CHIUDI */}
+            {/* AGGIUNGI ESERCIZIO */}
+            <button
+              type="button"
+              onClick={handleAddExercise}
+              className="px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white transition cursor-pointer shadow-md"
+              title="Aggiungi esercizio a questa sessione"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Esercizio</span>
+            </button>
+
+            {/* CHIUDI (se non inline) */}
+            {!inline && (
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition"
+                className="p-1.5 text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-xl transition cursor-pointer"
                 title="Chiudi"
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* BARRA SELEZIONE GIORNO / SESSIONE */}
-        <div className="px-4 py-2.5 bg-[#12151B] border-b border-white/5 flex items-center justify-between gap-3">
+        {/* BARRA SELEZIONE GIORNO / SESSIONE */}
+        <div className="px-4 py-2 bg-[#141822] border-b border-zinc-700/80 flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
-            <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400 mr-2 flex items-center gap-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-zinc-300 mr-1 flex items-center gap-1">
               <Layers className="w-3.5 h-3.5 text-zinc-400" /> Sessione:
             </span>
             {dayList.map(d => (
@@ -739,10 +723,10 @@ export default function MacrocycleTimelineModal({
                 key={d.index}
                 type="button"
                 onClick={() => setSelectedDayIdx(d.index)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                   selectedDayIdx === d.index
-                    ? 'bg-[#E50914] text-white shadow-md shadow-red-900/40'
-                    : 'bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white'
+                    ? 'bg-[#E50914] text-white shadow-md shadow-red-900/50'
+                    : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700'
                 }`}
               >
                 <Dumbbell className="w-3.5 h-3.5" />
@@ -751,52 +735,53 @@ export default function MacrocycleTimelineModal({
             ))}
           </div>
 
-          <div className="text-[11px] text-zinc-400 font-mono hidden sm:flex items-center gap-2">
+          <div className="text-[11px] text-zinc-300 font-mono hidden sm:flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Macro W1 - W{timeline.length} Modificabile in Tempo Reale</span>
           </div>
         </div>
 
-        {/* GRIGLIA MATRICE */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto bg-[#0A0C10]">
+        {/* GRIGLIA MATRICE AD ALTO CONTRASTO */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto bg-[#0C0E14]">
           <table className="w-full border-collapse text-left min-w-max">
-            <thead className="sticky top-0 z-30 bg-[#151922] shadow-md border-b border-white/10">
+            <thead className="sticky top-0 z-30 bg-[#161A24] shadow-md border-b-2 border-zinc-700">
               <tr>
-                <th className="sticky left-0 z-40 bg-[#151922] p-3 text-xs font-black uppercase tracking-wider text-zinc-300 min-w-[260px] max-w-[280px] border-r border-white/10 shadow-[4px_0_12px_rgba(0,0,0,0.6)]">
+                <th className="sticky left-0 z-40 bg-[#161A24] p-3 text-xs font-black uppercase tracking-wider text-white min-w-[260px] max-w-[280px] border-r-2 border-zinc-700 shadow-[4px_0_12px_rgba(0,0,0,0.7)]">
                   Esercizio & Parametri
                 </th>
                 {timeline.map(w => {
-                  let badgeBg = 'bg-zinc-800 text-zinc-300 border-white/10';
-                  if (w.isDeload) badgeBg = 'bg-blue-900/70 text-blue-200 border-blue-500/50';
-                  else if (w.phaseType === 'PICCO') badgeBg = 'bg-rose-900/70 text-rose-200 border-rose-500/50';
-                  else if (w.phaseType === 'OVERLOAD') badgeBg = 'bg-amber-900/70 text-amber-200 border-amber-500/50';
-                  else if (w.phaseType === 'CONVERSIONE') badgeBg = 'bg-purple-900/70 text-purple-200 border-purple-500/50';
-                  else badgeBg = 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40';
+                  let badgeBg = 'bg-zinc-800 text-zinc-200 border-zinc-600';
+                  if (w.isDeload) badgeBg = 'bg-blue-900/90 text-blue-100 border-blue-400';
+                  else if (w.phaseType === 'PICCO') badgeBg = 'bg-rose-900/90 text-rose-100 border-rose-400';
+                  else if (w.phaseType === 'OVERLOAD') badgeBg = 'bg-amber-900/90 text-amber-100 border-amber-400';
+                  else if (w.phaseType === 'CONVERSIONE') badgeBg = 'bg-purple-900/90 text-purple-100 border-purple-400';
+                  else badgeBg = 'bg-emerald-900/90 text-emerald-100 border-emerald-400';
 
                   return (
                     <th
                       key={w.weekNumber}
-                      className={`p-2 text-center min-w-[190px] max-w-[210px] border-r border-white/5 ${
-                        w.isDeload ? 'bg-blue-950/20' : ''
+                      className={`p-2.5 text-center min-w-[190px] max-w-[210px] border-r border-zinc-700/80 ${
+                        w.isDeload ? 'bg-blue-950/30' : ''
                       }`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-black text-sm text-white font-mono">
-                            W${w.weekNumber}
+                          {/* Correzione refuso: W1, W2 invece di W$1 */}
+                          <span className="font-black text-sm text-white font-mono tracking-wide">
+                            W{w.weekNumber}
                           </span>
                           {w.isDeload && (
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-500/30 text-blue-300 border border-blue-500/40">
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-500/40 text-blue-200 border border-blue-400">
                               Scarico
                             </span>
                           )}
                           {w.phaseType === 'PICCO' && (
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/30 text-rose-300 border border-rose-500/40">
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/40 text-rose-200 border border-rose-400">
                               Picco
                             </span>
                           )}
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border truncate max-w-[180px] ${badgeBg}`} title={w.phaseLabel}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm truncate max-w-[180px] ${badgeBg}`} title={w.phaseLabel}>
                           {w.phaseLabel.replace(/^W\d+:\s*/, '')}
                         </span>
                       </div>
@@ -805,14 +790,15 @@ export default function MacrocycleTimelineModal({
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-xs">
+            <tbody className="divide-y divide-zinc-700/60 text-xs">
               {exercisesForDay.map((baseEx, exIdx) => {
                 const exId = baseEx.id || `ex_${selectedDayIdx}_${exIdx}`;
                 const isLocked = localOverrides[1]?.[exId]?.isLocked ?? baseEx.isLocked;
 
                 return (
-                  <tr key={exId} className="hover:bg-white/[0.02] transition">
-                    <td className="sticky left-0 z-20 bg-[#12151B] p-3 min-w-[260px] max-w-[280px] border-r border-white/10 shadow-[4px_0_12px_rgba(0,0,0,0.6)]">
+                  <tr key={exId} className="hover:bg-white/[0.03] transition-colors">
+                    {/* COLONNA FISSA ESERCIZIO */}
+                    <td className="sticky left-0 z-20 bg-[#141822] p-3 min-w-[260px] max-w-[280px] border-r-2 border-zinc-700 shadow-[4px_0_12px_rgba(0,0,0,0.7)]">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2 overflow-hidden flex-1">
                           <button
@@ -820,8 +806,8 @@ export default function MacrocycleTimelineModal({
                             onClick={() => toggleExerciseLock(exId, !!isLocked)}
                             className={`mt-0.5 p-1.5 rounded-lg border transition cursor-pointer shrink-0 ${
                               isLocked
-                                ? 'bg-amber-500 text-black border-amber-400'
-                                : 'bg-white/5 text-zinc-400 hover:text-white border-white/10'
+                                ? 'bg-amber-500 text-black border-amber-300 font-bold'
+                                : 'bg-zinc-800 text-zinc-300 hover:text-white border-zinc-600'
                             }`}
                             title={isLocked ? "Esercizio bloccato" : "Blocca questo esercizio"}
                           >
@@ -833,7 +819,7 @@ export default function MacrocycleTimelineModal({
                               {baseEx.name}
                             </span>
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                              <span className="text-[10px] text-zinc-400 font-mono">
+                              <span className="text-[10px] text-zinc-300 font-mono font-semibold">
                                 {baseEx.muscle}
                               </span>
                               <select
@@ -841,12 +827,12 @@ export default function MacrocycleTimelineModal({
                                 onChange={(e) => handleChangeStimulus(exIdx, e.target.value as 'NEURAL' | 'HYPERTROPHIC' | 'METABOLIC')}
                                 className={`text-[8.5px] font-mono font-bold uppercase rounded px-1.5 py-0.5 border cursor-pointer transition-colors focus:outline-none ${
                                   (baseEx.stimulus || '').toUpperCase() === 'NEURAL'
-                                    ? 'bg-amber-950/60 text-amber-300 border-amber-600/50 hover:border-amber-400'
+                                    ? 'bg-amber-950/80 text-amber-200 border-amber-500 hover:border-amber-300'
                                     : (baseEx.stimulus || '').toUpperCase() === 'METABOLIC'
-                                    ? 'bg-cyan-950/60 text-cyan-300 border-cyan-600/50 hover:border-cyan-400'
-                                    : 'bg-emerald-950/60 text-emerald-300 border-emerald-600/50 hover:border-emerald-400'
+                                    ? 'bg-cyan-950/80 text-cyan-200 border-cyan-500 hover:border-cyan-300'
+                                    : 'bg-emerald-950/80 text-emerald-200 border-emerald-500 hover:border-emerald-300'
                                 }`}
-                                title="Modifica stimolo e ricalcola all'istante l'intera progressione a 16 settimane"
+                                title="Modifica stimolo e ricalcola all'istante l'intera progressione"
                               >
                                 <option value="NEURAL" className="bg-zinc-900 text-amber-300">⚡ NEURAL</option>
                                 <option value="HYPERTROPHIC" className="bg-zinc-900 text-emerald-300">🧱 HYPERTROPHIC</option>
@@ -856,10 +842,11 @@ export default function MacrocycleTimelineModal({
                           </div>
                         </div>
 
-                        <button
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
                             type="button"
                             onClick={() => handleEditExercise(exIdx, baseEx.name)}
-                            className="text-zinc-500 hover:text-amber-400 p-1 rounded transition shrink-0"
+                            className="text-zinc-400 hover:text-amber-300 p-1 rounded hover:bg-zinc-800 transition"
                             title="Modifica o sostituisci esercizio"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -867,95 +854,111 @@ export default function MacrocycleTimelineModal({
                           <button
                             type="button"
                             onClick={() => handleRemoveExercise(exIdx, baseEx.name)}
-                          className="text-zinc-600 hover:text-rose-400 p-1 rounded transition shrink-0"
-                          title="Rimuovi esercizio"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                            className="text-zinc-400 hover:text-rose-400 p-1 rounded hover:bg-zinc-800 transition"
+                            title="Rimuovi esercizio"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </td>
 
+                    {/* CELLE DELLE SETTIMANE (W1–W16) */}
                     {timeline.map(w => {
                       const ex = w.days[selectedDayIdx]?.exercises[exIdx];
-                      if (!ex) return <td key={w.weekNumber} className="border-r border-white/5 p-2 text-center text-zinc-600">-</td>;
+                      if (!ex) return <td key={w.weekNumber} className="border-r border-zinc-700/80 p-2 text-center text-zinc-500">-</td>;
 
                       const isOverridden = ex.isOverridden;
                       const cellLocked = ex.isLocked;
 
+                      // Risoluzione bug: sanificazione del carico per evitare la scritta letterale 'undefined'
+                      const rawWeight = ex.weight ?? ex.targetWeight ?? '';
+                      const displayWeight = (rawWeight === 'undefined' || rawWeight === undefined || rawWeight === null) ? '' : rawWeight;
+
                       return (
                         <td
                           key={w.weekNumber}
-                          className={`p-2 border-r border-white/5 align-top transition ${
+                          className={`p-2 border-r border-zinc-700/80 align-top transition-colors ${
                             cellLocked
-                              ? 'bg-amber-950/15'
+                              ? 'bg-amber-950/20'
                               : isOverridden
-                              ? 'bg-emerald-950/20'
+                              ? 'bg-emerald-950/25'
                               : w.isDeload
-                              ? 'bg-blue-950/10'
-                              : ''
+                              ? 'bg-blue-950/20'
+                              : 'bg-[#12151D]'
                           }`}
                         >
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-1">
+                          <div className="bg-[#181C26] border border-zinc-700 hover:border-zinc-500 rounded-xl p-2 space-y-2 shadow-sm transition-colors">
+                            {/* RIGA 1: SERIE x REPS */}
+                            <div className="flex items-center gap-1.5">
                               <div className="flex-1">
-                                <label className="text-[8px] font-black uppercase text-zinc-400 block mb-0.5">Serie</label>
+                                <label className="text-[9px] font-black uppercase text-zinc-300 block mb-0.5">Serie</label>
                                 <input
                                   type="number"
                                   min="1"
-                                  max="12"
-                                  value={ex.sets}
-                                  onChange={e => handleCellChange(w.weekNumber, exId, 'sets', parseInt(e.target.value) || 1)}
-                                  className="w-full bg-black/60 border border-white/10 rounded px-1 py-1 text-center font-black text-white text-xs outline-none focus:border-[#E50914]"
+                                  max="30"
+                                  value={ex.sets ?? ''}
+                                  onFocus={e => e.target.select()}
+                                  onChange={e => handleCellChange(w.weekNumber, exId, 'sets', parseInt(e.target.value, 10) || '')}
+                                  placeholder="1"
+                                  className="w-full bg-[#0C0E14] border border-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg px-1 py-1 text-center font-black text-white text-xs outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                               </div>
-                              <span className="text-zinc-500 font-bold pt-3">×</span>
+                              <span className="text-zinc-400 font-bold pt-3.5">×</span>
                               <div className="flex-1">
-                                <label className="text-[8px] font-black uppercase text-zinc-400 block mb-0.5">Reps</label>
+                                <label className="text-[9px] font-black uppercase text-zinc-300 block mb-0.5">Reps</label>
                                 <input
                                   type="text"
-                                  value={ex.reps}
+                                  value={ex.reps ?? ''}
+                                  onFocus={e => e.target.select()}
                                   onChange={e => handleCellChange(w.weekNumber, exId, 'reps', e.target.value)}
-                                  className="w-full bg-black/60 border border-white/10 rounded px-1 py-1 text-center font-bold text-white text-xs font-mono outline-none focus:border-[#E50914]"
+                                  placeholder="6"
+                                  className="w-full bg-[#0C0E14] border border-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg px-1 py-1 text-center font-bold text-white text-xs font-mono outline-none transition-all"
                                 />
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1">
+                            {/* RIGA 2: CARICO (KG) e RECUPERO (S) */}
+                            <div className="flex items-center gap-1.5">
                               <div className="flex-1">
-                                <label className="text-[8px] font-black uppercase text-zinc-400 block mb-0.5">Carico</label>
+                                <label className="text-[9px] font-black uppercase text-zinc-300 block mb-0.5">Carico</label>
                                 <input
                                   type="text"
-                                  value={ex.weight ?? ''}
-                                  placeholder="kg"
+                                  value={displayWeight}
+                                  placeholder="0 kg"
+                                  onFocus={e => e.target.select()}
                                   onChange={e => handleCellChange(w.weekNumber, exId, 'weight', e.target.value)}
-                                  className="w-full bg-black/60 border border-white/10 rounded px-1 py-1 text-center font-bold text-emerald-400 text-[11px] font-mono outline-none focus:border-[#E50914]"
+                                  className="w-full bg-[#0C0E14] border border-zinc-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-1 py-1 text-center font-bold text-emerald-400 text-xs font-mono outline-none transition-all"
                                 />
                               </div>
                               <div className="flex-1">
-                                <label className="text-[8px] font-black uppercase text-zinc-400 block mb-0.5">Rec (s)</label>
+                                <label className="text-[9px] font-black uppercase text-zinc-300 block mb-0.5">Rec (s)</label>
                                 <input
                                   type="number"
                                   step="5"
-                                  value={ex.restSeconds ?? 90}
-                                  placeholder="sec"
-                                  onChange={e => handleCellChange(w.weekNumber, exId, 'restSeconds', parseInt(e.target.value) || 0)}
-                                  className="w-full bg-black/60 border border-white/10 rounded px-1 py-1 text-center font-bold text-cyan-400 text-[11px] font-mono outline-none focus:border-[#E50914]"
+                                  min="0"
+                                  value={ex.restSeconds ?? ''}
+                                  placeholder="90"
+                                  onFocus={e => e.target.select()}
+                                  onChange={e => handleCellChange(w.weekNumber, exId, 'restSeconds', parseInt(e.target.value, 10) || 0)}
+                                  className="w-full bg-[#0C0E14] border border-zinc-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-lg px-1 py-1 text-center font-bold text-amber-300 text-xs font-mono outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                               </div>
                             </div>
 
-                            <div className="pt-1 border-t border-white/5 flex items-center justify-between gap-1">
-                              <span className="text-[9px] text-zinc-400 truncate flex-1 block" title={ex.notes}>
-                                {ex.notes}
+                            {/* NOTE & RESET OVERRIDE */}
+                            <div className="pt-1.5 border-t border-zinc-700/80 flex items-center justify-between gap-1 text-[10px]">
+                              <span className="text-zinc-400 truncate flex-1 block" title={ex.notes || ''}>
+                                {ex.notes || 'Progressione'}
                               </span>
                               {isOverridden && (
                                 <button
                                   type="button"
                                   onClick={() => resetCellOverride(w.weekNumber, exId)}
-                                  className="p-0.5 text-zinc-400 hover:text-white rounded"
-                                  title="Ripristina valore iniziale"
+                                  className="p-1 text-amber-400 hover:text-white rounded hover:bg-zinc-700 transition"
+                                  title="Ripristina progressione automatica"
                                 >
-                                  <RefreshCw className="w-2.5 h-2.5" />
+                                  <RefreshCw className="w-3 h-3" />
                                 </button>
                               )}
                             </div>
@@ -970,16 +973,12 @@ export default function MacrocycleTimelineModal({
           </table>
         </div>
 
-        {/* FOOTER */}
-        <div className="p-3 bg-[#151922] border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
-          <div className="flex items-center gap-4 flex-wrap">
+        {/* FOOTER AD ALTA LEGGIBILITÀ */}
+        <div className="p-3 bg-[#161A24] border-t-2 border-zinc-700 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-300">
+          <div className="flex items-center gap-4 flex-wrap font-medium">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
               <span>Modifica Manuale (Override)</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-              <span>Recupero Modificato</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -991,8 +990,8 @@ export default function MacrocycleTimelineModal({
             </span>
           </div>
 
-          <div className="text-[11px] text-zinc-400 font-mono">
-            "Stampa Macrociclo Completo" esporta tutte le sessioni da W1 a W${timeline.length} con impaginazione A4 orizzontale.
+          <div className="text-[11px] text-zinc-300 font-mono">
+            Stampa Macrociclo esporta da W1 a W{timeline.length} in formato A4 orizzontale.
           </div>
         </div>
 
