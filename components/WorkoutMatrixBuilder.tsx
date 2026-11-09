@@ -44,16 +44,15 @@ export default function WorkoutMatrixBuilder({
   builderSuccessMessage,
   setBuilderSuccessMessage,
 }: WorkoutMatrixBuilderProps) {
-  // 1. Inizializzazione sicura del client Supabase tramite la funzione di configurazione
   const supabase = getSupabase();
 
-  // Stati locali per la visualizzazione dei modali interni
+  // Stati per la gestione della vista
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
 
-  // Azione rapida: applica scarico volumetrico (-40% serie)
+  // Scarico volumetrico veloce (-40% serie)
   const handleApplyDeload = () => {
-    if (!window.confirm("Applicare lo scarico volumetrico (-40% serie su tutti i microcicli)?")) return;
+    if (!window.confirm("Applicare lo scarico volumetrico (-40% serie su tutte le settimane)?")) return;
     const deloaded = programDays.map((day: any) => ({
       ...day,
       exercises: day.exercises?.map((ex: any) => ({
@@ -62,11 +61,11 @@ export default function WorkoutMatrixBuilder({
       })),
     }));
     setProgramDays(deloaded);
-    setBuilderSuccessMessage("⚡ Scarico volumetrico (-40%) applicato alla scheda!");
+    setBuilderSuccessMessage("⚡ Scarico volumetrico (-40%) applicato con successo!");
     setTimeout(() => setBuilderSuccessMessage(null), 4000);
   };
 
-  // Azione rapida: stampa della scheda in formato PDF
+  // Esportazione PDF
   const handlePrintPDF = () => {
     const printName = window.prompt("Nome atleta da stampare sul PDF:", activeAthlete?.displayName);
     if (printName !== null) {
@@ -74,7 +73,7 @@ export default function WorkoutMatrixBuilder({
     }
   };
 
-  // Gestione salvataggio modifiche e override delle settimane (W1–W16)
+  // Salvataggio modifiche e propagazione settimane (W1–W16)
   const handleSaveOverrides = async (updatedDays: any[], overrides: any) => {
     const coachEmail = "riprendi@gmail.com";
     const daysWithOverrides = updatedDays.map((d: any) => ({
@@ -93,7 +92,7 @@ export default function WorkoutMatrixBuilder({
 
     const targetId = activeAthleteId || targetUserId;
     if (!targetId || targetId === "default-user") {
-      setBuilderSuccessMessage("⚠️ Seleziona un atleta valido prima di salvare gli override!");
+      setBuilderSuccessMessage("⚠️ Seleziona un atleta valido prima di salvare!");
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
       return;
     }
@@ -114,7 +113,7 @@ export default function WorkoutMatrixBuilder({
             },
           ]);
         } catch (err) {
-          console.error("Errore salvataggio notifica DB:", err);
+          console.error("Errore notifica DB:", err);
         }
 
         try {
@@ -125,11 +124,11 @@ export default function WorkoutMatrixBuilder({
             "/"
           );
         } catch (err) {
-          console.error("Errore invio push notification:", err);
+          console.error("Errore notifica Push:", err);
         }
       }
 
-      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata con successo a ${activeAthlete?.displayName || "Atleta"}!`);
+      setBuilderSuccessMessage(`✅ Scheda salvata e assegnata a ${activeAthlete?.displayName || "Atleta"}!`);
       setTimeout(() => setBuilderSuccessMessage(null), 4000);
     } catch (e: any) {
       setBuilderSuccessMessage(`❌ Errore durante il salvataggio: ${e?.message || "Riprova"}`);
@@ -138,93 +137,73 @@ export default function WorkoutMatrixBuilder({
   };
 
   return (
-    <div className="w-full space-y-6">
-      {/* 1. PANNELLO DI REGIA COACH */}
-      <div className="bg-[#12151B] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
-              <UserCheck className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <h2 className="text-sm font-black uppercase tracking-wider text-white">
-                  Regia Scheda & Assegnazione Programma
-                </h2>
-              </div>
-              <p className="text-[11px] text-zinc-400 mt-0.5">
-                Atleta: <b className="text-white">{activeAthlete?.displayName || "Nessun atleta selezionato"}</b> &bull; Gestione centralizzata W1–W16
-              </p>
-            </div>
+    <div className="w-full space-y-4">
+      {/* 1. BARRA DI CONTROLLO SUPERIORE SNELLA (SENZA DOPPIONI) */}
+      <div className="bg-[#161922] border border-zinc-700/60 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
+        {/* Info Atleta Selezionato */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+            <UserCheck className="w-4 h-4 text-emerald-400" />
           </div>
-
-          {/* PULSANTI DI AZIONE RAPIDA IN ALTO */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsTemplateModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#E50914] to-red-600 hover:from-red-600 hover:to-red-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-950/30 flex items-center gap-2 transition cursor-pointer active:scale-95"
-            >
-              <Layers className="w-4 h-4 text-white" />
-              <span>Scegli Template</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleApplyDeload}
-              className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
-              title="Riduci le serie del 40% su tutte le giornate"
-            >
-              <TrendingDown className="w-3.5 h-3.5 text-amber-400" />
-              <span>Scarico (-40%)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handlePrintPDF}
-              className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
-            >
-              <Printer className="w-3.5 h-3.5 text-sky-400" />
-              <span>Stampa PDF</span>
-            </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Atleta:</span>
+              <span className="text-xs font-black text-white">{activeAthlete?.displayName || "Nessun atleta selezionato"}</span>
+            </div>
+            <p className="text-[10px] text-zinc-400">
+              {programDays.length} Giornate Attive &bull; Programmazione W1–W16
+            </p>
           </div>
         </div>
 
-        {/* NOME DELLA SCHEDA E TASTO MASTER SALVA E ASSEGNA */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-          <div className="sm:col-span-8 space-y-1">
-            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-              Nome della Scheda
-            </label>
-            <input
-              type="text"
-              value={programName}
-              onChange={(e) => setProgramName(e.target.value)}
-              placeholder="Nome della Scheda..."
-              className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold outline-none focus:border-[#E50914] transition"
-            />
-          </div>
+        {/* Azioni Rapide Centrali e Schermo Intero */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleApplyDeload}
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-600 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+            title="Riduci le serie del 40% su tutte le settimane"
+          >
+            <TrendingDown className="w-3.5 h-3.5 text-amber-400" />
+            <span>Scarico (-40%)</span>
+          </button>
 
-          <div className="sm:col-span-4 sm:self-end">
-            <button
-              type="button"
-              onClick={onSaveProgram}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-            >
-              <UserCheck className="w-4 h-4" />
-              <span>Salva e Assegna</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handlePrintPDF}
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-600 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <Printer className="w-3.5 h-3.5 text-sky-400" />
+            <span>Stampa PDF</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsTimelineModalOpen(!isTimelineModalOpen)}
+            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-600 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            {isTimelineModalOpen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Riduci</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Schermo Intero</span>
+              </>
+            )}
+          </button>
         </div>
-
-        {/* FEEDBACK A SCHERMO */}
-        {builderSuccessMessage && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-center font-bold text-xs animate-in fade-in">
-            {builderSuccessMessage}
-          </div>
-        )}
       </div>
+
+      {/* Messaggio di Feedback Notifiche / Errori */}
+      {builderSuccessMessage && (
+        <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 p-2.5 rounded-xl text-center font-bold text-xs shadow-sm">
+          {builderSuccessMessage}
+        </div>
+      )}
 
       {/* 2. MODALE SELETTORE TEMPLATE */}
       <TemplatePickerModal
@@ -240,39 +219,8 @@ export default function WorkoutMatrixBuilder({
         }}
       />
 
-      {/* 3. MATRICE MACROCICLO W1-W16: SINGLE SOURCE OF TRUTH (A LARGHEZZA INTERA) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914] animate-pulse"></span>
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
-              Matrice Macrociclo (W1–W16) &bull; Single Source of Truth
-            </h3>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest hidden sm:inline">
-              {programDays.length} Giornate Attive
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsTimelineModalOpen(!isTimelineModalOpen)}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5"
-            >
-              {isTimelineModalOpen ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Riduci Vista</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Schermo Intero</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
+      {/* 3. MATRICE MACROCICLO W1-W16 */}
+      <div className="w-full">
         <MacrocycleTimelineModal
           key={targetUserId || "timeline-inline"}
           inline={!isTimelineModalOpen}
