@@ -13,6 +13,12 @@ import { ExerciseCard, PlannedWeekTargets } from './ExerciseCard';
 import { saveCompletedWorkoutToSupabase } from '@/lib/store';
 import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
 import { sanitizeProgramDays } from '@/lib/sanitization';
+import { 
+  getAthleteLastLoads, 
+  resolveInitialExerciseWeight, 
+  recordCompletedLoadLocally,
+  normalizeExerciseKey 
+} from '@/lib/workout-loads';
 import type { ExecutionType, SetLog } from '@/app/page';
 
 interface ActiveWorkoutSessionProps {
@@ -24,7 +30,6 @@ interface ActiveWorkoutSessionProps {
   workoutHistory?: any[];
   onWorkoutSaved: () => Promise<void> | void;
 }
-
 
 // ==================== TOPGYM AUDIO & WAKE ENGINE ====================
 let topgymAudioCtx: AudioContext | null = null;
@@ -62,7 +67,6 @@ function playLoudWorkoutBeep() {
     }
 
     const t = ctx.currentTime;
-    // Sequenza acustica ad alto impatto: 880Hz -> 880Hz -> 1760Hz
     const bursts = [
       { freq: 880, start: 0, dur: 0.12 },
       { freq: 880, start: 0.18, dur: 0.12 },
@@ -73,7 +77,7 @@ function playLoudWorkoutBeep() {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = 'triangle'; // Frequenza armonica penetrante
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, t + start);
 
       gain.gain.setValueAtTime(1.0, t + start);
@@ -113,16 +117,15 @@ export default function ActiveWorkoutSession({
   const activeDay = sanitizedDays[selectedDayIndex] || sanitizedDays[0];
   const activeExercises = activeDay?.exercises || [];
 
-  // Calcolo dinamico dello stato di Deload della settimana
-  const athleteCurrentWeek = useMemo(() => {
-    return Number(programDays?.[0]?.currentWeek) || 1;
-  }, [programDays]);
   const isDeloadWeek = false;
 
   const [currentExId, setCurrentExId] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [reps, setReps] = useState<string>('8');
   const [rpe, setRpe] = useState<string>('8');
+
+  // Mappa dei carichi storici dell'atleta (recuperati da Supabase e localStorage)
+  const [historicalLoads, setHistoricalLoads] = useState<Record<string, number>>({});
 
   // Logs locali sicuri
   const [todayLogs, setTodayLogs] = useState<SetLog[]>([]);
@@ -135,6 +138,27 @@ export default function ActiveWorkoutSession({
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
   const timerEndTimeRef = useRef<number | null>(null);
   const wakeLockRef = useRef<any>(null);
+
+  // Caricamento dei carichi storici per tutti gli esercizi della sessione
+  useEffect(() => {
+    if (!athleteId || !activeExercises || activeExercises.length === 0) return;
+    let isMounted = true;
+
+    const names = activeExercises.map((e: any) => e.name).filter(Boolean);
+    getAthleteLastLoads(athleteId, names)
+      .then((loads) => {
+        if (isMounted && loads) {
+          setHistoricalLoads(loads);
+        }
+      })
+      .catch((err) => {
+        console.warn('Recupero carichi storici non riuscito:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [athleteId, activeExercises]);
 
   const stopRestTimer = useCallback(() => {
     timerEndTimeRef.current = null;
@@ -238,6 +262,7 @@ export default function ActiveWorkoutSession({
     };
   };
 
+  // Selezione esercizio con precompilazione automatica del carico
   const handleSelectExercise = (ex: any) => {
     if (currentExId === ex.id) {
       setCurrentExId('');
@@ -245,7 +270,7 @@ export default function ActiveWorkoutSession({
     }
     setCurrentExId(ex.id);
 
-    // 1) Se serie già eseguite oggi, usa l'ultima serie
+    // 1) Se ci sono serie già registrate oggi per questo esercizio, usa l'ultima serie
     const exTodayLogs = todayLogs.filter((l: any) => l.exerciseName === ex.name);
     if (exTodayLogs.length > 0) {
       const last = exTodayLogs[0];
@@ -255,12 +280,39 @@ export default function ActiveWorkoutSession({
       return;
     }
 
-    // 2) Altrimenti precompila coi target della settimana selezionata
+    // 2) Altrimenti precompila: dà priorità al carico storico dell'atleta, poi al target del coach
     const targets = getPlannedTargetsForEx(ex);
-    setWeight(targets.targetWeight || '');
+    const resolvedWeight = resolveInitialExerciseWeight(
+      ex.name,
+      historicalLoads,
+      targets.targetWeight
+    );
+
+    setWeight(resolvedWeight);
     setReps(targets.reps || '8');
     setRpe(targets.rpeTarget || '8');
   };
+
+  // Se i carichi storici arrivano in ritardo da rete con l'esercizio già aperto, compila il peso
+  useEffect(() => {
+    if (!currentExId || weight !== '') return;
+    const currentEx = activeExercises.find((exItem: any) => exItem.id === currentExId);
+    if (!currentEx) return;
+
+    const exTodayLogs = todayLogs.filter((l: any) => l.exerciseName === currentEx.name);
+    if (exTodayLogs.length > 0) return;
+
+    const targets = getPlannedTargetsForEx(currentEx);
+    const resolvedWeight = resolveInitialExerciseWeight(
+      currentEx.name,
+      historicalLoads,
+      targets.targetWeight
+    );
+
+    if (resolvedWeight) {
+      setWeight(resolvedWeight);
+    }
+  }, [historicalLoads, currentExId]);
 
   const adjustWeight = (delta: number) => {
     const current = parseFloat(weight) || 0;
@@ -274,9 +326,8 @@ export default function ActiveWorkoutSession({
     }
   };
 
-  // Timer countdown assoluto: resiliente a standby, sospensione mobile e tab-switch
+  // Timer countdown assoluto resiliente
   useEffect(() => {
-    // Ripristino all'avvio / mount
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('topgym_active_rest_end');
@@ -351,7 +402,6 @@ export default function ActiveWorkoutSession({
     const currentEx = activeExercises.find((exItem: any) => exItem.id === currentExId);
     if (!currentEx) return;
 
-    // Tetto dinamico basato esattamente sulle serie previste per questa settimana
     const targets = getPlannedTargetsForEx(currentEx);
     const exTodayCount = todayLogs.filter((l: any) => l.exerciseName === currentEx.name).length;
     if (exTodayCount >= targets.sets) return;
@@ -362,6 +412,13 @@ export default function ActiveWorkoutSession({
     const numRpe = parseFloat(String(rpe).replace(',', '.')) || 8;
 
     if (numReps <= 0) return;
+
+    // Aggiorna subito la memoria carichi locale per le prossime volte
+    if (numWeight > 0 && athleteId) {
+      recordCompletedLoadLocally(athleteId, currentEx.name, numWeight);
+      const normKey = normalizeExerciseKey(currentEx.name);
+      setHistoricalLoads((prev) => ({ ...prev, [normKey]: numWeight }));
+    }
 
     const effectiveCalc = computeEffectiveLoad(
       currentEx.name,
@@ -394,7 +451,6 @@ export default function ActiveWorkoutSession({
     const updated = [newLog, ...todayLogs];
     saveLogsSafely(updated);
 
-    // Avvio Timer col tempo di recupero della settimana
     const rest = targets.restSeconds || 90;
     startRestTimer(rest);
   };
@@ -478,7 +534,6 @@ export default function ActiveWorkoutSession({
     }
   };
 
-  // Calcolo totale serie previste per questa giornata nella settimana scelta
   const totalWorkoutSets = useMemo(() => {
     return activeExercises.reduce((acc: number, ex: any) => {
       const tg = getPlannedTargetsForEx(ex);
@@ -491,7 +546,6 @@ export default function ActiveWorkoutSession({
     : 0;
 
   return (
-    /* pb-32 sm:pb-16 garantisce che l'ultimo pulsante sia sempre completamente visibile e cliccabile sopra la barra mobile */
     <div className="space-y-4 pb-32 sm:pb-16">
       
       {/* BOX PRINCIPALE */}
@@ -634,7 +688,7 @@ export default function ActiveWorkoutSession({
 
       </div>
 
-      {/* PULSANTE TERMINA ALLENAMENTO INDIPENDENTE (CON MARGINE AGGIUNTO) */}
+      {/* PULSANTE TERMINA ALLENAMENTO */}
       <div className="pt-3">
         <button
           type="button"
@@ -645,7 +699,7 @@ export default function ActiveWorkoutSession({
         </button>
       </div>
 
-      {/* FLOATING REST TIMER: POSIZIONATO A bottom-20 SU MOBILE CON z-[70] PER ESSERE SEMPRE PERFETTAMENTE VISIBILE SOPRA LA BARRA BOTTOM */}
+      {/* FLOATING REST TIMER */}
       {isTimerActive && restTimeLeft > 0 && (
         <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-[70] bg-[#0c0e12]/95 border border-[#E50914]/60 shadow-[0_10px_35px_rgba(229,9,20,0.45)] backdrop-blur-xl px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl flex items-center justify-between gap-3 sm:gap-4 max-w-[92vw] w-auto whitespace-nowrap animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center gap-2.5">

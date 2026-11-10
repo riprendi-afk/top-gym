@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "target": "ES2017",
     "lib": [
@@ -41,6 +41,7 @@
     "node_modules",
     "tests",
     "**/*.test.ts",
-    "vitest.config.mts"
+    "vitest.config.mts",
+    "app/test-*"
   ]
 }
