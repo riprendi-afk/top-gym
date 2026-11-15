@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
@@ -14,6 +14,7 @@ import { saveCompletedWorkoutToSupabase } from '@/lib/store';
 import { computeEffectiveLoad, findBodyweightConfig } from '@/lib/lib/bodyweight';
 import { sanitizeProgramDays } from '@/lib/sanitization';
 import { 
+  extractLoadsFromWorkoutHistory,
   getAthleteLastLoads, 
   resolveInitialExerciseWeight, 
   recordCompletedLoadLocally,
@@ -124,8 +125,21 @@ export default function ActiveWorkoutSession({
   const [reps, setReps] = useState<string>('8');
   const [rpe, setRpe] = useState<string>('8');
 
-  // Mappa dei carichi storici dell'atleta (recuperati da Supabase e localStorage)
+  // Mappa immediata dei carichi ricavata da workoutHistory (funziona su ogni dispositivo)
+  const historyDerivedLoads = useMemo(() => {
+    return extractLoadsFromWorkoutHistory(workoutHistory);
+  }, [workoutHistory]);
+
+  // Mappa dei carichi integrata da Supabase logs e cache locale
   const [historicalLoads, setHistoricalLoads] = useState<Record<string, number>>({});
+
+  // Unione sincronizzata di tutti i carichi storici disponibili
+  const effectiveHistoricalLoads = useMemo(() => {
+    return {
+      ...historyDerivedLoads,
+      ...historicalLoads,
+    };
+  }, [historyDerivedLoads, historicalLoads]);
 
   // Logs locali sicuri
   const [todayLogs, setTodayLogs] = useState<SetLog[]>([]);
@@ -139,13 +153,13 @@ export default function ActiveWorkoutSession({
   const timerEndTimeRef = useRef<number | null>(null);
   const wakeLockRef = useRef<any>(null);
 
-  // Caricamento dei carichi storici per tutti gli esercizi della sessione
+  // Caricamento e sincronizzazione dei carichi storici per tutti gli esercizi della sessione
   useEffect(() => {
     if (!athleteId || !activeExercises || activeExercises.length === 0) return;
     let isMounted = true;
 
     const names = activeExercises.map((e: any) => e.name).filter(Boolean);
-    getAthleteLastLoads(athleteId, names)
+    getAthleteLastLoads(athleteId, names, workoutHistory)
       .then((loads) => {
         if (isMounted && loads) {
           setHistoricalLoads(loads);
@@ -158,7 +172,7 @@ export default function ActiveWorkoutSession({
     return () => {
       isMounted = false;
     };
-  }, [athleteId, activeExercises]);
+  }, [athleteId, activeExercises, workoutHistory]);
 
   const stopRestTimer = useCallback(() => {
     timerEndTimeRef.current = null;
@@ -280,11 +294,11 @@ export default function ActiveWorkoutSession({
       return;
     }
 
-    // 2) Altrimenti precompila: dà priorità al carico storico dell'atleta, poi al target del coach
+    // 2) Altrimenti precompila: priorità al carico storico (workoutHistory/Supabase/cache), poi target coach
     const targets = getPlannedTargetsForEx(ex);
     const resolvedWeight = resolveInitialExerciseWeight(
       ex.name,
-      historicalLoads,
+      effectiveHistoricalLoads,
       targets.targetWeight
     );
 
@@ -305,14 +319,14 @@ export default function ActiveWorkoutSession({
     const targets = getPlannedTargetsForEx(currentEx);
     const resolvedWeight = resolveInitialExerciseWeight(
       currentEx.name,
-      historicalLoads,
+      effectiveHistoricalLoads,
       targets.targetWeight
     );
 
     if (resolvedWeight) {
       setWeight(resolvedWeight);
     }
-  }, [historicalLoads, currentExId]);
+  }, [effectiveHistoricalLoads, currentExId]);
 
   const adjustWeight = (delta: number) => {
     const current = parseFloat(weight) || 0;
